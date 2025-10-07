@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Input, Space, Button, Avatar, Dropdown, Switch } from 'antd';
+import { Layout, Input, Space, Button, Avatar, Dropdown, Select } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -8,6 +8,7 @@ import {
   LogoutOutlined,
   BulbOutlined,
   BulbFilled,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { toggleSidebar, setTheme } from '@/store/slices/appSlice';
@@ -23,8 +24,19 @@ const Header: React.FC = () => {
     dispatch(toggleSidebar());
   };
 
-  const handleThemeChange = (checked: boolean) => {
-    dispatch(setTheme(checked ? 'dark' : 'light'));
+  const handleThemeChange = (value: 'light' | 'dark' | 'compact') => {
+    dispatch(setTheme(value));
+  };
+
+  const getThemeIcon = () => {
+    switch (theme) {
+      case 'dark':
+        return <BulbFilled style={{ color: '#fff' }} />;
+      case 'compact':
+        return <ThunderboltOutlined style={{ color: '#1890ff' }} />;
+      default:
+        return <BulbOutlined />;
+    }
   };
 
   // Меню пользователя
@@ -79,12 +91,16 @@ const Header: React.FC = () => {
 
       <Space size="middle">
         <Space>
-          {theme === 'light' ? <BulbOutlined /> : <BulbFilled />}
-          <Switch
-            checked={theme === 'dark'}
+          {getThemeIcon()}
+          <Select
+            value={theme}
             onChange={handleThemeChange}
-            checkedChildren="Темная"
-            unCheckedChildren="Светлая"
+            style={{ width: 150 }}
+            options={[
+              { value: 'light', label: 'Светлая' },
+              { value: 'dark', label: 'Темная' },
+              { value: 'compact', label: 'Компактная' },
+            ]}
           />
         </Space>
         

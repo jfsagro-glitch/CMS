@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Form, Input, Select, Button, Space, message } from 'antd';
+import { Tabs, Form, Input, Select, Button, Space, message, Row, Col } from 'antd';
 import { SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import type { ExtendedCollateralCard, ObjectTypeKey, Partner, Document, Address, CharacteristicsValues } from '@/types';
 import ObjectTypeSelector from './ObjectTypeSelector';
@@ -94,71 +94,86 @@ const CollateralCardForm: React.FC<CollateralCardFormProps> = ({
       label: 'Основная информация',
       children: (
         <div>
-          <Form.Item
-            name="number"
-            label="Номер карточки"
-            rules={[{ required: true, message: 'Введите номер карточки' }]}
-          >
-            <Input placeholder="Например: КО-2024-001" />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item
+                name="number"
+                label="Номер карточки"
+                rules={[{ required: true, message: 'Введите номер' }]}
+              >
+                <Input placeholder="КО-2024-001" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item
+                name="status"
+                label="Статус"
+                initialValue="editing"
+              >
+                <Select>
+                  <Select.Option value="editing">Редактирование</Select.Option>
+                  <Select.Option value="approved">Утвержден</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item label="Код ЦБ">
+                <Input value={cbCode} disabled style={{ fontWeight: 'bold' }} />
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item
             name="name"
             label="Название объекта"
             rules={[{ required: true, message: 'Введите название объекта' }]}
           >
-            <Input placeholder="Краткое описание объекта" />
+            <Input placeholder="Краткое описание объекта залога" />
           </Form.Item>
 
-          <Form.Item
-            name="mainCategory"
-            label="Основная категория"
-            rules={[{ required: true, message: 'Выберите категорию' }]}
-          >
-            <Select placeholder="Выберите категорию">
-              <Select.Option value="real_estate">Недвижимость</Select.Option>
-              <Select.Option value="movable">Движимое имущество</Select.Option>
-              <Select.Option value="property_rights">Имущественные права</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="classification"
-            label="Классификация объекта"
-            rules={[
-              {
-                validator: async (_, value) => {
-                  if (!value || !value.level0 || !value.level1 || !value.level2) {
-                    return Promise.reject(new Error('Заполните все уровни классификации'));
-                  }
-                  if (cbCode === 0) {
-                    return Promise.reject(new Error('Некорректная комбинация классификации'));
-                  }
-                  return Promise.resolve();
-                },
-              },
-            ]}
-          >
-            <ObjectTypeSelector onChange={handleClassificationChange} />
-          </Form.Item>
-
-          <Form.Item
-            name="status"
-            label="Статус"
-            initialValue="editing"
-          >
-            <Select>
-              <Select.Option value="editing">Редактирование</Select.Option>
-              <Select.Option value="approved">Утвержден</Select.Option>
-            </Select>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col xs={24} lg={14}>
+              <Form.Item
+                name="classification"
+                label="Классификация объекта"
+                rules={[
+                  {
+                    validator: async (_, value) => {
+                      if (!value || !value.level0 || !value.level1 || !value.level2) {
+                        return Promise.reject(new Error('Заполните все уровни'));
+                      }
+                      if (cbCode === 0) {
+                        return Promise.reject(new Error('Некорректная комбинация'));
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
+              >
+                <ObjectTypeSelector onChange={handleClassificationChange} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} lg={10}>
+              <Form.Item
+                name="mainCategory"
+                label="Основная категория"
+                rules={[{ required: true, message: 'Выберите категорию' }]}
+              >
+                <Select placeholder="Выберите категорию">
+                  <Select.Option value="real_estate">Недвижимость</Select.Option>
+                  <Select.Option value="movable">Движимое имущество</Select.Option>
+                  <Select.Option value="property_rights">Имущественные права</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item name="description" label="Описание">
-            <Input.TextArea rows={4} placeholder="Подробное описание объекта" />
+            <Input.TextArea rows={3} placeholder="Подробное описание объекта" />
           </Form.Item>
 
           <Form.Item name="notes" label="Примечания">
-            <Input.TextArea rows={3} placeholder="Дополнительные заметки" />
+            <Input.TextArea rows={2} placeholder="Дополнительные заметки" />
           </Form.Item>
         </div>
       ),

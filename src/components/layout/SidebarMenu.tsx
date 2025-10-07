@@ -1,5 +1,6 @@
 import React from 'react';
 import { Layout, Menu } from 'antd';
+import Logo from '@/components/common/Logo';
 import {
   DatabaseOutlined,
   CheckSquareOutlined,
@@ -110,14 +111,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
           height: '64px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          fontSize: collapsed ? '16px' : '20px',
-          fontWeight: 'bold',
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          paddingLeft: collapsed ? 0 : 24,
           transition: 'all 0.2s',
         }}
       >
-        {collapsed ? 'CMS' : 'CarShop CMS'}
+        <Logo collapsed={collapsed} />
       </div>
       <Menu
         theme="dark"

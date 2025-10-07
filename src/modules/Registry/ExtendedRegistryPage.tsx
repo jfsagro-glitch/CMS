@@ -327,8 +327,10 @@ const ExtendedRegistryPage: React.FC = () => {
           setEditingCard(null);
         }}
         footer={null}
-        width="90%"
-        style={{ top: 20 }}
+        width="100%"
+        style={{ top: 0, maxWidth: '100vw', paddingBottom: 0 }}
+        styles={{ body: { height: 'calc(100vh - 110px)', overflowY: 'auto', padding: '24px 24px 24px 24px' } }}
+        centered={false}
         destroyOnClose
       >
         <CollateralCardForm

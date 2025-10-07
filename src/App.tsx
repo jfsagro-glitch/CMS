@@ -69,11 +69,22 @@ const AppContent: React.FC = () => {
     );
   }
 
+  const getThemeAlgorithm = () => {
+    switch (appTheme) {
+      case 'dark':
+        return theme.darkAlgorithm;
+      case 'compact':
+        return theme.compactAlgorithm;
+      default:
+        return theme.defaultAlgorithm;
+    }
+  };
+
   return (
     <ConfigProvider
       locale={ruRU}
       theme={{
-        algorithm: appTheme === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
+        algorithm: getThemeAlgorithm(),
         token: {
           colorPrimary: '#1890ff',
           borderRadius: 6,
