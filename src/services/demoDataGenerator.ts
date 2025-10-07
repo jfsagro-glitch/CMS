@@ -90,7 +90,7 @@ const generateRealEstateCharacteristics = (objectType: string) => {
 };
 
 // Генератор характеристик для транспорта
-const generateVehicleCharacteristics = (_vehicleType: string) => {
+const generateVehicleCharacteristics = () => {
   const brands = ['Toyota', 'Mercedes-Benz', 'BMW', 'Volkswagen', 'Ford', 'Hyundai', 'KIA'];
   const brand = brands[Math.floor(Math.random() * brands.length)];
   
@@ -107,7 +107,7 @@ const generateVehicleCharacteristics = (_vehicleType: string) => {
 };
 
 // Генератор характеристик для оборудования
-const generateEquipmentCharacteristics = (_equipmentType: string) => {
+const generateEquipmentCharacteristics = () => {
   return {
     manufacturer: ['Siemens', 'ABB', 'Schneider', 'GE', 'Mitsubishi'][Math.floor(Math.random() * 5)],
     model: `EQ-${Math.floor(Math.random() * 10000)}`,
@@ -191,10 +191,10 @@ export const generateDemoCards = (): ExtendedCollateralCard[] => {
     let characteristics;
     let itemName;
     if (typeItem.level0 === 'Транспорт') {
-      characteristics = generateVehicleCharacteristics(typeItem.level1);
+      characteristics = generateVehicleCharacteristics();
       itemName = `${typeItem.level1} - ${characteristics.brand}`;
     } else {
-      characteristics = generateEquipmentCharacteristics(typeItem.level1);
+      characteristics = generateEquipmentCharacteristics();
       itemName = `${typeItem.level1} - ${characteristics.manufacturer}`;
     }
     
