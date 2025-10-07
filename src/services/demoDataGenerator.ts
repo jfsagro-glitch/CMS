@@ -183,29 +183,32 @@ export const generateDemoCards = (): ExtendedCollateralCard[] => {
   });
 
   // Генерируем карточки движимого имущества (12 карточек)
-  movableTypes.forEach((type, index) => {
+  movableTypes.forEach((typeItem, index) => {
     const region = regions[index % regions.length];
     const status = statuses[index % statuses.length];
     const createdAt = randomDate(new Date(2023, 0, 1), new Date());
     
     let characteristics;
-    if (type.level0 === 'Транспорт') {
-      characteristics = generateVehicleCharacteristics(type.level1);
+    let itemName;
+    if (typeItem.level0 === 'Транспорт') {
+      characteristics = generateVehicleCharacteristics(typeItem.level1);
+      itemName = `${typeItem.level1} - ${characteristics.brand}`;
     } else {
-      characteristics = generateEquipmentCharacteristics(type.level1);
+      characteristics = generateEquipmentCharacteristics(typeItem.level1);
+      itemName = `${typeItem.level1} - ${characteristics.manufacturer}`;
     }
     
     cards.push({
       id: generateId(),
       number: `MV-${cardNumber.toString().padStart(4, '0')}`,
-      name: `${type.level1} - ${characteristics.brand || characteristics.manufacturer}`,
+      name: itemName,
       mainCategory: 'movable',
-      classification: type,
+      classification: typeItem,
       cbCode: 200 + index,
       status,
       address: generateAddress(region),
       characteristics,
-      ...generateValue('movable', type.level1),
+      ...generateValue('movable', typeItem.level1),
       createdAt,
       updatedAt: randomDate(createdAt, new Date()),
       owner: {

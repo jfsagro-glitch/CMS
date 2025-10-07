@@ -106,7 +106,7 @@ class ExtendedStorageService {
             card.name.toLowerCase().includes(query) ||
             card.number.toLowerCase().includes(query) ||
             card.address?.fullAddress?.toLowerCase().includes(query) ||
-            card.partners.some(p =>
+            card.partners?.some(p =>
               p.lastName?.toLowerCase().includes(query) ||
               p.firstName?.toLowerCase().includes(query) ||
               p.organizationName?.toLowerCase().includes(query)
@@ -137,7 +137,7 @@ class ExtendedStorageService {
 
         if (filters.hasDocuments !== undefined) {
           collection = collection.filter(card =>
-            filters.hasDocuments ? card.documents.length > 0 : card.documents.length === 0
+            filters.hasDocuments ? (card.documents?.length || 0) > 0 : (card.documents?.length || 0) === 0
           );
         }
 
@@ -305,11 +305,11 @@ class ExtendedStorageService {
         'Статус': card.status === 'editing' ? 'Редактирование' : 'Утвержден',
         'Адрес': card.address?.fullAddress || '',
         'Собственники': card.partners
-          .filter(p => p.role === 'owner')
+          ?.filter(p => p.role === 'owner')
           .map(p => this.getPartnerName(p))
-          .join(', '),
+          .join(', ') || '',
         'Площадь': card.characteristics?.totalArea || card.characteristics?.area || '',
-        'Документов': card.documents.length,
+        'Документов': card.documents?.length || 0,
         'Дата создания': new Date(card.createdAt).toLocaleString('ru-RU'),
         'Дата обновления': new Date(card.updatedAt).toLocaleString('ru-RU'),
       }));
@@ -444,8 +444,8 @@ class ExtendedStorageService {
           editing: allCards.filter(c => c.status === 'editing').length,
           approved: allCards.filter(c => c.status === 'approved').length
         },
-        withDocuments: allCards.filter(c => c.documents.length > 0).length,
-        withPartners: allCards.filter(c => c.partners.length > 0).length,
+        withDocuments: allCards.filter(c => (c.documents?.length || 0) > 0).length,
+        withPartners: allCards.filter(c => (c.partners?.length || 0) > 0).length,
       };
     } catch (error) {
       console.error('Failed to get statistics:', error);
