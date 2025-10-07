@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Space, Modal, message, Breadcrumb, Table, Input, Tag } from 'antd';
+import { Button, Space, Modal, message, Breadcrumb } from 'antd';
 import {
   PlusOutlined,
   ExportOutlined,
   ImportOutlined,
   CloudDownloadOutlined,
-  SearchOutlined,
 } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
 import CollateralCardForm from '@/components/common/CollateralCardForm';
+import RegistryTable from '@/components/common/RegistryTable';
+import type { RegistryTableRecord } from '@/components/common/RegistryTable';
+import '@/components/common/RegistryTable.css';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   setExtendedCards,
   addExtendedCard,
   updateExtendedCard,
   deleteExtendedCard,
-  deleteExtendedCards,
   setExtendedLoading,
 } from '@/store/slices/extendedCardsSlice';
 import extendedStorageService from '@/services/ExtendedStorageService';
-import { formatDate, translateCategory, translateStatus, downloadFile } from '@/utils/helpers';
+import { downloadFile } from '@/utils/helpers';
 import type { ExtendedCollateralCard } from '@/types';
 
 const ExtendedRegistryPage: React.FC = () => {
@@ -27,8 +27,6 @@ const ExtendedRegistryPage: React.FC = () => {
   const { filteredItems: cards, loading } = useAppSelector(state => state.extendedCards);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCard, setEditingCard] = useState<ExtendedCollateralCard | null>(null);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [searchText, setSearchText] = useState('');
 
   const loadCards = async () => {
     try {
@@ -54,9 +52,12 @@ const ExtendedRegistryPage: React.FC = () => {
     setModalVisible(true);
   };
 
-  const handleEdit = (card: ExtendedCollateralCard) => {
-    setEditingCard(card);
-    setModalVisible(true);
+  const handleEdit = (id: string) => {
+    const card = cards.find(c => c.id === id);
+    if (card) {
+      setEditingCard(card);
+      setModalVisible(true);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -70,17 +71,27 @@ const ExtendedRegistryPage: React.FC = () => {
     }
   };
 
-  const handleDeleteMultiple = async () => {
-    try {
-      await extendedStorageService.deleteExtendedCards(selectedRowKeys as string[]);
-      dispatch(deleteExtendedCards(selectedRowKeys as string[]));
-      message.success(`Удалено карточек: ${selectedRowKeys.length}`);
-      setSelectedRowKeys([]);
-    } catch (error) {
-      message.error('Ошибка удаления карточек');
-      console.error(error);
-    }
+  const handleView = (id: string) => {
+    handleEdit(id); // For now, view also opens edit modal
   };
+
+  const handleDoubleClick = (record: RegistryTableRecord) => {
+    handleEdit(record.id); // For now, double click also opens edit modal
+  };
+
+  // Prepare data for RegistryTable
+  const tableData: RegistryTableRecord[] = cards.map((card: any) => ({
+    id: card.id,
+    number: card.number,
+    name: card.name,
+    mainCategory: card.mainCategory,
+    status: card.status,
+    classification: card.classification,
+    addresses: card.address ? [{ fullAddress: card.address.fullAddress }] : [],
+    createdAt: card.createdAt,
+    updatedAt: card.updatedAt,
+  }));
+
 
   const handleSubmit = async (values: ExtendedCollateralCard) => {
     try {
@@ -142,118 +153,6 @@ const ExtendedRegistryPage: React.FC = () => {
     }
   };
 
-  const columns: ColumnsType<ExtendedCollateralCard> = [
-    {
-      title: '№',
-      dataIndex: 'number',
-      key: 'number',
-      width: 120,
-      sorter: (a, b) => a.number.localeCompare(b.number),
-    },
-    {
-      title: 'Название',
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      filteredValue: searchText ? [searchText] : null,
-      onFilter: (value, record) =>
-        record.name.toLowerCase().includes(String(value).toLowerCase()) ||
-        record.number.toLowerCase().includes(String(value).toLowerCase()),
-    },
-    {
-      title: 'Категория',
-      dataIndex: 'mainCategory',
-      key: 'mainCategory',
-      width: 150,
-      render: (category: string) => translateCategory(category),
-      filters: [
-        { text: 'Недвижимость', value: 'real_estate' },
-        { text: 'Движимое имущество', value: 'movable' },
-        { text: 'Имущественные права', value: 'property_rights' },
-      ],
-      onFilter: (value, record) => record.mainCategory === value,
-    },
-    {
-      title: 'Вид объекта',
-      key: 'level1',
-      width: 150,
-      render: (_, record) => record.classification.level1,
-    },
-    {
-      title: 'Адрес',
-      key: 'address',
-      width: 250,
-      render: (_, record) => record.address?.fullAddress || '-',
-    },
-    {
-      title: 'Собственники',
-      key: 'owners',
-      width: 200,
-      render: (_, record) => {
-        const owners = record.partners.filter(p => p.role === 'owner' && p.showInRegistry);
-        if (owners.length === 0) return '-';
-        return owners.map(o => {
-          const name = o.type === 'individual'
-            ? `${o.lastName} ${o.firstName?.charAt(0)}.${o.middleName?.charAt(0)}.`
-            : o.organizationName;
-          return <Tag key={o.id}>{name}</Tag>;
-        });
-      },
-    },
-    {
-      title: 'Документы',
-      key: 'documents',
-      width: 100,
-      render: (_, record) => record.documents.length > 0 ? `${record.documents.length} шт.` : '-',
-    },
-    {
-      title: 'Статус',
-      dataIndex: 'status',
-      key: 'status',
-      width: 130,
-      render: (status: string) => (
-        <Tag color={status === 'approved' ? 'green' : 'orange'}>
-          {translateStatus(status)}
-        </Tag>
-      ),
-      filters: [
-        { text: 'Редактирование', value: 'editing' },
-        { text: 'Утвержден', value: 'approved' },
-      ],
-      onFilter: (value, record) => record.status === value,
-    },
-    {
-      title: 'Дата создания',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      width: 150,
-      render: (date: Date) => formatDate(date),
-      sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    },
-    {
-      title: 'Действия',
-      key: 'actions',
-      width: 150,
-      fixed: 'right',
-      render: (_, record) => (
-        <Space size="small">
-          <Button type="link" onClick={() => handleEdit(record)}>
-            Изменить
-          </Button>
-          <Button type="link" danger onClick={() => handleDelete(record.id)}>
-            Удалить
-          </Button>
-        </Space>
-      ),
-    },
-  ];
-
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (newSelectedRowKeys: React.Key[]) => {
-      setSelectedRowKeys(newSelectedRowKeys);
-    },
-  };
 
   return (
     <div>
@@ -289,34 +188,15 @@ const ExtendedRegistryPage: React.FC = () => {
           Восстановить из копии
         </Button>
 
-        {selectedRowKeys.length > 0 && (
-          <Button danger onClick={handleDeleteMultiple}>
-            Удалить выбранные ({selectedRowKeys.length})
-          </Button>
-        )}
-
-        <Input
-          placeholder="Поиск по названию или номеру..."
-          prefix={<SearchOutlined />}
-          value={searchText}
-          onChange={e => setSearchText(e.target.value)}
-          style={{ width: 300 }}
-          allowClear
-        />
       </Space>
 
-      <Table
-        columns={columns}
-        dataSource={cards}
-        rowKey="id"
+      <RegistryTable
+        data={tableData}
         loading={loading}
-        rowSelection={rowSelection}
-        pagination={{
-          showSizeChanger: true,
-          showTotal: total => `Всего: ${total}`,
-          pageSizeOptions: ['10', '20', '50', '100'],
-        }}
-        scroll={{ x: 1800 }}
+        onEdit={handleEdit}
+        onView={handleView}
+        onDelete={handleDelete}
+        onDoubleClick={handleDoubleClick}
       />
 
       <Modal
