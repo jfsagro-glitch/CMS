@@ -12,7 +12,7 @@ const { Content, Sider } = Layout;
 const MainLayout: React.FC = () => {
   const sidebarCollapsed = useAppSelector((state: any) => state.app.sidebarCollapsed);
   const [rightToolbarCollapsed, setRightToolbarCollapsed] = useState(false);
-  const cards = useAppSelector((state: any) => state.cards.cards);
+  const cards = useAppSelector((state: any) => state.cards?.cards || []);
 
   const totalCards = cards.length;
   const approvedCards = cards.filter((c: any) => c.status === 'approved').length;

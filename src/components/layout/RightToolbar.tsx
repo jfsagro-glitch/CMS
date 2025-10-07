@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Button, Space, Divider, Switch, Select } from 'antd';
 import { CloseOutlined, SettingOutlined, TableOutlined, BellOutlined } from '@ant-design/icons';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../hooks/useTheme';
 
 interface RightToolbarProps {
   onCollapse: () => void;
