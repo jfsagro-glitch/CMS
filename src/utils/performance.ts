@@ -5,7 +5,7 @@ export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): ((...args: Parameters<T>) => void) => {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
 
   return function executedFunction(...args: Parameters<T>) {
     const later = () => {
@@ -141,7 +141,7 @@ export const memoizeWithCache = <T extends (...args: any[]) => any>(
 // Batching обновлений
 export class UpdateBatcher {
   private updates: Array<() => void> = [];
-  private timeout: NodeJS.Timeout | null = null;
+  private timeout: ReturnType<typeof setTimeout> | null = null;
   private delay: number;
 
   constructor(delay: number = 100) {
@@ -194,7 +194,7 @@ export const logPerformanceMetrics = () => {
     console.log('TCP Connection:', navigation.connectEnd - navigation.connectStart, 'ms');
     console.log('Request Time:', navigation.responseStart - navigation.requestStart, 'ms');
     console.log('Response Time:', navigation.responseEnd - navigation.responseStart, 'ms');
-    console.log('DOM Processing:', navigation.domComplete - navigation.domLoading, 'ms');
+    console.log('DOM Processing:', navigation.domComplete - navigation.domInteractive, 'ms');
     console.log('Total Load Time:', navigation.loadEventEnd - navigation.fetchStart, 'ms');
     
     const memoryUsage = getMemoryUsage();
