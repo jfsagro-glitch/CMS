@@ -76,18 +76,23 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
     },
   ];
 
+  // Обработчик клика по пункту меню
+  const handleMenuClick = (key: string) => {
+    const item = menuItems.find(i => i.key === key);
+    if (!item) return;
+
+    if (item.external && item.path) {
+      window.open(item.path, '_blank', 'noopener,noreferrer');
+    } else if (item.path) {
+      navigate(item.path);
+    }
+  };
+
   // Преобразуем MenuItem[] в формат, нужный для Ant Design Menu
   const antdMenuItems = menuItems.map(item => ({
     key: item.key,
     icon: item.icon,
     label: item.label,
-    onClick: () => {
-      if (item.external && item.path) {
-        window.open(item.path, '_blank');
-      } else if (item.path) {
-        navigate(item.path);
-      }
-    },
   }));
 
   // Определяем активный пункт меню на основе текущего пути
@@ -133,6 +138,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
         mode="inline"
         selectedKeys={[getSelectedKey()]}
         items={antdMenuItems}
+        onClick={({ key }) => handleMenuClick(key)}
       />
     </Sider>
   );
