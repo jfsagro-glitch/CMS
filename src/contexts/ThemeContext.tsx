@@ -1,15 +1,7 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { theme, ConfigProvider } from 'antd';
 import { darkGrayTheme, windowsXPTheme } from '../styles/theme';
-
-type ThemeMode = 'light' | 'dark' | 'windows-xp' | 'dark-gray';
-
-interface ThemeContextType {
-  currentTheme: ThemeMode;
-  setTheme: (theme: ThemeMode) => void;
-}
-
-export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+import { ThemeContext, ThemeMode } from './ThemeContext.types';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState<ThemeMode>(() => {
