@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card, Descriptions, Tag, Row, Col, Divider, Image, Typography, Space, Statistic } from 'antd';
+import { Card, Descriptions, Tag, Row, Col, Divider, Typography, Space, Statistic } from 'antd';
+import type { DescriptionsProps } from 'antd';
 import {
   HomeOutlined,
   CarOutlined,
@@ -79,10 +80,10 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
   };
 
   // Рендер характеристик в зависимости от типа
-  const renderCharacteristics = () => {
-    if (!card.characteristics) return null;
+  const renderCharacteristics = (): DescriptionsProps['items'] => {
+    if (!card.characteristics) return [];
 
-    const items: any[] = [];
+    const items: DescriptionsProps['items'] = [];
 
     if (card.mainCategory === 'real_estate') {
       if (card.characteristics.area) {

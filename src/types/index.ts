@@ -127,7 +127,7 @@ export interface Partner {
 
 // Адрес
 export interface Address {
-  id: string;
+  id?: string;
   region?: string;
   district?: string;
   city?: string;
@@ -140,6 +140,10 @@ export interface Address {
   fullAddress?: string; // Полный адрес строкой
   cadastralNumber?: string;
   fias?: string; // ФИАС код
+  coordinates?: {
+    lat: number;
+    lon: number;
+  };
 }
 
 // Документ
@@ -176,16 +180,31 @@ export type CharacteristicsValues = Record<string, any>;
 // Расширенная карточка объекта (полная версия)
 export interface ExtendedCollateralCard extends CollateralCard {
   // Партнеры
-  partners: Partner[];
+  partners?: Partner[];
   
   // Адрес
   address?: Address;
   
   // Характеристики (динамические)
-  characteristics: CharacteristicsValues;
+  characteristics?: CharacteristicsValues;
   
   // Документы
-  documents: Document[];
+  documents?: Document[] | any[];
+  
+  // Стоимость
+  marketValue?: number;
+  pledgeValue?: number;
+  evaluationDate?: string;
+  
+  // Собственник
+  owner?: {
+    name: string;
+    inn: string;
+    type: 'legal' | 'individual';
+  };
+  
+  // Фото
+  photos?: any[];
   
   // Дополнительная информация
   description?: string;
