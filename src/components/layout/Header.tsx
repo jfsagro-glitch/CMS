@@ -11,7 +11,8 @@ import {
 } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { toggleSidebar, setTheme } from '@/store/slices/appSlice';
-import type { MenuProps, ThemeMode } from '@/types';
+import type { ThemeMode } from '@/types';
+import type { MenuProps } from 'antd';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
