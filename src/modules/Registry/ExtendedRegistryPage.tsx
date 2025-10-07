@@ -80,7 +80,7 @@ const ExtendedRegistryPage: React.FC = () => {
   };
 
   // Prepare data for RegistryTable
-  const tableData: RegistryTableRecord[] = cards.map((card: any) => ({
+  const tableData: RegistryTableRecord[] = cards.map((card: ExtendedCollateralCard) => ({
     id: card.id,
     number: card.number,
     name: card.name,

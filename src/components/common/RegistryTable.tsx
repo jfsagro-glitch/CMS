@@ -2,10 +2,18 @@ import React, { useState, useMemo } from 'react';
 import { Table, Button, Space, Tooltip, Input, Tag } from 'antd';
 import { EditOutlined, EyeOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { CollateralCard } from '../../types';
+import { ExtendedCollateralCard } from '../../types';
 
-export interface RegistryTableRecord extends CollateralCard {
+export interface RegistryTableRecord {
+  id: string;
+  number: string;
+  name: string;
+  mainCategory: string;
+  status: string;
+  classification: any;
   addresses: { fullAddress?: string }[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface RegistryTableProps {
