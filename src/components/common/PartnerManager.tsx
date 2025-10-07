@@ -217,7 +217,6 @@ const PartnerManager: React.FC<PartnerManagerProps> = ({ value = [], onChange, d
           <Form.Item name="type" label="Тип партнера" rules={[{ required: true, message: 'Выберите тип' }]}>
             <Select
               options={partnerTypeOptions}
-              onChange={value => setPartnerType(value as PartnerType)}
             />
           </Form.Item>
 

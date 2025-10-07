@@ -116,8 +116,10 @@ function applyFiltersAndSort(
       const aValue = a[sort.field as keyof ExtendedCollateralCard];
       const bValue = b[sort.field as keyof ExtendedCollateralCard];
 
-      if (aValue < bValue) return sort.order === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sort.order === 'asc' ? 1 : -1;
+      if (aValue !== undefined && bValue !== undefined) {
+        if (aValue < bValue) return sort.order === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sort.order === 'asc' ? 1 : -1;
+      }
       return 0;
     });
   }

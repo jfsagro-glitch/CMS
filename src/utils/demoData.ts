@@ -1,4 +1,4 @@
-import type { ExtendedCollateralCard, Partner, Document } from '@/types';
+import type { ExtendedCollateralCard, Partner } from '@/types';
 import { generateId } from './helpers';
 
 // Демо-данные для быстрого тестирования

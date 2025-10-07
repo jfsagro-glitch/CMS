@@ -142,7 +142,7 @@ export const extendedRealEstateClassification: ClassificationOption[] =
   }));
 
 // Получение расширенного кода ЦБ
-export const getExtendedCBCode = (level0: string, level1: string, level2: string): number => {
+export const getExtendedCBCode = (_level0: string, level1: string, level2: string): number => {
   const key = `${level1}_${level2}`;
   return EXTENDED_CB_CODES[key] || 0;
 };

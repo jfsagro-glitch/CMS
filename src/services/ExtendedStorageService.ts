@@ -124,12 +124,12 @@ class ExtendedStorageService {
 
         if (filters.region) {
           collection = collection.filter(card =>
-            card.address?.region?.toLowerCase().includes(filters.region!.toLowerCase())
+            Boolean(card.address?.region?.toLowerCase().includes(filters.region!.toLowerCase()))
           );
         }
 
         if (filters.objectType) {
-          collection = collection.filter(card => {
+          collection = collection.filter(() => {
             // Логика определения типа объекта
             return true; // Упрощенная версия
           });
@@ -222,10 +222,10 @@ class ExtendedStorageService {
       const lowerQuery = query.toLowerCase();
       return await this.db.partners
         .filter(partner =>
-          partner.lastName?.toLowerCase().includes(lowerQuery) ||
+          Boolean(partner.lastName?.toLowerCase().includes(lowerQuery) ||
           partner.firstName?.toLowerCase().includes(lowerQuery) ||
           partner.organizationName?.toLowerCase().includes(lowerQuery) ||
-          partner.inn?.includes(query)
+          partner.inn?.includes(query))
         )
         .toArray();
     } catch (error) {
