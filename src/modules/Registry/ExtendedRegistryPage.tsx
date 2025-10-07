@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Space, Modal, message, Breadcrumb } from 'antd';
+import { Button, Space, Modal, message, Breadcrumb, Drawer } from 'antd';
 import {
   PlusOutlined,
   ExportOutlined,
   ImportOutlined,
   CloudDownloadOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import CollateralCardForm from '@/components/common/CollateralCardForm';
+import CollateralCardView from '@/components/common/CollateralCardView';
 import RegistryTable from '@/components/common/RegistryTable';
 import type { RegistryTableRecord } from '@/components/common/RegistryTable';
 import '@/components/common/RegistryTable.css';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { generateDemoCards } from '@/services/demoDataGenerator';
 import {
   setExtendedCards,
   addExtendedCard,
@@ -24,9 +27,11 @@ import type { ExtendedCollateralCard } from '@/types';
 
 const ExtendedRegistryPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { filteredItems: cards, loading } = useAppSelector(state => state.extendedCards);
+  const { filteredItems: cards, loading } = useAppSelector((state: any) => state.extendedCards);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCard, setEditingCard] = useState<ExtendedCollateralCard | null>(null);
+  const [viewingCard, setViewingCard] = useState<ExtendedCollateralCard | null>(null);
+  const [viewDrawerVisible, setViewDrawerVisible] = useState(false);
 
   const loadCards = async () => {
     try {
@@ -53,7 +58,7 @@ const ExtendedRegistryPage: React.FC = () => {
   };
 
   const handleEdit = (id: string) => {
-    const card = cards.find(c => c.id === id);
+    const card = cards.find((c: any) => c.id === id);
     if (card) {
       setEditingCard(card);
       setModalVisible(true);
@@ -72,11 +77,32 @@ const ExtendedRegistryPage: React.FC = () => {
   };
 
   const handleView = (id: string) => {
-    handleEdit(id); // For now, view also opens edit modal
+    const card = cards.find((c: any) => c.id === id);
+    if (card) {
+      setViewingCard(card);
+      setViewDrawerVisible(true);
+    }
   };
 
   const handleDoubleClick = (record: RegistryTableRecord) => {
-    handleEdit(record.id); // For now, double click also opens edit modal
+    handleView(record.id);
+  };
+
+  const handleLoadDemoData = async () => {
+    try {
+      const demoCards = generateDemoCards();
+      message.loading({ content: 'Загрузка демо-данных...', key: 'demo' });
+      
+      for (const card of demoCards) {
+        await extendedStorageService.saveExtendedCard(card);
+      }
+      
+      dispatch(setExtendedCards(demoCards));
+      message.success({ content: `Загружено ${demoCards.length} демо-карточек`, key: 'demo', duration: 3 });
+    } catch (error) {
+      message.error({ content: 'Ошибка загрузки демо-данных', key: 'demo' });
+      console.error(error);
+    }
   };
 
   // Prepare data for RegistryTable
@@ -165,6 +191,14 @@ const ExtendedRegistryPage: React.FC = () => {
         <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
           Создать карточку
         </Button>
+        <Button 
+          icon={<ThunderboltOutlined />} 
+          onClick={handleLoadDemoData}
+          type="dashed"
+          danger={cards.length > 0}
+        >
+          {cards.length > 0 ? 'Перезагрузить демо-данные (44)' : 'Загрузить демо-данные (44)'}
+        </Button>
         <Button icon={<ExportOutlined />} onClick={handleExport}>
           Экспорт в Excel
         </Button>
@@ -176,7 +210,7 @@ const ExtendedRegistryPage: React.FC = () => {
           accept=".json"
           style={{ display: 'none' }}
           id="backup-import"
-          onChange={e => {
+          onChange={(e: any) => {
             const file = e.target.files?.[0];
             if (file) handleImportBackup(file);
           }}
@@ -222,6 +256,21 @@ const ExtendedRegistryPage: React.FC = () => {
           }}
         />
       </Modal>
+
+      <Drawer
+        title="Просмотр карточки"
+        placement="right"
+        width={800}
+        open={viewDrawerVisible}
+        onClose={() => {
+          setViewDrawerVisible(false);
+          setViewingCard(null);
+        }}
+        destroyOnClose
+        styles={{ body: { padding: 0 } }}
+      >
+        {viewingCard && <CollateralCardView card={viewingCard} />}
+      </Drawer>
     </div>
   );
 };

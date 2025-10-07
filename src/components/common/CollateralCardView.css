@@ -1,0 +1,111 @@
+/* Collateral Card View Styles */
+.collateral-card-view {
+  padding: 16px;
+  background: var(--ant-color-bg-layout);
+  min-height: 100%;
+}
+
+.collateral-card-view .card-header-section {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.collateral-card-view .info-card {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+}
+
+.collateral-card-view .info-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.collateral-card-view .ant-statistic-title {
+  font-size: 14px;
+  color: var(--ant-color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.collateral-card-view .ant-statistic-content {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.collateral-card-view .ant-descriptions-item-label {
+  font-weight: 500;
+  color: var(--ant-color-text-secondary);
+}
+
+.collateral-card-view .ant-descriptions-item-content {
+  color: var(--ant-color-text);
+}
+
+/* Theme-specific styles */
+[data-theme="dark-gray"] .collateral-card-view {
+  background: #1a1a1a;
+}
+
+[data-theme="dark-gray"] .collateral-card-view .card-header-section,
+[data-theme="dark-gray"] .collateral-card-view .info-card {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+[data-theme="dark-gray"] .collateral-card-view .info-card:hover {
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="windows-xp"] .collateral-card-view {
+  background: #ece9d8;
+}
+
+[data-theme="windows-xp"] .collateral-card-view .card-header-section,
+[data-theme="windows-xp"] .collateral-card-view .info-card {
+  background: #ffffff;
+  border: 1px solid #c0c0c0;
+  box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080;
+}
+
+[data-theme="dark"] .collateral-card-view {
+  background: #141414;
+}
+
+[data-theme="dark"] .collateral-card-view .card-header-section,
+[data-theme="dark"] .collateral-card-view .info-card {
+  background: #1f1f1f;
+  border-color: #434343;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .collateral-card-view {
+    padding: 8px;
+  }
+
+  .collateral-card-view .ant-statistic-content {
+    font-size: 18px;
+  }
+
+  .collateral-card-view .card-header-section h3 {
+    font-size: 18px;
+  }
+}
+
+/* Animations */
+.collateral-card-view .info-card {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
