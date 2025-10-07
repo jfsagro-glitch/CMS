@@ -62,6 +62,7 @@ export interface MenuItem {
   icon?: React.ReactNode;
   children?: MenuItem[];
   path?: string;
+  external?: boolean;
 }
 
 // Хлебные крошки

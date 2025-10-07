@@ -1,0 +1,81 @@
+/* Main Layout Styles */
+.main-layout {
+  min-height: 100vh;
+}
+
+.content-layout {
+  transition: margin-right 0.2s ease;
+}
+
+.main-content {
+  margin: 16px;
+  padding: 24px;
+  min-height: 280px;
+  background: var(--ant-color-bg-container);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.right-toolbar {
+  background: var(--ant-color-bg-container);
+  border-left: 1px solid var(--ant-color-border);
+}
+
+.toolbar-toggle-btn {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Theme-specific adjustments */
+[data-theme="dark-gray"] .main-content {
+  background: var(--ant-color-bg-container);
+  border: 1px solid var(--ant-color-border);
+}
+
+[data-theme="dark-gray"] .right-toolbar {
+  background: var(--ant-color-bg-container);
+  border-left: 1px solid var(--ant-color-border);
+}
+
+[data-theme="windows-xp"] .main-content {
+  background: #ffffff;
+  border: 1px solid #c0c0c0;
+  box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080;
+}
+
+[data-theme="windows-xp"] .right-toolbar {
+  background: #ece9d8;
+  border-left: 1px solid #808080;
+}
+
+[data-theme="light"] .main-content {
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+}
+
+[data-theme="light"] .right-toolbar {
+  background: #fafafa;
+  border-left: 1px solid #d9d9d9;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .content-layout {
+    margin-right: 0 !important;
+  }
+  
+  .right-toolbar {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin: 8px;
+    padding: 16px;
+  }
+}

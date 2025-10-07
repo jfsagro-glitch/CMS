@@ -8,11 +8,13 @@ import { useAppDispatch, useAppSelector } from './store/hooks';
 import { setInitialized, setSettings } from './store/slices/appSlice';
 import { setCards } from './store/slices/cardsSlice';
 import extendedStorageService from './services/ExtendedStorageService';
+import { ThemeProvider } from './contexts/ThemeContext';
 import MainLayout from './components/layout/MainLayout';
 import ExtendedRegistryPage from './modules/Registry/ExtendedRegistryPage';
 import PlaceholderPage from './modules/Placeholder/PlaceholderPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
+import './styles/global.css';
 
 const AppContent: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -81,34 +83,36 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <ConfigProvider
-      locale={ruRU}
-      theme={{
-        algorithm: getThemeAlgorithm(),
-        token: {
-          colorPrimary: '#1890ff',
-          borderRadius: 6,
-        },
-      }}
-    >
-      <AntApp>
-        <HashRouter>
-          <Routes>
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<Navigate to="/registry" replace />} />
-              <Route path="registry" element={<ExtendedRegistryPage />} />
-              <Route path="tasks" element={<PlaceholderPage title="Задачи" />} />
-              <Route path="reports" element={<PlaceholderPage title="Отчеты" />} />
-              <Route path="mobile-appraiser" element={<PlaceholderPage title="Мобильный оценщик" />} />
-              <Route path="smartdeal" element={<PlaceholderPage title="SmartDeal" />} />
-              <Route path="upload" element={<PlaceholderPage title="Загрузка" />} />
-              <Route path="monitoring" element={<PlaceholderPage title="Мониторинг" />} />
-              <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
-            </Route>
-          </Routes>
-        </HashRouter>
-      </AntApp>
-    </ConfigProvider>
+    <ThemeProvider>
+      <ConfigProvider
+        locale={ruRU}
+        theme={{
+          algorithm: getThemeAlgorithm(),
+          token: {
+            colorPrimary: '#1890ff',
+            borderRadius: 6,
+          },
+        }}
+      >
+        <AntApp>
+          <HashRouter>
+            <Routes>
+              <Route path="/" element={<MainLayout />}>
+                <Route index element={<Navigate to="/registry" replace />} />
+                <Route path="registry" element={<ExtendedRegistryPage />} />
+                <Route path="tasks" element={<PlaceholderPage title="Задачи" />} />
+                <Route path="reports" element={<PlaceholderPage title="Отчеты" />} />
+                <Route path="mobile-appraiser" element={<PlaceholderPage title="Мобильный оценщик" />} />
+                <Route path="smartdeal" element={<PlaceholderPage title="SmartDeal" />} />
+                <Route path="upload" element={<PlaceholderPage title="Загрузка" />} />
+                <Route path="monitoring" element={<PlaceholderPage title="Мониторинг" />} />
+                <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
+              </Route>
+            </Routes>
+          </HashRouter>
+        </AntApp>
+      </ConfigProvider>
+    </ThemeProvider>
   );
 };
 

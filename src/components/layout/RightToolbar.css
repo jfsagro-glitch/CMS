@@ -1,0 +1,70 @@
+/* Right Toolbar Styles */
+.right-toolbar-content {
+  padding: 16px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.toolbar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  font-weight: 600;
+  color: var(--ant-color-text);
+}
+
+.toolbar-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.toolbar-section {
+  border: 1px solid var(--ant-color-border);
+  border-radius: 8px;
+}
+
+.toolbar-section .ant-card-head {
+  padding: 8px 12px;
+  min-height: auto;
+  border-bottom: 1px solid var(--ant-color-border);
+}
+
+.toolbar-section .ant-card-head-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ant-color-text-secondary);
+}
+
+.toolbar-section .ant-card-body {
+  padding: 12px;
+}
+
+/* Theme-specific adjustments */
+[data-theme="dark-gray"] .toolbar-section {
+  background: var(--ant-color-bg-container);
+  border-color: var(--ant-color-border);
+}
+
+[data-theme="windows-xp"] .toolbar-section {
+  background: #ffffff;
+  border: 1px solid #c0c0c0;
+  box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080;
+}
+
+[data-theme="light"] .toolbar-section {
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .right-toolbar-content {
+    padding: 12px;
+  }
+  
+  .toolbar-sections {
+    gap: 12px;
+  }
+}

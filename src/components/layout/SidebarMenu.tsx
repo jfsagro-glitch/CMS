@@ -9,6 +9,7 @@ import {
   CloudUploadOutlined,
   MonitorOutlined,
   SettingOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { MenuItem } from '@/types';
@@ -34,8 +35,9 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
     {
       key: 'tasks',
       label: 'Задачи',
-      icon: <CheckSquareOutlined />,
-      path: '/tasks',
+      icon: <LinkOutlined />,
+      path: 'https://jfsagro-glitch.github.io/task-manager/',
+      external: true,
     },
     {
       key: 'reports',
@@ -80,7 +82,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
     key: item.key,
     icon: item.icon,
     label: item.label,
-    onClick: () => item.path && navigate(item.path),
+    onClick: () => {
+      if (item.external && item.path) {
+        window.open(item.path, '_blank');
+      } else if (item.path) {
+        navigate(item.path);
+      }
+    },
   }));
 
   // Определяем активный пункт меню на основе текущего пути
