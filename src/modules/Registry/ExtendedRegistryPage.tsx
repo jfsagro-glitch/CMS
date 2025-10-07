@@ -114,6 +114,8 @@ const ExtendedRegistryPage: React.FC = () => {
     status: card.status,
     classification: card.classification,
     addresses: card.address ? [{ fullAddress: card.address.fullAddress }] : [],
+    owner: card.owner,
+    characteristics: card.characteristics,
     createdAt: card.createdAt,
     updatedAt: card.updatedAt,
   }));
