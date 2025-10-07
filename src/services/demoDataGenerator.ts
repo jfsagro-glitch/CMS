@@ -90,7 +90,7 @@ const generateRealEstateCharacteristics = (objectType: string) => {
 };
 
 // Генератор характеристик для транспорта
-const generateVehicleCharacteristics = (vehicleType: string) => {
+const generateVehicleCharacteristics = (_vehicleType: string) => {
   const brands = ['Toyota', 'Mercedes-Benz', 'BMW', 'Volkswagen', 'Ford', 'Hyundai', 'KIA'];
   const brand = brands[Math.floor(Math.random() * brands.length)];
   
@@ -107,7 +107,7 @@ const generateVehicleCharacteristics = (vehicleType: string) => {
 };
 
 // Генератор характеристик для оборудования
-const generateEquipmentCharacteristics = (equipmentType: string) => {
+const generateEquipmentCharacteristics = (_equipmentType: string) => {
   return {
     manufacturer: ['Siemens', 'ABB', 'Schneider', 'GE', 'Mitsubishi'][Math.floor(Math.random() * 5)],
     model: `EQ-${Math.floor(Math.random() * 10000)}`,
