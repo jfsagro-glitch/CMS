@@ -64,12 +64,9 @@
 
 /* Responsive design */
 @media (max-width: 1200px) {
-  .content-layout {
-    margin-right: 0 !important;
-  }
-  
-  .right-toolbar {
-    display: none;
+  .main-content {
+    margin: 8px;
+    padding: 16px;
   }
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu } from 'antd';
+import { Layout, Menu, Card, Space, Divider, Switch, Select, Statistic } from 'antd';
 import {
   DatabaseOutlined,
   BarChartOutlined,
@@ -9,19 +9,26 @@ import {
   MonitorOutlined,
   SettingOutlined,
   LinkOutlined,
+  TableOutlined,
+  BellOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTheme } from '../../hooks/useTheme';
 import type { MenuItem } from '@/types';
 
 const { Sider } = Layout;
 
 interface SidebarMenuProps {
   collapsed: boolean;
+  totalCards: number;
+  approvedCards: number;
+  editingCards: number;
 }
 
-const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
+const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, totalCards, approvedCards, editingCards }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentTheme, setTheme } = useTheme();
 
   // Определяем структуру меню
   const menuItems: MenuItem[] = [
@@ -115,6 +122,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
         left: 0,
         top: 0,
         bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <div
@@ -140,6 +149,45 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
         items={antdMenuItems}
         onClick={({ key }) => handleMenuClick(key)}
       />
+      
+      {!collapsed && (
+        <div style={{ 
+          padding: '16px', 
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          marginTop: 'auto'
+        }}>
+          <Space direction="vertical" style={{ width: '100%' }} size="small">
+            <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>
+              Настройки
+            </div>
+            
+            <div style={{ color: '#fff', fontSize: '12px' }}>
+              Тема:
+              <Select
+                value={currentTheme}
+                onChange={setTheme}
+                size="small"
+                style={{ width: '100%', marginTop: '4px' }}
+                options={[
+                  { value: 'light', label: 'Светлая' },
+                  { value: 'dark', label: 'Темная' },
+                  { value: 'dark-gray', label: 'Темно-серая' },
+                  { value: 'windows-xp', label: 'Windows XP' },
+                ]}
+              />
+            </div>
+            
+            <div style={{ color: '#fff', fontSize: '12px' }}>
+              Статистика:
+              <div style={{ marginTop: '4px' }}>
+                <div>Всего: {totalCards}</div>
+                <div style={{ color: '#52c41a' }}>✓ {approvedCards}</div>
+                <div style={{ color: '#faad14' }}>✎ {editingCards}</div>
+              </div>
+            </div>
+          </Space>
+        </div>
+      )}
     </Sider>
   );
 };

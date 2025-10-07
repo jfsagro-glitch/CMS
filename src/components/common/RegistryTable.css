@@ -29,6 +29,12 @@
 }
 
 /* Responsive design */
+@media (max-width: 1400px) {
+  .registry-table-container {
+    padding: 12px;
+  }
+}
+
 @media (max-width: 768px) {
   .table-header {
     flex-direction: column;
@@ -38,6 +44,10 @@
   
   .table-header .ant-input {
     width: 100% !important;
+  }
+  
+  .registry-table-container {
+    padding: 8px;
   }
 }
 

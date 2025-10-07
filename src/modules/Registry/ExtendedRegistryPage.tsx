@@ -194,10 +194,11 @@ const ExtendedRegistryPage: React.FC = () => {
         <Button 
           icon={<ThunderboltOutlined />} 
           onClick={handleLoadDemoData}
-          type="dashed"
+          type={cards.length === 0 ? "primary" : "dashed"}
           danger={cards.length > 0}
+          size={cards.length === 0 ? "large" : "middle"}
         >
-          {cards.length > 0 ? 'Перезагрузить демо-данные (44)' : 'Загрузить демо-данные (44)'}
+          {cards.length > 0 ? 'Перезагрузить демо-данные (44)' : '⚡ Загрузить демо-данные (44)'}
         </Button>
         <Button icon={<ExportOutlined />} onClick={handleExport}>
           Экспорт в Excel
