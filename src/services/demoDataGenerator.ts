@@ -65,7 +65,7 @@ const propertyRightsTypes = [
 ];
 
 // Генератор характеристик для недвижимости
-const generateRealEstateCharacteristics = (type: string) => {
+const generateRealEstateCharacteristics = (objectType: string) => {
   const area = Math.floor(Math.random() * 500) + 20;
   const characteristics: any = {
     area: area.toString(),
@@ -76,12 +76,12 @@ const generateRealEstateCharacteristics = (type: string) => {
     buildYear: Math.floor(Math.random() * 50) + 1970,
   };
 
-  if (type === 'Квартира' || type === 'Комната') {
+  if (objectType === 'Квартира' || objectType === 'Комната') {
     characteristics.hasBalcony = Math.random() > 0.5;
     characteristics.renovation = ['Без ремонта', 'Косметический', 'Евроремонт', 'Дизайнерский'][Math.floor(Math.random() * 4)];
   }
 
-  if (type === 'Дом' || type === 'Дача') {
+  if (objectType === 'Дом' || objectType === 'Дача') {
     characteristics.landArea = Math.floor(Math.random() * 1000) + 100;
     characteristics.hasGarage = Math.random() > 0.5;
   }
@@ -90,7 +90,7 @@ const generateRealEstateCharacteristics = (type: string) => {
 };
 
 // Генератор характеристик для транспорта
-const generateVehicleCharacteristics = (type: string) => {
+const generateVehicleCharacteristics = (vehicleType: string) => {
   const brands = ['Toyota', 'Mercedes-Benz', 'BMW', 'Volkswagen', 'Ford', 'Hyundai', 'KIA'];
   const brand = brands[Math.floor(Math.random() * brands.length)];
   
@@ -107,7 +107,7 @@ const generateVehicleCharacteristics = (type: string) => {
 };
 
 // Генератор характеристик для оборудования
-const generateEquipmentCharacteristics = (type: string) => {
+const generateEquipmentCharacteristics = (equipmentType: string) => {
   return {
     manufacturer: ['Siemens', 'ABB', 'Schneider', 'GE', 'Mitsubishi'][Math.floor(Math.random() * 5)],
     model: `EQ-${Math.floor(Math.random() * 10000)}`,
