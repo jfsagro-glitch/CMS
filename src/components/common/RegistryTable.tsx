@@ -173,7 +173,11 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
           prefix={<SearchOutlined />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          style={{ width: 300 }}
+          style={{ 
+            width: '100%',
+            backgroundColor: '#f5f5f5',
+            borderColor: '#d9d9d9'
+          }}
           allowClear
         />
         <Space>
