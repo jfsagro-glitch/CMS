@@ -63,6 +63,7 @@ const AddressInput: React.FC<AddressInputProps> = ({
       setAddress(updatedAddress);
       onChange?.(updatedAddress);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     address.region,
     address.district,

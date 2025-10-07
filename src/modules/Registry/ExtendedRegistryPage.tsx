@@ -30,11 +30,6 @@ const ExtendedRegistryPage: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [searchText, setSearchText] = useState('');
 
-  // Загрузка данных при монтировании
-  useEffect(() => {
-    loadCards();
-  }, []);
-
   const loadCards = async () => {
     try {
       dispatch(setExtendedLoading(true));
@@ -47,6 +42,12 @@ const ExtendedRegistryPage: React.FC = () => {
       dispatch(setExtendedLoading(false));
     }
   };
+
+  // Загрузка данных при монтировании
+  useEffect(() => {
+    loadCards();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCreate = () => {
     setEditingCard(null);

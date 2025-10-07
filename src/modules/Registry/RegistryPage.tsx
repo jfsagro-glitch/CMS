@@ -23,11 +23,6 @@ const RegistryPage: React.FC = () => {
   const [editingCard, setEditingCard] = useState<CollateralCard | null>(null);
   const [importModalVisible, setImportModalVisible] = useState(false);
 
-  // Загрузка данных при монтировании
-  useEffect(() => {
-    loadCards();
-  }, []);
-
   const loadCards = async () => {
     try {
       dispatch(setLoading(true));
@@ -40,6 +35,12 @@ const RegistryPage: React.FC = () => {
       dispatch(setLoading(false));
     }
   };
+
+  // Загрузка данных при монтировании
+  useEffect(() => {
+    loadCards();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCreate = () => {
     setEditingCard(null);

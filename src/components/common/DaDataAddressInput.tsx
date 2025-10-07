@@ -27,29 +27,33 @@ const DaDataAddressInput: React.FC<DaDataAddressInputProps> = ({
   const [selectedAddress, setSelectedAddress] = useState<EnhancedAddress | undefined>(value);
   const [remainingRequests, setRemainingRequests] = useState<number>(0);
 
-  // Функция для получения подсказок с debounce
+  // Функция для получения подсказок
+  const fetchSuggestionsBase = async (query: string) => {
+    if (query.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const addressSuggestions = await daDataService.suggestAddress(query, 10);
+      setSuggestions(addressSuggestions);
+      setRemainingRequests(daDataService.getRemainingRequests());
+    } catch (err) {
+      setError('Ошибка при получении подсказок адреса. Проверьте подключение к интернету.');
+      console.error('DaData suggestion error:', err);
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Функция с debounce
   const fetchSuggestions = useCallback(
-    debounce(async (query: string) => {
-      if (query.length < 3) {
-        setSuggestions([]);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const addressSuggestions = await daDataService.suggestAddress(query, 10);
-        setSuggestions(addressSuggestions);
-        setRemainingRequests(daDataService.getRemainingRequests());
-      } catch (err) {
-        setError('Ошибка при получении подсказок адреса. Проверьте подключение к интернету.');
-        console.error('DaData suggestion error:', err);
-        setSuggestions([]);
-      } finally {
-        setLoading(false);
-      }
-    }, 500),
+    debounce(fetchSuggestionsBase, 500),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
