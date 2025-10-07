@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, Button, Space, Divider, Switch, Select, Tooltip } from 'antd';
-import { CloseOutlined, SettingOutlined, ThemeOutlined, TableOutlined, BellOutlined } from '@ant-design/icons';
+import { Card, Button, Space, Divider, Switch, Select } from 'antd';
+import { CloseOutlined, SettingOutlined, TableOutlined, BellOutlined } from '@ant-design/icons';
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface RightToolbarProps {

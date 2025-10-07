@@ -1,5 +1,3 @@
-import { theme } from 'antd';
-
 export const darkGrayTheme = {
   token: {
     colorBgBase: '#1a1a1a',

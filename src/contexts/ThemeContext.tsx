@@ -25,14 +25,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const getThemeConfig = () => {
     switch (currentTheme) {
       case 'dark-gray':
-        return darkGrayTheme;
+        return {
+          ...darkGrayTheme,
+          algorithm: theme.darkAlgorithm,
+        };
       case 'windows-xp':
         return windowsXPTheme;
       case 'dark':
-        return theme.darkAlgorithm;
+        return {
+          algorithm: theme.darkAlgorithm,
+        };
       case 'light':
       default:
-        return theme.defaultAlgorithm;
+        return {
+          algorithm: theme.defaultAlgorithm,
+        };
     }
   };
 
