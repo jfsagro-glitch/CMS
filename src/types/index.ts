@@ -2,7 +2,7 @@
 export type MainCategory = 'real_estate' | 'movable' | 'property_rights';
 
 // Статусы карточек
-export type CardStatus = 'editing' | 'approved';
+export type CardStatus = 'editing' | 'approved' | 'archived';
 
 // Иерархия недвижимости
 export interface RealEstateHierarchy {

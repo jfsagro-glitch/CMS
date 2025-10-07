@@ -77,16 +77,16 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
       filters: [
         { text: 'Недвижимость', value: 'real_estate' },
         { text: 'Движимое имущество', value: 'movable' },
-        { text: 'НМА', value: 'intangible' },
+        { text: 'Имущественные права', value: 'property_rights' },
       ],
       onFilter: (value, record) => record.mainCategory === value,
       render: (category: string) => {
         const categoryConfig = {
           real_estate: { color: 'blue', text: 'Недвижимость' },
           movable: { color: 'green', text: 'Движимое' },
-          intangible: { color: 'orange', text: 'НМА' },
+          property_rights: { color: 'orange', text: 'Имущественные права' },
         };
-        const config = categoryConfig[category as keyof typeof categoryConfig];
+        const config = categoryConfig[category as keyof typeof categoryConfig] || { color: 'default', text: category || 'Не указано' };
         return <Tag color={config.color}>{config.text}</Tag>;
       },
     },
@@ -107,7 +107,7 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
           approved: { color: 'green', text: 'Согласовано' },
           archived: { color: 'default', text: 'Архив' },
         };
-        const config = statusConfig[status as keyof typeof statusConfig];
+        const config = statusConfig[status as keyof typeof statusConfig] || { color: 'default', text: status || 'Не указано' };
         return <Tag color={config.color}>{config.text}</Tag>;
       },
     },
