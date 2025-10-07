@@ -82,10 +82,10 @@ const ObjectTypeSelector: React.FC<ObjectTypeSelectorProps> = ({
   return (
     <Space direction="vertical" style={{ width: '100%' }}>
       <Space direction="vertical" style={{ width: '100%' }} size="middle">
-        <Form.Item
-          label="Категория (Уровень 0)"
-          style={{ marginBottom: 0 }}
-        >
+        <div style={{ width: '100%' }}>
+          <div style={{ marginBottom: 8, fontSize: '14px', fontWeight: 500 }}>
+            Категория (Уровень 0)
+          </div>
           <Select
             placeholder="Выберите категорию"
             value={level0 || undefined}
@@ -97,12 +97,12 @@ const ObjectTypeSelector: React.FC<ObjectTypeSelectorProps> = ({
               label: item.label,
             }))}
           />
-        </Form.Item>
+        </div>
 
-        <Form.Item
-          label="Вид объекта (Уровень 1)"
-          style={{ marginBottom: 0 }}
-        >
+        <div style={{ width: '100%' }}>
+          <div style={{ marginBottom: 8, fontSize: '14px', fontWeight: 500 }}>
+            Вид объекта (Уровень 1)
+          </div>
           <Select
             placeholder="Выберите вид объекта"
             value={level1 || undefined}
@@ -114,12 +114,12 @@ const ObjectTypeSelector: React.FC<ObjectTypeSelectorProps> = ({
               label: item.label,
             }))}
           />
-        </Form.Item>
+        </div>
 
-        <Form.Item
-          label="Тип (Уровень 2)"
-          style={{ marginBottom: 0 }}
-        >
+        <div style={{ width: '100%' }}>
+          <div style={{ marginBottom: 8, fontSize: '14px', fontWeight: 500 }}>
+            Тип (Уровень 2)
+          </div>
           <Select
             placeholder="Выберите тип"
             value={level2 || undefined}
@@ -131,7 +131,7 @@ const ObjectTypeSelector: React.FC<ObjectTypeSelectorProps> = ({
               label: item.label,
             }))}
           />
-        </Form.Item>
+        </div>
       </Space>
 
       {level0 && level1 && level2 && (
