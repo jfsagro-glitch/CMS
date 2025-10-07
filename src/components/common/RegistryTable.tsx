@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { Table, Button, Space, Tooltip, Input, Tag } from 'antd';
 import { EditOutlined, EyeOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { ExtendedCollateralCard } from '../../types';
 
 export interface RegistryTableRecord {
   id: string;
