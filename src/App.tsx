@@ -70,14 +70,9 @@ const AppContent: React.FC = () => {
   }
 
   const getThemeAlgorithm = () => {
-    switch (appTheme) {
-      case 'dark':
-        return theme.darkAlgorithm;
-      case 'compact':
-        return theme.compactAlgorithm;
-      default:
-        return theme.defaultAlgorithm;
-    }
+    if (appTheme === 'dark') return theme.darkAlgorithm;
+    if (appTheme === 'compact') return [theme.defaultAlgorithm, theme.compactAlgorithm];
+    return theme.defaultAlgorithm;
   };
 
   return (

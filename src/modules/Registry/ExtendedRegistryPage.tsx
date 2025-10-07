@@ -328,10 +328,10 @@ const ExtendedRegistryPage: React.FC = () => {
         }}
         footer={null}
         width="100%"
-        style={{ top: 0, maxWidth: '100vw', paddingBottom: 0 }}
-        styles={{ body: { height: 'calc(100vh - 110px)', overflowY: 'auto', padding: '24px 24px 24px 24px' } }}
-        centered={false}
+        style={{ top: 0, maxWidth: 'none', padding: 0 }}
+        styles={{ body: { height: 'calc(100vh - 110px)', overflowY: 'auto' } }}
         destroyOnClose
+        centered
       >
         <CollateralCardForm
           initialValues={editingCard || undefined}

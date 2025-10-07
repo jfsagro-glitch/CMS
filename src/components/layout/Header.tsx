@@ -1,20 +1,20 @@
 import React from 'react';
-import { Layout, Input, Space, Button, Avatar, Dropdown, Select } from 'antd';
+import { Layout, Input, Space, Button, Avatar, Dropdown, Select, Typography } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   SearchOutlined,
   UserOutlined,
   LogoutOutlined,
-  BulbOutlined,
-  BulbFilled,
-  ThunderboltOutlined,
+  SettingOutlined,
+  DatabaseOutlined,
 } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { toggleSidebar, setTheme } from '@/store/slices/appSlice';
-import type { MenuProps } from 'antd';
+import type { MenuProps, ThemeMode } from '@/types';
 
 const { Header: AntHeader } = Layout;
+const { Text } = Typography;
 
 const Header: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -24,19 +24,8 @@ const Header: React.FC = () => {
     dispatch(toggleSidebar());
   };
 
-  const handleThemeChange = (value: 'light' | 'dark' | 'compact') => {
+  const handleThemeChange = (value: ThemeMode) => {
     dispatch(setTheme(value));
-  };
-
-  const getThemeIcon = () => {
-    switch (theme) {
-      case 'dark':
-        return <BulbFilled style={{ color: '#fff' }} />;
-      case 'compact':
-        return <ThunderboltOutlined style={{ color: '#1890ff' }} />;
-      default:
-        return <BulbOutlined />;
-    }
   };
 
   // Меню пользователя
@@ -81,6 +70,12 @@ const Header: React.FC = () => {
           onClick={handleToggleSidebar}
           style={{ fontSize: '16px', width: 40, height: 40 }}
         />
+        
+        <Space size="small">
+          <DatabaseOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+          <Text strong style={{ fontSize: 18 }}>CMS</Text>
+        </Space>
+        
         <Input
           placeholder="Поиск по реестру..."
           prefix={<SearchOutlined />}
@@ -91,7 +86,7 @@ const Header: React.FC = () => {
 
       <Space size="middle">
         <Space>
-          {getThemeIcon()}
+          <SettingOutlined />
           <Select
             value={theme}
             onChange={handleThemeChange}
@@ -99,7 +94,7 @@ const Header: React.FC = () => {
             options={[
               { value: 'light', label: 'Светлая' },
               { value: 'dark', label: 'Темная' },
-              { value: 'compact', label: 'Компактная' },
+              { value: 'compact', label: 'Сбалансированная' },
             ]}
           />
         </Space>

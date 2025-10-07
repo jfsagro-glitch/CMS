@@ -47,7 +47,7 @@ export interface SortParams {
 }
 
 // Настройки темы
-export type ThemeMode = 'light' | 'dark' | 'compact';
+export type ThemeMode = 'light' | 'dark';
 
 export interface AppSettings {
   theme: ThemeMode;
