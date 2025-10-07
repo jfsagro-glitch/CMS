@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Card, Space, Divider, Switch, Select, Statistic } from 'antd';
+import { Layout, Menu, Space, Select } from 'antd';
 import {
   DatabaseOutlined,
   BarChartOutlined,
@@ -9,8 +9,6 @@ import {
   MonitorOutlined,
   SettingOutlined,
   LinkOutlined,
-  TableOutlined,
-  BellOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
