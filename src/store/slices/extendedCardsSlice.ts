@@ -106,7 +106,7 @@ function applyFiltersAndSort(
 
   if (filters.hasDocuments !== undefined) {
     result = result.filter(card =>
-      filters.hasDocuments ? card.documents.length > 0 : card.documents.length === 0
+      filters.hasDocuments ? (card.documents?.length || 0) > 0 : (card.documents?.length || 0) === 0
     );
   }
 

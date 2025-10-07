@@ -106,11 +106,11 @@ class ExtendedStorageService {
             card.name.toLowerCase().includes(query) ||
             card.number.toLowerCase().includes(query) ||
             card.address?.fullAddress?.toLowerCase().includes(query) ||
-            card.partners?.some(p =>
+            (card.partners?.some(p =>
               p.lastName?.toLowerCase().includes(query) ||
               p.firstName?.toLowerCase().includes(query) ||
               p.organizationName?.toLowerCase().includes(query)
-            )
+            ) || false)
           );
         }
 

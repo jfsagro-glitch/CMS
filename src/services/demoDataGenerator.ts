@@ -149,7 +149,7 @@ export const generateDemoCards = (): ExtendedCollateralCard[] => {
   let cardNumber = 1;
 
   // Генерируем карточки недвижимости (22 карточки)
-  realEstateTypes.forEach((type, index) => {
+  realEstateTypes.forEach((typeItem, index) => {
     const region = regions[index % regions.length];
     const status = statuses[index % statuses.length];
     const createdAt = randomDate(new Date(2023, 0, 1), new Date());
@@ -157,14 +157,14 @@ export const generateDemoCards = (): ExtendedCollateralCard[] => {
     cards.push({
       id: generateId(),
       number: `RE-${cardNumber.toString().padStart(4, '0')}`,
-      name: `${type.level1} в ${region}`,
+      name: `${typeItem.level1} в ${region}`,
       mainCategory: 'real_estate',
-      classification: type,
+      classification: typeItem,
       cbCode: 100 + index,
       status,
       address: generateAddress(region),
-      characteristics: generateRealEstateCharacteristics(type.level1),
-      ...generateValue('real_estate', type.level1),
+      characteristics: generateRealEstateCharacteristics(typeItem.level1),
+      ...generateValue('real_estate', typeItem.level1),
       createdAt,
       updatedAt: randomDate(createdAt, new Date()),
       owner: {
@@ -226,7 +226,7 @@ export const generateDemoCards = (): ExtendedCollateralCard[] => {
   });
 
   // Генерируем карточки имущественных прав (10 карточек)
-  propertyRightsTypes.forEach((type, index) => {
+  propertyRightsTypes.forEach((typeItem, index) => {
     const region = regions[index % regions.length];
     const status = statuses[index % statuses.length];
     const createdAt = randomDate(new Date(2023, 0, 1), new Date());
@@ -234,9 +234,9 @@ export const generateDemoCards = (): ExtendedCollateralCard[] => {
     cards.push({
       id: generateId(),
       number: `PR-${cardNumber.toString().padStart(4, '0')}`,
-      name: `${type.level1} - ${region}`,
+      name: `${typeItem.level1} - ${region}`,
       mainCategory: 'property_rights',
-      classification: type,
+      classification: typeItem,
       cbCode: 300 + index,
       status,
       address: generateAddress(region),
@@ -245,7 +245,7 @@ export const generateDemoCards = (): ExtendedCollateralCard[] => {
         quantity: Math.floor(Math.random() * 1000) + 1,
         issuer: `ПАО "Эмитент ${index + 1}"`,
       },
-      ...generateValue('property_rights', type.level1),
+      ...generateValue('property_rights', typeItem.level1),
       createdAt,
       updatedAt: randomDate(createdAt, new Date()),
       owner: {
