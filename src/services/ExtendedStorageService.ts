@@ -6,7 +6,6 @@ import type {
   Document,
   ExtendedFilterParams,
   AppSettings,
-  ImportResult,
   ExportResult,
 } from '@/types';
 
@@ -26,7 +25,7 @@ class ExtendedCMSDatabase extends Dexie {
       partners: 'id, type, role, inn, lastName, organizationName',
       documents: 'id, name, type, category, uploadDate',
       settings: 'id'
-    }).upgrade(async tx => {
+    }).upgrade(async () => {
       // Миграция данных из версии 1
       console.log('Upgrading database to version 2...');
     });

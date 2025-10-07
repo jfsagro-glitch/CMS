@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Form, Input, Select, Button, Space, Divider } from 'antd';
 import ObjectTypeSelector from './ObjectTypeSelector';
-import type { CollateralCard, RealEstateHierarchy, MainCategory } from '@/types';
+import type { CollateralCard, RealEstateHierarchy } from '@/types';
 
 interface CardFormProps {
   initialValues?: Partial<CollateralCard>;

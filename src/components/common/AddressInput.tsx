@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Form, Row, Col, Space, Switch, Divider } from 'antd';
+import { Input, Form, Row, Col, Space, Divider } from 'antd';
 import { EnvironmentOutlined } from '@ant-design/icons';
 import type { Address } from '@/types';
 import DaDataAddressInput from './DaDataAddressInput';

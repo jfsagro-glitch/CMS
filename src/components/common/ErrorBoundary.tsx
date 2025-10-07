@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { Result, Button, Typography } from 'antd';
 import { BugOutlined, ReloadOutlined } from '@ant-design/icons';
 
@@ -114,7 +114,7 @@ class ErrorBoundary extends Component<Props, State> {
               </Button>,
             ]}
           >
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.MODE === 'development' && this.state.error && (
               <div style={{ textAlign: 'left', marginTop: '20px' }}>
                 <Paragraph>
                   <Text strong style={{ fontSize: '16px' }}>

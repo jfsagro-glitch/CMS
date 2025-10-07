@@ -181,8 +181,6 @@ const PartnerManager: React.FC<PartnerManagerProps> = ({ value = [], onChange, d
     },
   ];
 
-  const [partnerType, setPartnerType] = useState<PartnerType>('individual');
-
   return (
     <div>
       <Space style={{ marginBottom: 16 }}>

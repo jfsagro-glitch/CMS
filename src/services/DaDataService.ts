@@ -94,7 +94,6 @@ interface DaDataGeolocateRequest {
 
 class DaDataService {
   private readonly API_KEY = '8369d552d89563916982831fbb6ddb90b7d38fe2';
-  private readonly SECRET_KEY = '5ca630d6dca5759332bd20223bb808e60969cab4';
   private readonly BASE_URL = 'https://suggestions.dadata.ru/suggestions/api/4_1/rs';
   
   private requestCount = 0;
