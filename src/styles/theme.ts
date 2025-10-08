@@ -1,4 +1,6 @@
-export const darkGrayTheme = {
+import type { ThemeConfig } from 'antd';
+
+export const darkGrayTheme: ThemeConfig = {
   token: {
     colorBgBase: '#1a1a1a',
     colorBgContainer: '#2d2d2d',
@@ -33,7 +35,7 @@ export const darkGrayTheme = {
   },
 };
 
-export const windowsXPTheme = {
+export const windowsXPTheme: ThemeConfig = {
   token: {
     colorBgBase: '#ece9d8',
     colorBgContainer: '#ffffff',
@@ -60,7 +62,7 @@ export const windowsXPTheme = {
   },
 };
 
-export const blackWhiteTheme = {
+export const blackWhiteTheme: ThemeConfig = {
   token: {
     colorBgBase: '#000000',
     colorBgContainer: '#0a0a0a',
@@ -149,7 +151,7 @@ export const blackWhiteTheme = {
   },
 };
 
-export const matrixTheme = {
+export const matrixTheme: ThemeConfig = {
   token: {
     colorBgBase: '#000000',
     colorBgContainer: '#001100',
@@ -230,6 +232,106 @@ export const matrixTheme = {
     Tooltip: {
       colorBgSpotlight: '#000800',
       colorTextLightSolid: '#00ff00',
+    },
+  },
+};
+
+export const windows97Theme: ThemeConfig = {
+  token: {
+    colorBgBase: '#c0c0c0',
+    colorBgContainer: '#c0c0c0',
+    colorTextBase: '#000000',
+    colorPrimary: '#000080',
+    colorSuccess: '#008000',
+    colorWarning: '#808000',
+    colorError: '#800000',
+    colorInfo: '#000080',
+    borderRadius: 0,
+    boxShadow: 'inset -1px -1px 0px #000000, inset 1px 1px 0px #ffffff, inset -2px -2px 0px #808080, inset 2px 2px 0px #dfdfdf',
+  },
+  components: {
+    Layout: {
+      bodyBg: '#008080',
+      headerBg: '#000080',
+      siderBg: '#c0c0c0',
+    },
+    Menu: {
+      darkItemBg: '#c0c0c0',
+      darkSubMenuItemBg: '#c0c0c0',
+      darkItemSelectedBg: '#000080',
+      darkItemColor: '#000000',
+      darkItemHoverBg: '#0000a0',
+    },
+    Button: {
+      colorPrimary: '#000080',
+      primaryColor: '#ffffff',
+      primaryBg: '#000080',
+      primaryHoverBg: '#0000a0',
+      defaultBg: '#c0c0c0',
+      defaultBorderColor: '#000000',
+      defaultColor: '#000000',
+      borderRadius: 0,
+      boxShadow: 'inset -1px -1px 0px #000000, inset 1px 1px 0px #ffffff, inset -2px -2px 0px #808080, inset 2px 2px 0px #dfdfdf',
+    },
+    Card: {
+      headerBg: '#000080',
+      actionsBg: '#c0c0c0',
+      extraColor: '#ffffff',
+      colorBgContainer: '#c0c0c0',
+      borderRadius: 0,
+      boxShadow: 'inset -1px -1px 0px #000000, inset 1px 1px 0px #ffffff',
+    },
+    Table: {
+      headerBg: '#000080',
+      headerColor: '#ffffff',
+      rowHoverBg: '#0000a0',
+      filterBg: '#c0c0c0',
+      bodySortBg: '#d0d0d0',
+      borderRadius: 0,
+    },
+    Modal: {
+      headerBg: '#000080',
+      contentBg: '#c0c0c0',
+      footerBg: '#c0c0c0',
+      borderRadius: 0,
+      boxShadow: 'inset -2px -2px 0px #000000, inset 2px 2px 0px #ffffff',
+    },
+    Drawer: {
+      headerBg: '#000080',
+      bodyBg: '#c0c0c0',
+      footerBg: '#c0c0c0',
+      borderRadius: 0,
+    },
+    Input: {
+      colorBgContainer: '#ffffff',
+      colorBorder: '#808080',
+      colorText: '#000000',
+      activeBorderColor: '#000080',
+      hoverBorderColor: '#000080',
+      borderRadius: 0,
+      boxShadow: 'inset -1px -1px 0px #ffffff, inset 1px 1px 0px #808080',
+    },
+    Select: {
+      colorBgContainer: '#ffffff',
+      colorBorder: '#808080',
+      colorText: '#000000',
+      activeBorderColor: '#000080',
+      hoverBorderColor: '#000080',
+      borderRadius: 0,
+    },
+    Switch: {
+      handleBg: '#c0c0c0',
+      trackBg: '#808080',
+      trackCheckedBg: '#000080',
+    },
+    Tag: {
+      defaultBg: '#c0c0c0',
+      defaultColor: '#000000',
+      borderRadius: 0,
+    },
+    Tooltip: {
+      colorBgSpotlight: '#ffffe1',
+      colorTextLightSolid: '#000000',
     },
   },
 };

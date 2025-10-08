@@ -68,6 +68,39 @@ body {
   color: #000000;
 }
 
+[data-theme="windows-97"] body {
+  background: #008080;
+  color: #000000;
+  font-family: 'MS Sans Serif', 'Microsoft Sans Serif', sans-serif;
+}
+
+/* Windows 97 theme specific styles */
+[data-theme="windows-97"] {
+  --ant-color-bg-base: #c0c0c0;
+  --ant-color-bg-container: #c0c0c0;
+  --ant-color-text-base: #000000;
+  --ant-color-text-secondary: #000000;
+  --ant-color-border-secondary: #808080;
+  --ant-color-fill-alter: #c0c0c0;
+  --ant-color-fill-tertiary: #d0d0d0;
+  --ant-color-bg-input: #ffffff;
+  --ant-layout-header-background: #000080;
+  --ant-layout-sider-background: #c0c0c0;
+}
+
+/* Windows 97 3D border effects */
+[data-theme="windows-97"] .ant-card {
+  box-shadow: inset -1px -1px 0px #000000, inset 1px 1px 0px #ffffff !important;
+}
+
+[data-theme="windows-97"] .ant-btn {
+  box-shadow: inset -1px -1px 0px #000000, inset 1px 1px 0px #ffffff, inset -2px -2px 0px #808080, inset 2px 2px 0px #dfdfdf !important;
+}
+
+[data-theme="windows-97"] .ant-input {
+  box-shadow: inset -1px -1px 0px #ffffff, inset 1px 1px 0px #808080 !important;
+}
+
 [data-theme="matrix"] body {
   background: #000000;
   color: #00ff00;
