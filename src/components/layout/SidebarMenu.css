@@ -40,17 +40,13 @@
 
 /* Default theme styles */
 .sidebar-logo {
-  transition: color 0.5s ease-in-out, 
-              text-shadow 0.5s ease-in-out, 
-              filter 0.5s ease-in-out !important;
+  transition: color 0.5s ease-in-out, text-shadow 0.5s ease-in-out, filter 0.5s ease-in-out !important;
 }
 
 .sidebar-logo .anticon {
-  transition: color 0.5s ease-in-out, 
-              filter 0.5s ease-in-out !important;
+  transition: color 0.5s ease-in-out, filter 0.5s ease-in-out !important;
 }
 
 .sidebar-logo span {
-  transition: color 0.5s ease-in-out, 
-              text-shadow 0.5s ease-in-out !important;
+  transition: color 0.5s ease-in-out, text-shadow 0.5s ease-in-out !important;
 }

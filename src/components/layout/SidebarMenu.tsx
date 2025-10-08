@@ -13,6 +13,7 @@ import {
   LineChartOutlined,
   WalletOutlined,
   DeleteOutlined,
+  AlertOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
@@ -81,6 +82,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       path: '/analytics',
     },
     {
+      key: 'credit-risk',
+      label: 'ФКР',
+      icon: <AlertOutlined />,
+      path: '/credit-risk',
+      tooltip: 'Факторы кредитного риска',
+    },
+    {
       key: 'mobile-appraiser',
       label: 'Мобильный оценщик',
       icon: <MobileOutlined />,
@@ -128,7 +136,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   const antdMenuItems = menuItems.map(item => ({
     key: item.key,
     icon: item.icon,
-    label: item.label,
+    label: item.tooltip ? (
+      <Tooltip title={item.tooltip} placement="right">
+        <span>{item.label}</span>
+      </Tooltip>
+    ) : (
+      item.label
+    ),
   }));
 
   // Определяем активный пункт меню на основе текущего пути

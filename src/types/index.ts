@@ -81,6 +81,7 @@ export interface MenuItem {
   children?: MenuItem[];
   path?: string;
   external?: boolean;
+  tooltip?: string;
 }
 
 // Хлебные крошки
