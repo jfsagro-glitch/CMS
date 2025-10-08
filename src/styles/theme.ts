@@ -60,6 +60,95 @@ export const windowsXPTheme = {
   },
 };
 
+export const blackWhiteTheme = {
+  token: {
+    colorBgBase: '#000000',
+    colorBgContainer: '#0a0a0a',
+    colorTextBase: '#ffffff',
+    colorPrimary: '#ffffff',
+    colorSuccess: '#ffffff',
+    colorWarning: '#ffffff',
+    colorError: '#ffffff',
+    colorInfo: '#ffffff',
+    borderRadius: 4,
+    boxShadow: '0 2px 8px rgba(255, 255, 255, 0.1)',
+  },
+  components: {
+    Layout: {
+      bodyBg: '#000000',
+      headerBg: '#0a0a0a',
+      siderBg: '#050505',
+    },
+    Menu: {
+      darkItemBg: '#050505',
+      darkSubMenuItemBg: '#0a0a0a',
+      darkItemSelectedBg: '#1a1a1a',
+      darkItemColor: '#ffffff',
+      darkItemHoverBg: '#151515',
+    },
+    Button: {
+      colorPrimary: '#ffffff',
+      primaryColor: '#000000',
+      primaryBg: '#ffffff',
+      primaryHoverBg: '#e0e0e0',
+      defaultBg: '#0a0a0a',
+      defaultBorderColor: '#ffffff',
+      defaultColor: '#ffffff',
+    },
+    Card: {
+      headerBg: '#0a0a0a',
+      actionsBg: '#0a0a0a',
+      extraColor: '#ffffff',
+      colorBgContainer: '#0a0a0a',
+      boxShadow: '0 2px 8px rgba(255, 255, 255, 0.1)',
+    },
+    Table: {
+      headerBg: '#0a0a0a',
+      rowHoverBg: 'rgba(255, 255, 255, 0.05)',
+      filterBg: '#0a0a0a',
+      bodySortBg: 'rgba(255, 255, 255, 0.03)',
+    },
+    Modal: {
+      headerBg: '#0a0a0a',
+      contentBg: '#0a0a0a',
+      footerBg: '#0a0a0a',
+      boxShadow: '0 4px 16px rgba(255, 255, 255, 0.15)',
+    },
+    Drawer: {
+      headerBg: '#0a0a0a',
+      bodyBg: '#0a0a0a',
+      footerBg: '#0a0a0a',
+    },
+    Input: {
+      colorBgContainer: '#050505',
+      colorBorder: '#ffffff',
+      colorText: '#ffffff',
+      activeBorderColor: '#ffffff',
+      hoverBorderColor: '#e0e0e0',
+    },
+    Select: {
+      colorBgContainer: '#050505',
+      colorBorder: '#ffffff',
+      colorText: '#ffffff',
+      activeBorderColor: '#ffffff',
+      hoverBorderColor: '#e0e0e0',
+    },
+    Switch: {
+      handleBg: '#000000',
+      trackBg: '#0a0a0a',
+      trackCheckedBg: '#ffffff',
+    },
+    Tag: {
+      defaultBg: '#1a1a1a',
+      defaultColor: '#ffffff',
+    },
+    Tooltip: {
+      colorBgSpotlight: '#0a0a0a',
+      colorTextLightSolid: '#ffffff',
+    },
+  },
+};
+
 export const matrixTheme = {
   token: {
     colorBgBase: '#000000',

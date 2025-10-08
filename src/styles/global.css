@@ -102,8 +102,29 @@ body {
 }
 
 [data-theme="dark"] body {
-  background: #141414;
+  background: #000000;
   color: #ffffff;
+}
+
+/* Black & White theme specific styles */
+[data-theme="dark"] {
+  --ant-color-bg-base: #000000;
+  --ant-color-bg-container: #0a0a0a;
+  --ant-color-text-base: #ffffff;
+  --ant-color-text-secondary: #e0e0e0;
+  --ant-color-border-secondary: #333333;
+  --ant-color-fill-alter: #1a1a1a;
+  --ant-color-fill-tertiary: #151515;
+  --ant-color-bg-input: #050505;
+  --ant-layout-header-background: #0a0a0a;
+  --ant-layout-sider-background: #050505;
+}
+
+/* Remove all colored tags in black & white theme */
+[data-theme="dark"] .ant-tag {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
 }
 
 /* Custom scrollbar for dark themes */

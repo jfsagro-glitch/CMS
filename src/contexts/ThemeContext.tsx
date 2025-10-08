@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { theme, ConfigProvider } from 'antd';
-import { darkGrayTheme, windowsXPTheme, matrixTheme } from '../styles/theme';
+import { darkGrayTheme, windowsXPTheme, matrixTheme, blackWhiteTheme } from '../styles/theme';
 import { ThemeContext, ThemeMode } from './ThemeContext.types';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -30,6 +30,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         };
       case 'dark':
         return {
+          ...blackWhiteTheme,
           algorithm: theme.darkAlgorithm,
         };
       case 'light':
