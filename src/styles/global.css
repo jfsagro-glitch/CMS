@@ -101,6 +101,72 @@ body {
   box-shadow: inset -1px -1px 0px #ffffff, inset 1px 1px 0px #808080 !important;
 }
 
+[data-theme="ios"] body {
+  background: #f2f2f7;
+  color: #000000;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+}
+
+/* iOS theme specific styles */
+[data-theme="ios"] {
+  --ant-color-bg-base: #f2f2f7;
+  --ant-color-bg-container: #ffffff;
+  --ant-color-text-base: #000000;
+  --ant-color-text-secondary: #8e8e93;
+  --ant-color-border-secondary: #d1d1d6;
+  --ant-color-fill-alter: #f9f9f9;
+  --ant-color-fill-tertiary: #e5e5ea;
+  --ant-color-bg-input: #ffffff;
+  --ant-layout-header-background: rgba(255, 255, 255, 0.8);
+  --ant-layout-sider-background: #ffffff;
+}
+
+/* iOS smooth animations */
+[data-theme="ios"] * {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* iOS card shadows */
+[data-theme="ios"] .ant-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* iOS buttons */
+[data-theme="ios"] .ant-btn {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+  font-weight: 500;
+}
+
+[data-theme="ios"] .ant-btn-primary {
+  background: linear-gradient(180deg, #007aff 0%, #0051d5 100%);
+}
+
+/* iOS inputs */
+[data-theme="ios"] .ant-input,
+[data-theme="ios"] .ant-select-selector {
+  border: 1px solid #d1d1d6 !important;
+  box-shadow: none !important;
+}
+
+[data-theme="ios"] .ant-input:focus,
+[data-theme="ios"] .ant-select-focused .ant-select-selector {
+  border-color: #007aff !important;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1) !important;
+}
+
+/* iOS table */
+[data-theme="ios"] .ant-table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* iOS tags with colors */
+[data-theme="ios"] .ant-tag {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
 [data-theme="matrix"] body {
   background: #000000;
   color: #00ff00;

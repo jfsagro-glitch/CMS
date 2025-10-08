@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-export type ThemeMode = 'light' | 'dark' | 'windows-xp' | 'dark-gray' | 'matrix' | 'windows-97';
+export type ThemeMode = 'light' | 'dark' | 'windows-xp' | 'dark-gray' | 'matrix' | 'windows-97' | 'ios';
 
 export interface ThemeContextType {
   currentTheme: ThemeMode;

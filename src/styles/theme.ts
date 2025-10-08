@@ -236,6 +236,116 @@ export const matrixTheme: ThemeConfig = {
   },
 };
 
+export const iosTheme: ThemeConfig = {
+  token: {
+    colorBgBase: '#f2f2f7',
+    colorBgContainer: '#ffffff',
+    colorTextBase: '#000000',
+    colorPrimary: '#007aff',
+    colorSuccess: '#34c759',
+    colorWarning: '#ff9500',
+    colorError: '#ff3b30',
+    colorInfo: '#5ac8fa',
+    borderRadius: 12,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08)',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
+  },
+  components: {
+    Layout: {
+      bodyBg: '#f2f2f7',
+      headerBg: 'rgba(255, 255, 255, 0.8)',
+      siderBg: '#ffffff',
+    },
+    Menu: {
+      itemBg: '#ffffff',
+      itemSelectedBg: '#007aff',
+      itemHoverBg: 'rgba(0, 122, 255, 0.1)',
+      itemColor: '#000000',
+      itemSelectedColor: '#ffffff',
+    },
+    Button: {
+      colorPrimary: '#007aff',
+      primaryColor: '#ffffff',
+      primaryBg: '#007aff',
+      primaryHoverBg: '#0051d5',
+      defaultBg: '#ffffff',
+      defaultBorderColor: '#007aff',
+      defaultColor: '#007aff',
+      borderRadius: 12,
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
+      controlHeight: 44,
+      paddingContentHorizontal: 20,
+    },
+    Card: {
+      headerBg: '#ffffff',
+      actionsBg: '#ffffff',
+      extraColor: '#007aff',
+      colorBgContainer: '#ffffff',
+      borderRadius: 16,
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+    },
+    Table: {
+      headerBg: '#f9f9f9',
+      rowHoverBg: 'rgba(0, 122, 255, 0.05)',
+      filterBg: '#ffffff',
+      bodySortBg: '#f9f9f9',
+      borderRadius: 12,
+    },
+    Modal: {
+      headerBg: '#ffffff',
+      contentBg: '#ffffff',
+      footerBg: '#ffffff',
+      borderRadius: 16,
+      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
+    },
+    Drawer: {
+      headerBg: '#ffffff',
+      bodyBg: '#f2f2f7',
+      footerBg: '#ffffff',
+    },
+    Input: {
+      colorBgContainer: '#ffffff',
+      colorBorder: '#d1d1d6',
+      colorText: '#000000',
+      activeBorderColor: '#007aff',
+      hoverBorderColor: '#007aff',
+      borderRadius: 10,
+      controlHeight: 44,
+      paddingBlock: 12,
+    },
+    Select: {
+      colorBgContainer: '#ffffff',
+      colorBorder: '#d1d1d6',
+      colorText: '#000000',
+      activeBorderColor: '#007aff',
+      hoverBorderColor: '#007aff',
+      borderRadius: 10,
+      controlHeight: 44,
+    },
+    Switch: {
+      handleBg: '#ffffff',
+      trackBg: '#e5e5ea',
+      trackCheckedBg: '#34c759',
+      handleSize: 27,
+    },
+    Tag: {
+      defaultBg: '#e5e5ea',
+      defaultColor: '#000000',
+      borderRadius: 8,
+    },
+    Tooltip: {
+      colorBgSpotlight: 'rgba(0, 0, 0, 0.85)',
+      colorTextLightSolid: '#ffffff',
+      borderRadius: 8,
+    },
+    Segmented: {
+      itemSelectedBg: '#ffffff',
+      trackBg: '#e5e5ea',
+      borderRadius: 10,
+    },
+  },
+};
+
 export const windows97Theme: ThemeConfig = {
   token: {
     colorBgBase: '#c0c0c0',

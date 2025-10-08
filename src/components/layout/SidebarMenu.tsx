@@ -198,6 +198,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, on
                   { value: 'light', label: 'Светлая' },
                   { value: 'dark', label: 'Темная' },
                   { value: 'dark-gray', label: 'Темно-серая' },
+                  { value: 'ios', label: 'iOS' },
                   { value: 'windows-xp', label: 'Windows XP' },
                   { value: 'windows-97', label: 'Windows 97' },
                   { value: 'matrix', label: 'Матрица' },

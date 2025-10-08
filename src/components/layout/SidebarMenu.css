@@ -9,6 +9,15 @@
   color: #00bfff !important; /* Bright blue icon */
 }
 
+/* iOS Theme - Apple Blue Logo */
+[data-theme='ios'] .sidebar-logo {
+  color: #007aff !important; /* iOS blue color */
+}
+
+[data-theme='ios'] .sidebar-logo .anticon {
+  color: #007aff !important; /* iOS blue icon */
+}
+
 /* Windows 97 Theme - Navy Blue Logo */
 [data-theme='windows-97'] .sidebar-logo {
   color: #000080 !important; /* Navy blue color */
