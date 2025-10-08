@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Layout, Input, Space, Button, Avatar, Dropdown, Select, Typography } from 'antd';
 import {
   MenuFoldOutlined,
@@ -8,6 +8,9 @@ import {
   LogoutOutlined,
   SettingOutlined,
   DatabaseOutlined,
+  PlusOutlined,
+  ExportOutlined,
+  ImportOutlined,
 } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { toggleSidebar, setTheme } from '@/store/slices/appSlice';
@@ -17,7 +20,36 @@ import type { MenuProps } from 'antd';
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
 
-const Header: React.FC = () => {
+const getSearchPlaceholder = (attribute: string): string => {
+  switch (attribute) {
+    case 'owner': return 'залогодателю (название, ИНН)';
+    case 'identifier': return 'идентификатору (кадастровый номер, VIN, серийный номер, ID)';
+    case 'name': return 'наименованию';
+    case 'type': return 'типу объекта';
+    case 'kind': return 'виду объекта';
+    default: return 'наименованию';
+  }
+};
+
+interface HeaderProps {
+  onCreateCard?: () => void;
+  onExport?: () => void;
+  onImport?: () => void;
+  onSearch?: (value: string) => void;
+  onSearchAttributeChange?: (attribute: string) => void;
+  searchText?: string;
+  searchAttribute?: string;
+}
+
+const Header: React.FC<HeaderProps> = ({
+  onCreateCard,
+  onExport,
+  onImport,
+  onSearch,
+  onSearchAttributeChange,
+  searchText = '',
+  searchAttribute = 'name'
+}) => {
   const dispatch = useAppDispatch();
   const { sidebarCollapsed, theme } = useAppSelector(state => state.app);
 
@@ -50,18 +82,18 @@ const Header: React.FC = () => {
   return (
     <AntHeader
       style={{
-        position: 'sticky',
+        position: 'fixed',
         top: 0,
-        zIndex: 1,
-        width: '100%',
+        left: sidebarCollapsed ? '80px' : '250px',
+        right: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 24px',
+        padding: '0 16px',
         background: '#fff',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        marginLeft: sidebarCollapsed ? '80px' : '250px',
-        transition: 'margin-left 0.2s',
+        transition: 'left 0.2s',
       }}
     >
       <Space size="middle">
@@ -77,21 +109,58 @@ const Header: React.FC = () => {
           <Text strong style={{ fontSize: 18 }}>CMS</Text>
         </Space>
         
-        <Input
-          placeholder="Поиск по реестру..."
-          prefix={<SearchOutlined />}
-          style={{ width: 300 }}
-          allowClear
-        />
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={onCreateCard}
+        >
+          Создать карточку
+        </Button>
+        
+        <Button
+          icon={<ExportOutlined />}
+          onClick={onExport}
+        >
+          Экспорт в Excel
+        </Button>
+        
+        <Button
+          icon={<ImportOutlined />}
+          onClick={onImport}
+        >
+          Импорт
+        </Button>
       </Space>
 
       <Space size="middle">
+        <Select
+          value={searchAttribute}
+          onChange={onSearchAttributeChange}
+          style={{ width: 150 }}
+          options={[
+            { value: 'owner', label: 'Залогодатель' },
+            { value: 'identifier', label: 'Идентификатор' },
+            { value: 'name', label: 'Наименование' },
+            { value: 'type', label: 'Тип' },
+            { value: 'kind', label: 'Вид' },
+          ]}
+        />
+        
+        <Input
+          placeholder={`Поиск по ${getSearchPlaceholder(searchAttribute)}...`}
+          prefix={<SearchOutlined />}
+          value={searchText}
+          onChange={(e) => onSearch?.(e.target.value)}
+          style={{ width: 300 }}
+          allowClear
+        />
+        
         <Space>
           <SettingOutlined />
           <Select
             value={theme}
             onChange={handleThemeChange}
-            style={{ width: 150 }}
+            style={{ width: 120 }}
             options={[
               { value: 'light', label: 'Светлая' },
               { value: 'dark', label: 'Темная' },

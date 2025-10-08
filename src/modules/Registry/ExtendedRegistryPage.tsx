@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Space, Modal, message, Breadcrumb, Drawer } from 'antd';
 import {
-  PlusOutlined,
-  ExportOutlined,
-  ImportOutlined,
-  CloudDownloadOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
 import CollateralCardForm from '@/components/common/CollateralCardForm';
@@ -22,7 +18,6 @@ import {
   setExtendedLoading,
 } from '@/store/slices/extendedCardsSlice';
 import extendedStorageService from '@/services/ExtendedStorageService';
-import { downloadFile } from '@/utils/helpers';
 import type { ExtendedCollateralCard } from '@/types';
 
 const ExtendedRegistryPage: React.FC = () => {
@@ -141,45 +136,6 @@ const ExtendedRegistryPage: React.FC = () => {
     }
   };
 
-  const handleExport = async () => {
-    try {
-      const result = await extendedStorageService.exportToExcel(
-        cards,
-        `registry_export_${new Date().toISOString().split('T')[0]}`
-      );
-      if (result.success) {
-        message.success(result.message);
-      } else {
-        message.error(result.message);
-      }
-    } catch (error) {
-      message.error('Ошибка экспорта данных');
-      console.error(error);
-    }
-  };
-
-  const handleExportBackup = async () => {
-    try {
-      const blob = await extendedStorageService.exportBackup();
-      const filename = `cms_backup_${new Date().toISOString().split('T')[0]}.json`;
-      downloadFile(blob, filename);
-      message.success('Резервная копия создана');
-    } catch (error) {
-      message.error('Ошибка создания резервной копии');
-      console.error(error);
-    }
-  };
-
-  const handleImportBackup = async (file: File) => {
-    try {
-      await extendedStorageService.importBackup(file);
-      message.success('Резервная копия восстановлена');
-      await loadCards();
-    } catch (error) {
-      message.error('Ошибка восстановления резервной копии');
-      console.error(error);
-    }
-  };
 
 
   return (
@@ -190,9 +146,6 @@ const ExtendedRegistryPage: React.FC = () => {
       </Breadcrumb>
 
       <Space style={{ marginBottom: 16 }} wrap>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          Создать карточку
-        </Button>
         <Button 
           icon={<ThunderboltOutlined />} 
           onClick={handleLoadDemoData}
@@ -202,29 +155,6 @@ const ExtendedRegistryPage: React.FC = () => {
         >
           {cards.length > 0 ? 'Перезагрузить демо-данные (44)' : '⚡ Загрузить демо-данные (44)'}
         </Button>
-        <Button icon={<ExportOutlined />} onClick={handleExport}>
-          Экспорт в Excel
-        </Button>
-        <Button icon={<CloudDownloadOutlined />} onClick={handleExportBackup}>
-          Создать резервную копию
-        </Button>
-        <input
-          type="file"
-          accept=".json"
-          style={{ display: 'none' }}
-          id="backup-import"
-          onChange={(e: any) => {
-            const file = e.target.files?.[0];
-            if (file) handleImportBackup(file);
-          }}
-        />
-        <Button
-          icon={<ImportOutlined />}
-          onClick={() => document.getElementById('backup-import')?.click()}
-        >
-          Восстановить из копии
-        </Button>
-
       </Space>
 
       <RegistryTable
