@@ -6,15 +6,13 @@ import {
   SearchOutlined,
   UserOutlined,
   LogoutOutlined,
-  SettingOutlined,
   DatabaseOutlined,
   PlusOutlined,
   ExportOutlined,
   ImportOutlined,
 } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { toggleSidebar, setTheme } from '@/store/slices/appSlice';
-import type { ThemeMode } from '@/types';
+import { toggleSidebar } from '@/store/slices/appSlice';
 import type { MenuProps } from 'antd';
 
 const { Header: AntHeader } = Layout;
@@ -51,14 +49,10 @@ const Header: React.FC<HeaderProps> = ({
   searchAttribute = 'name'
 }) => {
   const dispatch = useAppDispatch();
-  const { sidebarCollapsed, theme } = useAppSelector(state => state.app);
+  const { sidebarCollapsed } = useAppSelector(state => state.app);
 
   const handleToggleSidebar = () => {
     dispatch(toggleSidebar());
-  };
-
-  const handleThemeChange = (value: ThemeMode) => {
-    dispatch(setTheme(value));
   };
 
   // Меню пользователя
@@ -155,19 +149,6 @@ const Header: React.FC<HeaderProps> = ({
           allowClear
         />
         
-        <Space>
-          <SettingOutlined />
-          <Select
-            value={theme}
-            onChange={handleThemeChange}
-            style={{ width: 120 }}
-            options={[
-              { value: 'light', label: 'Светлая' },
-              { value: 'dark', label: 'Темная' },
-              { value: 'compact', label: 'Сбалансированная' },
-            ]}
-          />
-        </Space>
         
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
           <Avatar
