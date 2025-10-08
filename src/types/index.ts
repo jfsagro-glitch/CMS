@@ -4,6 +4,24 @@ export type MainCategory = 'real_estate' | 'movable' | 'property_rights';
 // Статусы карточек
 export type CardStatus = 'editing' | 'approved' | 'archived';
 
+// Роли пользователей
+export type UserRole = 'business' | 'employee' | 'manager' | 'superuser';
+
+// Сотрудник
+export interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  position: string;
+  department: string;
+  role: UserRole;
+  avatar?: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Иерархия недвижимости
 export interface RealEstateHierarchy {
   level0: string; // 'Коммерческая недвижимость' | 'Жилая недвижимость' | 'Промышленная недвижимость'

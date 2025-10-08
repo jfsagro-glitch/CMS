@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Layout } from 'antd';
+import { Layout, Button } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
 import { Outlet } from 'react-router-dom';
 import SidebarMenu from './SidebarMenu';
 import Header from './Header';
@@ -12,6 +13,7 @@ const MainLayout: React.FC = () => {
   const cards = useAppSelector((state: any) => state.extendedCards?.filteredItems || []);
   const [searchText, setSearchText] = useState('');
   const [searchAttribute, setSearchAttribute] = useState('name');
+  const [headerVisible, setHeaderVisible] = useState(true);
 
   const totalCards = cards.length;
   const approvedCards = cards.filter((c: any) => c.status === 'approved').length;
@@ -29,6 +31,10 @@ const MainLayout: React.FC = () => {
     // Логика импорта будет передана через контекст
   };
 
+  const handleToggleHeader = () => {
+    setHeaderVisible(!headerVisible);
+  };
+
   return (
     <Layout className="main-layout">
       <SidebarMenu 
@@ -38,16 +44,45 @@ const MainLayout: React.FC = () => {
         editingCards={editingCards}
       />
       <Layout style={{ marginLeft: 0 }}>
-        <Header 
-          onCreateCard={handleCreateCard}
-          onExport={handleExport}
-          onImport={handleImport}
-          onSearch={setSearchText}
-          onSearchAttributeChange={setSearchAttribute}
-          searchText={searchText}
-          searchAttribute={searchAttribute}
-        />
-        <Content className="main-content">
+        {headerVisible && (
+          <Header 
+            onCreateCard={handleCreateCard}
+            onExport={handleExport}
+            onImport={handleImport}
+            onSearch={setSearchText}
+            onSearchAttributeChange={setSearchAttribute}
+            onToggleHeader={handleToggleHeader}
+            searchText={searchText}
+            searchAttribute={searchAttribute}
+            headerVisible={headerVisible}
+          />
+        )}
+        <Content className="main-content" style={{ marginTop: headerVisible ? 64 : 0 }}>
+          {!headerVisible && (
+            <div style={{ 
+              position: 'fixed', 
+              top: 16, 
+              left: sidebarCollapsed ? 96 : 266, 
+              zIndex: 1001,
+              transition: 'left 0.2s'
+            }}>
+              <Button
+                type="primary"
+                icon={<DownOutlined />}
+                onClick={handleToggleHeader}
+                style={{ 
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  borderRadius: '50%',
+                  width: 40,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Показать шапку"
+              />
+            </div>
+          )}
           <Outlet />
         </Content>
       </Layout>

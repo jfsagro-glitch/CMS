@@ -6,10 +6,11 @@ import {
   SearchOutlined,
   UserOutlined,
   LogoutOutlined,
-  DatabaseOutlined,
   PlusOutlined,
   ExportOutlined,
   ImportOutlined,
+  UpOutlined,
+  DownOutlined,
 } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { toggleSidebar } from '@/store/slices/appSlice';
@@ -35,8 +36,10 @@ interface HeaderProps {
   onImport?: () => void;
   onSearch?: (value: string) => void;
   onSearchAttributeChange?: (attribute: string) => void;
+  onToggleHeader?: () => void;
   searchText?: string;
   searchAttribute?: string;
+  headerVisible?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -45,8 +48,10 @@ const Header: React.FC<HeaderProps> = ({
   onImport,
   onSearch,
   onSearchAttributeChange,
+  onToggleHeader,
   searchText = '',
-  searchAttribute = 'name'
+  searchAttribute = 'name',
+  headerVisible = true
 }) => {
   const dispatch = useAppDispatch();
   const { sidebarCollapsed } = useAppSelector(state => state.app);
@@ -98,10 +103,13 @@ const Header: React.FC<HeaderProps> = ({
           style={{ fontSize: '16px', width: 40, height: 40 }}
         />
         
-        <Space size="small">
-          <DatabaseOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-          <Text strong style={{ fontSize: 18 }}>CMS</Text>
-        </Space>
+        <Button
+          type="text"
+          icon={headerVisible ? <UpOutlined /> : <DownOutlined />}
+          onClick={onToggleHeader}
+          style={{ fontSize: '16px', width: 40, height: 40 }}
+          title={headerVisible ? 'Скрыть шапку' : 'Показать шапку'}
+        />
         
         <Button
           type="primary"
