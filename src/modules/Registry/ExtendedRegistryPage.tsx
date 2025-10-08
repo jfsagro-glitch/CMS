@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Space, Modal, message, Breadcrumb, Drawer } from 'antd';
-import {
-  ThunderboltOutlined,
-} from '@ant-design/icons';
+import { Modal, message, Breadcrumb, Drawer } from 'antd';
 import CollateralCardForm from '@/components/common/CollateralCardForm';
 import CollateralCardView from '@/components/common/CollateralCardView';
 import RegistryTable from '@/components/common/RegistryTable';
 import type { RegistryTableRecord } from '@/components/common/RegistryTable';
 import '@/components/common/RegistryTable.css';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { generateDemoCards } from '@/services/demoDataGenerator';
 import {
   setExtendedCards,
   addExtendedCard,
@@ -77,23 +73,6 @@ const ExtendedRegistryPage: React.FC = () => {
 
   const handleDoubleClick = (record: RegistryTableRecord) => {
     handleView(record.id);
-  };
-
-  const handleLoadDemoData = async () => {
-    try {
-      const demoCards = generateDemoCards();
-      message.loading({ content: 'Загрузка демо-данных...', key: 'demo' });
-      
-      for (const card of demoCards) {
-        await extendedStorageService.saveExtendedCard(card);
-      }
-      
-      dispatch(setExtendedCards(demoCards));
-      message.success({ content: `Загружено ${demoCards.length} демо-карточек`, key: 'demo', duration: 3 });
-    } catch (error) {
-      message.error({ content: 'Ошибка загрузки демо-данных', key: 'demo' });
-      console.error(error);
-    }
   };
 
   // Prepare data for RegistryTable
