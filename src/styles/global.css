@@ -119,8 +119,27 @@ body {
   --ant-color-fill-alter: #f9f9f9;
   --ant-color-fill-tertiary: #e5e5ea;
   --ant-color-bg-input: #ffffff;
-  --ant-layout-header-background: rgba(255, 255, 255, 0.8);
-  --ant-layout-sider-background: #ffffff;
+  --ant-layout-header-background: #ffffff;
+  --ant-layout-sider-background: #f8f8f8;
+}
+
+/* iOS sidebar menu styling */
+[data-theme='ios'] .ant-layout-sider {
+  background: #f8f8f8 !important;
+}
+
+[data-theme='ios'] .ant-menu {
+  background: transparent !important;
+  color: #000000 !important;
+}
+
+[data-theme='ios'] .ant-menu-item {
+  color: #000000 !important;
+}
+
+[data-theme='ios'] .ant-menu-item-selected {
+  background: #007aff !important;
+  color: #ffffff !important;
 }
 
 /* iOS smooth animations */
@@ -223,6 +242,31 @@ body {
 
 /* Remove all colored tags in black & white theme */
 [data-theme='dark'] .ant-tag {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+/* Black & White theme - ensure buttons are visible */
+[data-theme='dark'] .ant-btn-primary {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+}
+
+[data-theme='dark'] .ant-btn-primary:hover {
+  background: #e0e0e0 !important;
+  color: #000000 !important;
+  border-color: #e0e0e0 !important;
+}
+
+[data-theme='dark'] .ant-btn-default {
+  background: #0a0a0a !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+[data-theme='dark'] .ant-btn-default:hover {
   background: #1a1a1a !important;
   color: #ffffff !important;
   border-color: #ffffff !important;

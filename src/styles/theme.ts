@@ -73,6 +73,7 @@ export const blackWhiteTheme: ThemeConfig = {
     colorWarning: '#ffffff',
     colorError: '#ffffff',
     colorInfo: '#ffffff',
+    colorTextLightSolid: '#000000',
     borderRadius: 4,
     boxShadow: '0 2px 8px rgba(255, 255, 255, 0.1)',
   },
@@ -201,15 +202,20 @@ export const iosTheme: ThemeConfig = {
   components: {
     Layout: {
       bodyBg: '#f2f2f7',
-      headerBg: 'rgba(255, 255, 255, 0.8)',
-      siderBg: '#ffffff',
+      headerBg: '#ffffff',
+      siderBg: '#f8f8f8',
     },
     Menu: {
-      itemBg: '#ffffff',
+      itemBg: 'transparent',
       itemSelectedBg: '#007aff',
       itemHoverBg: 'rgba(0, 122, 255, 0.1)',
       itemColor: '#000000',
       itemSelectedColor: '#ffffff',
+      darkItemBg: 'transparent',
+      darkItemColor: '#000000',
+      darkItemSelectedBg: '#007aff',
+      darkItemSelectedColor: '#ffffff',
+      darkItemHoverBg: 'rgba(0, 122, 255, 0.1)',
     },
     Button: {
       colorPrimary: '#007aff',
