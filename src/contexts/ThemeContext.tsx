@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { theme, ConfigProvider } from 'antd';
-import { darkGrayTheme, windowsXPTheme, matrixTheme, blackWhiteTheme, windows97Theme, iosTheme } from '../styles/theme';
+import {
+  darkGrayTheme,
+  windowsXPTheme,
+  matrixTheme,
+  blackWhiteTheme,
+  windows97Theme,
+  iosTheme,
+} from '../styles/theme';
 import { ThemeContext, ThemeMode } from './ThemeContext.types';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -47,10 +54,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <ThemeContext.Provider value={{ currentTheme, setTheme: setCurrentTheme }}>
-      <ConfigProvider theme={getThemeConfig()}>
-        {children}
-      </ConfigProvider>
+      <ConfigProvider theme={getThemeConfig()}>{children}</ConfigProvider>
     </ThemeContext.Provider>
   );
 };
-

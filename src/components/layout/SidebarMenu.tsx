@@ -31,7 +31,12 @@ interface SidebarMenuProps {
   hasCards?: boolean;
 }
 
-const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, onClearDemoData, hasCards = false }) => {
+const SidebarMenu: React.FC<SidebarMenuProps> = ({
+  collapsed,
+  onLoadDemoData,
+  onClearDemoData,
+  hasCards = false,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentTheme, setTheme } = useTheme();
@@ -171,22 +176,22 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, on
         selectedKeys={[getSelectedKey()]}
         items={antdMenuItems}
         onClick={({ key }) => handleMenuClick(key)}
-        style={{ 
+        style={{
           flex: 1,
-          borderRight: 0
+          borderRight: 0,
         }}
       />
-      
+
       {!collapsed && (
-        <div style={{ 
-          padding: '16px', 
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-        }}>
+        <div
+          style={{
+            padding: '16px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+        >
           <Space direction="vertical" style={{ width: '100%' }} size="small">
-            <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>
-              Настройки
-            </div>
-            
+            <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>Настройки</div>
+
             <div style={{ color: '#fff', fontSize: '12px' }}>
               Тема:
               <Select
@@ -205,14 +210,16 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, on
                 ]}
               />
             </div>
-            
+
             {onLoadDemoData && (
               <div style={{ marginTop: '8px' }}>
-                <Tooltip title={hasCards ? 'Перезагрузить демо-данные (44)' : 'Загрузить демо-данные (44)'}>
+                <Tooltip
+                  title={hasCards ? 'Перезагрузить демо-данные (44)' : 'Загрузить демо-данные (44)'}
+                >
                   <Button
                     icon={<ThunderboltOutlined />}
                     onClick={onLoadDemoData}
-                    type={hasCards ? "dashed" : "primary"}
+                    type={hasCards ? 'dashed' : 'primary'}
                     danger={hasCards}
                     size="small"
                     style={{ width: '100%' }}
@@ -220,7 +227,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, on
                 </Tooltip>
               </div>
             )}
-            
+
             {onClearDemoData && hasCards && (
               <div style={{ marginTop: '8px' }}>
                 <Tooltip title="Удалить все демо-данные">
@@ -243,4 +250,3 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, on
 };
 
 export default SidebarMenu;
-

@@ -11,18 +11,19 @@
 }
 
 /* Dark Gray Theme */
-[data-theme="dark-gray"] {
+[data-theme='dark-gray'] {
   --cms-bg-primary: #1a1a1a;
   --cms-bg-secondary: #2d2d2d;
   --cms-bg-tertiary: #3a3a3a;
   --cms-text-primary: #e6e6e6;
   --cms-text-secondary: #a6a6a6;
   --cms-border: #404040;
-  --cms-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.48), 0 6px 16px 0 rgba(0, 0, 0, 0.32), 0 9px 28px 8px rgba(0, 0, 0, 0.2);
+  --cms-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.48), 0 6px 16px 0 rgba(0, 0, 0, 0.32),
+    0 9px 28px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Windows XP Theme */
-[data-theme="windows-xp"] {
+[data-theme='windows-xp'] {
   --cms-bg-primary: #ece9d8;
   --cms-bg-secondary: #ffffff;
   --cms-bg-tertiary: #f0f0f0;
@@ -33,7 +34,7 @@
 }
 
 /* Dark Theme */
-[data-theme="dark"] {
+[data-theme='dark'] {
   --cms-bg-primary: #141414;
   --cms-bg-secondary: #1f1f1f;
   --cms-bg-tertiary: #262626;
@@ -47,9 +48,8 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: var(--cms-bg-primary);
@@ -58,24 +58,24 @@ body {
 }
 
 /* Theme-specific body styles */
-[data-theme="dark-gray"] body {
+[data-theme='dark-gray'] body {
   background: #1a1a1a;
   color: #e6e6e6;
 }
 
-[data-theme="windows-xp"] body {
+[data-theme='windows-xp'] body {
   background: #ece9d8;
   color: #000000;
 }
 
-[data-theme="windows-97"] body {
+[data-theme='windows-97'] body {
   background: #008080;
   color: #000000;
   font-family: 'MS Sans Serif', 'Microsoft Sans Serif', sans-serif;
 }
 
 /* Windows 97 theme specific styles */
-[data-theme="windows-97"] {
+[data-theme='windows-97'] {
   --ant-color-bg-base: #c0c0c0;
   --ant-color-bg-container: #c0c0c0;
   --ant-color-text-base: #000000;
@@ -89,26 +89,28 @@ body {
 }
 
 /* Windows 97 3D border effects */
-[data-theme="windows-97"] .ant-card {
+[data-theme='windows-97'] .ant-card {
   box-shadow: inset -1px -1px 0px #000000, inset 1px 1px 0px #ffffff !important;
 }
 
-[data-theme="windows-97"] .ant-btn {
-  box-shadow: inset -1px -1px 0px #000000, inset 1px 1px 0px #ffffff, inset -2px -2px 0px #808080, inset 2px 2px 0px #dfdfdf !important;
+[data-theme='windows-97'] .ant-btn {
+  box-shadow: inset -1px -1px 0px #000000, inset 1px 1px 0px #ffffff, inset -2px -2px 0px #808080,
+    inset 2px 2px 0px #dfdfdf !important;
 }
 
-[data-theme="windows-97"] .ant-input {
+[data-theme='windows-97'] .ant-input {
   box-shadow: inset -1px -1px 0px #ffffff, inset 1px 1px 0px #808080 !important;
 }
 
-[data-theme="ios"] body {
+[data-theme='ios'] body {
   background: #f2f2f7;
   color: #000000;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue',
+    sans-serif;
 }
 
 /* iOS theme specific styles */
-[data-theme="ios"] {
+[data-theme='ios'] {
   --ant-color-bg-base: #f2f2f7;
   --ant-color-bg-container: #ffffff;
   --ant-color-text-base: #000000;
@@ -122,59 +124,59 @@ body {
 }
 
 /* iOS smooth animations */
-[data-theme="ios"] * {
+[data-theme='ios'] * {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* iOS card shadows */
-[data-theme="ios"] .ant-card {
+[data-theme='ios'] .ant-card {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
   backdrop-filter: blur(10px);
 }
 
 /* iOS buttons */
-[data-theme="ios"] .ant-btn {
+[data-theme='ios'] .ant-btn {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
   font-weight: 500;
 }
 
-[data-theme="ios"] .ant-btn-primary {
+[data-theme='ios'] .ant-btn-primary {
   background: linear-gradient(180deg, #007aff 0%, #0051d5 100%);
 }
 
 /* iOS inputs */
-[data-theme="ios"] .ant-input,
-[data-theme="ios"] .ant-select-selector {
+[data-theme='ios'] .ant-input,
+[data-theme='ios'] .ant-select-selector {
   border: 1px solid #d1d1d6 !important;
   box-shadow: none !important;
 }
 
-[data-theme="ios"] .ant-input:focus,
-[data-theme="ios"] .ant-select-focused .ant-select-selector {
+[data-theme='ios'] .ant-input:focus,
+[data-theme='ios'] .ant-select-focused .ant-select-selector {
   border-color: #007aff !important;
   box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1) !important;
 }
 
 /* iOS table */
-[data-theme="ios"] .ant-table {
+[data-theme='ios'] .ant-table {
   border-radius: 12px;
   overflow: hidden;
 }
 
 /* iOS tags with colors */
-[data-theme="ios"] .ant-tag {
+[data-theme='ios'] .ant-tag {
   border-radius: 8px;
   font-weight: 500;
 }
 
-[data-theme="matrix"] body {
+[data-theme='matrix'] body {
   background: #000000;
   color: #00ff00;
   font-family: 'Courier New', monospace;
 }
 
 /* Matrix theme specific styles */
-[data-theme="matrix"] {
+[data-theme='matrix'] {
   --ant-color-bg-base: #000000;
   --ant-color-bg-container: #001100;
   --ant-color-text-base: #00ff00;
@@ -188,25 +190,25 @@ body {
 }
 
 /* Matrix glow effects */
-[data-theme="matrix"] .ant-card {
+[data-theme='matrix'] .ant-card {
   box-shadow: 0 0 10px rgba(0, 255, 0, 0.3), inset 0 0 10px rgba(0, 255, 0, 0.1);
 }
 
-[data-theme="matrix"] .ant-btn-primary {
+[data-theme='matrix'] .ant-btn-primary {
   box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
 }
 
-[data-theme="matrix"] .ant-table-thead > tr > th {
+[data-theme='matrix'] .ant-table-thead > tr > th {
   text-shadow: 0 0 5px #00ff00;
 }
 
-[data-theme="dark"] body {
+[data-theme='dark'] body {
   background: #000000;
   color: #ffffff;
 }
 
 /* Black & White theme specific styles */
-[data-theme="dark"] {
+[data-theme='dark'] {
   --ant-color-bg-base: #000000;
   --ant-color-bg-container: #0a0a0a;
   --ant-color-text-base: #ffffff;
@@ -220,46 +222,46 @@ body {
 }
 
 /* Remove all colored tags in black & white theme */
-[data-theme="dark"] .ant-tag {
+[data-theme='dark'] .ant-tag {
   background: #1a1a1a !important;
   color: #ffffff !important;
   border-color: #ffffff !important;
 }
 
 /* Custom scrollbar for dark themes */
-[data-theme="dark-gray"] ::-webkit-scrollbar,
-[data-theme="dark"] ::-webkit-scrollbar {
+[data-theme='dark-gray'] ::-webkit-scrollbar,
+[data-theme='dark'] ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-[data-theme="dark-gray"] ::-webkit-scrollbar-track,
-[data-theme="dark"] ::-webkit-scrollbar-track {
+[data-theme='dark-gray'] ::-webkit-scrollbar-track,
+[data-theme='dark'] ::-webkit-scrollbar-track {
   background: var(--cms-bg-secondary);
 }
 
-[data-theme="dark-gray"] ::-webkit-scrollbar-thumb,
-[data-theme="dark"] ::-webkit-scrollbar-thumb {
+[data-theme='dark-gray'] ::-webkit-scrollbar-thumb,
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
   background: #555;
   border-radius: 4px;
 }
 
-[data-theme="dark-gray"] ::-webkit-scrollbar-thumb:hover,
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+[data-theme='dark-gray'] ::-webkit-scrollbar-thumb:hover,
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
   background: #777;
 }
 
 /* Windows XP specific styles */
-[data-theme="windows-xp"] .ant-layout {
+[data-theme='windows-xp'] .ant-layout {
   background: #ece9d8;
 }
 
-[data-theme="windows-xp"] .ant-layout-header {
+[data-theme='windows-xp'] .ant-layout-header {
   background: #0054e3;
   border-bottom: 1px solid #003d9e;
 }
 
-[data-theme="windows-xp"] .ant-layout-sider {
+[data-theme='windows-xp'] .ant-layout-sider {
   background: #ece9d8;
   border-right: 1px solid #808080;
 }
