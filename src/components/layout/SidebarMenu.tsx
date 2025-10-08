@@ -11,6 +11,7 @@ import {
   LinkOutlined,
   SafetyOutlined,
   LineChartOutlined,
+  WalletOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
@@ -39,6 +40,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, ha
       label: 'Реестры',
       icon: <DatabaseOutlined />,
       path: '/registry',
+    },
+    {
+      key: 'portfolio',
+      label: 'Залоговый портфель',
+      icon: <WalletOutlined />,
+      path: '/portfolio',
     },
     {
       key: 'tasks',
