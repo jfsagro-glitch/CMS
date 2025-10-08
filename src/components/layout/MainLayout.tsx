@@ -5,7 +5,7 @@ import { Outlet } from 'react-router-dom';
 import SidebarMenu from './SidebarMenu';
 import Header from './Header';
 import { useAppSelector } from '@/store/hooks';
-import { useDemoData } from '@/contexts/DemoDataContext';
+import { useDemoData } from '@/hooks/useDemoData';
 
 const { Content } = Layout;
 

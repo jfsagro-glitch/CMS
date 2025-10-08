@@ -43,7 +43,6 @@ const ExtendedRegistryPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
   const handleEdit = (id: string) => {
     const card = cards.find((c: any) => c.id === id);
     if (card) {
@@ -90,7 +89,6 @@ const ExtendedRegistryPage: React.FC = () => {
     updatedAt: card.updatedAt,
   }));
 
-
   const handleSubmit = async (values: ExtendedCollateralCard) => {
     try {
       await extendedStorageService.saveExtendedCard(values);
@@ -111,15 +109,12 @@ const ExtendedRegistryPage: React.FC = () => {
     }
   };
 
-
-
   return (
     <div>
       <Breadcrumb style={{ marginBottom: 16 }}>
         <Breadcrumb.Item>Главная</Breadcrumb.Item>
         <Breadcrumb.Item>Реестры</Breadcrumb.Item>
       </Breadcrumb>
-
 
       <RegistryTable
         data={tableData}
@@ -173,4 +168,3 @@ const ExtendedRegistryPage: React.FC = () => {
 };
 
 export default ExtendedRegistryPage;
-
