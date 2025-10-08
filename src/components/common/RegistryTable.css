@@ -91,27 +91,27 @@
     gap: 12px;
     align-items: stretch;
   }
-  
+
   .table-header .ant-input {
     width: 100% !important;
   }
-  
+
   .registry-table-container {
     padding: 8px;
   }
 }
 
 /* Dark theme adjustments */
-[data-theme="dark"] .registry-table-container {
+[data-theme='dark'] .registry-table-container {
   background: var(--ant-color-bg-container);
   border: 1px solid var(--ant-color-border);
 }
 
-[data-theme="dark"] .registry-table .ant-table-thead > tr > th {
+[data-theme='dark'] .registry-table .ant-table-thead > tr > th {
   background: var(--ant-color-bg-container);
   color: var(--ant-color-text);
 }
 
-[data-theme="dark"] .registry-table .ant-table-tbody > tr > td {
+[data-theme='dark'] .registry-table .ant-table-tbody > tr > td {
   color: var(--ant-color-text);
 }

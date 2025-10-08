@@ -12,7 +12,7 @@ const { Content } = Layout;
 const MainLayout: React.FC = () => {
   const sidebarCollapsed = useAppSelector((state: any) => state.app.sidebarCollapsed);
   const cards = useAppSelector((state: any) => state.extendedCards?.filteredItems || []);
-  const { loadDemoData } = useDemoData();
+  const { loadDemoData, clearDemoData } = useDemoData();
   const [searchText, setSearchText] = useState('');
   const [searchAttribute, setSearchAttribute] = useState('name');
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -38,6 +38,7 @@ const MainLayout: React.FC = () => {
       <SidebarMenu
         collapsed={sidebarCollapsed}
         onLoadDemoData={loadDemoData}
+        onClearDemoData={clearDemoData}
         hasCards={cards.length > 0}
       />
       <Layout style={{ marginLeft: sidebarCollapsed ? 80 : 250, transition: 'margin-left 0.2s' }}>

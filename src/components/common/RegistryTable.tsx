@@ -39,9 +39,8 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
   onEdit,
   onView,
   onDelete,
-  onDoubleClick
+  onDoubleClick,
 }) => {
-
   // Данные передаются уже отфильтрованными из родительского компонента
   const filteredData = data;
 
@@ -86,7 +85,10 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
           movable: { color: 'green', text: 'Движимое' },
           property_rights: { color: 'orange', text: 'Имущественные права' },
         };
-        const config = categoryConfig[category as keyof typeof categoryConfig] || { color: 'default', text: category || 'Не указано' };
+        const config = categoryConfig[category as keyof typeof categoryConfig] || {
+          color: 'default',
+          text: category || 'Не указано',
+        };
         return <Tag color={config.color}>{config.text}</Tag>;
       },
     },
@@ -107,7 +109,10 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
           approved: { color: 'green', text: 'Согласовано' },
           archived: { color: 'default', text: 'Архив' },
         };
-        const config = statusConfig[status as keyof typeof statusConfig] || { color: 'default', text: status || 'Не указано' };
+        const config = statusConfig[status as keyof typeof statusConfig] || {
+          color: 'default',
+          text: status || 'Не указано',
+        };
         return <Tag color={config.color}>{config.text}</Tag>;
       },
     },
@@ -116,9 +121,7 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
       dataIndex: 'addresses',
       key: 'address',
       width: 300,
-      render: (addresses: any[]) => (
-        <div>{addresses?.[0]?.fullAddress || 'Не указан'}</div>
-      ),
+      render: (addresses: any[]) => <div>{addresses?.[0]?.fullAddress || 'Не указан'}</div>,
     },
     {
       title: 'Дата создания',
@@ -182,11 +185,10 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
           pageSize: 30,
           showSizeChanger: true,
           showQuickJumper: true,
-          showTotal: (total, range) =>
-            `Показано ${range[0]}-${range[1]} из ${total} записей`,
+          showTotal: (total, range) => `Показано ${range[0]}-${range[1]} из ${total} записей`,
           pageSizeOptions: ['15', '30', '50', '100'],
         }}
-        onRow={(record) => ({
+        onRow={record => ({
           onDoubleClick: () => onDoubleClick(record),
           style: { cursor: 'pointer' },
         })}

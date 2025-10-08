@@ -12,6 +12,7 @@ import {
   SafetyOutlined,
   LineChartOutlined,
   WalletOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
@@ -25,10 +26,11 @@ interface SidebarMenuProps {
   approvedCards?: number;
   editingCards?: number;
   onLoadDemoData?: () => void;
+  onClearDemoData?: () => void;
   hasCards?: boolean;
 }
 
-const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, hasCards = false }) => {
+const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, onClearDemoData, hasCards = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentTheme, setTheme } = useTheme();
@@ -207,6 +209,21 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, ha
                     onClick={onLoadDemoData}
                     type={hasCards ? "dashed" : "primary"}
                     danger={hasCards}
+                    size="small"
+                    style={{ width: '100%' }}
+                  />
+                </Tooltip>
+              </div>
+            )}
+            
+            {onClearDemoData && hasCards && (
+              <div style={{ marginTop: '8px' }}>
+                <Tooltip title="Удалить все демо-данные">
+                  <Button
+                    icon={<DeleteOutlined />}
+                    onClick={onClearDemoData}
+                    type="dashed"
+                    danger
                     size="small"
                     style={{ width: '100%' }}
                   />

@@ -34,8 +34,37 @@ export const DemoDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const clearDemoData = async () => {
+    try {
+      setIsLoading(true);
+      message.loading({ content: 'Удаление демо-данных...', key: 'clear' });
+      
+      // Получаем все карточки
+      const allCards = await extendedStorageService.getExtendedCards();
+      
+      // Удаляем все карточки
+      for (const card of allCards) {
+        await extendedStorageService.deleteExtendedCard(card.id);
+      }
+      
+      // Очищаем store
+      dispatch(setExtendedCards([]));
+      
+      message.success({
+        content: 'Все демо-данные удалены',
+        key: 'clear',
+        duration: 3,
+      });
+    } catch (error) {
+      message.error({ content: 'Ошибка удаления демо-данных', key: 'clear' });
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <DemoDataContext.Provider value={{ loadDemoData, isLoading }}>
+    <DemoDataContext.Provider value={{ loadDemoData, clearDemoData, isLoading }}>
       {children}
     </DemoDataContext.Provider>
   );

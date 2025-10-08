@@ -23,7 +23,7 @@
 }
 
 /* Когда шапка скрыта */
-.main-layout .ant-layout-content.main-content[style*="marginTop: 0"] {
+.main-layout .ant-layout-content.main-content[style*='marginTop: 0'] {
   min-height: calc(100vh - 32px); /* 100vh - margins */
   max-height: calc(100vh - 32px);
 }
@@ -43,33 +43,33 @@
 }
 
 /* Theme-specific adjustments */
-[data-theme="dark-gray"] .main-content {
+[data-theme='dark-gray'] .main-content {
   background: var(--ant-color-bg-container);
   border: 1px solid var(--ant-color-border);
 }
 
-[data-theme="dark-gray"] .right-toolbar {
+[data-theme='dark-gray'] .right-toolbar {
   background: var(--ant-color-bg-container);
   border-left: 1px solid var(--ant-color-border);
 }
 
-[data-theme="windows-xp"] .main-content {
+[data-theme='windows-xp'] .main-content {
   background: #ffffff;
   border: 1px solid #c0c0c0;
   box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080;
 }
 
-[data-theme="windows-xp"] .right-toolbar {
+[data-theme='windows-xp'] .right-toolbar {
   background: #ece9d8;
   border-left: 1px solid #808080;
 }
 
-[data-theme="light"] .main-content {
+[data-theme='light'] .main-content {
   background: #ffffff;
   border: 1px solid #d9d9d9;
 }
 
-[data-theme="light"] .right-toolbar {
+[data-theme='light'] .right-toolbar {
   background: #fafafa;
   border-left: 1px solid #d9d9d9;
 }
