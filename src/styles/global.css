@@ -68,6 +68,39 @@ body {
   color: #000000;
 }
 
+[data-theme="matrix"] body {
+  background: #000000;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+}
+
+/* Matrix theme specific styles */
+[data-theme="matrix"] {
+  --ant-color-bg-base: #000000;
+  --ant-color-bg-container: #001100;
+  --ant-color-text-base: #00ff00;
+  --ant-color-text-secondary: #00cc00;
+  --ant-color-border-secondary: #003300;
+  --ant-color-fill-alter: #002200;
+  --ant-color-fill-tertiary: #001a00;
+  --ant-color-bg-input: #000800;
+  --ant-layout-header-background: #001100;
+  --ant-layout-sider-background: #000800;
+}
+
+/* Matrix glow effects */
+[data-theme="matrix"] .ant-card {
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3), inset 0 0 10px rgba(0, 255, 0, 0.1);
+}
+
+[data-theme="matrix"] .ant-btn-primary {
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+[data-theme="matrix"] .ant-table-thead > tr > th {
+  text-shadow: 0 0 5px #00ff00;
+}
+
 [data-theme="dark"] body {
   background: #141414;
   color: #ffffff;

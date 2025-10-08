@@ -9,6 +9,17 @@
   color: #00bfff !important; /* Bright blue icon */
 }
 
+/* Matrix Theme - Bright Green Logo with Glow */
+[data-theme='matrix'] .sidebar-logo {
+  color: #00ff00 !important; /* Matrix green color */
+  text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00; /* Green glow effect */
+}
+
+[data-theme='matrix'] .sidebar-logo .anticon {
+  color: #00ff00 !important; /* Matrix green icon */
+  filter: drop-shadow(0 0 5px #00ff00) drop-shadow(0 0 10px #00ff00); /* Green glow effect */
+}
+
 /* Default theme styles */
 .sidebar-logo {
   transition: color 0.2s ease;

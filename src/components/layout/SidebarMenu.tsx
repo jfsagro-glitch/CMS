@@ -199,6 +199,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, on
                   { value: 'dark', label: 'Темная' },
                   { value: 'dark-gray', label: 'Темно-серая' },
                   { value: 'windows-xp', label: 'Windows XP' },
+                  { value: 'matrix', label: 'Матрица' },
                 ]}
               />
             </div>
