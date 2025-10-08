@@ -141,17 +141,6 @@ const ExtendedRegistryPage: React.FC = () => {
         <Breadcrumb.Item>Реестры</Breadcrumb.Item>
       </Breadcrumb>
 
-      <Space style={{ marginBottom: 16 }} wrap>
-        <Button 
-          icon={<ThunderboltOutlined />} 
-          onClick={handleLoadDemoData}
-          type={cards.length === 0 ? "primary" : "dashed"}
-          danger={cards.length > 0}
-          size={cards.length === 0 ? "large" : "middle"}
-        >
-          {cards.length > 0 ? 'Перезагрузить демо-данные (44)' : '⚡ Загрузить демо-данные (44)'}
-        </Button>
-      </Space>
 
       <RegistryTable
         data={tableData}

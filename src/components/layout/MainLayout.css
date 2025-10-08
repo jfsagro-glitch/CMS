@@ -5,6 +5,7 @@
 
 .content-layout {
   transition: margin-right 0.2s ease;
+  margin-left: 0; /* Убираем отступ слева, так как сайдбар фиксированный */
 }
 
 .main-content {
@@ -14,6 +15,14 @@
   background: var(--ant-color-bg-container);
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* Добавляем отступ слева для учета сайдбара */
+  margin-left: 250px; /* Ширина развернутого сайдбара */
+  transition: margin-left 0.2s ease;
+}
+
+/* Когда сайдбар свернут */
+.main-layout .ant-layout-sider-collapsed + .ant-layout .main-content {
+  margin-left: 80px; /* Ширина свернутого сайдбара */
 }
 
 .right-toolbar {

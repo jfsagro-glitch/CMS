@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Space, Select } from 'antd';
+import { Layout, Menu, Space, Select, Button, Tooltip } from 'antd';
 import {
   DatabaseOutlined,
   BarChartOutlined,
@@ -23,9 +23,11 @@ interface SidebarMenuProps {
   totalCards?: number;
   approvedCards?: number;
   editingCards?: number;
+  onLoadDemoData?: () => void;
+  hasCards?: boolean;
 }
 
-const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
+const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, hasCards = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentTheme, setTheme } = useTheme();
@@ -189,6 +191,21 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
                 ]}
               />
             </div>
+            
+            {onLoadDemoData && (
+              <div style={{ marginTop: '8px' }}>
+                <Tooltip title={hasCards ? 'Перезагрузить демо-данные (44)' : 'Загрузить демо-данные (44)'}>
+                  <Button
+                    icon={<ThunderboltOutlined />}
+                    onClick={onLoadDemoData}
+                    type={hasCards ? "dashed" : "primary"}
+                    danger={hasCards}
+                    size="small"
+                    style={{ width: '100%' }}
+                  />
+                </Tooltip>
+              </div>
+            )}
           </Space>
         </div>
       )}

@@ -5,11 +5,14 @@ import { Outlet } from 'react-router-dom';
 import SidebarMenu from './SidebarMenu';
 import Header from './Header';
 import { useAppSelector } from '@/store/hooks';
+import { useDemoData } from '@/contexts/DemoDataContext';
 
 const { Content } = Layout;
 
 const MainLayout: React.FC = () => {
   const sidebarCollapsed = useAppSelector((state: any) => state.app.sidebarCollapsed);
+  const cards = useAppSelector((state: any) => state.extendedCards?.filteredItems || []);
+  const { loadDemoData } = useDemoData();
   const [searchText, setSearchText] = useState('');
   const [searchAttribute, setSearchAttribute] = useState('name');
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -34,8 +37,10 @@ const MainLayout: React.FC = () => {
     <Layout className="main-layout">
       <SidebarMenu 
         collapsed={sidebarCollapsed}
+        onLoadDemoData={loadDemoData}
+        hasCards={cards.length > 0}
       />
-      <Layout style={{ marginLeft: 0 }}>
+      <Layout>
         {headerVisible && (
           <Header 
             onCreateCard={handleCreateCard}
