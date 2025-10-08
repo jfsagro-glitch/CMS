@@ -54,7 +54,74 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: var(--cms-bg-primary);
   color: var(--cms-text-primary);
-  transition: background-color 0.3s, color 0.3s;
+  transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out;
+}
+
+/* Smooth theme transitions for all elements */
+html.theme-transitioning * {
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+* {
+  transition: background-color 0.3s ease-in-out, 
+              color 0.3s ease-in-out, 
+              border-color 0.3s ease-in-out,
+              box-shadow 0.3s ease-in-out;
+}
+
+/* Prevent transition on transform and position changes */
+*:not(.no-transition) {
+  transition-property: background-color, color, border-color, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease-in-out;
+}
+
+/* Smooth transitions for Ant Design components */
+.ant-layout,
+.ant-layout-header,
+.ant-layout-sider,
+.ant-layout-content {
+  transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out !important;
+}
+
+.ant-menu,
+.ant-menu-item,
+.ant-menu-submenu {
+  transition: background-color 0.4s ease-in-out, color 0.4s ease-in-out !important;
+}
+
+.ant-btn {
+  transition: all 0.4s ease-in-out !important;
+}
+
+.ant-card,
+.ant-modal,
+.ant-drawer {
+  transition: background-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out !important;
+}
+
+.ant-table,
+.ant-table-thead > tr > th,
+.ant-table-tbody > tr > td {
+  transition: background-color 0.4s ease-in-out, color 0.4s ease-in-out !important;
+}
+
+.ant-input,
+.ant-select-selector,
+.ant-picker {
+  transition: background-color 0.4s ease-in-out, 
+              border-color 0.4s ease-in-out, 
+              color 0.4s ease-in-out !important;
+}
+
+.ant-tag {
+  transition: background-color 0.4s ease-in-out, 
+              color 0.4s ease-in-out, 
+              border-color 0.4s ease-in-out !important;
 }
 
 /* Theme-specific body styles */
@@ -142,9 +209,9 @@ body {
   color: #ffffff !important;
 }
 
-/* iOS smooth animations */
+/* iOS smooth animations - inherit global transitions */
 [data-theme='ios'] * {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* iOS card shadows */

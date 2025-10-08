@@ -18,7 +18,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     localStorage.setItem('cms-theme', currentTheme);
-    document.documentElement.setAttribute('data-theme', currentTheme);
+    
+    // Add smooth transition class before theme change
+    document.documentElement.classList.add('theme-transitioning');
+    
+    // Use requestAnimationFrame for smooth transition
+    requestAnimationFrame(() => {
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      
+      // Remove transition class after animation completes
+      setTimeout(() => {
+        document.documentElement.classList.remove('theme-transitioning');
+      }, 500);
+    });
   }, [currentTheme]);
 
   const getThemeConfig = () => {
