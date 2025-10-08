@@ -177,7 +177,7 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
         dataSource={filteredData}
         loading={loading}
         rowKey="id"
-        scroll={{ x: 1200, y: 600 }}
+        scroll={{ x: 1200 }}
         pagination={{
           pageSize: 30,
           showSizeChanger: true,

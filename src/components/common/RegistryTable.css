@@ -4,6 +4,9 @@
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .table-header {
@@ -36,6 +39,29 @@
   background-color: #fff !important;
   border-color: #40a9ff !important;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+.registry-table {
+  flex: 1;
+  overflow: hidden;
+}
+
+.registry-table .ant-table-wrapper {
+  height: 100%;
+}
+
+.registry-table .ant-spin-nested-loading {
+  height: 100%;
+}
+
+.registry-table .ant-spin-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.registry-table .ant-table {
+  flex: 1;
 }
 
 .registry-table .ant-table-thead > tr > th {

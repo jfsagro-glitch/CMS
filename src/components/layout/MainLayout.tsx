@@ -35,14 +35,14 @@ const MainLayout: React.FC = () => {
 
   return (
     <Layout className="main-layout">
-      <SidebarMenu 
+      <SidebarMenu
         collapsed={sidebarCollapsed}
         onLoadDemoData={loadDemoData}
         hasCards={cards.length > 0}
       />
-      <Layout>
+      <Layout style={{ marginLeft: sidebarCollapsed ? 80 : 250, transition: 'margin-left 0.2s' }}>
         {headerVisible && (
-          <Header 
+          <Header
             onCreateCard={handleCreateCard}
             onExport={handleExport}
             onImport={handleImport}
@@ -56,25 +56,27 @@ const MainLayout: React.FC = () => {
         )}
         <Content className="main-content" style={{ marginTop: headerVisible ? 64 : 0 }}>
           {!headerVisible && (
-            <div style={{ 
-              position: 'fixed', 
-              top: 16, 
-              left: sidebarCollapsed ? 96 : 266, 
-              zIndex: 1001,
-              transition: 'left 0.2s'
-            }}>
+            <div
+              style={{
+                position: 'fixed',
+                top: 16,
+                left: sidebarCollapsed ? 96 : 266,
+                zIndex: 1001,
+                transition: 'left 0.2s',
+              }}
+            >
               <Button
                 type="primary"
                 icon={<DownOutlined />}
                 onClick={handleToggleHeader}
-                style={{ 
+                style={{
                   boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                   borderRadius: '50%',
                   width: 40,
                   height: 40,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
                 }}
                 title="Показать шапку"
               />
@@ -88,4 +90,3 @@ const MainLayout: React.FC = () => {
 };
 
 export default MainLayout;
-

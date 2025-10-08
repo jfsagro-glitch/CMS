@@ -15,13 +15,17 @@ export const DemoDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setIsLoading(true);
       const demoCards = generateDemoCards();
       message.loading({ content: 'Загрузка демо-данных...', key: 'demo' });
-      
+
       for (const card of demoCards) {
         await extendedStorageService.saveExtendedCard(card);
       }
-      
+
       dispatch(setExtendedCards(demoCards));
-      message.success({ content: `Загружено ${demoCards.length} демо-карточек`, key: 'demo', duration: 3 });
+      message.success({
+        content: `Загружено ${demoCards.length} демо-карточек`,
+        key: 'demo',
+        duration: 3,
+      });
     } catch (error) {
       message.error({ content: 'Ошибка загрузки демо-данных', key: 'demo' });
       console.error(error);
