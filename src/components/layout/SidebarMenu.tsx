@@ -17,6 +17,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
 import type { MenuItem } from '@/types';
+import './SidebarMenu.css';
 
 const { Sider } = Layout;
 
@@ -148,6 +149,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, onLoadDemoData, on
       }}
     >
       <div
+        className="sidebar-logo"
         style={{
           height: '64px',
           display: 'flex',

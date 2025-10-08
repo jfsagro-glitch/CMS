@@ -1,0 +1,19 @@
+/* Sidebar Menu Styles */
+
+/* Windows XP Theme - Bright Blue Logo */
+[data-theme='windows-xp'] .sidebar-logo {
+  color: #00bfff !important; /* Bright blue color */
+}
+
+[data-theme='windows-xp'] .sidebar-logo .anticon {
+  color: #00bfff !important; /* Bright blue icon */
+}
+
+/* Default theme styles */
+.sidebar-logo {
+  transition: color 0.2s ease;
+}
+
+.sidebar-logo .anticon {
+  transition: color 0.2s ease;
+}
