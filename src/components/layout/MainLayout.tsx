@@ -10,14 +10,9 @@ const { Content } = Layout;
 
 const MainLayout: React.FC = () => {
   const sidebarCollapsed = useAppSelector((state: any) => state.app.sidebarCollapsed);
-  const cards = useAppSelector((state: any) => state.extendedCards?.filteredItems || []);
   const [searchText, setSearchText] = useState('');
   const [searchAttribute, setSearchAttribute] = useState('name');
   const [headerVisible, setHeaderVisible] = useState(true);
-
-  const totalCards = cards.length;
-  const approvedCards = cards.filter((c: any) => c.status === 'approved').length;
-  const editingCards = cards.filter((c: any) => c.status === 'editing').length;
 
   const handleCreateCard = () => {
     // Логика создания карточки будет передана через контекст
@@ -38,10 +33,7 @@ const MainLayout: React.FC = () => {
   return (
     <Layout className="main-layout">
       <SidebarMenu 
-        collapsed={sidebarCollapsed} 
-        totalCards={totalCards}
-        approvedCards={approvedCards}
-        editingCards={editingCards}
+        collapsed={sidebarCollapsed}
       />
       <Layout style={{ marginLeft: 0 }}>
         {headerVisible && (

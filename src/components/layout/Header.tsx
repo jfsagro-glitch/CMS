@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Input, Space, Button, Avatar, Dropdown, Select, Typography } from 'antd';
+import { Layout, Input, Space, Button, Avatar, Dropdown, Select } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -17,7 +17,6 @@ import { toggleSidebar } from '@/store/slices/appSlice';
 import type { MenuProps } from 'antd';
 
 const { Header: AntHeader } = Layout;
-const { Text } = Typography;
 
 const getSearchPlaceholder = (attribute: string): string => {
   switch (attribute) {

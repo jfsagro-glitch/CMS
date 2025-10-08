@@ -102,6 +102,8 @@ const AppContent: React.FC = () => {
                 <Route path="registry" element={<ExtendedRegistryPage />} />
                 <Route path="tasks" element={<PlaceholderPage title="Задачи" />} />
                 <Route path="reports" element={<PlaceholderPage title="Отчеты" />} />
+                <Route path="insurance" element={<PlaceholderPage title="Страхование" />} />
+                <Route path="analytics" element={<PlaceholderPage title="Аналитика" />} />
                 <Route path="mobile-appraiser" element={<PlaceholderPage title="Мобильный оценщик" />} />
                 <Route path="smartdeal" element={<PlaceholderPage title="SmartDeal" />} />
                 <Route path="upload" element={<PlaceholderPage title="Загрузка" />} />

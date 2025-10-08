@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { Table, Button, Space, Tooltip, Input, Tag, Select } from 'antd';
-import { EditOutlined, EyeOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import React from 'react';
+import { Table, Button, Space, Tooltip, Tag } from 'antd';
+import { EditOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
 export interface RegistryTableRecord {
@@ -33,17 +33,6 @@ interface RegistryTableProps {
   onDoubleClick: (record: RegistryTableRecord) => void;
 }
 
-const getSearchPlaceholder = (attribute: string): string => {
-  switch (attribute) {
-    case 'owner': return 'залогодателю (название, ИНН)';
-    case 'identifier': return 'идентификатору (кадастровый номер, VIN, серийный номер, ID)';
-    case 'name': return 'наименованию';
-    case 'type': return 'типу объекта';
-    case 'kind': return 'виду объекта';
-    default: return 'наименованию';
-  }
-};
-
 export const RegistryTable: React.FC<RegistryTableProps> = ({
   data,
   loading,
@@ -52,38 +41,9 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
   onDelete,
   onDoubleClick
 }) => {
-  const [searchText, setSearchText] = useState('');
-  const [searchAttribute, setSearchAttribute] = useState<string>('name');
 
-  const filteredData = useMemo(() => {
-    if (!searchText) return data;
-    
-    return data.filter(item => {
-      const searchLower = searchText.toLowerCase();
-      
-      switch (searchAttribute) {
-        case 'owner':
-          return item.owner?.name?.toLowerCase().includes(searchLower) ||
-                 item.owner?.inn?.toLowerCase().includes(searchLower);
-        case 'identifier':
-          return item.characteristics?.cadastralNumber?.toLowerCase().includes(searchLower) ||
-                 item.characteristics?.vin?.toLowerCase().includes(searchLower) ||
-                 item.characteristics?.serialNumber?.toLowerCase().includes(searchLower) ||
-                 item.id?.toLowerCase().includes(searchLower);
-        case 'name':
-          return item.name?.toLowerCase().includes(searchLower);
-        case 'type':
-          return item.classification?.level1?.toLowerCase().includes(searchLower) ||
-                 item.classification?.level0?.toLowerCase().includes(searchLower);
-        case 'kind':
-          return item.classification?.level2?.toLowerCase().includes(searchLower);
-        default:
-          return item.name?.toLowerCase().includes(searchLower) ||
-                 item.number?.toLowerCase().includes(searchLower) ||
-                 item.addresses?.some(addr => addr.fullAddress?.toLowerCase().includes(searchLower));
-      }
-    });
-  }, [data, searchText, searchAttribute]);
+  // Данные передаются уже отфильтрованными из родительского компонента
+  const filteredData = data;
 
   const columns: ColumnsType<RegistryTableRecord> = [
     {
@@ -208,32 +168,6 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
   return (
     <div className="registry-table-container">
       <div className="table-header">
-        <div className="search-container">
-          <Select
-            value={searchAttribute}
-            onChange={setSearchAttribute}
-            style={{ width: 200, marginRight: 8 }}
-            options={[
-              { value: 'owner', label: 'Залогодатель' },
-              { value: 'identifier', label: 'Идентификатор' },
-              { value: 'name', label: 'Наименование' },
-              { value: 'type', label: 'Тип' },
-              { value: 'kind', label: 'Вид' },
-            ]}
-          />
-          <Input
-            placeholder={`Поиск по ${getSearchPlaceholder(searchAttribute)}...`}
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ 
-              flex: 1,
-              backgroundColor: '#f5f5f5',
-              borderColor: '#d9d9d9'
-            }}
-            allowClear
-          />
-        </div>
         <Space>
           <span>Найдено: {filteredData.length}</span>
         </Space>

@@ -9,6 +9,8 @@ import {
   MonitorOutlined,
   SettingOutlined,
   LinkOutlined,
+  SafetyOutlined,
+  LineChartOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
@@ -18,12 +20,12 @@ const { Sider } = Layout;
 
 interface SidebarMenuProps {
   collapsed: boolean;
-  totalCards: number;
-  approvedCards: number;
-  editingCards: number;
+  totalCards?: number;
+  approvedCards?: number;
+  editingCards?: number;
 }
 
-const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, totalCards, approvedCards, editingCards }) => {
+const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentTheme, setTheme } = useTheme();
@@ -48,6 +50,18 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, totalCards, approv
       label: 'Отчеты',
       icon: <BarChartOutlined />,
       path: '/reports',
+    },
+    {
+      key: 'insurance',
+      label: 'Страхование',
+      icon: <SafetyOutlined />,
+      path: '/insurance',
+    },
+    {
+      key: 'analytics',
+      label: 'Аналитика',
+      icon: <LineChartOutlined />,
+      path: '/analytics',
     },
     {
       key: 'mobile-appraiser',
@@ -120,8 +134,6 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, totalCards, approv
         left: 0,
         top: 0,
         bottom: 0,
-        display: 'flex',
-        flexDirection: 'column',
       }}
     >
       <div
@@ -146,13 +158,16 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, totalCards, approv
         selectedKeys={[getSelectedKey()]}
         items={antdMenuItems}
         onClick={({ key }) => handleMenuClick(key)}
+        style={{ 
+          flex: 1,
+          borderRight: 0
+        }}
       />
       
       {!collapsed && (
         <div style={{ 
           padding: '16px', 
           borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-          marginTop: 'auto'
         }}>
           <Space direction="vertical" style={{ width: '100%' }} size="small">
             <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>
@@ -173,15 +188,6 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed, totalCards, approv
                   { value: 'windows-xp', label: 'Windows XP' },
                 ]}
               />
-            </div>
-            
-            <div style={{ color: '#fff', fontSize: '12px' }}>
-              Статистика:
-              <div style={{ marginTop: '4px' }}>
-                <div>Всего: {totalCards}</div>
-                <div style={{ color: '#52c41a' }}>✓ {approvedCards}</div>
-                <div style={{ color: '#faad14' }}>✎ {editingCards}</div>
-              </div>
             </div>
           </Space>
         </div>
