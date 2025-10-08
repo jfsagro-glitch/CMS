@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Button, Space, Tooltip, Tag } from 'antd';
+import { Table, Button, Tooltip, Tag } from 'antd';
 import { EditOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -136,45 +136,40 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
       key: 'actions',
       width: 120,
       fixed: 'right',
-      render: (_, record) => (
-        <Space size="small">
-          <Tooltip title="Просмотр">
-            <Button
-              type="text"
-              icon={<EyeOutlined />}
-              size="small"
-              onClick={() => onView(record.id)}
-            />
-          </Tooltip>
-          <Tooltip title="Редактировать">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              size="small"
-              onClick={() => onEdit(record.id)}
-            />
-          </Tooltip>
-          <Tooltip title="Удалить">
-            <Button
-              type="text"
-              icon={<DeleteOutlined />}
-              size="small"
-              danger
-              onClick={() => onDelete(record.id)}
-            />
-          </Tooltip>
-        </Space>
-      ),
+        render: (_, record) => (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Tooltip title="Просмотр">
+              <Button
+                type="text"
+                icon={<EyeOutlined />}
+                size="small"
+                onClick={() => onView(record.id)}
+              />
+            </Tooltip>
+            <Tooltip title="Редактировать">
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                size="small"
+                onClick={() => onEdit(record.id)}
+              />
+            </Tooltip>
+            <Tooltip title="Удалить">
+              <Button
+                type="text"
+                icon={<DeleteOutlined />}
+                size="small"
+                danger
+                onClick={() => onDelete(record.id)}
+              />
+            </Tooltip>
+          </div>
+        ),
     },
   ];
 
   return (
     <div className="registry-table-container">
-      <div className="table-header">
-        <Space>
-          <span>Найдено: {filteredData.length}</span>
-        </Space>
-      </div>
       <Table
         columns={columns}
         dataSource={filteredData}

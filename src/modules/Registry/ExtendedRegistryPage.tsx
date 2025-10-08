@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, message, Breadcrumb, Drawer } from 'antd';
+import { Modal, message, Drawer } from 'antd';
 import CollateralCardForm from '@/components/common/CollateralCardForm';
 import CollateralCardView from '@/components/common/CollateralCardView';
 import RegistryTable from '@/components/common/RegistryTable';
@@ -111,11 +111,6 @@ const ExtendedRegistryPage: React.FC = () => {
 
   return (
     <div>
-      <Breadcrumb style={{ marginBottom: 16 }}>
-        <Breadcrumb.Item>Главная</Breadcrumb.Item>
-        <Breadcrumb.Item>Реестры</Breadcrumb.Item>
-      </Breadcrumb>
-
       <RegistryTable
         data={tableData}
         loading={loading}
