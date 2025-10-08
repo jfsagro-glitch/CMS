@@ -47,10 +47,6 @@ const ExtendedRegistryPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleCreate = () => {
-    setEditingCard(null);
-    setModalVisible(true);
-  };
 
   const handleEdit = (id: string) => {
     const card = cards.find((c: any) => c.id === id);
