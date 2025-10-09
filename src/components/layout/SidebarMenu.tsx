@@ -264,6 +264,32 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
                 </Tooltip>
               </div>
             )}
+
+            <div
+              style={{
+                marginTop: '16px',
+                paddingTop: '16px',
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+            >
+              <div style={{ color: '#fff', fontSize: '12px', marginBottom: '8px', opacity: 0.7 }}>
+                Техническая поддержка:
+              </div>
+              <a
+                href="mailto:cmsauto@bk.ru"
+                style={{
+                  color: '#1890ff',
+                  fontSize: '12px',
+                  textDecoration: 'none',
+                  display: 'block',
+                  wordBreak: 'break-all',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+              >
+                cmsauto@bk.ru
+              </a>
+            </div>
           </Space>
         </div>
       )}
