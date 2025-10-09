@@ -14,6 +14,7 @@ import {
   WalletOutlined,
   DeleteOutlined,
   AlertOutlined,
+  FolderOpenOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
@@ -68,6 +69,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       label: 'Отчеты',
       icon: <BarChartOutlined />,
       path: '/reports',
+      tooltip: 'Агрегирование отчетности',
+    },
+    {
+      key: 'collateral-dossier',
+      label: 'Залоговое досье',
+      icon: <FolderOpenOutlined />,
+      path: '/collateral-dossier',
     },
     {
       key: 'insurance',

@@ -200,45 +200,45 @@ export type CharacteristicsValues = Record<string, any>;
 export interface ExtendedCollateralCard extends CollateralCard {
   // Партнеры
   partners?: Partner[];
-  
+
   // Адрес
   address?: Address;
-  
+
   // Характеристики (динамические)
   characteristics?: CharacteristicsValues;
-  
+
   // Документы
   documents?: Document[] | any[];
-  
+
   // Стоимость
   marketValue?: number;
   pledgeValue?: number;
   evaluationDate?: string;
-  
+
   // Собственник
   owner?: {
     name: string;
     inn: string;
     type: 'legal' | 'individual';
   };
-  
+
   // Фото
   photos?: any[];
-  
+
   // Дополнительная информация
   description?: string;
   notes?: string;
 }
 
 // Тип объекта для определения набора характеристик
-export type ObjectTypeKey = 
+export type ObjectTypeKey =
   // Жилая недвижимость
   | 'apartment'
   | 'house'
   | 'townhouse'
   | 'room'
   | 'land_residential'
-  
+
   // Коммерческая недвижимость
   | 'office'
   | 'retail'
@@ -247,11 +247,11 @@ export type ObjectTypeKey =
   | 'catering'
   | 'gas_station'
   | 'car_dealership'
-  
+
   // Промышленная
   | 'industrial_building'
   | 'workshop'
-  
+
   // Движимое имущество
   | 'car_passenger'
   | 'car_truck'
@@ -291,4 +291,3 @@ export interface ExtendedDatabaseSchema {
   documents: Document;
   settings: AppSettings & { id: string };
 }
-
