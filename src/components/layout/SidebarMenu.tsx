@@ -15,6 +15,7 @@ import {
   DeleteOutlined,
   AlertOutlined,
   FolderOpenOutlined,
+  CameraOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
@@ -95,6 +96,14 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       icon: <AlertOutlined />,
       path: '/credit-risk',
       tooltip: 'Факторы кредитного риска',
+    },
+    {
+      key: 'cms-check',
+      label: 'CMS Check',
+      icon: <CameraOutlined />,
+      path: 'https://jfsagro-glitch.github.io/cms-check/',
+      external: true,
+      tooltip: 'Система дистанционных осмотров',
     },
     {
       key: 'mobile-appraiser',
@@ -284,8 +293,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
                   display: 'block',
                   wordBreak: 'break-all',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
               >
                 cmsauto@bk.ru
               </a>
