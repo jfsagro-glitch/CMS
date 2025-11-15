@@ -1,5 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Card, Col, Empty, Input, Modal, Row, Select, Space, Spin, Statistic, Table, Tag, Tooltip, Typography, List } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Descriptions,
+  Empty,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Space,
+  Spin,
+  Statistic,
+  Table,
+  Tag,
+  Tooltip,
+  Typography,
+  List,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { EnvironmentOutlined, LineChartOutlined, SearchOutlined } from '@ant-design/icons';
 import type { CollateralPortfolioEntry } from '@/types/portfolio';
@@ -18,6 +37,19 @@ const percentFormatter = new Intl.NumberFormat('ru-RU', {
   style: 'percent',
   maximumFractionDigits: 1,
 });
+
+const formatCurrency = (value: number | string | null | undefined) => {
+  const numeric = parseNumber(value ?? null);
+  return numeric == null ? '—' : currencyFormatter.format(numeric);
+};
+
+const formatText = (value: string | number | null | undefined) => {
+  if (value === null || value === undefined) {
+    return '—';
+  }
+  const text = String(value).trim();
+  return text.length > 0 ? text : '—';
+};
 
 const parseNumber = (value: unknown): number | null => {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -519,26 +551,86 @@ const PortfolioPage: React.FC = () => {
         {selectedDeal && (
           <div className="portfolio-modal">
             <Typography.Title level={4}>{selectedDeal.borrower ?? selectedDeal.pledger ?? 'Сделка'}</Typography.Title>
-            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-              <div>
-                <Typography.Text strong>Номер договора:</Typography.Text> {selectedDeal.contractNumber ?? '—'}
-              </div>
-              <div>
-                <Typography.Text strong>Задолженность:</Typography.Text>{' '}
-                {selectedDeal.debtRub ? currencyFormatter.format(parseNumber(selectedDeal.debtRub) || 0) : '—'}
-              </div>
-              <div>
-                <Typography.Text strong>Лимит:</Typography.Text>{' '}
-                {selectedDeal.limitRub ? currencyFormatter.format(parseNumber(selectedDeal.limitRub) || 0) : '—'}
-              </div>
-              <div>
-                <Typography.Text strong>Обеспечение:</Typography.Text>{' '}
-                {selectedDeal.collateralType ?? selectedDeal.collateralCategory ?? '—'}
-              </div>
-              <div>
-                <Typography.Text strong>Местоположение:</Typography.Text>{' '}
-                {selectedDeal.collateralLocation ?? '—'}
-              </div>
+            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+              <Descriptions title="Общие сведения" bordered column={3} size="small">
+                <Descriptions.Item label="Сегмент">{formatText(selectedDeal.segment)}</Descriptions.Item>
+                <Descriptions.Item label="Группа">{formatText(selectedDeal.group)}</Descriptions.Item>
+                <Descriptions.Item label="REFERENCE">{formatText(selectedDeal.reference)}</Descriptions.Item>
+                <Descriptions.Item label="Залогодатель">{formatText(selectedDeal.pledger)}</Descriptions.Item>
+                <Descriptions.Item label="ИНН">{formatText(selectedDeal.inn)}</Descriptions.Item>
+                <Descriptions.Item label="Заемщик">{formatText(selectedDeal.borrower)}</Descriptions.Item>
+                <Descriptions.Item label="№ договора">{formatText(selectedDeal.contractNumber)}</Descriptions.Item>
+                <Descriptions.Item label="Дата договора">{formatText(selectedDeal.contractDate)}</Descriptions.Item>
+                <Descriptions.Item label="Тип">{formatText(selectedDeal.type)}</Descriptions.Item>
+                <Descriptions.Item label="Дата открытия">{formatText(selectedDeal.openDate)}</Descriptions.Item>
+                <Descriptions.Item label="Дата закрытия">{formatText(selectedDeal.closeDate)}</Descriptions.Item>
+              </Descriptions>
+
+              <Descriptions title="Финансовые показатели" bordered column={3} size="small">
+                <Descriptions.Item label="Задолженность, руб.">{formatCurrency(selectedDeal.debtRub)}</Descriptions.Item>
+                <Descriptions.Item label="Лимит, руб.">{formatCurrency(selectedDeal.limitRub)}</Descriptions.Item>
+                <Descriptions.Item label="Проср. ОД, руб.">{formatCurrency(selectedDeal.overduePrincipal)}</Descriptions.Item>
+                <Descriptions.Item label="Проср. %, руб.">{formatCurrency(selectedDeal.overdueInterest)}</Descriptions.Item>
+              </Descriptions>
+
+              <Descriptions title="Договор обеспечения" bordered column={3} size="small">
+                <Descriptions.Item label="REFERENCE залога">{formatText(selectedDeal.collateralReference)}</Descriptions.Item>
+                <Descriptions.Item label="Номер договора залога (ипотеки)">
+                  {formatText(selectedDeal.collateralContractNumber)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Дата договора залога (ипотеки)">
+                  {formatText(selectedDeal.collateralContractDate)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Категория обеспечения">{formatText(selectedDeal.collateralCategory)}</Descriptions.Item>
+              </Descriptions>
+
+              <Descriptions title="Оценка обеспечения" bordered column={3} size="small">
+                <Descriptions.Item label="Залоговая стоимость, руб.">{formatCurrency(selectedDeal.collateralValue)}</Descriptions.Item>
+                <Descriptions.Item label="Рыночная стоимость, руб.">{formatCurrency(selectedDeal.marketValue)}</Descriptions.Item>
+                <Descriptions.Item label="Дата первоначального определения стоимости">
+                  {formatText(selectedDeal.initialValuationDate)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Актуальная рыночная стоимость, руб.">
+                  {formatCurrency(selectedDeal.currentMarketValue)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Дата определения текущей стоимости">
+                  {formatText(selectedDeal.currentValuationDate)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Справедливая стоимость, руб.">{formatCurrency(selectedDeal.fairValue)}</Descriptions.Item>
+              </Descriptions>
+
+              <Descriptions title="Обеспечение" bordered column={3} size="small">
+                <Descriptions.Item label="Тип обеспечения">{formatText(selectedDeal.collateralType)}</Descriptions.Item>
+                <Descriptions.Item label="Назначение обеспечения" span={2}>
+                  {formatText(selectedDeal.collateralPurpose)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Информация о залоге" span={3}>
+                  {formatText(selectedDeal.collateralInfo)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Местоположение предмета залога" span={2}>
+                  {formatText(selectedDeal.collateralLocation)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Ликвидность">{formatText(selectedDeal.liquidity)}</Descriptions.Item>
+                <Descriptions.Item label="Категория качества обеспечения">
+                  {formatText(selectedDeal.qualityCategory)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Дата регистрации обеспечения">
+                  {formatText(selectedDeal.registrationDate)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Очередность залога">{formatText(selectedDeal.priority)}</Descriptions.Item>
+              </Descriptions>
+
+              <Descriptions title="Мониторинг и ответственные" bordered column={3} size="small">
+                <Descriptions.Item label="Вид мониторинга">{formatText(selectedDeal.monitoringType)}</Descriptions.Item>
+                <Descriptions.Item label="Дата последнего мониторинга">
+                  {formatText(selectedDeal.lastMonitoringDate)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Планируемая дата мониторинга">
+                  {formatText(selectedDeal.nextMonitoringDate)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Ответственный сотрудник">{formatText(selectedDeal.owner)}</Descriptions.Item>
+                <Descriptions.Item label="Счет 9131">{formatText(selectedDeal.account9131)}</Descriptions.Item>
+              </Descriptions>
             </Space>
           </div>
         )}
