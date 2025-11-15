@@ -1,0 +1,41 @@
+export interface CollateralPortfolioEntry {
+  segment: string | null;
+  group: string | null;
+  reference: string | number | null;
+  pledger: string | null;
+  inn: string | number | null;
+  borrower: string | null;
+  contractNumber: string | null;
+  contractDate: string | null;
+  type: string | null;
+  openDate: string | null;
+  closeDate: string | null;
+  debtRub: number | string | null;
+  limitRub: number | string | null;
+  overduePrincipal: number | string | null;
+  overdueInterest: number | string | null;
+  collateralReference: string | number | null;
+  collateralContractNumber: string | null;
+  collateralContractDate: string | null;
+  collateralCategory: string | null;
+  collateralValue: number | string | null;
+  marketValue: number | string | null;
+  initialValuationDate: string | null;
+  currentMarketValue: number | string | null;
+  currentValuationDate: string | null;
+  fairValue: number | string | null;
+  collateralType: string | null;
+  collateralPurpose: string | null;
+  collateralInfo: string | null;
+  collateralLocation: string | null;
+  liquidity: string | null;
+  qualityCategory: string | null;
+  registrationDate: string | null;
+  priority: string | null;
+  monitoringType: string | null;
+  lastMonitoringDate: string | null;
+  nextMonitoringDate: string | null;
+  owner: string | null;
+  account9131: string | number | null;
+}
+

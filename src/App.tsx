@@ -13,6 +13,8 @@ import { DemoDataProvider } from './contexts/DemoDataContext';
 import MainLayout from './components/layout/MainLayout';
 import ExtendedRegistryPage from './modules/Registry/ExtendedRegistryPage';
 import PlaceholderPage from './modules/Placeholder/PlaceholderPage';
+import PortfolioPage from './modules/Portfolio/PortfolioPage';
+import CollateralDossierPage from './modules/CollateralDossier/CollateralDossierPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -102,7 +104,8 @@ const AppContent: React.FC = () => {
                   <Route path="/" element={<MainLayout />}>
                     <Route index element={<Navigate to="/registry" replace />} />
                     <Route path="registry" element={<ExtendedRegistryPage />} />
-                    <Route path="portfolio" element={<PlaceholderPage title="Залоговый портфель" />} />
+                    <Route path="portfolio" element={<PortfolioPage />} />
+                    <Route path="collateral-dossier" element={<CollateralDossierPage />} />
                     <Route path="tasks" element={<PlaceholderPage title="Задачи" />} />
                     <Route path="reports" element={<PlaceholderPage title="Отчеты" />} />
                     <Route path="insurance" element={<PlaceholderPage title="Страхование" />} />

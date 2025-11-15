@@ -1,0 +1,62 @@
+.collateral-dossier {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: calc(100vh - 64px);
+  background: linear-gradient(135deg, rgba(22, 119, 255, 0.05), rgba(245, 247, 250, 0.7));
+}
+
+.collateral-dossier__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.collateral-dossier__title {
+  margin-bottom: 4px;
+}
+
+.collateral-dossier__subtitle {
+  margin-bottom: 0;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.collateral-dossier__filters {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08);
+}
+
+.collateral-dossier__table-card {
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+}
+
+.dossier-doc-cell {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.dossier-doc-icon {
+  font-size: 24px;
+  color: #1677ff;
+}
+
+.dossier-muted {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+}
+
+.collateral-dossier__folder--active {
+  background: rgba(22, 119, 255, 0.08);
+  border-radius: 12px;
+}
+
+.collateral-dossier__folder--active .ant-list-item-meta-title {
+  color: #1677ff;
+}
+
