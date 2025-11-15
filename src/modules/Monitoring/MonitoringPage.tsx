@@ -6,6 +6,7 @@ import {
   Col,
   Empty,
   Input,
+  Modal,
   Radio,
   Row,
   Select,
@@ -45,6 +46,7 @@ const MonitoringPage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [methodFilter, setMethodFilter] = useState<string | null>(null);
   const [ownerFilter, setOwnerFilter] = useState<string | null>(null);
+  const [guidelinesVisible, setGuidelinesVisible] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -324,22 +326,15 @@ const MonitoringPage: React.FC = () => {
       </Card>
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} md={8}>
-          <Card title="Рекомендации по периодичности">
-            <ul className="monitoring-guidelines">
-              <li>Недвижимость — не реже 1 раза в 12 месяцев.</li>
-              <li>Транспорт/Oборудование без страхования — каждые 6 месяцев.</li>
-              <li>Товары/сырье — каждые 3 месяца, формальное обеспечение документарно.</li>
-              <li>Документарный мониторинг: ЕГРН, реестры залогов, выписки счетов депо.</li>
-            </ul>
-            <Typography.Paragraph className="monitoring-muted">
-              При наличии отдельного решения УО/УЛ используется кастомная периодичность и метод
-              проведения мониторинга.
-            </Typography.Paragraph>
-          </Card>
-        </Col>
-        <Col xs={24} md={16}>
+        <Col xs={24}>
           <Card bodyStyle={{ padding: 0 }} className="monitoring-page__table-card">
+            <div className="monitoring-page__table-actions">
+              <Space>
+                <Tooltip title="Рекомендации по периодичности мониторинга">
+                  <a onClick={() => setGuidelinesVisible(true)}>Рекомендации</a>
+                </Tooltip>
+              </Space>
+            </div>
             <Table
               columns={columns}
               dataSource={filteredPlan}
@@ -371,6 +366,28 @@ const MonitoringPage: React.FC = () => {
           }
         />
       )}
+
+      <Modal
+        title="Рекомендации по периодичности мониторинга"
+        open={guidelinesVisible}
+        onCancel={() => setGuidelinesVisible(false)}
+        onOk={() => setGuidelinesVisible(false)}
+        okText="Понятно"
+        cancelText="Закрыть"
+      >
+        <ul className="monitoring-guidelines">
+          <li>Недвижимость — не реже 1 раза в 12 месяцев.</li>
+          <li>Транспорт/оборудование без страхования — каждые 6 месяцев.</li>
+          <li>Транспорт/оборудование со страхованием — каждые 12 месяцев.</li>
+          <li>Товары и сырье — каждые 3 месяца (формальное обеспечение документарно).</li>
+          <li>Имущественные права — каждые 6 месяцев.</li>
+          <li>Ценные бумаги и доли — ежегодно, документарно.</li>
+        </ul>
+        <Typography.Paragraph className="monitoring-muted">
+          При наличии решения УО/УЛ используется индивидуальный график. Документарные проверки включают
+          ЕГРН, реестры залогов, выписки счетов депо и онлайн-проверку транспортных средств.
+        </Typography.Paragraph>
+      </Modal>
     </div>
   );
 };
