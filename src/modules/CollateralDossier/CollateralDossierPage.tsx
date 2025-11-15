@@ -7,6 +7,7 @@ import {
   Empty,
   Input,
   List,
+  Modal,
   Row,
   Select,
   Space,
@@ -35,6 +36,7 @@ const CollateralDossierPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [foldersVisible, setFoldersVisible] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -306,44 +308,25 @@ const CollateralDossierPage: React.FC = () => {
         </Space>
       </Card>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} md={7}>
-          <Card title="Структура папок">
-            <List
-              dataSource={folders}
-              renderItem={item => (
-                <List.Item
-                  className={item.id === folderFilter ? 'collateral-dossier__folder--active' : ''}
-                  onClick={() => setFolderFilter(prev => (prev === item.id ? null : item.id))}
-                >
-                  <List.Item.Meta
-                    avatar={<Badge status="processing" />}
-                    title={<span>{item.path.join(' / ')}</span>}
-                    description={
-                      item.description ? <span className="dossier-muted">{item.description}</span> : null
-                    }
-                  />
-                </List.Item>
-              )}
-              locale={{ emptyText: 'Структура папок не найдена' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} md={17}>
-          <Card bodyStyle={{ padding: 0 }} className="collateral-dossier__table-card">
-            <Table
-              columns={columns}
-              dataSource={filteredDocuments}
-              pagination={{ pageSize: 15, showSizeChanger: false }}
-              scroll={{ x: 1200 }}
-              loading={loading}
-              locale={{
-                emptyText: loading ? <Empty description="Загрузка..." /> : <Empty description="Нет документов" />,
-              }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <Card bodyStyle={{ padding: 0 }} className="collateral-dossier__table-card">
+        <div className="collateral-dossier__table-actions">
+          <Space>
+            <Tooltip title="Открыть иерархию хранения документов">
+              <a onClick={() => setFoldersVisible(true)}>Структура папок</a>
+            </Tooltip>
+          </Space>
+        </div>
+        <Table
+          columns={columns}
+          dataSource={filteredDocuments}
+          pagination={{ pageSize: 15, showSizeChanger: false }}
+          scroll={{ x: 1200 }}
+          loading={loading}
+          locale={{
+            emptyText: loading ? <Empty description="Загрузка..." /> : <Empty description="Нет документов" />,
+          }}
+        />
+      </Card>
 
       {error && (
         <Alert
@@ -358,6 +341,34 @@ const CollateralDossierPage: React.FC = () => {
           }
         />
       )}
+
+      <Modal
+        title="Структура папок залогового досье"
+        open={foldersVisible}
+        onCancel={() => setFoldersVisible(false)}
+        onOk={() => setFoldersVisible(false)}
+        okText="Закрыть"
+        cancelButtonProps={{ style: { display: 'none' } }}
+        width={720}
+      >
+        <List
+          dataSource={folders}
+          renderItem={item => (
+            <List.Item
+              className={item.id === folderFilter ? 'collateral-dossier__folder--active' : ''}
+              onClick={() => setFolderFilter(prev => (prev === item.id ? null : item.id))}
+              style={{ cursor: 'pointer' }}
+            >
+              <List.Item.Meta
+                avatar={<Badge status="processing" />}
+                title={<span>{item.path.join(' / ')}</span>}
+                description={item.description ? <span className="dossier-muted">{item.description}</span> : null}
+              />
+            </List.Item>
+          )}
+          locale={{ emptyText: 'Структура папок не найдена' }}
+        />
+      </Modal>
     </div>
   );
 };
