@@ -1,0 +1,54 @@
+.monitoring-page {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: calc(100vh - 64px);
+  background: linear-gradient(120deg, rgba(24, 144, 255, 0.06), rgba(255, 255, 255, 0.9));
+}
+
+.monitoring-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.monitoring-page__title {
+  margin-bottom: 4px;
+}
+
+.monitoring-page__subtitle {
+  margin-bottom: 0;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.monitoring-page__filters {
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08);
+}
+
+.monitoring-page__table-card {
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+}
+
+.monitoring-muted {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+}
+
+.monitoring-trend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 12px;
+}
+
+.monitoring-guidelines {
+  padding-left: 18px;
+  margin-bottom: 8px;
+  color: rgba(0, 0, 0, 0.75);
+}

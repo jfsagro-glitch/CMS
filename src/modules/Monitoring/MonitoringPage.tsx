@@ -1,0 +1,378 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Alert,
+  Badge,
+  Card,
+  Col,
+  Empty,
+  Input,
+  Radio,
+  Row,
+  Select,
+  Space,
+  Statistic,
+  Table,
+  Tag,
+  Tooltip,
+  Typography,
+} from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import { CalendarOutlined, ClockCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import type { MonitoringPlanEntry, MonitoringTimeframe } from '@/types/monitoring';
+import './MonitoringPage.css';
+
+dayjs.extend(relativeTime);
+
+type TableRow = MonitoringPlanEntry & { key: string; daysUntil: number; statusColor: string };
+
+const timeframeOptions: { label: string; value: MonitoringTimeframe | 'all' }[] = [
+  { label: 'Все', value: 'all' },
+  { label: 'Просрочено', value: 'overdue' },
+  { label: '7 дней', value: 'week' },
+  { label: '30 дней', value: 'month' },
+  { label: '90 дней', value: 'quarter' },
+];
+
+const MonitoringPage: React.FC = () => {
+  const [plan, setPlan] = useState<TableRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [timeframeFilter, setTimeframeFilter] = useState<MonitoringTimeframe | 'all'>('week');
+  const [searchValue, setSearchValue] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [methodFilter, setMethodFilter] = useState<string | null>(null);
+  const [ownerFilter, setOwnerFilter] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const base = import.meta.env.BASE_URL ?? '/';
+        const resolvedBase = new URL(base, window.location.origin);
+        const normalizedPath = resolvedBase.pathname.endsWith('/')
+          ? resolvedBase.pathname
+          : `${resolvedBase.pathname}/`;
+        const url = `${resolvedBase.origin}${normalizedPath}monitoringPlan.json?v=${Date.now()}`;
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`Не удалось загрузить план мониторинга (${response.status})`);
+        }
+        const payload = (await response.json()) as MonitoringPlanEntry[];
+        if (!mounted) return;
+
+        const enriched: TableRow[] = payload.map((item, index) => {
+          const planned = dayjs(item.plannedDate);
+          const daysUntil = planned.diff(dayjs(), 'day');
+          let statusColor = '#1677ff';
+          if (daysUntil < 0) statusColor = '#f5222d';
+          else if (daysUntil <= 7) statusColor = '#fa8c16';
+          else if (daysUntil <= 30) statusColor = '#52c41a';
+
+          return {
+            ...item,
+            key: `${item.reference ?? 'ref'}-${index}`,
+            daysUntil,
+            statusColor,
+          };
+        });
+
+        setPlan(enriched);
+      } catch (fetchError) {
+        setError(fetchError instanceof Error ? fetchError.message : 'Неизвестная ошибка');
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const typeOptions = useMemo(() => {
+    const values = Array.from(new Set(plan.map(item => item.baseType))).filter(Boolean);
+    return values.map(value => ({ value, label: value }));
+  }, [plan]);
+
+  const methodOptions = useMemo(() => {
+    const values = Array.from(new Set(plan.map(item => item.monitoringMethod))).filter(Boolean);
+    return values.map(value => ({ value, label: value }));
+  }, [plan]);
+
+  const ownerOptions = useMemo(() => {
+    const values = Array.from(new Set(plan.map(item => item.owner))).filter(Boolean);
+    return values.map(value => ({ value, label: value }));
+  }, [plan]);
+
+  const filteredPlan = useMemo(() => {
+    const search = searchValue.trim().toLowerCase();
+
+    return plan.filter(entry => {
+      const matchesSearch =
+        !search ||
+        [
+          entry.reference,
+          entry.borrower,
+          entry.pledger,
+          entry.segment,
+          entry.owner,
+          entry.monitoringType,
+        ]
+          .filter(Boolean)
+          .some(value => String(value).toLowerCase().includes(search));
+
+      const matchesTimeframe = timeframeFilter === 'all' || entry.timeframe === timeframeFilter;
+      const matchesType = !typeFilter || entry.baseType === typeFilter;
+      const matchesMethod = !methodFilter || entry.monitoringMethod === methodFilter;
+      const matchesOwner = !ownerFilter || entry.owner === ownerFilter;
+
+      return matchesSearch && matchesTimeframe && matchesType && matchesMethod && matchesOwner;
+    });
+  }, [plan, searchValue, timeframeFilter, typeFilter, methodFilter, ownerFilter]);
+
+  const stats = useMemo(() => {
+    const counters = {
+      overdue: 0,
+      week: 0,
+      month: 0,
+      quarter: 0,
+      total: plan.length,
+    };
+    plan.forEach(item => {
+      if (item.timeframe in counters) {
+        counters[item.timeframe as keyof typeof counters] += 1;
+      }
+    });
+    return counters;
+  }, [plan]);
+
+  const columns: ColumnsType<TableRow> = [
+    {
+      title: 'Сделка',
+      dataIndex: 'reference',
+      key: 'reference',
+      width: 220,
+      render: (_, record) => (
+        <div>
+          <Typography.Text strong>{record.reference ?? '—'}</Typography.Text>
+          <div className="monitoring-muted">{record.borrower ?? record.pledger ?? 'Не указан'}</div>
+          <div className="monitoring-muted">
+            {record.segment ?? '—'} · {record.group ?? '—'}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'Обеспечение',
+      dataIndex: 'baseType',
+      key: 'baseType',
+      width: 220,
+      render: (_, record) => (
+        <div>
+          <Typography.Text>{record.baseType}</Typography.Text>
+          <div className="monitoring-muted">{record.collateralType}</div>
+          {record.liquidity && <Tag>{record.liquidity}</Tag>}
+        </div>
+      ),
+    },
+    {
+      title: 'План мониторинга',
+      dataIndex: 'plannedDate',
+      key: 'plannedDate',
+      width: 220,
+      render: (_, record) => (
+        <div>
+          <Badge color={record.statusColor} />
+          <Typography.Text style={{ marginLeft: 8 }}>{record.plannedDate}</Typography.Text>
+          <div className="monitoring-muted">
+            Последний: {record.lastMonitoringDate} · каждые {record.frequencyMonths} мес.
+          </div>
+          <div className="monitoring-trend">
+            <ClockCircleOutlined />
+            {record.daysUntil < 0 ? (
+              <span>Просрочен на {Math.abs(record.daysUntil)} дн.</span>
+            ) : (
+              <span>Через {record.daysUntil} дн.</span>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'Вид/метод мониторинга',
+      dataIndex: 'monitoringType',
+      key: 'monitoringType',
+      width: 240,
+      render: (_, record) => (
+        <div>
+          {record.monitoringType && <Tag color="blue">{record.monitoringType}</Tag>}
+          <div className="monitoring-muted">{record.monitoringMethod}</div>
+        </div>
+      ),
+    },
+    {
+      title: 'Ответственный',
+      dataIndex: 'owner',
+      key: 'owner',
+      width: 180,
+      render: value => <Typography.Text>{value}</Typography.Text>,
+    },
+    {
+      title: 'Приоритет',
+      dataIndex: 'priority',
+      key: 'priority',
+      width: 160,
+      render: value => <span>{value ?? '—'}</span>,
+    },
+  ];
+
+  return (
+    <div className="monitoring-page">
+      <div className="monitoring-page__header">
+        <div>
+          <Typography.Title level={2} className="monitoring-page__title">
+            План мониторинга Обеспечения
+          </Typography.Title>
+          <Typography.Paragraph className="monitoring-page__subtitle">
+            Формирование недельного, месячного и квартального графика выездов и документарных
+            проверок по всем видам залогов.
+          </Typography.Paragraph>
+        </div>
+        <Tooltip title="Поиск по сделке, клиенту, ИНН или ответственному">
+          <Input
+            allowClear
+            size="large"
+            placeholder="Поиск по сделкам и клиентам"
+            prefix={<SearchOutlined />}
+            value={searchValue}
+            onChange={event => setSearchValue(event.target.value)}
+            style={{ width: 360 }}
+          />
+        </Tooltip>
+      </div>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="Просрочено"
+              value={stats.overdue}
+              valueStyle={{ color: '#f5222d' }}
+              prefix={<CalendarOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic title="7 дней" value={stats.week} valueStyle={{ color: '#fa8c16' }} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic title="30 дней" value={stats.month} valueStyle={{ color: '#52c41a' }} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic title="90 дней" value={stats.quarter} valueStyle={{ color: '#1677ff' }} />
+          </Card>
+        </Col>
+      </Row>
+
+      <Card className="monitoring-page__filters">
+        <Space size="middle" wrap>
+          <Radio.Group
+            options={timeframeOptions}
+            value={timeframeFilter}
+            onChange={event => setTimeframeFilter(event.target.value)}
+            optionType="button"
+            buttonStyle="solid"
+          />
+          <Select
+            allowClear
+            placeholder="Тип обеспечения"
+            style={{ minWidth: 200 }}
+            options={typeOptions}
+            value={typeFilter ?? undefined}
+            onChange={value => setTypeFilter(value ?? null)}
+          />
+          <Select
+            allowClear
+            placeholder="Метод мониторинга"
+            style={{ minWidth: 200 }}
+            options={methodOptions}
+            value={methodFilter ?? undefined}
+            onChange={value => setMethodFilter(value ?? null)}
+          />
+          <Select
+            allowClear
+            placeholder="Ответственный"
+            style={{ minWidth: 200 }}
+            options={ownerOptions}
+            value={ownerFilter ?? undefined}
+            onChange={value => setOwnerFilter(value ?? null)}
+          />
+        </Space>
+      </Card>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={8}>
+          <Card title="Рекомендации по периодичности">
+            <ul className="monitoring-guidelines">
+              <li>Недвижимость — не реже 1 раза в 12 месяцев.</li>
+              <li>Транспорт/Oборудование без страхования — каждые 6 месяцев.</li>
+              <li>Товары/сырье — каждые 3 месяца, формальное обеспечение документарно.</li>
+              <li>Документарный мониторинг: ЕГРН, реестры залогов, выписки счетов депо.</li>
+            </ul>
+            <Typography.Paragraph className="monitoring-muted">
+              При наличии отдельного решения УО/УЛ используется кастомная периодичность и метод
+              проведения мониторинга.
+            </Typography.Paragraph>
+          </Card>
+        </Col>
+        <Col xs={24} md={16}>
+          <Card bodyStyle={{ padding: 0 }} className="monitoring-page__table-card">
+            <Table
+              columns={columns}
+              dataSource={filteredPlan}
+              pagination={{ pageSize: 15, showSizeChanger: false }}
+              scroll={{ x: 1200 }}
+              loading={loading}
+              locale={{
+                emptyText: loading ? (
+                  <Empty description="Загрузка..." />
+                ) : (
+                  <Empty description="Нет задач" />
+                ),
+              }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {error && (
+        <Alert
+          type="error"
+          showIcon
+          message="Не удалось загрузить план мониторинга"
+          description={error}
+          action={
+            <a onClick={() => window.location.reload()} style={{ fontWeight: 600 }}>
+              Повторить
+            </a>
+          }
+        />
+      )}
+    </div>
+  );
+};
+
+export default MonitoringPage;

@@ -15,6 +15,7 @@ import ExtendedRegistryPage from './modules/Registry/ExtendedRegistryPage';
 import PlaceholderPage from './modules/Placeholder/PlaceholderPage';
 import PortfolioPage from './modules/Portfolio/PortfolioPage';
 import CollateralDossierPage from './modules/CollateralDossier/CollateralDossierPage';
+import MonitoringPage from './modules/Monitoring/MonitoringPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -35,7 +36,7 @@ const AppContent: React.FC = () => {
 
         // Загрузка расширенных карточек
         const cards = await extendedStorageService.getExtendedCards();
-        
+
         // Автозагрузка демо-данных при первом запуске (если база пустая)
         if (cards.length === 0) {
           try {
@@ -63,12 +64,14 @@ const AppContent: React.FC = () => {
 
   if (!initialized) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}
+      >
         Загрузка...
       </div>
     );
@@ -85,44 +88,47 @@ const AppContent: React.FC = () => {
     }
   };
 
-      return (
-        <ThemeProvider>
-          <DemoDataProvider>
-            <ConfigProvider
-              locale={ruRU}
-              theme={{
-                algorithm: getThemeAlgorithm(),
-                token: {
-                  colorPrimary: '#1890ff',
-                  borderRadius: 6,
-                },
-              }}
-            >
-              <AntApp>
-                <HashRouter>
-                  <Routes>
-                  <Route path="/" element={<MainLayout />}>
-                    <Route index element={<Navigate to="/registry" replace />} />
-                    <Route path="registry" element={<ExtendedRegistryPage />} />
-                    <Route path="portfolio" element={<PortfolioPage />} />
-                    <Route path="collateral-dossier" element={<CollateralDossierPage />} />
-                    <Route path="tasks" element={<PlaceholderPage title="Задачи" />} />
-                    <Route path="reports" element={<PlaceholderPage title="Отчеты" />} />
-                    <Route path="insurance" element={<PlaceholderPage title="Страхование" />} />
-                    <Route path="analytics" element={<PlaceholderPage title="Аналитика" />} />
-                      <Route path="mobile-appraiser" element={<PlaceholderPage title="Мобильный оценщик" />} />
-                      <Route path="smartdeal" element={<PlaceholderPage title="SmartDeal" />} />
-                      <Route path="upload" element={<PlaceholderPage title="Загрузка" />} />
-                      <Route path="monitoring" element={<PlaceholderPage title="Мониторинг" />} />
-                      <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
-                    </Route>
-                  </Routes>
-                </HashRouter>
-              </AntApp>
-            </ConfigProvider>
-          </DemoDataProvider>
-        </ThemeProvider>
-      );
+  return (
+    <ThemeProvider>
+      <DemoDataProvider>
+        <ConfigProvider
+          locale={ruRU}
+          theme={{
+            algorithm: getThemeAlgorithm(),
+            token: {
+              colorPrimary: '#1890ff',
+              borderRadius: 6,
+            },
+          }}
+        >
+          <AntApp>
+            <HashRouter>
+              <Routes>
+                <Route path="/" element={<MainLayout />}>
+                  <Route index element={<Navigate to="/registry" replace />} />
+                  <Route path="registry" element={<ExtendedRegistryPage />} />
+                  <Route path="portfolio" element={<PortfolioPage />} />
+                  <Route path="collateral-dossier" element={<CollateralDossierPage />} />
+                  <Route path="tasks" element={<PlaceholderPage title="Задачи" />} />
+                  <Route path="reports" element={<PlaceholderPage title="Отчеты" />} />
+                  <Route path="insurance" element={<PlaceholderPage title="Страхование" />} />
+                  <Route path="analytics" element={<PlaceholderPage title="Аналитика" />} />
+                  <Route
+                    path="mobile-appraiser"
+                    element={<PlaceholderPage title="Мобильный оценщик" />}
+                  />
+                  <Route path="smartdeal" element={<PlaceholderPage title="SmartDeal" />} />
+                  <Route path="upload" element={<PlaceholderPage title="Загрузка" />} />
+                  <Route path="monitoring" element={<MonitoringPage />} />
+                  <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
+                </Route>
+              </Routes>
+            </HashRouter>
+          </AntApp>
+        </ConfigProvider>
+      </DemoDataProvider>
+    </ThemeProvider>
+  );
 };
 
 const App: React.FC = () => {
@@ -136,4 +142,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
