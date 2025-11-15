@@ -29,6 +29,8 @@ const CollateralDossierPage: React.FC = () => {
   const [documents, setDocuments] = useState<TableRow[]>([]);
   const [folders, setFolders] = useState<CollateralFolder[]>([]);
   const [searchValue, setSearchValue] = useState('');
+  const [clientSearch, setClientSearch] = useState('');
+  const [pledgerSearch, setPledgerSearch] = useState('');
   const [folderFilter, setFolderFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -91,6 +93,9 @@ const CollateralDossierPage: React.FC = () => {
 
   const filteredDocuments = useMemo(() => {
     const search = searchValue.trim().toLowerCase();
+    const clientTerm = clientSearch.trim().toLowerCase();
+    const pledgerTerm = pledgerSearch.trim().toLowerCase();
+
     return documents.filter(doc => {
       const matchesSearch =
         !search ||
@@ -106,12 +111,20 @@ const CollateralDossierPage: React.FC = () => {
           .filter(Boolean)
           .some(value => String(value).toLowerCase().includes(search));
 
+      const matchesClient =
+        !clientTerm ||
+        (doc.borrower && String(doc.borrower).toLowerCase().includes(clientTerm)) ||
+        (doc.pledger && String(doc.pledger).toLowerCase().includes(clientTerm));
+
+      const matchesPledger =
+        !pledgerTerm || (doc.pledger && String(doc.pledger).toLowerCase().includes(pledgerTerm));
+
       const matchesFolder = !folderFilter || doc.folderId === folderFilter;
       const matchesStatus = !statusFilter || doc.status === statusFilter;
 
-      return matchesSearch && matchesFolder && matchesStatus;
+      return matchesSearch && matchesClient && matchesPledger && matchesFolder && matchesStatus;
     });
-  }, [documents, searchValue, folderFilter, statusFilter]);
+  }, [documents, searchValue, clientSearch, pledgerSearch, folderFilter, statusFilter]);
 
   const stats = useMemo(() => {
     const totalDocs = documents.length;
@@ -273,6 +286,22 @@ const CollateralDossierPage: React.FC = () => {
             options={statusOptions}
             value={statusFilter ?? undefined}
             onChange={value => setStatusFilter(value ?? null)}
+          />
+          <Input
+            allowClear
+            placeholder="Поиск по клиенту"
+            prefix={<SearchOutlined />}
+            value={clientSearch}
+            onChange={event => setClientSearch(event.target.value)}
+            style={{ minWidth: 220 }}
+          />
+          <Input
+            allowClear
+            placeholder="Поиск по залогодателю"
+            prefix={<SearchOutlined />}
+            value={pledgerSearch}
+            onChange={event => setPledgerSearch(event.target.value)}
+            style={{ minWidth: 220 }}
           />
         </Space>
       </Card>
