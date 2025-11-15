@@ -460,7 +460,7 @@ const PortfolioPage: React.FC = () => {
         <Col xs={24} sm={12} md={6}>
           <Card className="portfolio-page__card">
             <Statistic
-              title="Объекты в выдаче"
+              title="Количество договоров"
               value={stats.totalRows}
               prefix={<LineChartOutlined />}
               valueStyle={{ color: '#1d39c4' }}
