@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Card, Col, Empty, Input, Row, Select, Space, Spin, Statistic, Table, Tag, Tooltip, Typography } from 'antd';
+import { Alert, Button, Card, Col, Empty, Input, Modal, Row, Select, Space, Spin, Statistic, Table, Tag, Tooltip, Typography, List } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { EnvironmentOutlined, LineChartOutlined, SearchOutlined } from '@ant-design/icons';
 import type { CollateralPortfolioEntry } from '@/types/portfolio';
+import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
 import './PortfolioPage.css';
 
 type PortfolioRow = CollateralPortfolioEntry & { key: string };
@@ -46,10 +47,16 @@ const PortfolioPage: React.FC = () => {
   const [portfolioRows, setPortfolioRows] = useState<PortfolioRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDeal, setSelectedDeal] = useState<PortfolioRow | null>(null);
+  const [dealModalVisible, setDealModalVisible] = useState(false);
+  const [dossierModalVisible, setDossierModalVisible] = useState(false);
+  const [dossierDocuments, setDossierDocuments] = useState<CollateralDocument[]>([]);
+  const [dossierData, setDossierData] = useState<CollateralDocument[]>([]);
+  const [dossierLoading, setDossierLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    const load = async () => {
+    const loadPortfolio = async () => {
       setLoading(true);
       setError(null);
       try {
@@ -86,7 +93,30 @@ const PortfolioPage: React.FC = () => {
       }
     };
 
-    load();
+    const loadDossier = async () => {
+      try {
+        const base = import.meta.env.BASE_URL ?? '/';
+        const resolvedBase = new URL(base, window.location.origin);
+        const normalizedPath = resolvedBase.pathname.endsWith('/')
+          ? resolvedBase.pathname
+          : `${resolvedBase.pathname}/`;
+        const url = `${resolvedBase.origin}${normalizedPath}collateralDossier.json?v=${Date.now()}`;
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`Не удалось загрузить досье (${response.status})`);
+        }
+        const payload = (await response.json()) as CollateralDossierPayload;
+        if (!mounted) return;
+        setDossierData(payload.documents);
+      } catch (fetchError) {
+        console.warn('Не удалось загрузить залоговое досье', fetchError);
+      } finally {
+        setDossierLoading(false);
+      }
+    };
+
+    loadPortfolio();
+    loadDossier();
 
     return () => {
       mounted = false;
@@ -134,6 +164,24 @@ const PortfolioPage: React.FC = () => {
       return matchesSearch && matchesSegment && matchesGroup && matchesLiquidity && matchesMonitoring;
     });
   }, [portfolioRows, searchValue, segmentFilter, groupFilter, liquidityFilter, monitoringFilter]);
+
+  const handleOpenDeal = (record: PortfolioRow) => {
+    setSelectedDeal(record);
+    setDealModalVisible(true);
+  };
+
+  const closeDealModal = () => {
+    setSelectedDeal(null);
+    setDealModalVisible(false);
+  };
+
+  const openDossierModal = () => {
+    if (!selectedDeal) return;
+    const reference = String(selectedDeal.reference ?? selectedDeal.contractNumber ?? '');
+    const docs = dossierData.filter(doc => String(doc.reference) === reference);
+    setDossierDocuments(docs);
+    setDossierModalVisible(true);
+  };
 
   const stats = useMemo(() => {
     const totals = filteredData.reduce(
@@ -425,6 +473,9 @@ const PortfolioPage: React.FC = () => {
           pagination={{ pageSize: 20, showSizeChanger: false }}
           scroll={{ x: 1200 }}
           loading={loading}
+          onRow={record => ({
+            onDoubleClick: () => handleOpenDeal(record),
+          })}
           locale={{
             emptyText: <Empty description="Нет записей, удовлетворяющих фильтрам" className="portfolio-page__empty" />,
           }}
@@ -448,6 +499,93 @@ const PortfolioPage: React.FC = () => {
           <Spin tip="Загружаем данные залогов..." />
         </div>
       )}
+
+      <Modal
+        title="Карточка сделки"
+        open={dealModalVisible}
+        onCancel={closeDealModal}
+        footer={[
+          <Button key="dossier" type="primary" onClick={openDossierModal} disabled={!selectedDeal}>
+            Залоговое досье
+          </Button>,
+          <Button key="close" onClick={closeDealModal}>
+            Закрыть
+          </Button>,
+        ]}
+        width="90%"
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: '70vh', overflowY: 'auto' } }}
+      >
+        {selectedDeal && (
+          <div className="portfolio-modal">
+            <Typography.Title level={4}>{selectedDeal.borrower ?? selectedDeal.pledger ?? 'Сделка'}</Typography.Title>
+            <Space direction="vertical" size="small" style={{ width: '100%' }}>
+              <div>
+                <Typography.Text strong>Номер договора:</Typography.Text> {selectedDeal.contractNumber ?? '—'}
+              </div>
+              <div>
+                <Typography.Text strong>Задолженность:</Typography.Text>{' '}
+                {selectedDeal.debtRub ? currencyFormatter.format(parseNumber(selectedDeal.debtRub) || 0) : '—'}
+              </div>
+              <div>
+                <Typography.Text strong>Лимит:</Typography.Text>{' '}
+                {selectedDeal.limitRub ? currencyFormatter.format(parseNumber(selectedDeal.limitRub) || 0) : '—'}
+              </div>
+              <div>
+                <Typography.Text strong>Обеспечение:</Typography.Text>{' '}
+                {selectedDeal.collateralType ?? selectedDeal.collateralCategory ?? '—'}
+              </div>
+              <div>
+                <Typography.Text strong>Местоположение:</Typography.Text>{' '}
+                {selectedDeal.collateralLocation ?? '—'}
+              </div>
+            </Space>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        title="Залоговое досье"
+        open={dossierModalVisible}
+        onCancel={() => setDossierModalVisible(false)}
+        footer={[
+          <Button key="close" type="primary" onClick={() => setDossierModalVisible(false)}>
+            Закрыть
+          </Button>,
+        ]}
+        width={720}
+      >
+        {dossierLoading ? (
+          <Empty description="Загрузка документов..." />
+        ) : dossierDocuments.length === 0 ? (
+          <Empty description="Документы по сделке не найдены" />
+        ) : (
+          <List
+            dataSource={dossierDocuments}
+            renderItem={item => (
+              <List.Item>
+                <List.Item.Meta
+                  title={
+                    <Space>
+                      <Tag color={item.statusColor || 'blue'}>{item.status}</Tag>
+                      <span>{item.docType}</span>
+                    </Space>
+                  }
+                  description={
+                    <Typography.Text type="secondary">
+                      {item.folderPath.join(' / ')} · {item.lastUpdated}
+                    </Typography.Text>
+                  }
+                />
+                <div>
+                  <div>{item.fileName}</div>
+                  <Typography.Text type="secondary">{item.responsible}</Typography.Text>
+                </div>
+              </List.Item>
+            )}
+          />
+        )}
+      </Modal>
     </div>
   );
 };
