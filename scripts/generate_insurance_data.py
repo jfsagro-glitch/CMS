@@ -76,6 +76,8 @@ def build_from_ins(df: pd.DataFrame, portfolio: List[Dict[str, Any]]) -> List[Di
         insurance_type = lower.get("вид страхования") or lower.get("type") or random.choice(
             ["КАСКО", "ОСАГО", "Имущество", "Ответственность"]
         )
+        prop_type = lower.get("тип имущества") or lower.get("property type") or lower.get("asset type")
+        prop_addr = lower.get("адрес") or lower.get("адрес имущества") or lower.get("address")
         insured_amount = normalize_number(lower.get("страховая сумма") or lower.get("insured amount")) or random.randrange(
             5_000_000, 150_000_000, 500_000
         )
@@ -88,8 +90,6 @@ def build_from_ins(df: pd.DataFrame, portfolio: List[Dict[str, Any]]) -> List[Di
             ["Ингосстрах", "Ренессанс", "РЕСО", "СОГАЗ", "ВСК"]
         )
         status = lower.get("статус") or lower.get("status") or random.choice(["Активен", "Истек", "Требует продления"])
-        property_type = lower.get("тип имущества") or lower.get("property type") or (p or {}).get("collateralType")
-        property_address = lower.get("адрес имущества") or lower.get("property address") or (p or {}).get("collateralLocation")
 
         records.append(
             {
@@ -97,6 +97,8 @@ def build_from_ins(df: pd.DataFrame, portfolio: List[Dict[str, Any]]) -> List[Di
                 "insuranceType": str(insurance_type),
                 "insuredAmount": insured_amount,
                 "premium": premium,
+                "propertyType": str(prop_type) if prop_type else None,
+                "propertyAddress": str(prop_addr) if prop_addr else (p or {}).get("collateralLocation"),
                 "startDate": start_date,
                 "endDate": end_date,
                 "insurer": str(insurer),
@@ -104,8 +106,6 @@ def build_from_ins(df: pd.DataFrame, portfolio: List[Dict[str, Any]]) -> List[Di
                 "insured": insured,
                 "contractNumber": contract_number,
                 "reference": deal_reference,
-                "propertyType": property_type,
-                "propertyAddress": property_address,
             }
         )
     return records
@@ -119,12 +119,25 @@ def build_demo_from_portfolio(portfolio: List[Dict[str, Any]]) -> List[Dict[str,
         end = datetime(2026, 12, 31)
         start_date = random_date(start, datetime(2025, 12, 31))
         end_date = random_date(datetime(2025, 1, 1), end)
+        # derive property fields from collateral info
+        collateral_type = str(p.get("collateralType") or p.get("collateralCategory") or "")
+        location = p.get("collateralLocation") or "г. Москва"
+        if any(k in collateral_type.lower() for k in ["недвиж", "зем", "склад", "офис", "торгов"]):
+            prop_type = "Недвижимость"
+        elif any(k in collateral_type.lower() for k in ["транспорт", "авто", "грузовой", "легковой"]):
+            prop_type = "Транспортные средства"
+        elif any(k in collateral_type.lower() for k in ["техника", "оборуд"]):
+            prop_type = "Движимое оборудование"
+        else:
+            prop_type = "Имущество"
         records.append(
             {
                 "policyNumber": f"POL-{100000+idx}",
                 "insuranceType": random.choice(["КАСКО", "ОСАГО", "Имущество", "Ответственность"]),
                 "insuredAmount": random.randrange(5_000_000, 150_000_000, 500_000),
                 "premium": random.randrange(50_000, 2_000_000, 10_000),
+                "propertyType": prop_type,
+                "propertyAddress": str(location),
                 "startDate": start_date,
                 "endDate": end_date,
                 "insurer": random.choice(["Ингосстрах", "Ренессанс", "РЕСО", "СОГАЗ", "ВСК"]),
@@ -132,8 +145,6 @@ def build_demo_from_portfolio(portfolio: List[Dict[str, Any]]) -> List[Dict[str,
                 "insured": p.get("borrower") or p.get("pledger"),
                 "contractNumber": p.get("contractNumber"),
                 "reference": p.get("reference"),
-                "propertyType": p.get("collateralType"),
-                "propertyAddress": p.get("collateralLocation"),
             }
         )
     return records

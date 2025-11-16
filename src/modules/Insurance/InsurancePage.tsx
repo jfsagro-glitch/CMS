@@ -1,5 +1,21 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Card, Col, Empty, Input, Modal, Row, Select, Space, Spin, Statistic, Table, Tag, Tooltip, Typography } from 'antd';
+import {
+  Alert,
+  Card,
+  Col,
+  Empty,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Space,
+  Spin,
+  Statistic,
+  Table,
+  Tag,
+  Tooltip,
+  Typography,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, SafetyCertificateOutlined, FundOutlined } from '@ant-design/icons';
 import type { InsuranceRecord } from '@/types/insurance';
@@ -23,17 +39,43 @@ const InsurancePage: React.FC = () => {
   const [insurerFilter, setInsurerFilter] = useState<string | null>(null);
   const [selected, setSelected] = useState<InsuranceRow | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [queryRef, setQueryRef] = useState<string | null>(null);
+  const [queryPolicy, setQueryPolicy] = useState<string | null>(null);
 
-  // Prefill search from query (?ref=... or ?q=...)
+  // Prefill search from query (?ref=... or ?q=...) and remember deep-link params
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const q = params.get('q') || params.get('ref') || '';
+      const ref = params.get('ref');
+      const pol = params.get('policy');
+      if (ref) setQueryRef(ref);
+      if (pol) setQueryPolicy(pol);
       if (q) setSearch(q);
     } catch {
       // ignore
     }
   }, []);
+
+  // Auto-open modal for policy or first match by ref
+  useEffect(() => {
+    if (rows.length === 0) return;
+    if (queryPolicy) {
+      const rec = rows.find(r => r.policyNumber === queryPolicy);
+      if (rec) {
+        setSelected(rec);
+        setModalOpen(true);
+        return;
+      }
+    }
+    if (queryRef) {
+      const matches = rows.filter(r => String(r.reference) === String(queryRef));
+      if (matches.length >= 1) {
+        setSelected(matches[0]);
+        setModalOpen(true);
+      }
+    }
+  }, [rows, queryRef, queryPolicy]);
 
   useEffect(() => {
     let mounted = true;
@@ -43,7 +85,9 @@ const InsurancePage: React.FC = () => {
       try {
         const base = import.meta.env.BASE_URL ?? '/';
         const resolvedBase = new URL(base, window.location.origin);
-        const path = resolvedBase.pathname.endsWith('/') ? resolvedBase.pathname : `${resolvedBase.pathname}/`;
+        const path = resolvedBase.pathname.endsWith('/')
+          ? resolvedBase.pathname
+          : `${resolvedBase.pathname}/`;
         const url = `${resolvedBase.origin}${path}insuranceData.json?v=${Date.now()}`;
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) throw new Error(`Не удалось загрузить страхование (${res.status})`);
@@ -54,7 +98,7 @@ const InsurancePage: React.FC = () => {
             ...r,
             key: `ins-${i}`,
             reference: r.reference != null ? String(r.reference) : null,
-          })),
+          }))
         );
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Неизвестная ошибка');
@@ -75,8 +119,8 @@ const InsurancePage: React.FC = () => {
         new Set(
           rows
             .map(r => r[k])
-            .filter((v): v is string => typeof v === 'string' && v.trim().length > 0),
-        ),
+            .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+        )
       ).sort();
     return {
       types: unique('insuranceType'),
@@ -103,11 +147,25 @@ const InsurancePage: React.FC = () => {
   const stats = useMemo(() => {
     const totalPolicies = filtered.length;
     const totalInsured = filtered.reduce((sum, r) => {
-      const n = typeof r.insuredAmount === 'number' ? r.insuredAmount : Number(String(r.insuredAmount ?? '').replace(/\s/g, '').replace(',', '.'));
+      const n =
+        typeof r.insuredAmount === 'number'
+          ? r.insuredAmount
+          : Number(
+              String(r.insuredAmount ?? '')
+                .replace(/\s/g, '')
+                .replace(',', '.')
+            );
       return sum + (Number.isFinite(n) ? (n as number) : 0);
     }, 0);
     const totalPremium = filtered.reduce((sum, r) => {
-      const n = typeof r.premium === 'number' ? r.premium : Number(String(r.premium ?? '').replace(/\s/g, '').replace(',', '.'));
+      const n =
+        typeof r.premium === 'number'
+          ? r.premium
+          : Number(
+              String(r.premium ?? '')
+                .replace(/\s/g, '')
+                .replace(',', '.')
+            );
       return sum + (Number.isFinite(n) ? (n as number) : 0);
     }, 0);
     return { totalPolicies, totalInsured, totalPremium };
@@ -124,6 +182,17 @@ const InsurancePage: React.FC = () => {
           <div>
             <div style={{ fontWeight: 600 }}>{r.policyNumber}</div>
             <div className="insurance-muted">{r.insuranceType}</div>
+          </div>
+        ),
+      },
+      {
+        title: 'Объект',
+        key: 'property',
+        width: 260,
+        render: (_, r) => (
+          <div>
+            <div className="insurance-muted">{r.propertyType ?? '—'}</div>
+            <div className="insurance-muted">{r.propertyAddress ?? '—'}</div>
           </div>
         ),
       },
@@ -158,13 +227,21 @@ const InsurancePage: React.FC = () => {
             <div className="insurance-metrics-row">
               <span>Страховая сумма</span>
               <strong>
-                {r.insuredAmount ? currencyFormatter.format(Number(String(r.insuredAmount).replace(/\s/g, '').replace(',', '.'))) : '—'}
+                {r.insuredAmount
+                  ? currencyFormatter.format(
+                      Number(String(r.insuredAmount).replace(/\s/g, '').replace(',', '.'))
+                    )
+                  : '—'}
               </strong>
             </div>
             <div className="insurance-metrics-row">
               <span>Премия</span>
               <strong>
-                {r.premium ? currencyFormatter.format(Number(String(r.premium).replace(/\s/g, '').replace(',', '.'))) : '—'}
+                {r.premium
+                  ? currencyFormatter.format(
+                      Number(String(r.premium).replace(/\s/g, '').replace(',', '.'))
+                    )
+                  : '—'}
               </strong>
             </div>
           </div>
@@ -188,12 +265,18 @@ const InsurancePage: React.FC = () => {
         width: 160,
         render: (v: string) => {
           const color =
-            v === 'Активен' ? 'green' : v === 'Требует продления' ? 'orange' : v === 'Истек' ? 'volcano' : 'default';
+            v === 'Активен'
+              ? 'green'
+              : v === 'Требует продления'
+              ? 'orange'
+              : v === 'Истек'
+              ? 'volcano'
+              : 'default';
           return <Tag color={color}>{v}</Tag>;
         },
       },
     ],
-    [],
+    []
   );
 
   return (
@@ -254,17 +337,28 @@ const InsurancePage: React.FC = () => {
       <Row gutter={[16, 16]} className="insurance-stats">
         <Col xs={24} sm={12} md={8}>
           <Card>
-            <Statistic title="Количество полисов" value={stats.totalPolicies} prefix={<SafetyCertificateOutlined />} />
+            <Statistic
+              title="Количество полисов"
+              value={stats.totalPolicies}
+              prefix={<SafetyCertificateOutlined />}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8}>
           <Card>
-            <Statistic title="Совокупная страховая сумма" value={currencyFormatter.format(stats.totalInsured)} />
+            <Statistic
+              title="Совокупная страховая сумма"
+              value={currencyFormatter.format(stats.totalInsured)}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8}>
           <Card>
-            <Statistic title="Совокупная премия" value={currencyFormatter.format(stats.totalPremium)} prefix={<FundOutlined />} />
+            <Statistic
+              title="Совокупная премия"
+              value={currencyFormatter.format(stats.totalPremium)}
+              prefix={<FundOutlined />}
+            />
           </Card>
         </Col>
       </Row>
@@ -283,7 +377,12 @@ const InsurancePage: React.FC = () => {
             },
           })}
           locale={{
-            emptyText: <Empty description="Нет записей, удовлетворяющих фильтрам" className="insurance-empty" />,
+            emptyText: (
+              <Empty
+                description="Нет записей, удовлетворяющих фильтрам"
+                className="insurance-empty"
+              />
+            ),
           }}
         />
       </Card>
@@ -317,18 +416,26 @@ const InsurancePage: React.FC = () => {
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
             <Typography.Text strong>Полис:</Typography.Text> {selected.policyNumber}
             <div className="insurance-muted">Тип: {selected.insuranceType}</div>
+            <div className="insurance-muted">Тип имущества: {selected.propertyType ?? '—'}</div>
+            <div className="insurance-muted">Адрес имущества: {selected.propertyAddress ?? '—'}</div>
             <div className="insurance-muted">Страхователь: {selected.insured ?? '—'}</div>
             <div className="insurance-muted">REFERENCE сделки: {selected.reference ?? '—'}</div>
             <div className="insurance-muted">Договор: {selected.contractNumber ?? '—'}</div>
-            <div className="insurance-muted">Тип имущества: {selected.propertyType ?? '—'}</div>
-            <div className="insurance-muted">Адрес имущества: {selected.propertyAddress ?? '—'}</div>
             <div className="insurance-muted">
-              Страховая сумма: {typeof selected.insuredAmount === 'number' ? currencyFormatter.format(selected.insuredAmount) : '—'}
+              Страховая сумма:{' '}
+              {typeof selected.insuredAmount === 'number'
+                ? currencyFormatter.format(selected.insuredAmount)
+                : '—'}
             </div>
             <div className="insurance-muted">
-              Премия: {typeof selected.premium === 'number' ? currencyFormatter.format(selected.premium) : '—'}
+              Премия:{' '}
+              {typeof selected.premium === 'number'
+                ? currencyFormatter.format(selected.premium)
+                : '—'}
             </div>
-            <div className="insurance-muted">Срок: {selected.startDate ?? '—'} — {selected.endDate ?? '—'}</div>
+            <div className="insurance-muted">
+              Срок: {selected.startDate ?? '—'} — {selected.endDate ?? '—'}
+            </div>
             <div className="insurance-muted">Страховщик: {selected.insurer}</div>
             <div>
               <Tag>{selected.status}</Tag>
@@ -341,5 +448,3 @@ const InsurancePage: React.FC = () => {
 };
 
 export default InsurancePage;
-
-

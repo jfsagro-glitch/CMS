@@ -3,6 +3,8 @@ export interface InsuranceRecord {
   insuranceType: string;
   insuredAmount: number | string | null;
   premium: number | string | null;
+  propertyType?: string | null;
+  propertyAddress?: string | null;
   startDate: string | null;
   endDate: string | null;
   insurer: string;
@@ -10,8 +12,4 @@ export interface InsuranceRecord {
   insured: string | null;
   contractNumber: string | null;
   reference: string | number | null;
-  propertyType?: string | null;
-  propertyAddress?: string | null;
 }
-
-
