@@ -22,6 +22,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { EnvironmentOutlined, LineChartOutlined, SearchOutlined } from '@ant-design/icons';
 import type { CollateralPortfolioEntry } from '@/types/portfolio';
+import { useNavigate } from 'react-router-dom';
 import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
 import './PortfolioPage.css';
 
@@ -71,6 +72,7 @@ const liquidityColor: Record<string, string> = {
 };
 
 const PortfolioPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState('');
   const [segmentFilter, setSegmentFilter] = useState<string | null>(null);
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
@@ -213,6 +215,12 @@ const PortfolioPage: React.FC = () => {
     const docs = dossierData.filter(doc => String(doc.reference) === reference);
     setDossierDocuments(docs);
     setDossierModalVisible(true);
+  };
+
+  const goToInsurance = () => {
+    if (!selectedDeal) return;
+    const ref = String(selectedDeal.reference ?? selectedDeal.contractNumber ?? '');
+    navigate(`/insurance?ref=${encodeURIComponent(ref)}`);
   };
 
   const stats = useMemo(() => {
@@ -537,6 +545,9 @@ const PortfolioPage: React.FC = () => {
         open={dealModalVisible}
         onCancel={closeDealModal}
         footer={[
+          <Button key="insurance" onClick={goToInsurance} disabled={!selectedDeal}>
+            Страхование
+          </Button>,
           <Button key="dossier" type="primary" onClick={openDossierModal} disabled={!selectedDeal}>
             Залоговое досье
           </Button>,

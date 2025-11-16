@@ -24,6 +24,17 @@ const InsurancePage: React.FC = () => {
   const [selected, setSelected] = useState<InsuranceRow | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Prefill search from query (?ref=... or ?q=...)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get('q') || params.get('ref') || '';
+      if (q) setSearch(q);
+    } catch {
+      // ignore
+    }
+  }, []);
+
   useEffect(() => {
     let mounted = true;
     const load = async () => {
