@@ -88,6 +88,8 @@ def build_from_ins(df: pd.DataFrame, portfolio: List[Dict[str, Any]]) -> List[Di
             ["Ингосстрах", "Ренессанс", "РЕСО", "СОГАЗ", "ВСК"]
         )
         status = lower.get("статус") or lower.get("status") or random.choice(["Активен", "Истек", "Требует продления"])
+        property_type = lower.get("тип имущества") or lower.get("property type") or (p or {}).get("collateralType")
+        property_address = lower.get("адрес имущества") or lower.get("property address") or (p or {}).get("collateralLocation")
 
         records.append(
             {
@@ -102,6 +104,8 @@ def build_from_ins(df: pd.DataFrame, portfolio: List[Dict[str, Any]]) -> List[Di
                 "insured": insured,
                 "contractNumber": contract_number,
                 "reference": deal_reference,
+                "propertyType": property_type,
+                "propertyAddress": property_address,
             }
         )
     return records
@@ -128,6 +132,8 @@ def build_demo_from_portfolio(portfolio: List[Dict[str, Any]]) -> List[Dict[str,
                 "insured": p.get("borrower") or p.get("pledger"),
                 "contractNumber": p.get("contractNumber"),
                 "reference": p.get("reference"),
+                "propertyType": p.get("collateralType"),
+                "propertyAddress": p.get("collateralLocation"),
             }
         )
     return records

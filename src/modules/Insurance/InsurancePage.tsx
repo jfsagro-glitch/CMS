@@ -320,6 +320,8 @@ const InsurancePage: React.FC = () => {
             <div className="insurance-muted">Страхователь: {selected.insured ?? '—'}</div>
             <div className="insurance-muted">REFERENCE сделки: {selected.reference ?? '—'}</div>
             <div className="insurance-muted">Договор: {selected.contractNumber ?? '—'}</div>
+            <div className="insurance-muted">Тип имущества: {selected.propertyType ?? '—'}</div>
+            <div className="insurance-muted">Адрес имущества: {selected.propertyAddress ?? '—'}</div>
             <div className="insurance-muted">
               Страховая сумма: {typeof selected.insuredAmount === 'number' ? currencyFormatter.format(selected.insuredAmount) : '—'}
             </div>

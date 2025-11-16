@@ -10,6 +10,8 @@ export interface InsuranceRecord {
   insured: string | null;
   contractNumber: string | null;
   reference: string | number | null;
+  propertyType?: string | null;
+  propertyAddress?: string | null;
 }
 
 
