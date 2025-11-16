@@ -13,6 +13,7 @@ import { DemoDataProvider } from './contexts/DemoDataContext';
 import MainLayout from './components/layout/MainLayout';
 import ExtendedRegistryPage from './modules/Registry/ExtendedRegistryPage';
 import PlaceholderPage from './modules/Placeholder/PlaceholderPage';
+import InsurancePage from './modules/Insurance/InsurancePage';
 import PortfolioPage from './modules/Portfolio/PortfolioPage';
 import CollateralDossierPage from './modules/CollateralDossier/CollateralDossierPage';
 import MonitoringPage from './modules/Monitoring/MonitoringPage';
@@ -111,7 +112,7 @@ const AppContent: React.FC = () => {
                   <Route path="collateral-dossier" element={<CollateralDossierPage />} />
                   <Route path="tasks" element={<PlaceholderPage title="Задачи" />} />
                   <Route path="reports" element={<PlaceholderPage title="Отчеты" />} />
-                  <Route path="insurance" element={<PlaceholderPage title="Страхование" />} />
+                  <Route path="insurance" element={<InsurancePage />} />
                   <Route path="analytics" element={<PlaceholderPage title="Аналитика" />} />
                   <Route
                     path="mobile-appraiser"

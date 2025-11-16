@@ -1,0 +1,57 @@
+.insurance-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.insurance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.insurance-title {
+  margin-bottom: 4px;
+}
+
+.insurance-subtitle {
+  color: #8c8c8c;
+  margin: 0;
+}
+
+.insurance-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.insurance-stats {
+  margin-top: 4px;
+}
+
+.insurance-muted {
+  color: #8c8c8c;
+}
+
+.insurance-metrics {
+  display: grid;
+  gap: 6px;
+}
+
+.insurance-metrics-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.insurance-table-card {
+  overflow: hidden;
+}
+
+.insurance-empty {
+  padding: 24px 0;
+}
+
+
