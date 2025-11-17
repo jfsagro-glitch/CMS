@@ -36,27 +36,53 @@ jobs:
           pip install pandas openpyxl
 
       - name: Generate collateral portfolio dataset
-        run: python scripts/generate_portfolio_data.py
+        run: |
+          if [ -f "ZALOG/залоговый портфель.xlsx" ]; then
+            python scripts/generate_portfolio_data.py
+          else
+            echo "⚠️ Source file not found, skipping portfolio data generation"
+          fi
         continue-on-error: true
 
       - name: Generate collateral dossier dataset
-        run: python scripts/generate_collateral_dossier.py
+        run: |
+          if [ -d "ZALOG_DOS" ]; then
+            python scripts/generate_collateral_dossier.py
+          else
+            echo "⚠️ Source directory not found, skipping dossier data generation"
+          fi
         continue-on-error: true
 
       - name: Generate monitoring plan dataset
-        run: python scripts/generate_monitoring_plan.py
+        run: |
+          python scripts/generate_monitoring_plan.py || echo "⚠️ Monitoring plan generation skipped"
         continue-on-error: true
 
       - name: Generate insurance dataset
-        run: python scripts/generate_insurance_data.py
+        run: |
+          if [ -f "INS/INS.xlsx" ] || [ -d "INS" ]; then
+            python scripts/generate_insurance_data.py
+          else
+            echo "⚠️ Source file not found, skipping insurance data generation"
+          fi
         continue-on-error: true
 
       - name: Generate reports dataset
-        run: python scripts/generate_reports_data.py
+        run: |
+          if [ -d "XML_310_2025-04-24" ]; then
+            python scripts/generate_reports_data.py
+          else
+            echo "⚠️ Source directory not found, skipping reports data generation"
+          fi
         continue-on-error: true
 
       - name: Generate collateral conclusions dataset
-        run: python scripts/generate_collateral_conclusions_data.py
+        run: |
+          if [ -d "ZZ" ]; then
+            python scripts/generate_collateral_conclusions_data.py
+          else
+            echo "⚠️ Source directory not found, skipping conclusions data generation"
+          fi
         continue-on-error: true
         
       - name: Setup Node.js
