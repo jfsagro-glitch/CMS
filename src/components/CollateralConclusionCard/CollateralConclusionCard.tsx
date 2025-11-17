@@ -160,30 +160,9 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
     const collateralType = conclusion.collateralType;
     const groupedAttributes = getGroupedCollateralAttributes(collateralType || undefined);
     
-    // Собираем все характеристики из заключения
+    // Собираем все характеристики из заключения (только из additionalData, старые поля удалены)
     const allCharacteristics: Record<string, any> = {
       ...(conclusion.additionalData || {}),
-      // Добавляем основные поля, если они есть
-      marketValue: conclusion.marketValue,
-      collateralValue: conclusion.collateralValue,
-      fairValue: conclusion.fairValue,
-      totalAreaSqm: conclusion.totalAreaSqm,
-      totalAreaHectares: conclusion.totalAreaHectares,
-      landAreaSqm: conclusion.landAreaSqm,
-      landAreaHectares: conclusion.landAreaHectares,
-      category: conclusion.category,
-      liquidity: conclusion.liquidity,
-      collateralCondition: conclusion.collateralCondition,
-      ownershipShare: conclusion.ownershipShare,
-      hasEncumbrances: conclusion.hasEncumbrances,
-      encumbrancesDescription: conclusion.encumbrancesDescription,
-      hasReplanning: conclusion.hasReplanning,
-      landCategory: conclusion.landCategory,
-      landPermittedUse: conclusion.landPermittedUse,
-      landCadastralNumber: conclusion.landCadastralNumber,
-      cadastralValue: conclusion.cadastralValue,
-      marketValuePerSqm: conclusion.marketValuePerSqm,
-      marketValuePerHectare: conclusion.marketValuePerHectare,
     };
     
     // Проверяем наличие хотя бы одной характеристики

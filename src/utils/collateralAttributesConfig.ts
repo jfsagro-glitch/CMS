@@ -33,7 +33,7 @@ const commonAttributes: CollateralAttribute[] = [
   },
   {
     key: 'collateralLocation',
-    label: 'Местоположение',
+    label: 'Адрес местоположения',
     type: 'text',
     required: true,
     placeholder: 'Адрес местоположения',
@@ -105,11 +105,18 @@ const realEstateCommonAttributes: CollateralAttribute[] = [
   ...commonAttributes,
   {
     key: 'totalAreaSqm',
-    label: 'Общая площадь',
+    label: 'Общая площадь объекта, кв. м. (или протяженность и т.п. в соответствующих единицах измерения) Только цифры',
     type: 'number',
     required: true,
     min: 0,
     unit: 'кв.м',
+    group: 'Параметры объекта',
+  },
+  {
+    key: 'objectCadastralNumber',
+    label: 'Кадастровый номер объекта',
+    type: 'text',
+    placeholder: '23:49:0303008:1915',
     group: 'Параметры объекта',
   },
   {
@@ -136,10 +143,17 @@ const realEstateCommonAttributes: CollateralAttribute[] = [
   },
   {
     key: 'landPermittedUse',
-    label: 'Разрешенный вид использования',
+    label: 'Вид разрешенного использования земельного участка (только по земельным участкам)',
     type: 'text',
     placeholder: 'Вид разрешенного использования земельного участка',
     group: 'Земельный участок',
+  },
+  {
+    key: 'structureType',
+    label: 'Тип строения/Категория участка',
+    type: 'text',
+    placeholder: 'Тип строения или категория участка',
+    group: 'Параметры объекта',
   },
   {
     key: 'landAreaSqm',
@@ -152,6 +166,14 @@ const realEstateCommonAttributes: CollateralAttribute[] = [
   {
     key: 'cadastralValue',
     label: 'Кадастровая стоимость',
+    type: 'number',
+    min: 0,
+    unit: 'руб.',
+    group: 'Оценка',
+  },
+  {
+    key: 'bookValue',
+    label: 'Балансовая стоимость на последнюю отчетную дату, руб. без учета НДС',
     type: 'number',
     min: 0,
     unit: 'руб.',
