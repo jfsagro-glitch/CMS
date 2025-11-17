@@ -26,7 +26,7 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const handleAddToCreditRisk = (condition: any) => {
+  const handleAddToCreditRisk = React.useCallback((condition: any) => {
     try {
       // Загружаем существующие записи
       const stored = localStorage.getItem('creditRiskRecords');
@@ -68,16 +68,17 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
       console.error('Ошибка добавления в ФКР:', error);
       message.error('Ошибка добавления в модуль ФКР');
     }
-  };
-  const currencyFormatter = new Intl.NumberFormat('ru-RU', {
+  }, [conclusion, navigate]);
+
+  const currencyFormatter = React.useMemo(() => new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency: 'RUB',
     maximumFractionDigits: 0,
-  });
+  }), []);
 
-  const formatCurrency = (value: number | null | undefined) => {
+  const formatCurrency = React.useCallback((value: number | null | undefined) => {
     return value ? currencyFormatter.format(value) : '—';
-  };
+  }, [currencyFormatter]);
 
   const tabItems: TabsProps['items'] = useMemo(() => {
     const items: TabsProps['items'] = [];
@@ -621,7 +622,7 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
     });
 
     return items;
-  }, [conclusion]);
+  }, [conclusion, formatCurrency, handleAddToCreditRisk]);
 
   return (
     <div style={{ padding: '8px 0' }}>

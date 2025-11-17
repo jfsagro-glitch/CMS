@@ -202,7 +202,7 @@ const ReportsPage: React.FC = () => {
         render: (date: string) => new Date(date).toLocaleString('ru-RU'),
       },
     ],
-    []
+    [statusColor, statusLabel]
   );
 
   const handleViewReport = (record: ReportRow) => {

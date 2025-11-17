@@ -119,7 +119,7 @@ const CollateralConclusionsPage: React.FC = () => {
     setModalVisible(true);
   };
 
-  const handleGoToDossier = (reference: string | null, pledger: string | null) => {
+  const handleGoToDossier = React.useCallback((reference: string | null, pledger: string | null) => {
     if (reference) {
       navigate(`/collateral-dossier?ref=${reference}`);
     } else if (pledger) {
@@ -127,9 +127,9 @@ const CollateralConclusionsPage: React.FC = () => {
     } else {
       message.warning('Не указан REFERENCE или Залогодатель для перехода к досье');
     }
-  };
+  }, [navigate]);
 
-  const handleGoToPledger = (pledger: string | null, reference: string | null) => {
+  const handleGoToPledger = React.useCallback((pledger: string | null, reference: string | null) => {
     if (reference) {
       navigate(`/portfolio?q=${encodeURIComponent(reference)}`);
     } else if (pledger) {
@@ -137,7 +137,7 @@ const CollateralConclusionsPage: React.FC = () => {
     } else {
       message.warning('Не указан Залогодатель или REFERENCE для перехода к портфелю');
     }
-  };
+  }, [navigate]);
 
   const columns: ColumnsType<ConclusionRow> = useMemo(
     () => [
@@ -241,7 +241,7 @@ const CollateralConclusionsPage: React.FC = () => {
         ),
       },
     ],
-    [navigate]
+    [navigate, handleGoToDossier, handleGoToPledger]
   );
 
   const handleCreateSuccess = () => {

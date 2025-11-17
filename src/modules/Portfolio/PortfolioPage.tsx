@@ -169,6 +169,37 @@ const PortfolioPage: React.FC = () => {
     };
   }, []);
 
+  const loadRegistryObjects = React.useCallback(async (deal: PortfolioRow) => {
+    setRegistryObjectsLoading(true);
+    try {
+      const reference = String(deal.reference ?? deal.contractNumber ?? '');
+      const allCards = await extendedStorageService.getExtendedCards();
+      // Фильтруем объекты по REFERENCE или contractNumber
+      const relatedObjects = allCards.filter(
+        card =>
+          (card.reference && String(card.reference) === reference) ||
+          (card.contractNumber && card.contractNumber === deal.contractNumber)
+      );
+      setRegistryObjects(relatedObjects);
+    } catch (error) {
+      console.error('Ошибка загрузки объектов из реестра:', error);
+      setRegistryObjects([]);
+    } finally {
+      setRegistryObjectsLoading(false);
+    }
+  }, []);
+
+  const handleOpenDeal = React.useCallback(async (record: PortfolioRow) => {
+    setSelectedDeal(record);
+    setDealModalVisible(true);
+    // Загружаем хронологию событий
+    const events = getDealTimeline(record);
+    setTimelineEvents(events);
+    
+    // Загружаем объекты из реестра по REFERENCE
+    await loadRegistryObjects(record);
+  }, [loadRegistryObjects]);
+
   // Обработка deep linking - поиск по query параметру
   useEffect(() => {
     if (portfolioRows.length > 0) {
@@ -189,7 +220,7 @@ const PortfolioPage: React.FC = () => {
         }
       }
     }
-  }, [portfolioRows, location.search]);
+  }, [portfolioRows, location.search, handleOpenDeal]);
 
   const filterOptions = useMemo(() => {
     const unique = <T extends keyof CollateralPortfolioEntry>(key: T) => {
@@ -232,37 +263,6 @@ const PortfolioPage: React.FC = () => {
       return matchesSearch && matchesSegment && matchesGroup && matchesLiquidity && matchesMonitoring;
     });
   }, [portfolioRows, searchValue, segmentFilter, groupFilter, liquidityFilter, monitoringFilter]);
-
-  const handleOpenDeal = async (record: PortfolioRow) => {
-    setSelectedDeal(record);
-    setDealModalVisible(true);
-    // Загружаем хронологию событий
-    const events = getDealTimeline(record);
-    setTimelineEvents(events);
-    
-    // Загружаем объекты из реестра по REFERENCE
-    await loadRegistryObjects(record);
-  };
-
-  const loadRegistryObjects = async (deal: PortfolioRow) => {
-    setRegistryObjectsLoading(true);
-    try {
-      const reference = String(deal.reference ?? deal.contractNumber ?? '');
-      const allCards = await extendedStorageService.getExtendedCards();
-      // Фильтруем объекты по REFERENCE или contractNumber
-      const relatedObjects = allCards.filter(
-        card =>
-          (card.reference && String(card.reference) === reference) ||
-          (card.contractNumber && card.contractNumber === deal.contractNumber)
-      );
-      setRegistryObjects(relatedObjects);
-    } catch (error) {
-      console.error('Ошибка загрузки объектов из реестра:', error);
-      setRegistryObjects([]);
-    } finally {
-      setRegistryObjectsLoading(false);
-    }
-  };
 
   const handleGoToRegistryObject = (objectId: string) => {
     navigate(`/registry?objectId=${objectId}`);

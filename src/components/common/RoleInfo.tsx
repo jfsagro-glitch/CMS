@@ -51,8 +51,30 @@ const RoleInfo: React.FC<RoleInfoProps> = ({ role }) => {
     }
   };
 
-  const roleStats = employeeService.getRoleStatistics();
-  const departments = employeeService.getDepartments();
+  // Получаем сотрудников и вычисляем статистику
+  const employees = employeeService.getEmployees();
+  const roleStats: Record<string, number> = {
+    business: 0,
+    employee: 0,
+    manager: 0,
+    superuser: 0,
+  };
+  
+  employees.forEach(emp => {
+    // Определяем роль на основе прав доступа
+    if (emp.permissions.includes('admin')) {
+      roleStats.superuser++;
+    } else if (emp.permissions.some(p => p.includes('edit'))) {
+      roleStats.manager++;
+    } else if (emp.permissions.some(p => p.includes('view'))) {
+      roleStats.employee++;
+    } else {
+      roleStats.business++;
+    }
+  });
+
+  // Получаем уникальные отделы
+  const departments = Array.from(new Set(employees.map(emp => emp.department).filter(Boolean))) as string[];
 
   if (!role) {
     return (
@@ -69,7 +91,7 @@ const RoleInfo: React.FC<RoleInfoProps> = ({ role }) => {
                   </Tag>
                 </Col>
                 <Col>
-                  <Text strong>{count}</Text>
+                  <Text strong>{String(count)}</Text>
                 </Col>
               </Row>
             );
@@ -77,7 +99,7 @@ const RoleInfo: React.FC<RoleInfoProps> = ({ role }) => {
           
           <Title level={5}>Отделы:</Title>
           <Space wrap>
-            {departments.map(dept => (
+            {departments.map((dept: string) => (
               <Tag key={dept} color="cyan">{dept}</Tag>
             ))}
           </Space>
@@ -87,7 +109,7 @@ const RoleInfo: React.FC<RoleInfoProps> = ({ role }) => {
   }
 
   const info = getRoleInfo(role);
-  const roleCount = roleStats[role];
+  const roleCount = roleStats[role] || 0;
 
   return (
     <Card title="Информация о роли" size="small">

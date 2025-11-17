@@ -113,7 +113,7 @@ const MonitoringCardModal: React.FC<MonitoringCardModalProps> = ({ visible, entr
   }, [portfolioData?.collateralType]);
 
   // Форматирование значения для отображения
-  const formatValue = (key: string, value: any): string => {
+  const formatValue = React.useCallback((key: string, value: any): string => {
     if (value === null || value === undefined || value === '') return '—';
     
     const attr = collateralAttributes.find(a => a.key === key);
@@ -127,17 +127,19 @@ const MonitoringCardModal: React.FC<MonitoringCardModalProps> = ({ visible, entr
       return dayjs(value).format('DD.MM.YYYY');
     }
     return String(value);
-  };
+  }, [collateralAttributes]);
 
   // Получение значения из портфеля по ключу атрибута
-  const getPortfolioValue = (key: string): any => {
+  const getPortfolioValue = React.useCallback((key: string): any => {
     if (!portfolioData) return null;
     return (portfolioData as any)[key] ?? null;
-  };
+  }, [portfolioData]);
 
   // Путь к CMS Check
-  const base = import.meta.env.BASE_URL ?? '/';
-  const cmsCheckPath = `${base}cms-check/index.html#/inspections`;
+  const cmsCheckPath = React.useMemo(() => {
+    const base = import.meta.env.BASE_URL ?? '/';
+    return `${base}cms-check/index.html#/inspections`;
+  }, []);
 
   // Вкладки модалки
   const tabItems: TabsProps['items'] = useMemo(() => {
@@ -391,7 +393,7 @@ const MonitoringCardModal: React.FC<MonitoringCardModalProps> = ({ visible, entr
     });
 
     return items;
-  }, [entry, portfolioData, collateralAttributes, groupedAttributes, loading, inspectionAct]);
+  }, [entry, portfolioData, collateralAttributes, groupedAttributes, loading, inspectionAct, cmsCheckPath, formatValue, getPortfolioValue]);
 
   if (!entry) return null;
 

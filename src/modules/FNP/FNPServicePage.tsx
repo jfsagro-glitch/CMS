@@ -288,7 +288,7 @@ const FNPServicePage: React.FC = () => {
         };
         const updatedList = registrations.map(r => (r.id === selectedRegistration.id ? { ...updated, key: updated.id } : r));
         setRegistrations(updatedList);
-        localStorage.setItem('fnp_registrations', JSON.stringify(updatedList.map(({ key, ...rest }) => rest)));
+        localStorage.setItem('fnp_registrations', JSON.stringify(updatedList));
         message.success('Регистрация обновлена');
       } else {
         // Создание
@@ -304,7 +304,7 @@ const FNPServicePage: React.FC = () => {
         };
         const updatedList = [...registrations, { ...newReg, key: newReg.id }];
         setRegistrations(updatedList);
-        localStorage.setItem('fnp_registrations', JSON.stringify(updatedList.map(({ key, ...rest }) => rest)));
+        localStorage.setItem('fnp_registrations', JSON.stringify(updatedList));
         message.success('Регистрация создана');
       }
 
@@ -316,7 +316,7 @@ const FNPServicePage: React.FC = () => {
     }
   };
 
-  const handleDeleteRegistration = (id: string) => {
+  const handleDeleteRegistration = React.useCallback((id: string) => {
     Modal.confirm({
       title: 'Удалить регистрацию?',
       content: 'Это действие нельзя отменить.',
@@ -326,11 +326,11 @@ const FNPServicePage: React.FC = () => {
       onOk: () => {
         const updatedList = registrations.filter(r => r.id !== id);
         setRegistrations(updatedList);
-        localStorage.setItem('fnp_registrations', JSON.stringify(updatedList.map(({ key, ...rest }) => rest)));
+        localStorage.setItem('fnp_registrations', JSON.stringify(updatedList));
         message.success('Регистрация удалена');
       },
     });
-  };
+  }, [registrations]);
 
   const handleReferenceChange = (reference: string) => {
     const deal = portfolioData.find((d: any) => String(d.reference) === String(reference));
@@ -458,7 +458,7 @@ const FNPServicePage: React.FC = () => {
         ),
       },
     ],
-    [handleGoToPortfolio],
+    [handleGoToPortfolio, handleEditRegistration, handleDeleteRegistration],
   );
 
   return (

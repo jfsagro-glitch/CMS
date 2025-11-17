@@ -244,7 +244,7 @@ const KPIPage: React.FC = () => {
     } catch {
       return [];
     }
-  }, [kpiData]);
+  }, []);
 
   const taskColumns: ColumnsType<TaskStatistic> = [
     {

@@ -169,7 +169,7 @@ function formatDate(value: string | null | undefined): string {
     }
     
     // Пробуем распарсить DD.MM.YYYY или DD/MM/YYYY
-    const parts = str.split(/[.\/-]/);
+    const parts = str.split(/[./-]/);
     if (parts.length === 3) {
       const [part1, part2, part3] = parts;
       
