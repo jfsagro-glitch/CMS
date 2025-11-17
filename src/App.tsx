@@ -17,6 +17,7 @@ import InsurancePage from './modules/Insurance/InsurancePage';
 import PortfolioPage from './modules/Portfolio/PortfolioPage';
 import CollateralDossierPage from './modules/CollateralDossier/CollateralDossierPage';
 import MonitoringPage from './modules/Monitoring/MonitoringPage';
+import ReportsPage from './modules/Reports/ReportsPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -111,7 +112,7 @@ const AppContent: React.FC = () => {
                   <Route path="portfolio" element={<PortfolioPage />} />
                   <Route path="collateral-dossier" element={<CollateralDossierPage />} />
                   <Route path="tasks" element={<PlaceholderPage title="Задачи" />} />
-                  <Route path="reports" element={<PlaceholderPage title="Отчеты" />} />
+                  <Route path="reports" element={<ReportsPage />} />
                   <Route path="insurance" element={<InsurancePage />} />
                   <Route path="analytics" element={<PlaceholderPage title="Аналитика" />} />
                   <Route

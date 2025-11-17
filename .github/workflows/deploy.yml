@@ -38,8 +38,17 @@ jobs:
       - name: Generate collateral portfolio dataset
         run: python scripts/generate_portfolio_data.py
 
+      - name: Generate collateral dossier dataset
+        run: python scripts/generate_collateral_dossier.py
+
+      - name: Generate monitoring plan dataset
+        run: python scripts/generate_monitoring_plan.py
+
       - name: Generate insurance dataset
         run: python scripts/generate_insurance_data.py
+
+      - name: Generate reports dataset
+        run: python scripts/generate_reports_data.py
         
       - name: Setup Node.js
         uses: actions/setup-node@v4
