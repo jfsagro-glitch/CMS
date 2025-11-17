@@ -39,7 +39,7 @@ CREDIT_PRODUCTS = [
 ]
 
 # Категории обеспечения
-CATEGORIES = ["Формальное", "Достаточное", "Недостаточное"]
+CATEGORIES = ["Основной", "Формальный"]
 
 # Ликвидность
 LIQUIDITY_OPTIONS = [
@@ -369,6 +369,33 @@ def generate_conclusions(count: int = 50) -> List[Dict[str, Any]]:
                     },
                 })
         
+        # Формируем additionalData с характеристиками для нежилой недвижимости
+        additional_data: Dict[str, Any] = {}
+        if is_real_estate and collateral_type and "нежилая" in str(collateral_type).lower():
+            # Сохраняем характеристики в additionalData для нежилой недвижимости
+            additional_data = {
+                "totalAreaSqm": total_area_sqm,
+                "collateralLocation": collateral_location,
+                "landCategory": land_category,
+                "landPermittedUse": land_permitted_use,
+                "landCadastralNumber": land_cadastral,
+                "hasEncumbrances": has_encumbrances,
+                "ownershipShare": f"{ownership_share}/100" if ownership_share else None,
+                "marketValue": market_value,
+                "collateralValue": collateral_value,
+                "fairValue": int((float(market_value) if market_value else 0) * random.uniform(0.9, 1.0)) if market_value else None,
+                "category": random.choice(CATEGORIES) if random.random() > 0.3 else None,
+                "collateralCondition": collateral_condition,
+                "wallMaterial": random.choice(["Деревянные", "Кирпич", "Кирпичный/Сталинский", "Монолит/Монолит-кирпич", "Панельный/блочный"]) if random.random() > 0.5 else None,
+                "ceilingMaterial": random.choice(["Деревянные балки", "Металлические балки", "ж/б"]) if random.random() > 0.5 else None,
+                "finishLevel": random.choice(["Евроремонт", "Простая", "Среднее", "Улучшенная"]) if random.random() > 0.5 else None,
+                "finishCondition": random.choice(["Хорошее", "Удовлетворительное", "Требуется косметический ремонт"]) if random.random() > 0.5 else None,
+                "replanning": random.choice(["Несущественные", "Перепланировки отсутствуют", "Существенные"]) if random.random() > 0.5 else None,
+                "ownershipRight": random.choice(["Право собственности", "Право аренды", "Иное"]) if random.random() > 0.5 else None,
+            }
+            # Удаляем None значения
+            additional_data = {k: v for k, v in additional_data.items() if v is not None}
+        
         conclusion: Dict[str, Any] = {
             "id": f"conclusion-{i}",
             "conclusionNumber": generate_conclusion_number(i),
@@ -427,6 +454,7 @@ def generate_conclusions(count: int = 50) -> List[Dict[str, Any]]:
             "photos": photos if photos else None,
             "review": review,
             "calculations": calculations if calculations else None,
+            "additionalData": additional_data if additional_data else None,
             "conclusionType": random.choice(CONCLUSION_TYPES),
             "status": status,
             "statusColor": (
