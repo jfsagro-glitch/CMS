@@ -25,64 +25,56 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Python (optional - for data generation)
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+        continue-on-error: true
 
-      - name: Install data tooling
+      - name: Install data tooling (optional)
         run: |
-          python -m pip install --upgrade pip
-          pip install pandas openpyxl
+          python -m pip install --upgrade pip || true
+          pip install pandas openpyxl || true
+        continue-on-error: true
 
-      - name: Generate collateral portfolio dataset
+      - name: Generate datasets (optional)
         run: |
+          echo "📊 Attempting to generate datasets..."
+          set +e
+          
           if [ -f "ZALOG/залоговый портфель.xlsx" ]; then
-            python scripts/generate_portfolio_data.py
+            python scripts/generate_portfolio_data.py 2>&1 || echo "⚠️ Portfolio data generation failed"
           else
-            echo "⚠️ Source file not found, skipping portfolio data generation"
+            echo "⚠️ Portfolio source file not found, skipping"
           fi
-        continue-on-error: true
-
-      - name: Generate collateral dossier dataset
-        run: |
+          
           if [ -d "ZALOG_DOS" ]; then
-            python scripts/generate_collateral_dossier.py
+            python scripts/generate_collateral_dossier.py 2>&1 || echo "⚠️ Dossier data generation failed"
           else
-            echo "⚠️ Source directory not found, skipping dossier data generation"
+            echo "⚠️ Dossier source directory not found, skipping"
           fi
-        continue-on-error: true
-
-      - name: Generate monitoring plan dataset
-        run: |
-          python scripts/generate_monitoring_plan.py || echo "⚠️ Monitoring plan generation skipped"
-        continue-on-error: true
-
-      - name: Generate insurance dataset
-        run: |
+          
+          python scripts/generate_monitoring_plan.py 2>&1 || echo "⚠️ Monitoring plan generation failed"
+          
           if [ -f "INS/INS.xlsx" ] || [ -d "INS" ]; then
-            python scripts/generate_insurance_data.py
+            python scripts/generate_insurance_data.py 2>&1 || echo "⚠️ Insurance data generation failed"
           else
-            echo "⚠️ Source file not found, skipping insurance data generation"
+            echo "⚠️ Insurance source not found, skipping"
           fi
-        continue-on-error: true
-
-      - name: Generate reports dataset
-        run: |
+          
           if [ -d "XML_310_2025-04-24" ]; then
-            python scripts/generate_reports_data.py
+            python scripts/generate_reports_data.py 2>&1 || echo "⚠️ Reports data generation failed"
           else
-            echo "⚠️ Source directory not found, skipping reports data generation"
+            echo "⚠️ Reports source directory not found, skipping"
           fi
-        continue-on-error: true
-
-      - name: Generate collateral conclusions dataset
-        run: |
+          
           if [ -d "ZZ" ]; then
-            python scripts/generate_collateral_conclusions_data.py
+            python scripts/generate_collateral_conclusions_data.py 2>&1 || echo "⚠️ Conclusions data generation failed"
           else
-            echo "⚠️ Source directory not found, skipping conclusions data generation"
+            echo "⚠️ Conclusions source directory not found, skipping"
           fi
+          
+          echo "✅ Data generation step completed (some may have been skipped)"
         continue-on-error: true
         
       - name: Setup Node.js
