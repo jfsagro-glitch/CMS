@@ -100,8 +100,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       key: 'cms-check',
       label: 'CMS Check',
       icon: <CameraOutlined />,
-      path: 'https://jfsagro-glitch.github.io/CMS_chek/#/inspections',
-      external: true,
+      path: '/cms-check',
       tooltip: 'Система дистанционных осмотров',
     },
     {

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#000000" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com; script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com; img-src 'self' data: https: https://maps.googleapis.com https://maps.gstatic.com; connect-src 'self' https: https://maps.googleapis.com; frame-src 'none';" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="cache-control" content="max-age=0" />
+    <meta name="cache-control" content="no-cache" />
+    <meta name="cache-control" content="no-store" />
+    <meta name="cache-control" content="must-revalidate" />
+    <meta name="version" content="2025-10-21-20-00" />
+    <meta name="timestamp" content="1729537200" />
+    <meta name="build" content="force-cache-clear-v14" />
+    <meta name="description" content="Web site created using create-react-app" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>CMS Check - Система осмотров</title>
+    
+    <!-- Отключение Google Translate для предотвращения CSP ошибок -->
+    <script type="text/javascript">
+      if (window.google && window.google.translate) {
+        window.google.translate = null;
+      }
+      
+      const originalCreateElement = document.createElement;
+      document.createElement = function(tagName) {
+        const element = originalCreateElement.call(document, tagName);
+        if (tagName.toLowerCase() === 'link' && element.rel === 'stylesheet') {
+          element.addEventListener('error', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          });
+        }
+        return element;
+      };
+    </script>
+    
+    <!-- GitHub Pages SPA redirect handler -->
+    <script type="text/javascript">
+      // For HashRouter, 404.html should just redirect to index.html
+      // HashRouter uses # for routing, so no special handling needed
+      if (window.location.pathname !== '/' && !window.location.hash) {
+        window.location.replace('/' + window.location.hash);
+      }
+      
+      // Force cache refresh
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (let name of names) {
+            caches.delete(name);
+          }
+        });
+      }
+      
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
