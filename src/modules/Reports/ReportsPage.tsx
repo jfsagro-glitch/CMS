@@ -18,8 +18,11 @@ import {
   Descriptions,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { FileTextOutlined, SearchOutlined, CalendarOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { FileTextOutlined, SearchOutlined, CalendarOutlined, CheckCircleOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { Form310Report } from '@/types/reports';
+import { generateForm310XML, downloadXML } from '@/utils/generateForm310XML';
+import type { CollateralPortfolioEntry } from '@/types/portfolio';
+import { message } from 'antd';
 import './ReportsPage.css';
 
 type ReportRow = Form310Report & { key: string };
@@ -207,6 +210,49 @@ const ReportsPage: React.FC = () => {
     setModalVisible(true);
   };
 
+  const handleGenerateXML = async () => {
+    try {
+      message.loading({ content: 'Загрузка данных портфеля...', key: 'generate-xml' });
+      
+      // Загружаем данные портфеля
+      const base = import.meta.env.BASE_URL ?? '/';
+      const resolvedBase = new URL(base, window.location.origin);
+      const normalizedPath = resolvedBase.pathname.endsWith('/')
+        ? resolvedBase.pathname
+        : `${resolvedBase.pathname}/`;
+      const portfolioUrl = `${resolvedBase.origin}${normalizedPath}portfolioData.json?v=${Date.now()}`;
+      
+      const portfolioResponse = await fetch(portfolioUrl, { cache: 'no-store' });
+      if (!portfolioResponse.ok) {
+        throw new Error('Не удалось загрузить данные портфеля');
+      }
+      
+      const portfolioData = (await portfolioResponse.json()) as CollateralPortfolioEntry[];
+      
+      message.loading({ content: 'Генерация XML отчета...', key: 'generate-xml' });
+      
+      // Генерируем XML
+      const xmlContent = generateForm310XML({
+        portfolioData,
+        creditOrgCode: '000000000',
+        creditOrgName: 'Кредитная организация',
+        reportDate: new Date().toISOString().split('T')[0],
+      });
+      
+      // Скачиваем файл
+      const filename = `Ф310_${new Date().toISOString().split('T')[0].replace(/-/g, '')}_${Date.now()}.xml`;
+      downloadXML(xmlContent, filename);
+      
+      message.success({ content: `XML отчет "${filename}" успешно сгенерирован и скачан`, key: 'generate-xml', duration: 4 });
+    } catch (error) {
+      message.error({
+        content: error instanceof Error ? error.message : 'Ошибка при генерации XML отчета',
+        key: 'generate-xml',
+        duration: 4,
+      });
+    }
+  };
+
   return (
     <div className="reports-page">
       <div className="reports-header">
@@ -230,6 +276,14 @@ const ReportsPage: React.FC = () => {
               style={{ width: 360 }}
             />
           </Tooltip>
+          <Button
+            type="primary"
+            icon={<DownloadOutlined />}
+            size="large"
+            onClick={handleGenerateXML}
+          >
+            Сформировать XML отчет (Ф310)
+          </Button>
         </Space>
       </div>
 
