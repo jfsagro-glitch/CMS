@@ -33,6 +33,7 @@ const { RangePicker } = DatePicker;
 interface PortfolioEntry {
   reference: string;
   collateralType: string;
+  collateralCategory?: string; // Категория обеспечения из карточки сделки
   segment: string;
   group: string;
   debtRub: number;
@@ -188,12 +189,14 @@ const AnalyticsPage: React.FC = () => {
     }
   };
 
-  // 1. Структура портфеля по категориям имущества
+  // 1. Структура портфеля по категориям имущества (используем "Категория обеспечения" из карточек сделок)
   const propertyCategoryStructure = useMemo(() => {
     const categoryMap = new Map<string, { count: number; value: number; debt: number }>();
     
     analyticsData.portfolioData.forEach(item => {
-      const category = getPropertyCategory(item.collateralType);
+      // Используем поле collateralCategory (Категория обеспечения) из карточки сделки
+      // Если его нет, используем автоматическое определение по типу имущества
+      const category = item.collateralCategory || getPropertyCategory(item.collateralType) || 'Не указана';
       const value = parseFloat(String(item.collateralValue || 0)) || 0;
       const debt = parseFloat(String(item.debtRub || 0)) || 0;
       
