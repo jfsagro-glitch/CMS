@@ -1,0 +1,54 @@
+.fnp-service-page {
+  padding: 24px;
+}
+
+.fnp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.fnp-title {
+  margin: 0 !important;
+}
+
+.fnp-subtitle {
+  margin: 8px 0 0 0 !important;
+  color: #666;
+}
+
+.fnp-filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.fnp-stats {
+  margin-bottom: 24px;
+}
+
+.fnp-table-card {
+  margin-bottom: 24px;
+}
+
+.fnp-empty {
+  padding: 40px 0;
+}
+
+.fnp-registration-details {
+  padding: 8px 0;
+}
+
+@media (max-width: 768px) {
+  .fnp-header {
+    flex-direction: column;
+  }
+
+  .fnp-filters {
+    flex-direction: column;
+  }
+}
+

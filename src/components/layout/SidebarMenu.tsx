@@ -17,6 +17,7 @@ import {
   FolderOpenOutlined,
   CameraOutlined,
   FileTextOutlined,
+  BankOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
@@ -89,6 +90,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       label: 'Страхование',
       icon: <SafetyOutlined />,
       path: '/insurance',
+    },
+    {
+      key: 'fnp',
+      label: 'ФНП',
+      icon: <BankOutlined />,
+      path: '/fnp',
+      tooltip: 'Регистрация залога движимого имущества ФНП',
     },
     {
       key: 'analytics',

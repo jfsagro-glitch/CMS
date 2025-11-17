@@ -21,6 +21,7 @@ import ReportsPage from './modules/Reports/ReportsPage';
 import TasksPage from './modules/Tasks/TasksPage';
 import CMSCheckPage from './modules/CMSCheck/CMSCheckPage';
 import CollateralConclusionsPage from './modules/CollateralConclusions/CollateralConclusionsPage';
+import FNPServicePage from './modules/FNP/FNPServicePage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -118,6 +119,7 @@ const AppContent: React.FC = () => {
                   <Route path="tasks" element={<TasksPage />} />
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="insurance" element={<InsurancePage />} />
+                  <Route path="fnp" element={<FNPServicePage />} />
                   <Route path="analytics" element={<PlaceholderPage title="Аналитика" />} />
                   <Route path="credit-risk" element={<PlaceholderPage title="ФКР" />} />
                   <Route path="cms-check" element={<CMSCheckPage />} />
