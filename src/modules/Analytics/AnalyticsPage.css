@@ -1,0 +1,19 @@
+.analytics-page {
+  padding: 24px;
+}
+
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .analytics-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+

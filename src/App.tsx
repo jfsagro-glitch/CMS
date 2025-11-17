@@ -26,6 +26,7 @@ import CreditRiskPage from './modules/CreditRisk/CreditRiskPage';
 import AppraisalPage from './modules/Appraisal/AppraisalPage';
 import EGRNPage from './modules/EGRN/EGRNPage';
 import KPIPage from './modules/KPI/KPIPage';
+import AnalyticsPage from './modules/Analytics/AnalyticsPage';
 import EmployeesPage from './modules/Settings/EmployeesPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
@@ -126,7 +127,7 @@ const AppContent: React.FC = () => {
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="insurance" element={<InsurancePage />} />
                   <Route path="fnp" element={<FNPServicePage />} />
-                    <Route path="analytics" element={<PlaceholderPage title="Аналитика" />} />
+                    <Route path="analytics" element={<AnalyticsPage />} />
                   <Route path="credit-risk" element={<CreditRiskPage />} />
                   <Route path="appraisal" element={<AppraisalPage />} />
                   <Route path="cms-check" element={<CMSCheckPage />} />
