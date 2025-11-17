@@ -1,0 +1,14 @@
+.monitoring-card-content {
+  padding: 8px 0;
+}
+
+.monitoring-card-content .ant-descriptions {
+  margin-bottom: 16px;
+}
+
+.monitoring-card-content .ant-typography h5 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #1890ff;
+}
+

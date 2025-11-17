@@ -20,8 +20,9 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { CalendarOutlined, ClockCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import { CalendarOutlined, ClockCircleOutlined, SearchOutlined, EyeOutlined } from '@ant-design/icons';
 import type { MonitoringPlanEntry, MonitoringTimeframe } from '@/types/monitoring';
+import MonitoringCardModal from '@/components/MonitoringCardModal/MonitoringCardModal';
 import './MonitoringPage.css';
 
 dayjs.extend(relativeTime);
@@ -47,6 +48,8 @@ const MonitoringPage: React.FC = () => {
   const [methodFilter, setMethodFilter] = useState<string | null>(null);
   const [ownerFilter, setOwnerFilter] = useState<string | null>(null);
   const [guidelinesVisible, setGuidelinesVisible] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<TableRow | null>(null);
+  const [cardModalVisible, setCardModalVisible] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -234,6 +237,24 @@ const MonitoringPage: React.FC = () => {
       width: 160,
       render: value => <span>{value ?? '—'}</span>,
     },
+    {
+      title: 'Действия',
+      key: 'actions',
+      width: 100,
+      fixed: 'right',
+      render: (_, record) => (
+        <Tooltip title="Открыть карточку мониторинга">
+          <a
+            onClick={() => {
+              setSelectedEntry(record);
+              setCardModalVisible(true);
+            }}
+          >
+            <EyeOutlined /> Открыть
+          </a>
+        </Tooltip>
+      ),
+    },
   ];
 
   return (
@@ -341,6 +362,13 @@ const MonitoringPage: React.FC = () => {
               pagination={{ pageSize: 15, showSizeChanger: false }}
               scroll={{ x: 1200 }}
               loading={loading}
+              onRow={record => ({
+                onDoubleClick: () => {
+                  setSelectedEntry(record);
+                  setCardModalVisible(true);
+                },
+                style: { cursor: 'pointer' },
+              })}
               locale={{
                 emptyText: loading ? (
                   <Empty description="Загрузка..." />
@@ -388,6 +416,15 @@ const MonitoringPage: React.FC = () => {
           ЕГРН, реестры залогов, выписки счетов депо и онлайн-проверку транспортных средств.
         </Typography.Paragraph>
       </Modal>
+
+      <MonitoringCardModal
+        visible={cardModalVisible}
+        entry={selectedEntry}
+        onClose={() => {
+          setCardModalVisible(false);
+          setSelectedEntry(null);
+        }}
+      />
     </div>
   );
 };
