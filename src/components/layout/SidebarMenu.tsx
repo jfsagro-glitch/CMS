@@ -17,6 +17,7 @@ import {
   FileTextOutlined,
   BankOutlined,
   DollarOutlined,
+  DashboardOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
@@ -64,6 +65,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       label: 'Задачи',
       icon: <LinkOutlined />,
       path: '/tasks',
+    },
+    {
+      key: 'kpi',
+      label: 'KPI',
+      icon: <DashboardOutlined />,
+      path: '/kpi',
+      tooltip: 'KPI и аналитика',
     },
     {
       key: 'reports',

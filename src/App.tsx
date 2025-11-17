@@ -25,6 +25,7 @@ import FNPServicePage from './modules/FNP/FNPServicePage';
 import CreditRiskPage from './modules/CreditRisk/CreditRiskPage';
 import AppraisalPage from './modules/Appraisal/AppraisalPage';
 import EGRNPage from './modules/EGRN/EGRNPage';
+import KPIPage from './modules/KPI/KPIPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -120,6 +121,7 @@ const AppContent: React.FC = () => {
                   <Route path="collateral-dossier" element={<CollateralDossierPage />} />
                   <Route path="collateral-conclusions" element={<CollateralConclusionsPage />} />
                   <Route path="tasks" element={<TasksPage />} />
+                  <Route path="kpi" element={<KPIPage />} />
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="insurance" element={<InsurancePage />} />
                   <Route path="fnp" element={<FNPServicePage />} />
