@@ -158,17 +158,83 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
 
     // 2. Характеристики
     const collateralType = conclusion.collateralType;
-    const groupedAttributes = getGroupedCollateralAttributes(collateralType || undefined);
     
-    // Собираем все характеристики из заключения (только из additionalData, старые поля удалены)
+    // Маппинг типа залога из заключения в ObjectTypeKey
+    const mapCollateralTypeToKey = (type: string | null | undefined): string | undefined => {
+      if (!type) return undefined;
+      const typeLower = type.toLowerCase();
+      
+      // Недвижимость
+      if (typeLower.includes('недвижимость') || typeLower.includes('нежилая')) {
+        // Попытка определить более конкретный тип по другим полям
+        if (conclusion.collateralName) {
+          const nameLower = conclusion.collateralName.toLowerCase();
+          if (nameLower.includes('офис') || nameLower.includes('офисное')) return 'office';
+          if (nameLower.includes('торгов') || nameLower.includes('магазин')) return 'retail';
+          if (nameLower.includes('склад')) return 'warehouse';
+          if (nameLower.includes('гостиниц') || nameLower.includes('отель')) return 'hotel';
+          if (nameLower.includes('кафе') || nameLower.includes('ресторан')) return 'catering';
+          if (nameLower.includes('азс') || nameLower.includes('заправк')) return 'gas_station';
+          if (nameLower.includes('автосалон')) return 'car_dealership';
+          if (nameLower.includes('производств') || nameLower.includes('цех')) return 'industrial_building';
+        }
+        // По умолчанию для недвижимости
+        return 'office';
+      }
+      
+      // Транспорт
+      if (typeLower.includes('транспорт') || typeLower.includes('авто')) {
+        return 'car_passenger';
+      }
+      
+      // Спецтехника
+      if (typeLower.includes('спецтехник') || typeLower.includes('техник')) {
+        return 'machinery';
+      }
+      
+      // Оборудование
+      if (typeLower.includes('оборудован')) {
+        return 'equipment';
+      }
+      
+      return undefined;
+    };
+    
+    const mappedType = mapCollateralTypeToKey(collateralType);
+    const groupedAttributes = getGroupedCollateralAttributes(mappedType || collateralType || undefined);
+    
+    // Собираем все характеристики из заключения
+    // Сначала из additionalData, затем из основных полей заключения
     const allCharacteristics: Record<string, any> = {
+      // Основные поля заключения
+      collateralName: conclusion.collateralName,
+      collateralLocation: conclusion.collateralLocation,
+      totalAreaSqm: conclusion.totalAreaSqm,
+      totalAreaHectares: conclusion.totalAreaHectares,
+      landCategory: conclusion.landCategory,
+      landPermittedUse: conclusion.landPermittedUse,
+      landCadastralNumber: conclusion.landCadastralNumber,
+      ownershipShare: conclusion.ownershipShare,
+      marketValue: conclusion.marketValue,
+      collateralValue: conclusion.collateralValue,
+      fairValue: conclusion.fairValue,
+      category: conclusion.category,
+      collateralCondition: conclusion.collateralCondition,
+      hasEncumbrances: conclusion.hasEncumbrances,
+      ownershipBasis: conclusion.ownershipBasis,
+      // Затем из additionalData (перезаписывает основные поля, если есть)
       ...(conclusion.additionalData || {}),
     };
     
+    // Удаляем null и undefined значения
+    Object.keys(allCharacteristics).forEach(key => {
+      if (allCharacteristics[key] === null || allCharacteristics[key] === undefined || allCharacteristics[key] === '') {
+        delete allCharacteristics[key];
+      }
+    });
+    
     // Проверяем наличие хотя бы одной характеристики
-    const hasCharacteristics = Object.values(allCharacteristics).some(
-      value => value !== null && value !== undefined && value !== ''
-    );
+    const hasCharacteristics = Object.keys(allCharacteristics).length > 0;
 
     const formatAttributeValue = (attr: any, value: any): string => {
       if (value === null || value === undefined || value === '') return '—';
