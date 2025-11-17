@@ -28,6 +28,7 @@ import EGRNPage from './modules/EGRN/EGRNPage';
 import KPIPage from './modules/KPI/KPIPage';
 import AnalyticsPage from './modules/Analytics/AnalyticsPage';
 import EmployeesPage from './modules/Settings/EmployeesPage';
+import ReferenceDataPage from './modules/Settings/ReferenceDataPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -136,6 +137,7 @@ const AppContent: React.FC = () => {
                   <Route path="monitoring" element={<MonitoringPage />} />
                       <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
                       <Route path="settings/employees" element={<EmployeesPage />} />
+                      <Route path="settings/reference-data" element={<ReferenceDataPage />} />
                     </Route>
                   </Routes>
                 </HashRouter>
