@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Statistic, Table, Space, Typography, DatePicker, Select, Spin } from 'antd';
+import { Card, Row, Col, Statistic, Table, Space, Typography, DatePicker, Select, Spin, Modal, Progress, Button } from 'antd';
 import {
   DollarOutlined,
   FileTextOutlined,
@@ -9,9 +9,12 @@ import {
   BarChartOutlined,
   LineChartOutlined,
   PieChartOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs, { Dayjs } from 'dayjs';
+import employeeService from '@/services/EmployeeService';
+import type { RegionStats } from '@/types/employee';
 import './KPIPage.css';
 
 const { Title, Text } = Typography;
@@ -63,10 +66,76 @@ const KPIPage: React.FC = () => {
     dayjs(),
   ]);
   const [period, setPeriod] = useState<string>('30days');
+  const [regionStats, setRegionStats] = useState<RegionStats[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [regionModalVisible, setRegionModalVisible] = useState(false);
 
   useEffect(() => {
     loadKPIData();
+    loadRegionStats();
   }, [dateRange, period]);
+
+  const loadRegionStats = () => {
+    try {
+      const tasksData = JSON.parse(localStorage.getItem('zadachnik_tasks') || '[]');
+      const employees = employeeService.getEmployees();
+      const regions = employeeService.getRegions();
+
+      const stats: RegionStats[] = regions.map(region => {
+        const regionEmployees = employees.filter(emp => emp.region === region && emp.isActive);
+        const employeeStats = regionEmployees.map(emp => {
+          const employeeTasks = tasksData.filter((task: any) => 
+            task.assignee === emp.id || 
+            task.assignee === `${emp.lastName} ${emp.firstName}` ||
+            task.employeeId === emp.id
+          );
+
+          const completed = employeeTasks.filter((t: any) => 
+            t.status === 'completed' || t.status === 'Выполнено'
+          ).length;
+          const inProgress = employeeTasks.filter((t: any) => 
+            t.status === 'pending' || t.status === 'В работе'
+          ).length;
+          const overdue = employeeTasks.filter((t: any) => {
+            if (!t.dueDate) return false;
+            const dueDate = dayjs(t.dueDate);
+            return dueDate.isBefore(dayjs()) && (t.status !== 'completed' && t.status !== 'Выполнено');
+          }).length;
+          const total = employeeTasks.length;
+          const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+          return {
+            employeeId: emp.id,
+            totalTasks: total,
+            completedTasks: completed,
+            inProgressTasks: inProgress,
+            overdueTasks: overdue,
+            completionRate,
+          };
+        });
+
+        const totalTasks = employeeStats.reduce((sum, stat) => sum + stat.totalTasks, 0);
+        const completedTasks = employeeStats.reduce((sum, stat) => sum + stat.completedTasks, 0);
+        const inProgressTasks = employeeStats.reduce((sum, stat) => sum + stat.inProgressTasks, 0);
+        const overdueTasks = employeeStats.reduce((sum, stat) => sum + stat.overdueTasks, 0);
+        const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+        return {
+          region,
+          totalTasks,
+          completedTasks,
+          inProgressTasks,
+          overdueTasks,
+          completionRate,
+          employees: employeeStats,
+        };
+      });
+
+      setRegionStats(stats);
+    } catch (error) {
+      console.error('Ошибка загрузки статистики по регионам:', error);
+    }
+  };
 
   const loadKPIData = async () => {
     setLoading(true);
@@ -357,6 +426,64 @@ const KPIPage: React.FC = () => {
         </Col>
       </Row>
 
+      {/* Аналитика по регионам */}
+      <Card
+        title={
+          <Space>
+            <BarChartOutlined />
+            <span>Аналитика по регионам</span>
+          </Space>
+        }
+        style={{ marginBottom: 24 }}
+      >
+        <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+          Кликните на регион для детальной статистики по сотрудникам
+        </Text>
+        <Row gutter={[16, 16]}>
+          {regionStats.map((stat) => (
+            <Col xs={24} sm={12} lg={6} key={stat.region}>
+              <Card
+                hoverable
+                onClick={() => {
+                  setSelectedRegion(stat.region);
+                  setRegionModalVisible(true);
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <Typography.Title level={4} style={{ marginTop: 0 }}>
+                  {stat.region}
+                </Typography.Title>
+                <div style={{ marginBottom: 12 }}>
+                  <Text strong style={{ color: '#3f8600', fontSize: 18 }}>
+                    {stat.completionRate}%
+                  </Text>
+                </div>
+                <Progress
+                  percent={stat.completionRate}
+                  strokeColor="#3f8600"
+                  showInfo={false}
+                  style={{ marginBottom: 12 }}
+                />
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                  <div>
+                    <Text type="secondary">Всего задач:</Text> <Text strong>{stat.totalTasks}</Text>
+                  </div>
+                  <div>
+                    <Text type="secondary">Завершено:</Text> <Text strong type="success">{stat.completedTasks}</Text>
+                  </div>
+                  <div>
+                    <Text type="secondary">В работе:</Text> <Text strong type="warning">{stat.inProgressTasks}</Text>
+                  </div>
+                  <div>
+                    <Text type="secondary">Просрочено:</Text> <Text strong type="danger">{stat.overdueTasks}</Text>
+                  </div>
+                </Space>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </Card>
+
       {/* Статистика по задачам */}
       <Card
         title={
@@ -410,6 +537,107 @@ const KPIPage: React.FC = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Модальное окно с детальной статистикой по сотрудникам региона */}
+      <Modal
+        title={
+          <Space>
+            <UserOutlined />
+            <span>Аналитика по сотрудникам: {selectedRegion}</span>
+          </Space>
+        }
+        open={regionModalVisible}
+        onCancel={() => setRegionModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setRegionModalVisible(false)}>
+            Закрыть
+          </Button>,
+        ]}
+        width={800}
+      >
+        {selectedRegion && (() => {
+          const regionStat = regionStats.find(s => s.region === selectedRegion);
+          if (!regionStat) return null;
+
+          const employees = employeeService.getEmployeesByRegion(selectedRegion);
+          const employeeColumns: ColumnsType<any> = [
+            {
+              title: 'Сотрудник',
+              dataIndex: 'employee',
+              key: 'employee',
+              render: (_, record) => {
+                const emp = employees.find(e => e.id === record.employeeId);
+                return emp ? `${emp.lastName} ${emp.firstName} ${emp.middleName || ''}`.trim() : 'Неизвестно';
+              },
+            },
+            {
+              title: 'Должность',
+              dataIndex: 'position',
+              key: 'position',
+              render: (_, record) => {
+                const emp = employees.find(e => e.id === record.employeeId);
+                return emp?.position || '—';
+              },
+            },
+            {
+              title: 'Всего задач',
+              dataIndex: 'totalTasks',
+              key: 'totalTasks',
+              align: 'center',
+            },
+            {
+              title: 'Завершено',
+              dataIndex: 'completedTasks',
+              key: 'completedTasks',
+              align: 'center',
+              render: (value) => <Text type="success">{value}</Text>,
+            },
+            {
+              title: 'В работе',
+              dataIndex: 'inProgressTasks',
+              key: 'inProgressTasks',
+              align: 'center',
+              render: (value) => <Text type="warning">{value}</Text>,
+            },
+            {
+              title: 'Просрочено',
+              dataIndex: 'overdueTasks',
+              key: 'overdueTasks',
+              align: 'center',
+              render: (value) => <Text type="danger">{value}</Text>,
+            },
+            {
+              title: '% выполнения',
+              dataIndex: 'completionRate',
+              key: 'completionRate',
+              align: 'center',
+              render: (value) => (
+                <div>
+                  <Text strong style={{ color: value >= 80 ? '#3f8600' : value >= 50 ? '#faad14' : '#cf1322' }}>
+                    {value}%
+                  </Text>
+                  <Progress
+                    percent={value}
+                    strokeColor={value >= 80 ? '#3f8600' : value >= 50 ? '#faad14' : '#cf1322'}
+                    showInfo={false}
+                    size="small"
+                    style={{ marginTop: 4 }}
+                  />
+                </div>
+              ),
+            },
+          ];
+
+          return (
+            <Table
+              columns={employeeColumns}
+              dataSource={regionStat.employees.map(stat => ({ ...stat, key: stat.employeeId }))}
+              pagination={false}
+              size="small"
+            />
+          );
+        })()}
+      </Modal>
     </div>
   );
 };

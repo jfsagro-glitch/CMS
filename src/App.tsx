@@ -26,6 +26,7 @@ import CreditRiskPage from './modules/CreditRisk/CreditRiskPage';
 import AppraisalPage from './modules/Appraisal/AppraisalPage';
 import EGRNPage from './modules/EGRN/EGRNPage';
 import KPIPage from './modules/KPI/KPIPage';
+import EmployeesPage from './modules/Settings/EmployeesPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -133,6 +134,7 @@ const AppContent: React.FC = () => {
                       <Route path="upload" element={<PlaceholderPage title="Загрузка" />} />
                   <Route path="monitoring" element={<MonitoringPage />} />
                       <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
+                      <Route path="settings/employees" element={<EmployeesPage />} />
                     </Route>
                   </Routes>
                 </HashRouter>

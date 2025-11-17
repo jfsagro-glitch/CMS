@@ -1,218 +1,201 @@
-import { Employee, UserRole } from '../types';
+/**
+ * Сервис для управления сотрудниками
+ */
 
-// База данных сотрудников (по аналогии с Задачником)
-export const employeesDatabase: Employee[] = [
-  {
-    id: 'emp-001',
-    name: 'Александр Петров',
-    email: 'a.petrov@company.com',
-    phone: '+7 (495) 123-45-67',
-    position: 'Руководитель отдела',
-    department: 'Управление',
-    role: 'manager',
-    isActive: true,
-    createdAt: new Date('2023-01-15'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: 'emp-002',
-    name: 'Мария Иванова',
-    email: 'm.ivanova@company.com',
-    phone: '+7 (495) 234-56-78',
-    position: 'Специалист по оценке',
-    department: 'Оценка имущества',
-    role: 'employee',
-    isActive: true,
-    createdAt: new Date('2023-02-20'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: 'emp-003',
-    name: 'Дмитрий Сидоров',
-    email: 'd.sidorov@company.com',
-    phone: '+7 (495) 345-67-89',
-    position: 'IT-специалист',
-    department: 'Информационные технологии',
-    role: 'superuser',
-    isActive: true,
-    createdAt: new Date('2023-03-10'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: 'emp-004',
-    name: 'Елена Козлова',
-    email: 'e.kozlova@company.com',
-    phone: '+7 (495) 456-78-90',
-    position: 'Бизнес-аналитик',
-    department: 'Бизнес-развитие',
-    role: 'business',
-    isActive: true,
-    createdAt: new Date('2023-04-05'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: 'emp-005',
-    name: 'Сергей Волков',
-    email: 's.volkov@company.com',
-    phone: '+7 (495) 567-89-01',
-    position: 'Оценщик недвижимости',
-    department: 'Оценка имущества',
-    role: 'employee',
-    isActive: true,
-    createdAt: new Date('2023-05-12'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: 'emp-006',
-    name: 'Анна Морозова',
-    email: 'a.morozova@company.com',
-    phone: '+7 (495) 678-90-12',
-    position: 'Руководитель проекта',
-    department: 'Управление проектами',
-    role: 'manager',
-    isActive: true,
-    createdAt: new Date('2023-06-18'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: 'emp-007',
-    name: 'Игорь Новиков',
-    email: 'i.novikov@company.com',
-    phone: '+7 (495) 789-01-23',
-    position: 'Специалист по залогам',
-    department: 'Залоговые операции',
-    role: 'employee',
-    isActive: true,
-    createdAt: new Date('2023-07-25'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: 'emp-008',
-    name: 'Ольга Лебедева',
-    email: 'o.lebedeva@company.com',
-    phone: '+7 (495) 890-12-34',
-    position: 'Администратор системы',
-    department: 'Информационные технологии',
-    role: 'superuser',
-    isActive: true,
-    createdAt: new Date('2023-08-30'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: 'emp-009',
-    name: 'Владимир Соколов',
-    email: 'v.sokolov@company.com',
-    phone: '+7 (495) 901-23-45',
-    position: 'Бизнес-консультант',
-    department: 'Бизнес-развитие',
-    role: 'business',
-    isActive: true,
-    createdAt: new Date('2023-09-14'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: 'emp-010',
-    name: 'Татьяна Кузнецова',
-    email: 't.kuznetsova@company.com',
-    phone: '+7 (495) 012-34-56',
-    position: 'Оценщик движимого имущества',
-    department: 'Оценка имущества',
-    role: 'employee',
-    isActive: true,
-    createdAt: new Date('2023-10-22'),
-    updatedAt: new Date('2024-01-15'),
-  },
-];
+import type { Employee } from '@/types/employee';
+
+const STORAGE_KEY = 'cms_employees';
 
 class EmployeeService {
-  private employees: Employee[] = [...employeesDatabase];
-
-  // Получить всех сотрудников
-  getAllEmployees(): Employee[] {
-    return this.employees;
+  /**
+   * Получить всех сотрудников
+   */
+  getEmployees(): Employee[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (!data) {
+        // Возвращаем демо-данные при первом запуске
+        return this.getDefaultEmployees();
+      }
+      return JSON.parse(data);
+    } catch (error) {
+      console.error('Ошибка загрузки сотрудников:', error);
+      return this.getDefaultEmployees();
+    }
   }
 
-  // Получить сотрудника по ID
+  /**
+   * Сохранить сотрудников
+   */
+  saveEmployees(employees: Employee[]): void {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(employees));
+    } catch (error) {
+      console.error('Ошибка сохранения сотрудников:', error);
+    }
+  }
+
+  /**
+   * Получить сотрудника по ID
+   */
   getEmployeeById(id: string): Employee | undefined {
-    return this.employees.find(emp => emp.id === id);
+    const employees = this.getEmployees();
+    return employees.find(emp => emp.id === id);
   }
 
-  // Получить сотрудников по роли
-  getEmployeesByRole(role: UserRole): Employee[] {
-    return this.employees.filter(emp => emp.role === role);
-  }
-
-  // Получить сотрудников по отделу
-  getEmployeesByDepartment(department: string): Employee[] {
-    return this.employees.filter(emp => emp.department === department);
-  }
-
-  // Добавить нового сотрудника
+  /**
+   * Добавить сотрудника
+   */
   addEmployee(employee: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>): Employee {
+    const employees = this.getEmployees();
     const newEmployee: Employee = {
       ...employee,
-      id: `emp-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      id: `emp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
-    
-    this.employees.push(newEmployee);
+    employees.push(newEmployee);
+    this.saveEmployees(employees);
     return newEmployee;
   }
 
-  // Обновить сотрудника
+  /**
+   * Обновить сотрудника
+   */
   updateEmployee(id: string, updates: Partial<Employee>): Employee | null {
-    const index = this.employees.findIndex(emp => emp.id === id);
+    const employees = this.getEmployees();
+    const index = employees.findIndex(emp => emp.id === id);
     if (index === -1) return null;
 
-    this.employees[index] = {
-      ...this.employees[index],
+    employees[index] = {
+      ...employees[index],
       ...updates,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     };
-
-    return this.employees[index];
+    this.saveEmployees(employees);
+    return employees[index];
   }
 
-  // Удалить сотрудника
+  /**
+   * Удалить сотрудника
+   */
   deleteEmployee(id: string): boolean {
-    const index = this.employees.findIndex(emp => emp.id === id);
-    if (index === -1) return false;
-
-    this.employees.splice(index, 1);
+    const employees = this.getEmployees();
+    const filtered = employees.filter(emp => emp.id !== id);
+    if (filtered.length === employees.length) return false;
+    this.saveEmployees(filtered);
     return true;
   }
 
-  // Получить статистику по ролям
-  getRoleStatistics(): Record<UserRole, number> {
-    const stats: Record<UserRole, number> = {
-      business: 0,
-      employee: 0,
-      manager: 0,
-      superuser: 0,
-    };
-
-    this.employees.forEach(emp => {
-      if (emp.isActive) {
-        stats[emp.role]++;
-      }
-    });
-
-    return stats;
+  /**
+   * Получить сотрудников по региону
+   */
+  getEmployeesByRegion(region: string): Employee[] {
+    const employees = this.getEmployees();
+    return employees.filter(emp => emp.region === region && emp.isActive);
   }
 
-  // Получить все отделы
-  getDepartments(): string[] {
-    const departments = new Set(this.employees.map(emp => emp.department));
-    return Array.from(departments).sort();
+  /**
+   * Получить все регионы
+   */
+  getRegions(): string[] {
+    const employees = this.getEmployees();
+    const regions = new Set(employees.map(emp => emp.region));
+    return Array.from(regions).sort();
   }
 
-  // Получить все должности
-  getPositions(): string[] {
-    const positions = new Set(this.employees.map(emp => emp.position));
-    return Array.from(positions).sort();
+  /**
+   * Демо-данные сотрудников
+   */
+  private getDefaultEmployees(): Employee[] {
+    const defaultEmployees: Employee[] = [
+      {
+        id: 'emp-1',
+        lastName: 'Иванов',
+        firstName: 'Иван',
+        middleName: 'Иванович',
+        position: 'Менеджер по работе с залогами',
+        region: 'Москва',
+        email: 'ivanov@bank.ru',
+        phone: '+7 (495) 123-45-67',
+        department: 'Отдел залогового обеспечения',
+        permissions: ['registry_view', 'registry_edit', 'portfolio_view', 'tasks_view', 'tasks_edit'],
+        isActive: true,
+        hireDate: '2020-01-15',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'emp-2',
+        lastName: 'Петрова',
+        firstName: 'Мария',
+        middleName: 'Сергеевна',
+        position: 'Специалист по оценке',
+        region: 'Москва',
+        email: 'petrova@bank.ru',
+        phone: '+7 (495) 123-45-68',
+        department: 'Отдел оценки',
+        permissions: ['registry_view', 'conclusions_view', 'conclusions_edit', 'tasks_view'],
+        isActive: true,
+        hireDate: '2021-03-20',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'emp-3',
+        lastName: 'Сидоров',
+        firstName: 'Алексей',
+        middleName: 'Владимирович',
+        position: 'Менеджер по работе с залогами',
+        region: 'Санкт-Петербург',
+        email: 'sidorov@bank.ru',
+        phone: '+7 (812) 234-56-78',
+        department: 'Отдел залогового обеспечения',
+        permissions: ['registry_view', 'registry_edit', 'portfolio_view', 'tasks_view', 'tasks_edit'],
+        isActive: true,
+        hireDate: '2019-06-10',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'emp-4',
+        lastName: 'Козлова',
+        firstName: 'Елена',
+        middleName: 'Александровна',
+        position: 'Специалист по мониторингу',
+        region: 'Новосибирск',
+        email: 'kozlova@bank.ru',
+        phone: '+7 (383) 345-67-89',
+        department: 'Отдел мониторинга',
+        permissions: ['registry_view', 'portfolio_view', 'tasks_view', 'reports_view'],
+        isActive: true,
+        hireDate: '2022-02-14',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'emp-5',
+        lastName: 'Новиков',
+        firstName: 'Дмитрий',
+        middleName: 'Петрович',
+        position: 'Менеджер по работе с залогами',
+        region: 'Екатеринбург',
+        email: 'novikov@bank.ru',
+        phone: '+7 (343) 456-78-90',
+        department: 'Отдел залогового обеспечения',
+        permissions: ['registry_view', 'registry_edit', 'portfolio_view', 'tasks_view', 'tasks_edit'],
+        isActive: true,
+        hireDate: '2021-09-01',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+
+    // Сохраняем демо-данные при первом запуске
+    this.saveEmployees(defaultEmployees);
+    return defaultEmployees;
   }
 }
 
-export const employeeService = new EmployeeService();
+const employeeService = new EmployeeService();
 export default employeeService;

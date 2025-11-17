@@ -1,6 +1,7 @@
 import React from 'react';
-import { Result, Button } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { Result, Button, Space } from 'antd';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { UserOutlined } from '@ant-design/icons';
 
 interface PlaceholderPageProps {
   title: string;
@@ -9,6 +10,10 @@ interface PlaceholderPageProps {
 
 const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Если это страница настроек, показываем ссылку на сотрудников
+  const isSettingsPage = location.pathname === '/settings' || location.pathname === '#/settings';
 
   return (
     <Result
@@ -16,9 +21,20 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
       title={title}
       subTitle={subtitle || 'Этот раздел находится в разработке'}
       extra={
-        <Button type="primary" onClick={() => navigate('/registry')}>
-          Вернуться к реестру
-        </Button>
+        <Space>
+          {isSettingsPage && (
+            <Button
+              type="primary"
+              icon={<UserOutlined />}
+              onClick={() => navigate('/settings/employees')}
+            >
+              Управление сотрудниками
+            </Button>
+          )}
+          <Button onClick={() => navigate('/registry')}>
+            Вернуться к реестру
+          </Button>
+        </Space>
       }
     />
   );
