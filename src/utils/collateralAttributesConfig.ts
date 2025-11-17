@@ -472,6 +472,7 @@ const commercialRealEstateAttributes: CollateralAttribute[] = [
     type: 'text',
     placeholder: 'Например: 1/1, 1/2, 1/3',
     group: 'Права',
+    description: 'Указывается в виде дроби, например: 1/1, 1/2, 1/3',
   },
   {
     key: 'isUnfinishedConstruction',
