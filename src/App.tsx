@@ -23,6 +23,8 @@ import CMSCheckPage from './modules/CMSCheck/CMSCheckPage';
 import CollateralConclusionsPage from './modules/CollateralConclusions/CollateralConclusionsPage';
 import FNPServicePage from './modules/FNP/FNPServicePage';
 import CreditRiskPage from './modules/CreditRisk/CreditRiskPage';
+import AppraisalPage from './modules/Appraisal/AppraisalPage';
+import EGRNPage from './modules/EGRN/EGRNPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -123,12 +125,9 @@ const AppContent: React.FC = () => {
                   <Route path="fnp" element={<FNPServicePage />} />
                     <Route path="analytics" element={<PlaceholderPage title="Аналитика" />} />
                   <Route path="credit-risk" element={<CreditRiskPage />} />
+                  <Route path="appraisal" element={<AppraisalPage />} />
                   <Route path="cms-check" element={<CMSCheckPage />} />
-                  <Route
-                    path="mobile-appraiser"
-                    element={<PlaceholderPage title="Мобильный оценщик" />}
-                  />
-                      <Route path="smartdeal" element={<PlaceholderPage title="SmartDeal" />} />
+                  <Route path="egrn" element={<EGRNPage />} />
                       <Route path="upload" element={<PlaceholderPage title="Загрузка" />} />
                   <Route path="monitoring" element={<MonitoringPage />} />
                       <Route path="settings" element={<PlaceholderPage title="Настройки" />} />

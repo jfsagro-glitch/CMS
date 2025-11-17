@@ -1,0 +1,20 @@
+.appraisal-page {
+  padding: 24px;
+}
+
+.appraisal-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.appraisal-page__title {
+  margin-bottom: 8px !important;
+}
+
+.appraisal-page__subtitle {
+  color: #8c8c8c;
+  margin-bottom: 0;
+}
+

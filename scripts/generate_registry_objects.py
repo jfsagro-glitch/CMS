@@ -194,6 +194,16 @@ def generate_characteristics(obj_type: Dict[str, Any]) -> Dict[str, Any]:
         chars['wallMaterial'] = random.choice(['Кирпич', 'Панель', 'Монолит', 'Блочный', 'Дерево'])
         chars['hasReplanning'] = random.choice([True, False])
         
+    elif key == 'room':
+        chars['totalAreaSqm'] = round(random.uniform(15, 30), 1)
+        chars['livingArea'] = round(chars['totalAreaSqm'] * random.uniform(0.8, 0.95), 1)
+        chars['floor'] = random.randint(1, 10)
+        chars['totalFloors'] = random.randint(3, 10)
+        chars['ceilingHeight'] = round(random.uniform(2.5, 3.0), 1)
+        chars['buildYear'] = random.randint(1950, 2023)
+        chars['wallMaterial'] = random.choice(['Кирпич', 'Панель', 'Блочный'])
+        chars['hasReplanning'] = random.choice([True, False])
+        
     elif key == 'house':
         chars['totalAreaSqm'] = round(random.uniform(100, 400), 1)
         chars['landAreaHectares'] = round(random.uniform(0.05, 0.5), 2)
@@ -303,6 +313,36 @@ def generate_characteristics(obj_type: Dict[str, Any]) -> Dict[str, Any]:
         chars['hasEncumbrances'] = random.choice([True, False])
         chars['bookValue'] = int(chars['marketValue'] * random.uniform(0.3, 0.7))
         
+    elif key == 'hotel':
+        chars['totalAreaSqm'] = round(random.uniform(500, 5000), 1)
+        chars['roomsCount'] = random.randint(10, 100)
+        chars['floors'] = random.randint(2, 10)
+        chars['buildingClass'] = random.choice(['A+', 'A', 'B+', 'B', 'C'])
+        chars['buildYear'] = random.randint(1990, 2023)
+        chars['wallMaterial'] = random.choice(['Кирпич', 'Монолит', 'Железобетон'])
+        chars['ceilingMaterial'] = random.choice(['Железобетонные плиты', 'Монолитные'])
+        chars['structuralCondition'] = random.choice(['Хорошее', 'Удовлетворительное'])
+        chars['hasElectricity'] = True
+        chars['hasWaterSupply'] = True
+        chars['hasSewerage'] = True
+        chars['hasFireAlarm'] = True
+        chars['hasVideoSurveillance'] = True
+        
+    elif key == 'catering':
+        chars['totalAreaSqm'] = round(random.uniform(50, 500), 1)
+        chars['tradingArea'] = round(chars['totalAreaSqm'] * random.uniform(0.6, 0.8), 1)
+        chars['floor'] = random.randint(1, 3)
+        chars['seatsCount'] = random.randint(20, 200)
+        chars['ceilingHeight'] = round(random.uniform(2.7, 4.0), 1)
+        chars['ventilation'] = random.choice(['Приточно-вытяжная', 'Приточная'])
+        chars['buildYear'] = random.randint(1980, 2023)
+        chars['wallMaterial'] = random.choice(['Кирпич', 'Монолит', 'Панель'])
+        chars['hasElectricity'] = True
+        chars['hasWaterSupply'] = True
+        chars['hasSewerage'] = True
+        chars['hasGasSupply'] = True
+        chars['hasFireAlarm'] = True
+        
     elif key == 'gas_station':
         chars['landAreaSqm'] = round(random.uniform(1000, 5000), 1)
         chars['buildingArea'] = round(random.uniform(50, 200), 1)
@@ -314,6 +354,46 @@ def generate_characteristics(obj_type: Dict[str, Any]) -> Dict[str, Any]:
         chars['cafe'] = random.choice([True, False])
         chars['landCadastralNumber'] = f"{random.randint(10, 99)}:{random.randint(1, 99):02d}:{random.randint(1000000, 9999999)}:{random.randint(1000, 9999)}"
         chars['landCategory'] = random.choice(['Земли населенных пунктов', 'Земли промназначения'])
+        
+    elif key == 'car_dealership':
+        chars['totalAreaSqm'] = round(random.uniform(500, 3000), 1)
+        chars['showroomArea'] = round(chars['totalAreaSqm'] * random.uniform(0.4, 0.6), 1)
+        chars['serviceArea'] = round(chars['totalAreaSqm'] * random.uniform(0.3, 0.5), 1)
+        chars['floors'] = random.randint(1, 3)
+        chars['parkingSpaces'] = random.randint(10, 50)
+        chars['buildYear'] = random.randint(2000, 2023)
+        chars['wallMaterial'] = random.choice(['Кирпич', 'Металлический', 'Железобетон'])
+        chars['hasElectricity'] = True
+        chars['hasWaterSupply'] = True
+        chars['hasSewerage'] = True
+        chars['hasFireAlarm'] = True
+        chars['hasVideoSurveillance'] = True
+        
+    elif key == 'industrial_building':
+        chars['totalAreaSqm'] = round(random.uniform(1000, 20000), 1)
+        chars['ceilingHeight'] = round(random.uniform(6, 20), 1)
+        chars['floors'] = random.randint(1, 5)
+        chars['loadCapacity'] = round(random.uniform(5, 20), 1)
+        chars['buildYear'] = random.randint(1970, 2023)
+        chars['wallMaterial'] = random.choice(['Железобетон', 'Металлический', 'Кирпич'])
+        chars['ceilingMaterial'] = random.choice(['Железобетонные плиты', 'Металлические'])
+        chars['structuralCondition'] = random.choice(['Хорошее', 'Удовлетворительное', 'Неудовлетворительное'])
+        chars['hasElectricity'] = True
+        chars['hasWaterSupply'] = random.choice([True, False])
+        chars['hasSewerage'] = random.choice([True, False])
+        chars['hasFireAlarm'] = True
+        
+    elif key == 'workshop':
+        chars['totalAreaSqm'] = round(random.uniform(200, 2000), 1)
+        chars['ceilingHeight'] = round(random.uniform(4, 10), 1)
+        chars['loadCapacity'] = round(random.uniform(3, 10), 1)
+        chars['buildYear'] = random.randint(1980, 2023)
+        chars['wallMaterial'] = random.choice(['Железобетон', 'Металлический', 'Кирпич'])
+        chars['structuralCondition'] = random.choice(['Хорошее', 'Удовлетворительное'])
+        chars['hasElectricity'] = True
+        chars['hasWaterSupply'] = random.choice([True, False])
+        chars['hasSewerage'] = random.choice([True, False])
+        chars['hasFireAlarm'] = True
         
     elif key in ['car_passenger', 'car_truck']:
         brands = ['Toyota', 'BMW', 'Mercedes-Benz', 'Audi', 'Volkswagen', 'Lada', 'Hyundai', 'Kia']
@@ -358,16 +438,32 @@ def generate_object_name(obj_type: Dict[str, Any], index: int) -> str:
     if key == 'apartment':
         rooms = random.randint(1, 5)
         return f"{rooms}-комнатная квартира, {random.choice(STREETS)}, д. {random.randint(1, 100)}"
+    elif key == 'room':
+        return f"Комната, {random.choice(STREETS)}, д. {random.randint(1, 100)}, кв. {random.randint(1, 200)}"
     elif key == 'house':
         return f"Жилой дом с участком, {random.choice(STREETS)}, д. {random.randint(1, 100)}"
+    elif key == 'townhouse':
+        return f"Таунхаус, {random.choice(STREETS)}, д. {random.randint(1, 100)}"
+    elif key == 'land_residential':
+        return f"Земельный участок под ИЖС, {random.choice(STREETS)}, уч. {random.randint(1, 100)}"
     elif key == 'office':
         return f"Офисное помещение, {random.choice(STREETS)}, д. {random.randint(1, 100)}, пом. {random.randint(100, 500)}"
     elif key == 'retail':
         return f"Торговое помещение, {random.choice(STREETS)}, д. {random.randint(1, 100)}"
     elif key == 'warehouse':
         return f"Складской комплекс, {random.choice(STREETS)}, д. {random.randint(1, 100)}"
+    elif key == 'hotel':
+        return f"Гостиница, {random.choice(STREETS)}, д. {random.randint(1, 100)}"
+    elif key == 'catering':
+        return f"Кафе/Ресторан, {random.choice(STREETS)}, д. {random.randint(1, 100)}"
     elif key == 'gas_station':
         return f"АЗС, {random.choice(STREETS)}, д. {random.randint(1, 100)}"
+    elif key == 'car_dealership':
+        return f"Автосалон, {random.choice(STREETS)}, д. {random.randint(1, 100)}"
+    elif key == 'industrial_building':
+        return f"Производственное здание, {random.choice(STREETS)}, д. {random.randint(1, 100)}"
+    elif key == 'workshop':
+        return f"Цех, {random.choice(STREETS)}, д. {random.randint(1, 100)}"
     elif key in ['car_passenger', 'car_truck']:
         brands = ['Toyota', 'BMW', 'Mercedes-Benz', 'Audi', 'Volkswagen', 'Lada']
         models = ['Camry', 'X5', 'E-Class', 'A6', 'Passat', 'Granta']
@@ -390,12 +486,29 @@ def load_portfolio_references() -> List[str]:
         print(f"Ошибка загрузки портфеля: {e}")
     return []
 
-def generate_objects(count: int = 200) -> List[Dict[str, Any]]:
+def generate_objects(count: int = 300) -> List[Dict[str, Any]]:
+    """
+    Генерирует объекты всех типов из справочника.
+    Гарантирует, что каждый тип объекта представлен минимум несколько раз.
+    """
     portfolio_refs = load_portfolio_references()
     objects = []
     
-    for i in range(count):
-        obj_type = random.choice(OBJECT_TYPES)
+    # Гарантируем минимум по 5 объектов каждого типа
+    min_per_type = 5
+    guaranteed_objects = []
+    for obj_type in OBJECT_TYPES:
+        for _ in range(min_per_type):
+            guaranteed_objects.append(obj_type)
+    
+    # Остальные объекты - случайные типы
+    remaining_count = max(0, count - len(guaranteed_objects))
+    all_types = guaranteed_objects + [random.choice(OBJECT_TYPES) for _ in range(remaining_count)]
+    
+    # Перемешиваем для разнообразия
+    random.shuffle(all_types)
+    
+    for i, obj_type in enumerate(all_types[:count]):
         obj_id = generate_id()
         created_date = random_date()
         
@@ -437,8 +550,8 @@ def generate_objects(count: int = 200) -> List[Dict[str, Any]]:
     return objects
 
 def main():
-    print("Генерация 200 объектов для реестра...")
-    objects = generate_objects(200)
+    print("Генерация 300 объектов для реестра (все типы из справочника)...")
+    objects = generate_objects(300)
     
     output_file = Path("public/registryObjects.json")
     output_file.parent.mkdir(parents=True, exist_ok=True)

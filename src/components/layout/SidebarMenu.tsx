@@ -3,8 +3,6 @@ import { Layout, Menu, Space, Select, Button, Tooltip } from 'antd';
 import {
   DatabaseOutlined,
   BarChartOutlined,
-  MobileOutlined,
-  ThunderboltOutlined,
   CloudUploadOutlined,
   MonitorOutlined,
   SettingOutlined,
@@ -18,6 +16,7 @@ import {
   CameraOutlined,
   FileTextOutlined,
   BankOutlined,
+  DollarOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
@@ -50,7 +49,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   const menuItems: MenuItem[] = [
     {
       key: 'registry',
-      label: 'Реестры',
+      label: 'Реестр объектов',
       icon: <DatabaseOutlined />,
       path: '/registry',
     },
@@ -112,6 +111,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       tooltip: 'Модуль мониторинга',
     },
     {
+      key: 'appraisal',
+      label: 'Модуль оценки',
+      icon: <DollarOutlined />,
+      path: '/appraisal',
+      tooltip: 'Автоматическая оценка объектов залога',
+    },
+    {
       key: 'cms-check',
       label: 'CMS Check',
       icon: <CameraOutlined />,
@@ -119,16 +125,11 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       tooltip: 'Система дистанционных осмотров',
     },
     {
-      key: 'mobile-appraiser',
-      label: 'Мобильный оценщик',
-      icon: <MobileOutlined />,
-      path: '/mobile-appraiser',
-    },
-    {
-      key: 'smartdeal',
-      label: 'SmartDeal',
-      icon: <ThunderboltOutlined />,
-      path: '/smartdeal',
+      key: 'egrn',
+      label: 'ЕГРН',
+      icon: <FileTextOutlined />,
+      path: '/egrn',
+      tooltip: 'Регистрация ипотеки, снятие обременений, выписки ЕГРН',
     },
     {
       key: 'upload',
@@ -261,7 +262,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
                   title={hasCards ? 'Перезагрузить демо-данные (44)' : 'Загрузить демо-данные (44)'}
                 >
                   <Button
-                    icon={<ThunderboltOutlined />}
+                    icon={<DatabaseOutlined />}
                     onClick={onLoadDemoData}
                     type={hasCards ? 'dashed' : 'primary'}
                     danger={hasCards}

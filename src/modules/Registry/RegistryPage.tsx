@@ -165,7 +165,7 @@ const RegistryPage: React.FC = () => {
     <div>
       <Breadcrumb style={{ marginBottom: 16 }}>
         <Breadcrumb.Item>Главная</Breadcrumb.Item>
-        <Breadcrumb.Item>Реестры</Breadcrumb.Item>
+        <Breadcrumb.Item>Реестр объектов</Breadcrumb.Item>
       </Breadcrumb>
 
       <Space style={{ marginBottom: 16 }} wrap>
