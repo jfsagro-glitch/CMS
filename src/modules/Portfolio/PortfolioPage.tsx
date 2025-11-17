@@ -24,6 +24,10 @@ import { EnvironmentOutlined, LineChartOutlined, SearchOutlined } from '@ant-des
 import type { CollateralPortfolioEntry } from '@/types/portfolio';
 import { useNavigate } from 'react-router-dom';
 import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
+import Timeline from '@/components/Timeline/Timeline';
+import CreateTaskModal from '@/components/CreateTaskModal/CreateTaskModal';
+import { getDealTimeline } from '@/utils/timelineUtils';
+import type { TimelineEvent } from '@/types/timeline';
 import './PortfolioPage.css';
 
 type PortfolioRow = CollateralPortfolioEntry & { key: string };
@@ -87,6 +91,8 @@ const PortfolioPage: React.FC = () => {
   const [dossierDocuments, setDossierDocuments] = useState<CollateralDocument[]>([]);
   const [dossierData, setDossierData] = useState<CollateralDocument[]>([]);
   const [dossierLoading, setDossierLoading] = useState(true);
+  const [createTaskModalVisible, setCreateTaskModalVisible] = useState(false);
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -202,6 +208,9 @@ const PortfolioPage: React.FC = () => {
   const handleOpenDeal = (record: PortfolioRow) => {
     setSelectedDeal(record);
     setDealModalVisible(true);
+    // Загружаем хронологию событий
+    const events = getDealTimeline(record);
+    setTimelineEvents(events);
   };
 
   const closeDealModal = () => {
@@ -548,8 +557,11 @@ const PortfolioPage: React.FC = () => {
           <Button key="insurance" onClick={goToInsurance} disabled={!selectedDeal}>
             Страхование
           </Button>,
-          <Button key="dossier" type="primary" onClick={openDossierModal} disabled={!selectedDeal}>
+          <Button key="dossier" onClick={openDossierModal} disabled={!selectedDeal}>
             Залоговое досье
+          </Button>,
+          <Button key="create-task" type="primary" onClick={() => setCreateTaskModalVisible(true)} disabled={!selectedDeal}>
+            Создать задачу
           </Button>,
           <Button key="close" onClick={closeDealModal}>
             Закрыть
@@ -642,10 +654,28 @@ const PortfolioPage: React.FC = () => {
                 <Descriptions.Item label="Ответственный сотрудник">{formatText(selectedDeal.owner)}</Descriptions.Item>
                 <Descriptions.Item label="Счет 9131">{formatText(selectedDeal.account9131)}</Descriptions.Item>
               </Descriptions>
+
+              <div>
+                <Typography.Title level={5}>Хронология</Typography.Title>
+                <Timeline events={timelineEvents} />
+              </div>
             </Space>
           </div>
         )}
       </Modal>
+
+      <CreateTaskModal
+        visible={createTaskModalVisible}
+        deal={selectedDeal}
+        onCancel={() => setCreateTaskModalVisible(false)}
+        onSuccess={() => {
+          // Обновляем хронологию после создания задачи
+          if (selectedDeal) {
+            const events = getDealTimeline(selectedDeal);
+            setTimelineEvents(events);
+          }
+        }}
+      />
 
       <Modal
         title="Залоговое досье"

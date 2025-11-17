@@ -1,0 +1,41 @@
+.timeline-container {
+  padding: 16px 0;
+}
+
+.timeline-item {
+  padding: 8px 0;
+}
+
+.timeline-header {
+  margin-bottom: 4px;
+}
+
+.timeline-icon {
+  font-size: 18px;
+  margin-right: 4px;
+}
+
+.timeline-description {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.timeline-footer {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.timeline-date {
+  font-size: 12px;
+}
+
+.timeline-responsible {
+  font-size: 12px;
+}
+
+.timeline-empty {
+  padding: 24px;
+  text-align: center;
+}
+
