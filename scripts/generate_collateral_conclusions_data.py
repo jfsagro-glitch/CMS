@@ -313,7 +313,7 @@ def generate_conclusions(count: int = 50) -> List[Dict[str, Any]]:
                     "floor": f"{random.randint(1, 10)} этаж" if is_real_estate and random.random() > 0.5 else None,
                     "floorsCount": random.randint(1, 10) if is_real_estate and random.random() > 0.5 else None,
                     "undergroundFloors": random.randint(0, 2) if is_real_estate and random.random() > 0.7 else None,
-                    "purpose": collateral_purpose or collateral_type,
+                    "purpose": collateral_type,
                     "condition": collateral_condition or "хорошее",
                     "material": random.choice(["Кирпич", "Бетон", "Металл"]) if is_real_estate and random.random() > 0.5 else None,
                     "yearBuilt": random.randint(1990, 2020) if random.random() > 0.5 else None,

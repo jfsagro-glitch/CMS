@@ -371,43 +371,76 @@ const CollateralConclusionsPage: React.FC = () => {
         />
       )}
 
-      <Modal
-        title="Карточка залогового заключения"
-        open={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        footer={[
-          <Button
-            key="dossier"
-            icon={<FolderOpenOutlined />}
-            onClick={() => {
-              if (selectedConclusion) {
-                handleGoToDossier(selectedConclusion.reference, selectedConclusion.pledger);
-              }
-            }}
+          <Modal
+            title={
+              <Space>
+                <FileTextOutlined />
+                <span>Залоговое заключение {selectedConclusion?.conclusionNumber}</span>
+                {selectedConclusion && (
+                  <Tag
+                    color={
+                      selectedConclusion.status === 'Согласовано'
+                        ? 'green'
+                        : selectedConclusion.status === 'На согласовании'
+                          ? 'blue'
+                          : selectedConclusion.status === 'Отклонено' || selectedConclusion.status === 'Аннулировано'
+                            ? 'red'
+                            : 'default'
+                    }
+                  >
+                    {selectedConclusion.status}
+                  </Tag>
+                )}
+              </Space>
+            }
+            open={modalVisible}
+            onCancel={() => setModalVisible(false)}
+            footer={[
+              <Button
+                key="dossier"
+                icon={<FolderOpenOutlined />}
+                onClick={() => {
+                  if (selectedConclusion) {
+                    handleGoToDossier(selectedConclusion.reference, selectedConclusion.pledger);
+                  }
+                }}
+              >
+                Залоговое досье
+              </Button>,
+              <Button
+                key="pledger"
+                icon={<UserOutlined />}
+                onClick={() => {
+                  if (selectedConclusion) {
+                    handleGoToPledger(selectedConclusion.pledger, selectedConclusion.reference);
+                  }
+                }}
+              >
+                Залогодатель
+              </Button>,
+              <Button key="close" type="primary" onClick={() => setModalVisible(false)}>
+                Закрыть
+              </Button>,
+            ]}
+            width="95%"
+            style={{ top: 10 }}
+            styles={{ body: { maxHeight: '80vh', overflowY: 'auto', padding: '16px' } }}
           >
-            Залоговое досье
-          </Button>,
-          <Button
-            key="pledger"
-            icon={<UserOutlined />}
-            onClick={() => {
-              if (selectedConclusion) {
-                handleGoToPledger(selectedConclusion.pledger, selectedConclusion.reference);
-              }
-            }}
-          >
-            Залогодатель
-          </Button>,
-          <Button key="close" type="primary" onClick={() => setModalVisible(false)}>
-            Закрыть
-          </Button>,
-        ]}
-        width="90%"
-        style={{ top: 20 }}
-        styles={{ body: { maxHeight: '70vh', overflowY: 'auto' } }}
-      >
-        {selectedConclusion && <CollateralConclusionCard conclusion={selectedConclusion} />}
-      </Modal>
+            {selectedConclusion && (
+              <CollateralConclusionCard
+                conclusion={selectedConclusion}
+                onEdit={() => {
+                  message.info('Редактирование в разработке');
+                }}
+                onPrint={() => {
+                  window.print();
+                }}
+                onExport={() => {
+                  message.info('Экспорт в разработке');
+                }}
+              />
+            )}
+          </Modal>
 
       <CreateConclusionModal
         visible={createModalVisible}
