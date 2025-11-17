@@ -6,6 +6,7 @@ import type { TabsProps } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import type { CreditRiskRecord } from '@/types/creditRisk';
 import { RISK_EVENTS } from '@/types/creditRisk';
+import { getGroupedCollateralAttributes, getAttributeValue } from '@/utils/collateralAttributesConfig';
 import dayjs from 'dayjs';
 
 const { Paragraph, Text } = Typography;
@@ -155,7 +156,100 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
       ),
     });
 
-    // 2. Отлагательные условия
+    // 2. Характеристики
+    const collateralType = conclusion.collateralType;
+    const groupedAttributes = getGroupedCollateralAttributes(collateralType || undefined);
+    
+    // Собираем все характеристики из заключения
+    const allCharacteristics: Record<string, any> = {
+      ...(conclusion.additionalData || {}),
+      // Добавляем основные поля, если они есть
+      marketValue: conclusion.marketValue,
+      collateralValue: conclusion.collateralValue,
+      fairValue: conclusion.fairValue,
+      totalAreaSqm: conclusion.totalAreaSqm,
+      totalAreaHectares: conclusion.totalAreaHectares,
+      landAreaSqm: conclusion.landAreaSqm,
+      landAreaHectares: conclusion.landAreaHectares,
+      category: conclusion.category,
+      liquidity: conclusion.liquidity,
+      collateralCondition: conclusion.collateralCondition,
+      ownershipShare: conclusion.ownershipShare,
+      hasEncumbrances: conclusion.hasEncumbrances,
+      encumbrancesDescription: conclusion.encumbrancesDescription,
+      hasReplanning: conclusion.hasReplanning,
+      landCategory: conclusion.landCategory,
+      landPermittedUse: conclusion.landPermittedUse,
+      landCadastralNumber: conclusion.landCadastralNumber,
+      cadastralValue: conclusion.cadastralValue,
+      marketValuePerSqm: conclusion.marketValuePerSqm,
+      marketValuePerHectare: conclusion.marketValuePerHectare,
+    };
+    
+    // Проверяем наличие хотя бы одной характеристики
+    const hasCharacteristics = Object.values(allCharacteristics).some(
+      value => value !== null && value !== undefined && value !== ''
+    );
+
+    const formatAttributeValue = (attr: any, value: any): string => {
+      if (value === null || value === undefined || value === '') return '—';
+      
+      if (attr.type === 'boolean') {
+        return value ? 'Да' : 'Нет';
+      }
+      
+      if (attr.type === 'number' && attr.unit) {
+        return `${value} ${attr.unit}`;
+      }
+      
+      if (attr.type === 'number') {
+        return String(value);
+      }
+      
+      return String(value);
+    };
+
+    items.push({
+      key: 'characteristics',
+      label: 'Характеристики',
+      children: (() => {
+        const groups = Object.keys(groupedAttributes);
+        
+        if (groups.length === 0 || !hasCharacteristics) {
+          return <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>Характеристики не указаны</div>;
+        }
+
+        return (
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            {groups.map(group => {
+              const attributes = groupedAttributes[group];
+              const items: any[] = [];
+              
+              attributes.forEach(attr => {
+                const value = getAttributeValue(allCharacteristics, attr.key);
+                if (value !== null && value !== undefined && value !== '') {
+                  items.push({
+                    label: attr.label,
+                    children: formatAttributeValue(attr, value),
+                  });
+                }
+              });
+              
+              if (items.length === 0) return null;
+              
+              return (
+                <div key={group}>
+                  <Divider orientation="left" style={{ margin: '8px 0' }}>{group}</Divider>
+                  <Descriptions bordered column={2} size="small" items={items} />
+                </div>
+              );
+            })}
+          </Space>
+        );
+      })(),
+    });
+
+    // 3. Отлагательные условия
     if (conclusion.suspensiveConditions && conclusion.suspensiveConditions.length > 0) {
       items.push({
         key: 'suspensive',
@@ -212,7 +306,7 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
       });
     }
 
-    // 3. Описание
+    // 4. Описание
     if (conclusion.detailedDescriptions && conclusion.detailedDescriptions.length > 0) {
       const firstObj = conclusion.detailedDescriptions[0];
       const columns = Object.keys(firstObj)
@@ -253,7 +347,7 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
       });
     }
 
-    // 4. Фото
+    // 5. Фото
     if (conclusion.photos && conclusion.photos.length > 0) {
       items.push({
         key: 'photos',
@@ -288,7 +382,7 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
       });
     }
 
-    // 5. Аналоги (для расчетов)
+    // 6. Аналоги (для расчетов)
     if (conclusion.calculations && conclusion.calculations.length > 0) {
       // Извлекаем аналоги из расчетов
       const analogsData: any[] = [];
@@ -355,7 +449,7 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
       });
     }
 
-    // 6. Расчеты
+    // 7. Расчеты
     if (conclusion.calculations && conclusion.calculations.length > 0) {
       const calcItems: TabsProps['items'] = conclusion.calculations.map(calc => ({
         key: calc.id,
@@ -388,7 +482,7 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
       });
     }
 
-    // 7. Рецензия
+    // 8. Рецензия
     if (conclusion.review) {
       items.push({
         key: 'review',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, Descriptions, Tag, Row, Col, Divider, Typography, Space, Statistic } from 'antd';
 import type { DescriptionsProps } from 'antd';
 import {
@@ -12,6 +12,8 @@ import {
   InfoCircleOutlined,
 } from '@ant-design/icons';
 import type { ExtendedCollateralCard } from '../../types';
+import { getGroupedCollateralAttributes, getAttributeValue } from '@/utils/collateralAttributesConfig';
+import { getObjectTypeKey } from '@/utils/extendedClassification';
 import './CollateralCardView.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -79,75 +81,88 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
     }).format(value);
   };
 
+  // Определяем тип объекта для получения правильных атрибутов
+  const objectTypeKey = useMemo(() => {
+    if (card.classification) {
+      return getObjectTypeKey(card.classification.level1, card.classification.level2);
+    }
+    return null;
+  }, [card.classification]);
+
+  // Получаем сгруппированные атрибуты
+  const groupedAttributes = useMemo(() => {
+    return getGroupedCollateralAttributes(objectTypeKey || undefined);
+  }, [objectTypeKey]);
+
+  // Форматирование значения атрибута
+  const formatAttributeValue = (attr: any, value: any): string => {
+    if (value === null || value === undefined || value === '') return '—';
+    
+    if (attr.type === 'boolean') {
+      return value ? 'Да' : 'Нет';
+    }
+    
+    if (attr.type === 'number' && attr.unit) {
+      return `${value} ${attr.unit}`;
+    }
+    
+    if (attr.type === 'number') {
+      return String(value);
+    }
+    
+    return String(value);
+  };
+
   // Рендер характеристик в зависимости от типа
-  const renderCharacteristics = (): DescriptionsProps['items'] => {
-    if (!card.characteristics) return [];
-
-    const items: DescriptionsProps['items'] = [];
-
-    if (card.mainCategory === 'real_estate') {
-      if (card.characteristics.area) {
-        items.push({ label: 'Площадь', children: `${card.characteristics.area} м²` });
-      }
-      if (card.characteristics.floor) {
-        items.push({ label: 'Этаж', children: `${card.characteristics.floor}/${card.characteristics.totalFloors}` });
-      }
-      if (card.characteristics.roomsCount) {
-        items.push({ label: 'Количество комнат', children: card.characteristics.roomsCount });
-      }
-      if (card.characteristics.cadastralNumber) {
-        items.push({ label: 'Кадастровый номер', children: card.characteristics.cadastralNumber });
-      }
-      if (card.characteristics.buildYear) {
-        items.push({ label: 'Год постройки', children: card.characteristics.buildYear });
-      }
-      if (card.characteristics.renovation) {
-        items.push({ label: 'Ремонт', children: card.characteristics.renovation });
-      }
-      if (card.characteristics.landArea) {
-        items.push({ label: 'Площадь участка', children: `${card.characteristics.landArea} сот.` });
-      }
-    } else if (card.mainCategory === 'movable') {
-      if (card.characteristics.brand) {
-        items.push({ label: 'Марка', children: card.characteristics.brand });
-      }
-      if (card.characteristics.model) {
-        items.push({ label: 'Модель', children: card.characteristics.model });
-      }
-      if (card.characteristics.year) {
-        items.push({ label: 'Год выпуска', children: card.characteristics.year });
-      }
-      if (card.characteristics.vin) {
-        items.push({ label: 'VIN', children: card.characteristics.vin });
-      }
-      if (card.characteristics.mileage) {
-        items.push({ label: 'Пробег', children: `${card.characteristics.mileage.toLocaleString('ru-RU')} км` });
-      }
-      if (card.characteristics.color) {
-        items.push({ label: 'Цвет', children: card.characteristics.color });
-      }
-      if (card.characteristics.manufacturer) {
-        items.push({ label: 'Производитель', children: card.characteristics.manufacturer });
-      }
-      if (card.characteristics.serialNumber) {
-        items.push({ label: 'Серийный номер', children: card.characteristics.serialNumber });
-      }
-      if (card.characteristics.condition) {
-        items.push({ label: 'Состояние', children: card.characteristics.condition });
-      }
-    } else if (card.mainCategory === 'property_rights') {
-      if (card.characteristics.nominalValue) {
-        items.push({ label: 'Номинальная стоимость', children: formatCurrency(card.characteristics.nominalValue) });
-      }
-      if (card.characteristics.quantity) {
-        items.push({ label: 'Количество', children: card.characteristics.quantity });
-      }
-      if (card.characteristics.issuer) {
-        items.push({ label: 'Эмитент', children: card.characteristics.issuer });
-      }
+  const renderCharacteristics = (): React.ReactNode => {
+    if (!card.characteristics || Object.keys(card.characteristics).length === 0) {
+      return <Text type="secondary">Характеристики не указаны</Text>;
     }
 
-    return items;
+    const groups = Object.keys(groupedAttributes);
+    
+    if (groups.length === 0) {
+      // Fallback: отображаем все характеристики без группировки
+      const items: DescriptionsProps['items'] = [];
+      Object.entries(card.characteristics).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          items.push({ 
+            label: key, 
+            children: typeof value === 'boolean' ? (value ? 'Да' : 'Нет') : String(value) 
+          });
+        }
+      });
+      return <Descriptions bordered column={2} size="small" items={items} />;
+    }
+
+    // Отображаем характеристики по группам
+    return (
+      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+        {groups.map(group => {
+          const attributes = groupedAttributes[group];
+          const items: DescriptionsProps['items'] = [];
+          
+          attributes.forEach(attr => {
+            const value = getAttributeValue(card.characteristics, attr.key);
+            if (value !== null && value !== undefined && value !== '') {
+              items.push({
+                label: attr.label,
+                children: formatAttributeValue(attr, value),
+              });
+            }
+          });
+          
+          if (items.length === 0) return null;
+          
+          return (
+            <div key={group}>
+              <Divider orientation="left" style={{ margin: '8px 0' }}>{group}</Divider>
+              <Descriptions bordered column={2} size="small" items={items} />
+            </div>
+          );
+        })}
+      </Space>
+    );
   };
 
   return (
@@ -253,7 +268,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
       {/* Характеристики */}
       {card.characteristics && (
         <Card title={<Space><FileTextOutlined /> Характеристики</Space>} className="info-card">
-          <Descriptions column={{ xs: 1, sm: 2, lg: 3 }} size="small" items={renderCharacteristics()} />
+          {renderCharacteristics()}
         </Card>
       )}
 
