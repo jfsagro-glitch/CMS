@@ -62,8 +62,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       key: 'tasks',
       label: 'Задачи',
       icon: <LinkOutlined />,
-      path: 'https://jfsagro-glitch.github.io/zadachnik/',
-      external: true,
+      path: '/tasks',
     },
     {
       key: 'reports',
