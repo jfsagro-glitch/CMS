@@ -1,0 +1,40 @@
+.collateral-conclusions-page {
+  padding: 24px;
+}
+
+.conclusions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.conclusions-title {
+  margin: 0 !important;
+}
+
+.conclusions-subtitle {
+  margin: 8px 0 0 0 !important;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.conclusions-filters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.conclusions-stats {
+  margin: 24px 0;
+}
+
+.conclusions-table-card {
+  margin-top: 24px;
+}
+
+.conclusions-empty {
+  padding: 48px 0;
+}
+

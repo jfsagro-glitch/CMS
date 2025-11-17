@@ -20,6 +20,7 @@ import MonitoringPage from './modules/Monitoring/MonitoringPage';
 import ReportsPage from './modules/Reports/ReportsPage';
 import TasksPage from './modules/Tasks/TasksPage';
 import CMSCheckPage from './modules/CMSCheck/CMSCheckPage';
+import CollateralConclusionsPage from './modules/CollateralConclusions/CollateralConclusionsPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -113,6 +114,7 @@ const AppContent: React.FC = () => {
                   <Route path="registry" element={<ExtendedRegistryPage />} />
                   <Route path="portfolio" element={<PortfolioPage />} />
                   <Route path="collateral-dossier" element={<CollateralDossierPage />} />
+                  <Route path="collateral-conclusions" element={<CollateralConclusionsPage />} />
                   <Route path="tasks" element={<TasksPage />} />
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="insurance" element={<InsurancePage />} />

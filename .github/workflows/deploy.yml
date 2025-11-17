@@ -49,6 +49,9 @@ jobs:
 
       - name: Generate reports dataset
         run: python scripts/generate_reports_data.py
+
+      - name: Generate collateral conclusions dataset
+        run: python scripts/generate_collateral_conclusions_data.py
         
       - name: Setup Node.js
         uses: actions/setup-node@v4

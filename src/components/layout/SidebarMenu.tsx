@@ -16,6 +16,7 @@ import {
   AlertOutlined,
   FolderOpenOutlined,
   CameraOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
@@ -76,6 +77,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       label: 'Залоговое досье',
       icon: <FolderOpenOutlined />,
       path: '/collateral-dossier',
+    },
+    {
+      key: 'collateral-conclusions',
+      label: 'Залоговые заключения',
+      icon: <FileTextOutlined />,
+      path: '/collateral-conclusions',
     },
     {
       key: 'insurance',
