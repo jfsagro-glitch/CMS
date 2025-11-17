@@ -217,6 +217,26 @@ def generate_characteristics(obj_type: Dict[str, Any]) -> Dict[str, Any]:
         chars['parking'] = random.choice([True, False])
         chars['parkingSpaces'] = random.randint(0, 10) if chars['parking'] else 0
         chars['buildYear'] = random.randint(1980, 2023)
+        chars['wallMaterial'] = random.choice(['Кирпич', 'Монолит', 'Железобетон', 'Панель'])
+        chars['ceilingMaterial'] = random.choice(['Железобетонные плиты', 'Монолитные', 'Смешанные'])
+        chars['structuralCondition'] = random.choice(['Хорошее', 'Удовлетворительное', 'Неудовлетворительное'])
+        chars['finishLevel'] = random.choice(['Без отделки', 'Черновая', 'Предчистовая', 'Чистовая', 'Типовой ремонт'])
+        chars['finishCondition'] = random.choice(['Хорошее', 'Удовлетворительное', 'Неудовлетворительное'])
+        chars['hasElectricity'] = True
+        chars['hasWaterSupply'] = random.choice([True, False])
+        chars['hasSewerage'] = random.choice([True, False])
+        chars['hasGasSupply'] = random.choice([True, False])
+        chars['hasSecurityAlarm'] = random.choice([True, False])
+        chars['hasFireAlarm'] = random.choice([True, True])  # Чаще есть
+        chars['hasVideoSurveillance'] = random.choice([True, False])
+        chars['replanning'] = random.choice(['Перепланировки не выявлены', 'Не осуществлялись'])
+        chars['ownershipRight'] = 'Право собственности'
+        chars['ownershipShare'] = '1/1'
+        chars['isUnfinishedConstruction'] = False
+        chars['ownershipBasis'] = 'Право собственности, на основании следующих документов: Договор купли-продажи'
+        chars['technicalDocument'] = 'Выписка из Единого государственного реестра недвижимости об объекте'
+        chars['hasEncumbrances'] = random.choice([True, False])
+        chars['bookValue'] = int(chars['marketValue'] * random.uniform(0.3, 0.7))
         
     elif key == 'retail':
         chars['totalAreaSqm'] = round(random.uniform(30, 300), 1)
@@ -227,12 +247,33 @@ def generate_characteristics(obj_type: Dict[str, Any]) -> Dict[str, Any]:
         chars['ceilingHeight'] = round(random.uniform(2.7, 4.5), 1)
         chars['ventilation'] = random.choice(['Естественная', 'Приточная', 'Приточно-вытяжная'])
         chars['parking'] = random.choice([True, False])
+        chars['buildYear'] = random.randint(1980, 2023)
+        chars['wallMaterial'] = random.choice(['Кирпич', 'Монолит', 'Панель'])
+        chars['ceilingMaterial'] = random.choice(['Железобетонные плиты', 'Монолитные'])
+        chars['structuralCondition'] = random.choice(['Хорошее', 'Удовлетворительное', 'Неудовлетворительное'])
+        chars['finishLevel'] = random.choice(['Типовой ремонт', 'Требуется косметический ремонт', 'Чистовая'])
+        chars['finishCondition'] = random.choice(['Хорошее', 'Удовлетворительное'])
+        chars['hasElectricity'] = True
+        chars['hasWaterSupply'] = True
+        chars['hasSewerage'] = True
+        chars['hasGasSupply'] = random.choice([True, False])
+        chars['hasSecurityAlarm'] = random.choice([True, True])  # Чаще есть
+        chars['hasFireAlarm'] = True
+        chars['hasVideoSurveillance'] = random.choice([True, True])  # Чаще есть
+        chars['replanning'] = random.choice(['Перепланировки не выявлены', 'Не осуществлялись'])
+        chars['ownershipRight'] = 'Право собственности'
+        chars['ownershipShare'] = '1/1'
+        chars['isUnfinishedConstruction'] = False
+        chars['ownershipBasis'] = 'Право собственности, на основании следующих документов: Договор купли-продажи'
+        chars['technicalDocument'] = 'Выписка из Единого государственного реестра недвижимости об объекте'
+        chars['hasEncumbrances'] = random.choice([True, False])
+        chars['bookValue'] = int(chars['marketValue'] * random.uniform(0.3, 0.7))
         
     elif key == 'warehouse':
         chars['totalAreaSqm'] = round(random.uniform(500, 10000), 1)
         chars['storageArea'] = round(chars['totalAreaSqm'] * random.uniform(0.8, 0.95), 1)
         chars['ceilingHeight'] = round(random.uniform(6, 15), 1)
-        chars['floors'] = random.randint(1, 3)
+        chars['totalFloors'] = random.randint(1, 3)
         chars['warehouseClass'] = random.choice(['A', 'A+', 'B', 'B+', 'C', 'D'])
         chars['gates'] = random.choice(['Докового типа', 'На нулевой отметке', 'Смешанные'])
         chars['gatesCount'] = random.randint(2, 20)
@@ -240,6 +281,27 @@ def generate_characteristics(obj_type: Dict[str, Any]) -> Dict[str, Any]:
         chars['loadCapacity'] = round(random.uniform(3, 10), 1)
         chars['heating'] = random.choice([True, False])
         chars['ramp'] = random.choice([True, False])
+        chars['buildYear'] = random.randint(1990, 2023)
+        chars['wallMaterial'] = random.choice(['Железобетон', 'Металлический', 'Кирпич'])
+        chars['ceilingMaterial'] = random.choice(['Железобетонные плиты', 'Металлические'])
+        chars['structuralCondition'] = random.choice(['Хорошее', 'Удовлетворительное', 'Неудовлетворительное'])
+        chars['finishLevel'] = random.choice(['Без отделки', 'Черновая'])
+        chars['finishCondition'] = random.choice(['Удовлетворительное', 'Хорошее'])
+        chars['hasElectricity'] = True
+        chars['hasWaterSupply'] = random.choice([True, False])
+        chars['hasSewerage'] = random.choice([True, False])
+        chars['hasGasSupply'] = random.choice([True, False])
+        chars['hasSecurityAlarm'] = random.choice([True, True])  # Чаще есть
+        chars['hasFireAlarm'] = True
+        chars['hasVideoSurveillance'] = random.choice([True, True])  # Чаще есть
+        chars['replanning'] = random.choice(['Перепланировки не выявлены', 'Не осуществлялись'])
+        chars['ownershipRight'] = 'Право собственности'
+        chars['ownershipShare'] = '1/1'
+        chars['isUnfinishedConstruction'] = False
+        chars['ownershipBasis'] = 'Право собственности, на основании следующих документов: Договор купли-продажи'
+        chars['technicalDocument'] = 'Выписка из Единого государственного реестра недвижимости об объекте'
+        chars['hasEncumbrances'] = random.choice([True, False])
+        chars['bookValue'] = int(chars['marketValue'] * random.uniform(0.3, 0.7))
         
     elif key == 'gas_station':
         chars['landAreaSqm'] = round(random.uniform(1000, 5000), 1)

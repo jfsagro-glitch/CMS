@@ -106,10 +106,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
     },
     {
       key: 'credit-risk',
-      label: 'ФКР',
+      label: 'Модуль мониторинга',
       icon: <AlertOutlined />,
       path: '/credit-risk',
-      tooltip: 'Факторы кредитного риска',
+      tooltip: 'Модуль мониторинга',
     },
     {
       key: 'cms-check',

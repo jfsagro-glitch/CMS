@@ -346,7 +346,7 @@ const CreditRiskPage: React.FC = () => {
       <div className="credit-risk-page__header">
         <div>
           <Title level={2} className="credit-risk-page__title">
-            Финансовый контроль рисков (ФКР)
+            Модуль мониторинга
           </Title>
           <Typography.Paragraph className="credit-risk-page__subtitle">
             Отслеживание рисковых событий и отлагательных условий по договорам залога
