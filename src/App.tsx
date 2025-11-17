@@ -42,7 +42,7 @@ const AppContent: React.FC = () => {
 
         // Загрузка расширенных карточек
         const cards = await extendedStorageService.getExtendedCards();
-
+        
         // Автозагрузка демо-данных при первом запуске (если база пустая)
         if (cards.length === 0) {
           try {
@@ -72,9 +72,9 @@ const AppContent: React.FC = () => {
     return (
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
           height: '100vh',
         }}
       >
@@ -94,25 +94,25 @@ const AppContent: React.FC = () => {
     }
   };
 
-  return (
-    <ThemeProvider>
-      <DemoDataProvider>
-        <ConfigProvider
-          locale={ruRU}
-          theme={{
-            algorithm: getThemeAlgorithm(),
-            token: {
-              colorPrimary: '#1890ff',
-              borderRadius: 6,
-            },
-          }}
-        >
-          <AntApp>
-            <HashRouter>
-              <Routes>
-                <Route path="/" element={<MainLayout />}>
-                  <Route index element={<Navigate to="/registry" replace />} />
-                  <Route path="registry" element={<ExtendedRegistryPage />} />
+      return (
+        <ThemeProvider>
+          <DemoDataProvider>
+            <ConfigProvider
+              locale={ruRU}
+              theme={{
+                algorithm: getThemeAlgorithm(),
+                token: {
+                  colorPrimary: '#1890ff',
+                  borderRadius: 6,
+                },
+              }}
+            >
+              <AntApp>
+                <HashRouter>
+                  <Routes>
+                  <Route path="/" element={<MainLayout />}>
+                    <Route index element={<Navigate to="/registry" replace />} />
+                    <Route path="registry" element={<ExtendedRegistryPage />} />
                   <Route path="portfolio" element={<PortfolioPage />} />
                   <Route path="collateral-dossier" element={<CollateralDossierPage />} />
                   <Route path="collateral-conclusions" element={<CollateralConclusionsPage />} />
@@ -120,25 +120,25 @@ const AppContent: React.FC = () => {
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="insurance" element={<InsurancePage />} />
                   <Route path="fnp" element={<FNPServicePage />} />
-                  <Route path="analytics" element={<PlaceholderPage title="Аналитика" />} />
+                    <Route path="analytics" element={<PlaceholderPage title="Аналитика" />} />
                   <Route path="credit-risk" element={<PlaceholderPage title="ФКР" />} />
                   <Route path="cms-check" element={<CMSCheckPage />} />
                   <Route
                     path="mobile-appraiser"
                     element={<PlaceholderPage title="Мобильный оценщик" />}
                   />
-                  <Route path="smartdeal" element={<PlaceholderPage title="SmartDeal" />} />
-                  <Route path="upload" element={<PlaceholderPage title="Загрузка" />} />
+                      <Route path="smartdeal" element={<PlaceholderPage title="SmartDeal" />} />
+                      <Route path="upload" element={<PlaceholderPage title="Загрузка" />} />
                   <Route path="monitoring" element={<MonitoringPage />} />
-                  <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
-                </Route>
-              </Routes>
-            </HashRouter>
-          </AntApp>
-        </ConfigProvider>
-      </DemoDataProvider>
-    </ThemeProvider>
-  );
+                      <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
+                    </Route>
+                  </Routes>
+                </HashRouter>
+              </AntApp>
+            </ConfigProvider>
+          </DemoDataProvider>
+        </ThemeProvider>
+      );
 };
 
 const App: React.FC = () => {
