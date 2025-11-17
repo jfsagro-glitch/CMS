@@ -266,11 +266,9 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
       </Card>
 
       {/* Характеристики */}
-      {card.characteristics && (
-        <Card title={<Space><FileTextOutlined /> Характеристики</Space>} className="info-card">
-          {renderCharacteristics()}
-        </Card>
-      )}
+      <Card title={<Space><FileTextOutlined /> Характеристики</Space>} className="info-card">
+        {renderCharacteristics()}
+      </Card>
 
       {/* Собственник */}
       {card.owner && (

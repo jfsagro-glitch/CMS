@@ -170,7 +170,7 @@ def generate_characteristics(obj_type: Dict[str, Any]) -> Dict[str, Any]:
     chars['marketValue'] = random.randint(1000000, 50000000)
     chars['collateralValue'] = int(chars['marketValue'] * random.uniform(0.5, 0.8))
     chars['fairValue'] = int(chars['marketValue'] * random.uniform(0.7, 0.9))
-    chars['category'] = random.choice(['Формальное', 'Достаточное', 'Недостаточное'])
+    chars['category'] = random.choice(['Основной', 'Формальный'])
     chars['liquidity'] = random.choice([
         'высокая (срок реализации до 90 дней)',
         'удовлетворительная (срок реализации до 365 дней)',
