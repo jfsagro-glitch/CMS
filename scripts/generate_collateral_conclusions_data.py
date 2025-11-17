@@ -29,6 +29,45 @@ COLLATERAL_TYPES = [
     "Права требования",
 ]
 
+# Кредитные продукты
+CREDIT_PRODUCTS = [
+    "Кредит",
+    "Кредитная линия",
+    "Овердрафт",
+    "Гарантия",
+    "Аккредитив",
+]
+
+# Категории обеспечения
+CATEGORIES = ["Формальное", "Достаточное", "Недостаточное"]
+
+# Ликвидность
+LIQUIDITY_OPTIONS = [
+    "высокая (срок реализации до 90 дней)",
+    "удовлетворительная (срок реализации до 365 дней)",
+    "низкая (срок реализации свыше 365 дней)",
+    "малоудовлетворительная",
+]
+
+# Состояние имущества
+CONDITIONS = ["хорошее", "удовлетворительное", "неудовлетворительное"]
+
+# Категории земель
+LAND_CATEGORIES = [
+    "земли населенных пунктов",
+    "земли сельскохозяйственного назначения",
+    "земли промышленности",
+    "земли особо охраняемых территорий",
+]
+
+# Разрешенные виды использования
+PERMITTED_USES = [
+    "размещение объектов капитального строительства",
+    "размещение объектов торговли",
+    "размещение объектов общественного питания",
+    "размещение объектов бытового обслуживания",
+]
+
 # Примеры текстов заключений
 CONCLUSION_TEXTS = [
     "Проведена оценка залогового имущества. Рыночная стоимость соответствует заявленной. Рекомендуется принять в качестве обеспечения.",
@@ -109,8 +148,15 @@ def generate_conclusions(count: int = 50) -> List[Dict[str, Any]]:
             borrower = deal.get("borrower")
             collateral_type = deal.get("collateralType")
             collateral_location = deal.get("collateralLocation")
-            collateral_value = deal.get("collateralValue") or deal.get("marketValue")
-            market_value = deal.get("currentMarketValue") or deal.get("marketValue")
+            collateral_value_raw = deal.get("collateralValue") or deal.get("marketValue")
+            market_value_raw = deal.get("currentMarketValue") or deal.get("marketValue")
+            # Преобразуем в числа
+            try:
+                collateral_value = float(collateral_value_raw) if collateral_value_raw else None
+                market_value = float(market_value_raw) if market_value_raw else None
+            except (ValueError, TypeError):
+                collateral_value = None
+                market_value = None
         else:
             reference = f"REF-{random.randint(1000, 9999)}"
             contract_number = f"ДОГ-{random.randint(10000, 99999)}"
@@ -119,8 +165,8 @@ def generate_conclusions(count: int = 50) -> List[Dict[str, Any]]:
             borrower = f"ИП Иванов Иван Иванович"
             collateral_type = random.choice(COLLATERAL_TYPES)
             collateral_location = random.choice(["г. Москва", "г. Санкт-Петербург", "г. Новосибирск", "г. Екатеринбург"])
-            collateral_value = random.randint(1000000, 50000000)
-            market_value = int(collateral_value * random.uniform(0.8, 1.2))
+            collateral_value = float(random.randint(1000000, 50000000))
+            market_value = float(int(collateral_value * random.uniform(0.8, 1.2)))
         
         conclusion_date = random_date(start_date, end_date)
         author_date = random_date(
@@ -138,6 +184,134 @@ def generate_conclusions(count: int = 50) -> List[Dict[str, Any]]:
                 datetime.strptime(conclusion_date, "%Y-%m-%d") + timedelta(days=5)
             )
         
+        # Определяем тип имущества для дополнительных полей
+        is_real_estate = "недвижимость" in str(collateral_type).lower() if collateral_type else False
+        
+        # Генерируем дополнительные поля
+        credit_product = random.choice(CREDIT_PRODUCTS) if random.random() > 0.3 else None
+        credit_amount = collateral_value if credit_product else None
+        credit_term = random.randint(12, 60) if credit_product else None
+        
+        # Площадь и количество объектов
+        total_area_sqm = random.randint(50, 500) if is_real_estate else None
+        total_area_hectares = round(random.uniform(0.1, 5.0), 2) if is_real_estate and random.random() > 0.7 else None
+        objects_count = random.randint(1, 10) if random.random() > 0.5 else None
+        ownership_share = random.choice([25, 50, 75, 100]) if random.random() > 0.6 else None
+        
+        # Земельный участок (для недвижимости)
+        land_cadastral = None
+        land_category = None
+        land_permitted_use = None
+        land_area_sqm = None
+        if is_real_estate and random.random() > 0.4:
+            land_cadastral = f"77:08:{random.randint(1000000, 9999999)}:{random.randint(1, 9999)}"
+            land_category = random.choice(LAND_CATEGORIES)
+            land_permitted_use = random.choice(PERMITTED_USES)
+            land_area_sqm = int(total_area_sqm * random.uniform(1.5, 3.0)) if total_area_sqm else None
+        
+        # Состояние и описание
+        collateral_condition = random.choice(CONDITIONS) if random.random() > 0.3 else None
+        has_replanning = random.choice([True, False]) if random.random() > 0.5 else None
+        land_functional_provision = random.choice([
+            "функционально обеспечивает",
+            "не обеспечивает"
+        ]) if is_real_estate and random.random() > 0.6 else None
+        
+        collateral_description = (
+            f"Предлагаемое в залог имущество расположено в {collateral_location}, "
+            f"состояние имущества {collateral_condition if collateral_condition else 'хорошее'}, "
+            f"перепланировки {'выявлены' if has_replanning else 'не выявлены'}."
+        ) if random.random() > 0.2 else None
+        
+        # Обременения
+        has_encumbrances = random.choice([True, False]) if random.random() > 0.6 else None
+        encumbrances_description = (
+            "Имеются зарегистрированные обременения. Требуется снятие обременений."
+        ) if has_encumbrances else None
+        
+        # Проверка
+        inspection_date = random_date(
+            datetime.strptime(conclusion_date, "%Y-%m-%d") - timedelta(days=14),
+            datetime.strptime(conclusion_date, "%Y-%m-%d") - timedelta(days=1)
+        ) if random.random() > 0.3 else None
+        inspector_name = random.choice(AUTHORS) if inspection_date else None
+        
+        # Особое мнение
+        special_opinion = (
+            f"Возможно рассмотреть в качестве залога при условии {'внесения в ЕГРН сведений о кадастровых номерах' if land_cadastral else 'подтверждения права собственности'}. "
+            f"Уровень ликвидности объекта: {random.choice(LIQUIDITY_OPTIONS)}. "
+            f"{'Требуется снятие обременений.' if has_encumbrances else ''}"
+        ) if random.random() > 0.3 else None
+        
+        # Отлагательные условия
+        suspensive_conditions = []
+        if random.random() > 0.5:
+            for j in range(1, random.randint(2, 5)):
+                suspensive_conditions.append({
+                    "id": f"cond-{i}-{j}",
+                    "number": j,
+                    "description": f"Условие {j}",
+                    "suspensiveCondition": random.choice([
+                        "согласования ДЗ/ДИ",
+                        "предоставления КП",
+                        "подтверждения права собственности",
+                    ]) if random.random() > 0.5 else None,
+                    "additionalCondition": f"Дополнительное условие {j}" if random.random() > 0.5 else None,
+                })
+        
+        # Детальное описание (для некоторых типов)
+        detailed_descriptions = []
+        if objects_count and objects_count > 1 and random.random() > 0.6:
+            for j in range(1, min(objects_count + 1, 6)):
+                detailed_descriptions.append({
+                    "id": f"desc-{i}-{j}",
+                    "objectNumber": j,
+                    "description": f"Описание объекта {j}",
+                    "area": random.randint(20, 200) if is_real_estate else None,
+                    "value": int((float(market_value) if market_value else 0) / objects_count) if market_value and objects_count else None,
+                })
+        
+        # Фото (демо)
+        photos = []
+        if random.random() > 0.5:
+            photo_count = random.randint(2, 5)
+            for j in range(1, photo_count + 1):
+                photos.append({
+                    "id": f"photo-{i}-{j}",
+                    "url": f"https://via.placeholder.com/400x300?text=Photo+{j}",
+                    "description": f"Фото {j} - {'фасадное' if j <= 2 else 'внутреннее'}",
+                    "isMain": j <= 2,
+                })
+        
+        # Рецензия (для некоторых)
+        review = None
+        if random.random() > 0.7:
+            review = {
+                "id": f"review-{i}",
+                "reviewer": random.choice(AUTHORS),
+                "reviewDate": random_date(
+                    datetime.strptime(conclusion_date, "%Y-%m-%d"),
+                    datetime.strptime(conclusion_date, "%Y-%m-%d") + timedelta(days=10)
+                ),
+                "reviewText": "Рецензия проведена. Заключение соответствует требованиям.",
+                "conclusion": "Одобрено",
+            }
+        
+        # Расчеты (для некоторых типов)
+        calculations = []
+        if random.random() > 0.6:
+            calc_types = ["Расчет ком.пом.", "Расчет АЗС", "Расчет движимое (ЗП)"]
+            for calc_type in random.sample(calc_types, random.randint(1, 2)):
+                calculations.append({
+                    "id": f"calc-{i}-{calc_type}",
+                    "type": calc_type,
+                    "data": {
+                        "Исходные данные": "Демо данные",
+                        "Результат": market_value or collateral_value,
+                        "Метод": "Сравнительный",
+                    },
+                })
+        
         conclusion: Dict[str, Any] = {
             "id": f"conclusion-{i}",
             "conclusionNumber": generate_conclusion_number(i),
@@ -147,8 +321,42 @@ def generate_conclusions(count: int = 50) -> List[Dict[str, Any]]:
             "pledger": pledger,
             "pledgerInn": pledger_inn,
             "borrower": borrower,
+            "borrowerInn": f"{random.randint(1000000000, 9999999999)}" if random.random() > 0.5 else None,
+            "creditProduct": credit_product,
+            "creditAmount": credit_amount,
+            "creditTermMonths": credit_term,
             "collateralType": collateral_type,
+            "collateralName": f"{collateral_type} - объект {i}" if random.random() > 0.5 else None,
+            "collateralPurpose": f"Использование в качестве {collateral_type.lower()}" if random.random() > 0.5 else None,
+            "totalAreaSqm": total_area_sqm,
+            "totalAreaHectares": total_area_hectares,
             "collateralLocation": collateral_location,
+            "objectsCount": objects_count,
+            "ownershipShare": ownership_share,
+            "landCategory": land_category,
+            "landPermittedUse": land_permitted_use,
+            "landCadastralNumber": land_cadastral,
+            "landAreaSqm": land_area_sqm,
+            "marketValue": market_value,
+            "collateralValue": collateral_value,
+            "fairValue": int((float(market_value) if market_value else 0) * random.uniform(0.9, 1.0)) if market_value else None,
+            "category": random.choice(CATEGORIES) if random.random() > 0.3 else None,
+            "liquidity": random.choice(LIQUIDITY_OPTIONS) if random.random() > 0.3 else None,
+            "liquidityFairValue": random.choice(LIQUIDITY_OPTIONS) if random.random() > 0.5 else None,
+            "collateralDescription": collateral_description,
+            "collateralCondition": collateral_condition,
+            "hasReplanning": has_replanning,
+            "landFunctionalProvision": land_functional_provision,
+            "hasEncumbrances": has_encumbrances,
+            "encumbrancesDescription": encumbrances_description,
+            "inspectionDate": inspection_date,
+            "inspectorName": inspector_name,
+            "specialOpinion": special_opinion,
+            "suspensiveConditions": suspensive_conditions if suspensive_conditions else None,
+            "detailedDescriptions": detailed_descriptions if detailed_descriptions else None,
+            "photos": photos if photos else None,
+            "review": review,
+            "calculations": calculations if calculations else None,
             "conclusionType": random.choice(CONCLUSION_TYPES),
             "status": status,
             "statusColor": (
@@ -164,8 +372,6 @@ def generate_conclusions(count: int = 50) -> List[Dict[str, Any]]:
             "conclusionText": random.choice(CONCLUSION_TEXTS),
             "recommendations": random.choice(RECOMMENDATIONS) if random.random() > 0.3 else None,
             "riskLevel": random.choice(RISK_LEVELS) if random.random() > 0.2 else None,
-            "collateralValue": collateral_value,
-            "marketValue": market_value,
             "notes": f"Примечание к заключению {i}" if random.random() > 0.5 else None,
         }
         

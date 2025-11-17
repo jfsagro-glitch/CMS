@@ -15,7 +15,6 @@ import {
   Tag,
   Tooltip,
   Typography,
-  Descriptions,
   message,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -30,6 +29,7 @@ import {
 import type { CollateralConclusion } from '@/types/collateralConclusion';
 import { useNavigate } from 'react-router-dom';
 import CreateConclusionModal from './CreateConclusionModal';
+import CollateralConclusionCard from '@/components/CollateralConclusionCard/CollateralConclusionCard';
 import './CollateralConclusionsPage.css';
 
 type ConclusionRow = CollateralConclusion & { key: string };
@@ -406,134 +406,7 @@ const CollateralConclusionsPage: React.FC = () => {
         style={{ top: 20 }}
         styles={{ body: { maxHeight: '70vh', overflowY: 'auto' } }}
       >
-        {selectedConclusion && (
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <Descriptions title="Общие сведения" bordered column={3} size="small">
-              <Descriptions.Item label="№ заключения">
-                {selectedConclusion.conclusionNumber}
-              </Descriptions.Item>
-              <Descriptions.Item label="Дата заключения">
-                {selectedConclusion.conclusionDate}
-              </Descriptions.Item>
-              <Descriptions.Item label="Тип заключения">
-                {selectedConclusion.conclusionType}
-              </Descriptions.Item>
-              <Descriptions.Item label="Статус">
-                <Tag
-                  color={
-                    selectedConclusion.status === 'Согласовано'
-                      ? 'green'
-                      : selectedConclusion.status === 'На согласовании'
-                        ? 'blue'
-                        : selectedConclusion.status === 'Отклонено' ||
-                            selectedConclusion.status === 'Аннулировано'
-                          ? 'red'
-                          : 'default'
-                  }
-                >
-                  {selectedConclusion.status}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="REFERENCE">
-                {selectedConclusion.reference ? (
-                  <Typography.Text code>{selectedConclusion.reference}</Typography.Text>
-                ) : (
-                  '—'
-                )}
-              </Descriptions.Item>
-              <Descriptions.Item label="№ договора">
-                {selectedConclusion.contractNumber || '—'}
-              </Descriptions.Item>
-            </Descriptions>
-
-            <Descriptions title="Стороны" bordered column={3} size="small">
-              <Descriptions.Item label="Залогодатель" span={2}>
-                {selectedConclusion.pledger || '—'}
-              </Descriptions.Item>
-              <Descriptions.Item label="ИНН">{selectedConclusion.pledgerInn || '—'}</Descriptions.Item>
-              <Descriptions.Item label="Заемщик" span={3}>
-                {selectedConclusion.borrower || '—'}
-              </Descriptions.Item>
-            </Descriptions>
-
-            <Descriptions title="Залог" bordered column={3} size="small">
-              <Descriptions.Item label="Тип залога">
-                {selectedConclusion.collateralType || '—'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Местоположение" span={2}>
-                {selectedConclusion.collateralLocation || '—'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Оценочная стоимость">
-                {selectedConclusion.collateralValue
-                  ? new Intl.NumberFormat('ru-RU', {
-                      style: 'currency',
-                      currency: 'RUB',
-                      maximumFractionDigits: 0,
-                    }).format(selectedConclusion.collateralValue)
-                  : '—'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Рыночная стоимость">
-                {selectedConclusion.marketValue
-                  ? new Intl.NumberFormat('ru-RU', {
-                      style: 'currency',
-                      currency: 'RUB',
-                      maximumFractionDigits: 0,
-                    }).format(selectedConclusion.marketValue)
-                  : '—'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Уровень риска">
-                {selectedConclusion.riskLevel ? (
-                  <Tag
-                    color={
-                      selectedConclusion.riskLevel === 'Низкий'
-                        ? 'green'
-                        : selectedConclusion.riskLevel === 'Средний'
-                          ? 'blue'
-                          : selectedConclusion.riskLevel === 'Высокий'
-                            ? 'orange'
-                            : 'red'
-                    }
-                  >
-                    {selectedConclusion.riskLevel}
-                  </Tag>
-                ) : (
-                  '—'
-                )}
-              </Descriptions.Item>
-            </Descriptions>
-
-            <Descriptions title="Заключение" bordered column={1} size="small">
-              <Descriptions.Item label="Текст заключения">
-                <Typography.Paragraph>{selectedConclusion.conclusionText}</Typography.Paragraph>
-              </Descriptions.Item>
-              {selectedConclusion.recommendations && (
-                <Descriptions.Item label="Рекомендации">
-                  <Typography.Paragraph>{selectedConclusion.recommendations}</Typography.Paragraph>
-                </Descriptions.Item>
-              )}
-              {selectedConclusion.notes && (
-                <Descriptions.Item label="Примечания">
-                  <Typography.Paragraph>{selectedConclusion.notes}</Typography.Paragraph>
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-
-            <Descriptions title="Согласование" bordered column={3} size="small">
-              <Descriptions.Item label="Автор">{selectedConclusion.author}</Descriptions.Item>
-              <Descriptions.Item label="Дата создания">{selectedConclusion.authorDate}</Descriptions.Item>
-              {selectedConclusion.approver && (
-                <>
-                  <Descriptions.Item label="Согласующий">{selectedConclusion.approver}</Descriptions.Item>
-                  {selectedConclusion.approvalDate && (
-                    <Descriptions.Item label="Дата согласования">
-                      {selectedConclusion.approvalDate}
-                    </Descriptions.Item>
-                  )}
-                </>
-              )}
-            </Descriptions>
-          </Space>
-        )}
+        {selectedConclusion && <CollateralConclusionCard conclusion={selectedConclusion} />}
       </Modal>
 
       <CreateConclusionModal

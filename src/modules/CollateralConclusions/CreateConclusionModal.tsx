@@ -69,8 +69,37 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
         pledger: values.pledger || null,
         pledgerInn: values.pledgerInn || null,
         borrower: values.borrower || null,
+        borrowerInn: values.borrowerInn || null,
+        creditProduct: values.creditProduct || null,
+        creditAmount: values.creditAmount ? parseFloat(values.creditAmount) : null,
+        creditTermMonths: values.creditTermMonths ? parseInt(values.creditTermMonths) : null,
         collateralType: values.collateralType || null,
+        collateralName: values.collateralName || null,
+        collateralPurpose: values.collateralPurpose || null,
+        totalAreaSqm: values.totalAreaSqm ? parseFloat(values.totalAreaSqm) : null,
+        totalAreaHectares: values.totalAreaHectares ? parseFloat(values.totalAreaHectares) : null,
         collateralLocation: values.collateralLocation || null,
+        objectsCount: values.objectsCount ? parseInt(values.objectsCount) : null,
+        ownershipShare: values.ownershipShare ? parseFloat(values.ownershipShare) : null,
+        landCategory: values.landCategory || null,
+        landPermittedUse: values.landPermittedUse || null,
+        landCadastralNumber: values.landCadastralNumber || null,
+        landAreaSqm: values.landAreaSqm ? parseFloat(values.landAreaSqm) : null,
+        marketValue: values.marketValue ? parseFloat(values.marketValue) : null,
+        collateralValue: values.collateralValue ? parseFloat(values.collateralValue) : null,
+        fairValue: values.fairValue ? parseFloat(values.fairValue) : null,
+        category: values.category || null,
+        liquidity: values.liquidity || null,
+        liquidityFairValue: values.liquidityFairValue || null,
+        collateralDescription: values.collateralDescription || null,
+        collateralCondition: values.collateralCondition || null,
+        hasReplanning: values.hasReplanning !== undefined ? values.hasReplanning : null,
+        landFunctionalProvision: values.landFunctionalProvision || null,
+        hasEncumbrances: values.hasEncumbrances !== undefined ? values.hasEncumbrances : null,
+        encumbrancesDescription: values.encumbrancesDescription || null,
+        inspectionDate: values.inspectionDate ? values.inspectionDate.format('YYYY-MM-DD') : null,
+        inspectorName: values.inspectorName || null,
+        specialOpinion: values.specialOpinion || null,
         conclusionType: values.conclusionType,
         status: values.status,
         statusColor:
@@ -84,12 +113,10 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
         author: values.author || 'Система',
         authorDate: values.authorDate || dayjs().format('YYYY-MM-DD'),
         approver: values.approver || null,
-        approvalDate: values.approvalDate || null,
+        approvalDate: values.approvalDate ? values.approvalDate.format('YYYY-MM-DD') : null,
         conclusionText: values.conclusionText || '',
         recommendations: values.recommendations || undefined,
         riskLevel: values.riskLevel || undefined,
-        collateralValue: values.collateralValue ? parseFloat(values.collateralValue) : null,
-        marketValue: values.marketValue ? parseFloat(values.marketValue) : null,
         notes: values.notes || undefined,
       };
 
@@ -135,6 +162,9 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
         collateralLocation: deal.collateralLocation || null,
         collateralValue: deal.collateralValue || null,
         marketValue: deal.marketValue || deal.currentMarketValue || null,
+        fairValue: deal.fairValue || null,
+        category: deal.qualityCategory || null,
+        liquidity: deal.liquidity || null,
       });
     }
   };
@@ -152,7 +182,7 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
           Создать
         </Button>,
       ]}
-      width={800}
+      width={900}
     >
       <Form form={form} layout="vertical">
         <Form.Item
@@ -220,8 +250,103 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
           <Input placeholder="Тип залога" />
         </Form.Item>
 
+        <Form.Item name="collateralName" label="Наименование, назначение">
+          <Input placeholder="Наименование и назначение имущества" />
+        </Form.Item>
+
+        <Form.Item name="collateralPurpose" label="Назначение обеспечения">
+          <Input placeholder="Назначение обеспечения" />
+        </Form.Item>
+
         <Form.Item name="collateralLocation" label="Местоположение">
           <Input placeholder="Местоположение предмета залога" />
+        </Form.Item>
+
+        <Form.Item name="totalAreaSqm" label="Общая площадь, кв.м.">
+          <Input type="number" placeholder="Площадь в квадратных метрах" />
+        </Form.Item>
+
+        <Form.Item name="totalAreaHectares" label="Общая площадь, сот.">
+          <Input type="number" step="0.01" placeholder="Площадь в сотках" />
+        </Form.Item>
+
+        <Form.Item name="objectsCount" label="Количество объектов">
+          <Input type="number" placeholder="Количество объектов" />
+        </Form.Item>
+
+        <Form.Item name="ownershipShare" label="Доля в праве, %">
+          <Input type="number" placeholder="Доля в праве" />
+        </Form.Item>
+
+        <Form.Item name="landCadastralNumber" label="Кадастровый номер земельного участка">
+          <Input placeholder="Кадастровый номер" />
+        </Form.Item>
+
+        <Form.Item name="landCategory" label="Категория земель">
+          <Input placeholder="Категория земель" />
+        </Form.Item>
+
+        <Form.Item name="landPermittedUse" label="Разрешенный вид использования">
+          <Input placeholder="Разрешенный вид использования" />
+        </Form.Item>
+
+        <Form.Item name="landAreaSqm" label="Площадь земельного участка, кв.м.">
+          <Input type="number" placeholder="Площадь земельного участка" />
+        </Form.Item>
+
+        <Form.Item name="collateralDescription" label="Описание имущества">
+          <TextArea rows={4} placeholder="Состояние и краткое описание имущества" />
+        </Form.Item>
+
+        <Form.Item name="collateralCondition" label="Состояние имущества">
+          <Select placeholder="Выберите состояние">
+            <Option value="хорошее">Хорошее</Option>
+            <Option value="удовлетворительное">Удовлетворительное</Option>
+            <Option value="неудовлетворительное">Неудовлетворительное</Option>
+          </Select>
+        </Form.Item>
+
+        <Form.Item name="hasReplanning" label="Наличие перепланировок">
+          <Select placeholder="Выберите">
+            <Option value={true}>Да</Option>
+            <Option value={false}>Нет</Option>
+          </Select>
+        </Form.Item>
+
+        <Form.Item name="hasEncumbrances" label="Наличие обременений">
+          <Select placeholder="Выберите">
+            <Option value={true}>Да</Option>
+            <Option value={false}>Нет</Option>
+          </Select>
+        </Form.Item>
+
+        <Form.Item name="encumbrancesDescription" label="Описание обременений">
+          <TextArea rows={3} placeholder="Описание обременений" />
+        </Form.Item>
+
+        <Form.Item name="inspectionDate" label="Дата осмотра / проверки">
+          <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+        </Form.Item>
+
+        <Form.Item name="inspectorName" label="Сотрудник ПР, проводивший проверку">
+          <Input placeholder="ФИО сотрудника" />
+        </Form.Item>
+
+        <Form.Item name="category" label="Категория обеспечения">
+          <Select placeholder="Выберите категорию">
+            <Option value="Формальное">Формальное</Option>
+            <Option value="Достаточное">Достаточное</Option>
+            <Option value="Недостаточное">Недостаточное</Option>
+          </Select>
+        </Form.Item>
+
+        <Form.Item name="liquidity" label="Ликвидность">
+          <Select placeholder="Выберите ликвидность">
+            <Option value="высокая (срок реализации до 90 дней)">Высокая (срок реализации до 90 дней)</Option>
+            <Option value="удовлетворительная (срок реализации до 365 дней)">Удовлетворительная (срок реализации до 365 дней)</Option>
+            <Option value="низкая (срок реализации свыше 365 дней)">Низкая (срок реализации свыше 365 дней)</Option>
+            <Option value="малоудовлетворительная">Малоудовлетворительная</Option>
+          </Select>
         </Form.Item>
 
         <Form.Item name="riskLevel" label="Уровень риска">
@@ -241,12 +366,20 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
           <Input type="number" placeholder="Рыночная стоимость" />
         </Form.Item>
 
+        <Form.Item name="fairValue" label="Справедливая стоимость, руб.">
+          <Input type="number" placeholder="Справедливая стоимость" />
+        </Form.Item>
+
         <Form.Item name="conclusionText" label="Текст заключения" rules={[{ required: true }]}>
           <TextArea rows={6} placeholder="Введите текст заключения" />
         </Form.Item>
 
         <Form.Item name="recommendations" label="Рекомендации">
           <TextArea rows={4} placeholder="Введите рекомендации" />
+        </Form.Item>
+
+        <Form.Item name="specialOpinion" label="Особое мнение">
+          <TextArea rows={6} placeholder="Введите особое мнение" />
         </Form.Item>
 
         <Form.Item name="notes" label="Примечания">
