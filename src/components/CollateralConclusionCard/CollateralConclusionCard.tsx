@@ -1,8 +1,12 @@
 import React, { useMemo } from 'react';
-import { Tabs, Descriptions, Tag, Typography, Table, Space, Image, Button, Divider } from 'antd';
-import { EditOutlined, PrinterOutlined, DownloadOutlined, FileTextOutlined } from '@ant-design/icons';
+import { Tabs, Descriptions, Tag, Typography, Table, Space, Image, Button, Divider, message } from 'antd';
+import { EditOutlined, PrinterOutlined, DownloadOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
 import type { CollateralConclusion } from '@/types/collateralConclusion';
 import type { TabsProps } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import type { CreditRiskRecord } from '@/types/creditRisk';
+import { RISK_EVENTS } from '@/types/creditRisk';
+import dayjs from 'dayjs';
 
 const { Paragraph, Text } = Typography;
 
@@ -19,6 +23,51 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
   onPrint, 
   onExport 
 }) => {
+  const navigate = useNavigate();
+
+  const handleAddToCreditRisk = (condition: any) => {
+    try {
+      // Загружаем существующие записи
+      const stored = localStorage.getItem('creditRiskRecords');
+      const existingRecords: CreditRiskRecord[] = stored ? JSON.parse(stored) : [];
+
+      // Создаем новую запись для отлагательного условия
+      const newRecord: CreditRiskRecord = {
+        id: `risk-${Date.now()}`,
+        reference: conclusion.reference || '',
+        contractNumber: conclusion.contractNumber || undefined,
+        pledger: conclusion.pledger || '',
+        pledgerInn: conclusion.pledgerInn || undefined,
+        borrower: conclusion.borrower || undefined,
+        borrowerInn: conclusion.borrowerInn || undefined,
+        riskEvent: RISK_EVENTS[0], // По умолчанию первое событие, можно будет изменить
+        suspensiveConditionId: condition.id,
+        suspensiveConditionDescription: condition.description,
+        insuranceRelated: false,
+        status: 'active',
+        eventDate: dayjs().format('YYYY-MM-DD'),
+        detectionDate: dayjs().format('YYYY-MM-DD'),
+        priority: 'medium',
+        documents: [],
+        createdAt: dayjs().format('YYYY-MM-DD'),
+        updatedAt: dayjs().format('YYYY-MM-DD'),
+      };
+
+      // Сохраняем
+      existingRecords.push(newRecord);
+      localStorage.setItem('creditRiskRecords', JSON.stringify(existingRecords));
+
+      message.success('Отлагательное условие добавлено в модуль ФКР');
+      
+      // Переходим в модуль ФКР
+      setTimeout(() => {
+        navigate('/credit-risk');
+      }, 500);
+    } catch (error) {
+      console.error('Ошибка добавления в ФКР:', error);
+      message.error('Ошибка добавления в модуль ФКР');
+    }
+  };
   const currencyFormatter = new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency: 'RUB',
@@ -133,6 +182,22 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
                 width: 150,
                 align: 'center',
                 render: (val) => val ? <Tag color="blue">+</Tag> : <Tag color="default">-</Tag>
+              },
+              {
+                title: 'Действия',
+                key: 'actions',
+                width: 150,
+                align: 'center',
+                render: (_, record) => (
+                  <Button
+                    type="link"
+                    icon={<PlusOutlined />}
+                    onClick={() => handleAddToCreditRisk(record)}
+                    size="small"
+                  >
+                    Добавить в модуль ФКР
+                  </Button>
+                ),
               },
             ]}
           />

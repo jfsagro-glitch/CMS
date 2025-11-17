@@ -22,6 +22,7 @@ import TasksPage from './modules/Tasks/TasksPage';
 import CMSCheckPage from './modules/CMSCheck/CMSCheckPage';
 import CollateralConclusionsPage from './modules/CollateralConclusions/CollateralConclusionsPage';
 import FNPServicePage from './modules/FNP/FNPServicePage';
+import CreditRiskPage from './modules/CreditRisk/CreditRiskPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -121,7 +122,7 @@ const AppContent: React.FC = () => {
                   <Route path="insurance" element={<InsurancePage />} />
                   <Route path="fnp" element={<FNPServicePage />} />
                     <Route path="analytics" element={<PlaceholderPage title="Аналитика" />} />
-                  <Route path="credit-risk" element={<PlaceholderPage title="ФКР" />} />
+                  <Route path="credit-risk" element={<CreditRiskPage />} />
                   <Route path="cms-check" element={<CMSCheckPage />} />
                   <Route
                     path="mobile-appraiser"

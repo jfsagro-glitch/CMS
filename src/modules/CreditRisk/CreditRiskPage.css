@@ -1,0 +1,24 @@
+.credit-risk-page {
+  padding: 24px;
+}
+
+.credit-risk-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.credit-risk-page__title {
+  margin-bottom: 8px !important;
+}
+
+.credit-risk-page__subtitle {
+  color: #8c8c8c;
+  margin-bottom: 0;
+}
+
+.credit-risk-page__stats {
+  margin-bottom: 24px;
+}
+
