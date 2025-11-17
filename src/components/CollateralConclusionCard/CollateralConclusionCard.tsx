@@ -4,7 +4,7 @@ import { EditOutlined, PrinterOutlined, DownloadOutlined, FileTextOutlined } fro
 import type { CollateralConclusion } from '@/types/collateralConclusion';
 import type { TabsProps } from 'antd';
 
-const { Paragraph, Text, Title } = Typography;
+const { Paragraph, Text } = Typography;
 
 interface CollateralConclusionCardProps {
   conclusion: CollateralConclusion;
@@ -32,13 +32,12 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
   const tabItems: TabsProps['items'] = useMemo(() => {
     const items: TabsProps['items'] = [];
 
-    // 1. Залоговое заключение (основная вкладка со всей информацией)
+    // 1. Залоговое заключение (основная вкладка)
     items.push({
-      key: 'main',
+      key: 'conclusion',
       label: 'Залоговое заключение',
       children: (
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          {/* Основная информация */}
           <Descriptions bordered column={3} size="small">
             <Descriptions.Item label="№ заключения" span={1}>
               <Text strong>{conclusion.conclusionNumber}</Text>
@@ -70,7 +69,6 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
             <Descriptions.Item label="ИНН залогодателя" span={1}>{conclusion.pledgerInn || '—'}</Descriptions.Item>
           </Descriptions>
 
-          {/* Кредитный продукт */}
           {conclusion.creditProduct && (
             <>
               <Divider orientation="left" style={{ margin: '8px 0' }}>Кредитный продукт</Divider>
@@ -78,501 +76,16 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
                 <Descriptions.Item label="Продукт">{conclusion.creditProduct}</Descriptions.Item>
                 <Descriptions.Item label="Сумма, руб.">{formatCurrency(conclusion.creditAmount)}</Descriptions.Item>
                 <Descriptions.Item label="Срок, мес.">{conclusion.creditTermMonths || '—'}</Descriptions.Item>
-                {conclusion.creditContractNumber && (
-                  <Descriptions.Item label="№ Кредитного договора" span={3}>
-                    {conclusion.creditContractNumber}
-                  </Descriptions.Item>
-                )}
-              </Descriptions>
-            </>
+          {conclusion.creditContractNumber && (
+            <Descriptions.Item label="№ Кредитного договора" span={3}>
+              {conclusion.creditContractNumber}
+            </Descriptions.Item>
           )}
+        </Descriptions>
+      </>
+    )}
 
-          {/* Имущество */}
-          <Divider orientation="left" style={{ margin: '8px 0' }}>Имущество, предлагаемое в залог</Divider>
-          <Descriptions bordered column={3} size="small">
-            <Descriptions.Item label="Тип залога">{conclusion.collateralType || '—'}</Descriptions.Item>
-            <Descriptions.Item label="Наименование, назначение" span={2}>{conclusion.collateralName || '—'}</Descriptions.Item>
-            <Descriptions.Item label="Местоположение" span={3}>{conclusion.collateralLocation || '—'}</Descriptions.Item>
-            {conclusion.totalAreaSqm && (
-              <Descriptions.Item label="общая площадь, кв.м.">{conclusion.totalAreaSqm}</Descriptions.Item>
-            )}
-            {conclusion.totalAreaHectares && (
-              <Descriptions.Item label="общая площадь, сот.">{conclusion.totalAreaHectares}</Descriptions.Item>
-            )}
-            {conclusion.objectsCount && (
-              <Descriptions.Item label="кол-во объектов">{conclusion.objectsCount}</Descriptions.Item>
-            )}
-            {conclusion.ownershipShare && (
-              <Descriptions.Item label="оцениваемые права, доля в праве %">{conclusion.ownershipShare}</Descriptions.Item>
-            )}
-            {conclusion.marketValue && (
-              <Descriptions.Item label="рыночная стоимость">{formatCurrency(conclusion.marketValue)}</Descriptions.Item>
-            )}
-            {conclusion.collateralValue && (
-              <Descriptions.Item label="залоговая стоимость">{formatCurrency(conclusion.collateralValue)}</Descriptions.Item>
-            )}
-          </Descriptions>
-
-          {/* Земельный участок */}
-          {conclusion.landCadastralNumber && (
-            <>
-              <Divider orientation="left" style={{ margin: '8px 0' }}>Наименование, категория земель и разрешенный вид использования</Divider>
-              <Descriptions bordered column={3} size="small">
-                <Descriptions.Item label="Кадастровый номер">{conclusion.landCadastralNumber}</Descriptions.Item>
-                <Descriptions.Item label="Категория">{conclusion.landCategory || '—'}</Descriptions.Item>
-                <Descriptions.Item label="Разрешенное использование">{conclusion.landPermittedUse || '—'}</Descriptions.Item>
-                {conclusion.landAreaSqm && (
-                  <Descriptions.Item label="общая площадь, кв.м.">{conclusion.landAreaSqm}</Descriptions.Item>
-                )}
-                {conclusion.landAreaHectares && (
-                  <Descriptions.Item label="общая площадь, сот.">{conclusion.landAreaHectares}</Descriptions.Item>
-                )}
-              </Descriptions>
-            </>
-          )}
-
-          {/* Состояние и описание */}
-          <Divider orientation="left" style={{ margin: '8px 0' }}>Состояние и краткое описание имущества, предлагаемого в залог</Divider>
-          <Descriptions bordered column={1} size="small">
-            {conclusion.collateralDescription && (
-              <Descriptions.Item label="Описание">
-                <Paragraph style={{ margin: 0 }}>{conclusion.collateralDescription}</Paragraph>
-              </Descriptions.Item>
-            )}
-            {conclusion.collateralCondition && (
-              <Descriptions.Item label="Состояние">{conclusion.collateralCondition}</Descriptions.Item>
-            )}
-            {conclusion.hasReplanning !== null && (
-              <Descriptions.Item label="Наличие перепланировок">
-                {conclusion.hasReplanning ? 'Да' : 'Нет'}
-              </Descriptions.Item>
-            )}
-            {conclusion.replanningDescription && (
-              <Descriptions.Item label="Выявленные перепланировки">
-                <Paragraph style={{ margin: 0 }}>{conclusion.replanningDescription}</Paragraph>
-              </Descriptions.Item>
-            )}
-            {conclusion.landFunctionalProvision && (
-              <Descriptions.Item label="Функциональное обеспечение ЗУ">
-                {conclusion.landFunctionalProvision}
-              </Descriptions.Item>
-            )}
-          </Descriptions>
-
-          {/* Обременения */}
-          {conclusion.hasEncumbrances !== null && (
-            <>
-              <Divider orientation="left" style={{ margin: '8px 0' }}>Наличие зарегистрированных обременений</Divider>
-              <Descriptions bordered column={1} size="small">
-                <Descriptions.Item label="Наличие обременений">
-                  {conclusion.hasEncumbrances ? 'Да' : 'Нет'}
-                </Descriptions.Item>
-                {conclusion.encumbrancesDescription && (
-                  <Descriptions.Item label="Описание">
-                    <Paragraph style={{ margin: 0 }}>{conclusion.encumbrancesDescription}</Paragraph>
-                  </Descriptions.Item>
-                )}
-                {conclusion.encumbrancesDetails && (
-                  <Descriptions.Item label="Выявленные обременения">
-                    <Paragraph style={{ margin: 0 }}>{conclusion.encumbrancesDetails}</Paragraph>
-                  </Descriptions.Item>
-                )}
-              </Descriptions>
-            </>
-          )}
-
-          {/* Проверка на банкротство */}
-          {(conclusion.bankruptcyCheckDate || conclusion.bankruptcyCheckResult) && (
-            <>
-              <Divider orientation="left" style={{ margin: '8px 0' }}>Информация о наличии / отсутствии признаков банкротства</Divider>
-              <Descriptions bordered column={2} size="small">
-                {conclusion.bankruptcyCheckDate && (
-                  <Descriptions.Item label="Дата проведения проверки">{conclusion.bankruptcyCheckDate}</Descriptions.Item>
-                )}
-                {conclusion.inspectorName && (
-                  <Descriptions.Item label="Сотрудник ПР, проводивший проверку">{conclusion.inspectorName}</Descriptions.Item>
-                )}
-                {conclusion.bankruptcyCheckResult && (
-                  <Descriptions.Item label="Результат" span={2}>{conclusion.bankruptcyCheckResult}</Descriptions.Item>
-                )}
-              </Descriptions>
-            </>
-          )}
-
-          {/* Оценка */}
-          <Divider orientation="left" style={{ margin: '8px 0' }}>Оценка</Divider>
-          <Descriptions bordered column={3} size="small">
-            <Descriptions.Item label="Рыночная стоимость, руб">{formatCurrency(conclusion.marketValue)}</Descriptions.Item>
-            <Descriptions.Item label="Залоговая стоимость, руб">{formatCurrency(conclusion.collateralValue)}</Descriptions.Item>
-            <Descriptions.Item label="Справедливая стоимость">{formatCurrency(conclusion.fairValue)}</Descriptions.Item>
-            {conclusion.cadastralValue && (
-              <Descriptions.Item label="Кадастровая стоимость">{formatCurrency(conclusion.cadastralValue)}</Descriptions.Item>
-            )}
-            {conclusion.marketValuePerSqm && (
-              <Descriptions.Item label="Рыночная стоимость, руб./кв.м.">
-                {formatCurrency(conclusion.marketValuePerSqm)}
-              </Descriptions.Item>
-            )}
-            {conclusion.marketValuePerHectare && (
-              <Descriptions.Item label="Рыночная стоимость, руб./сот.">
-                {formatCurrency(conclusion.marketValuePerHectare)}
-              </Descriptions.Item>
-            )}
-          </Descriptions>
-
-          {/* Характеристики */}
-          <Divider orientation="left" style={{ margin: '8px 0' }}>Характеристики</Divider>
-          <Descriptions bordered column={3} size="small">
-            <Descriptions.Item label="Категория обеспечения">{conclusion.category || '—'}</Descriptions.Item>
-            <Descriptions.Item label="Ликвидность недвижимого имущества">{conclusion.liquidity || '—'}</Descriptions.Item>
-            {conclusion.liquidityFairValue && (
-              <Descriptions.Item label="Ликвидность недвижимого имущества (при справедливой стоимости)">
-                {conclusion.liquidityFairValue}
-              </Descriptions.Item>
-            )}
-            {conclusion.liquidityMovable && (
-              <Descriptions.Item label="Ликвидность движимого имущества">
-                {conclusion.liquidityMovable}
-              </Descriptions.Item>
-            )}
-            {conclusion.riskLevel && (
-              <Descriptions.Item label="Уровень риска">
-                <Tag
-                  color={
-                    conclusion.riskLevel === 'Низкий'
-                      ? 'green'
-                      : conclusion.riskLevel === 'Средний'
-                        ? 'blue'
-                        : conclusion.riskLevel === 'Высокий'
-                          ? 'orange'
-                          : 'red'
-                  }
-                >
-                  {conclusion.riskLevel}
-                </Tag>
-              </Descriptions.Item>
-            )}
-          </Descriptions>
-
-          {/* Особое мнение */}
-          {conclusion.specialOpinion && (
-            <>
-              <Divider orientation="left" style={{ margin: '8px 0' }}>Особое мнение</Divider>
-              <Paragraph>{conclusion.specialOpinion}</Paragraph>
-            </>
-          )}
-
-          {/* Права на объект */}
-          {(conclusion.ownershipBasis || conclusion.ownershipDocuments || conclusion.registrationRecord) && (
-            <>
-              <Divider orientation="left" style={{ margin: '8px 0' }}>Права на объект</Divider>
-              <Descriptions bordered column={1} size="small">
-                {conclusion.ownershipBasis && (
-                  <Descriptions.Item label="Право, на основании которого объект принадлежит Залогодателю">
-                    <Paragraph style={{ margin: 0 }}>{conclusion.ownershipBasis}</Paragraph>
-                  </Descriptions.Item>
-                )}
-                {conclusion.ownershipDocuments && (
-                  <Descriptions.Item label="Документы-основания возникновения права собственности">
-                    <Paragraph style={{ margin: 0 }}>{conclusion.ownershipDocuments}</Paragraph>
-                  </Descriptions.Item>
-                )}
-                {conclusion.registrationRecord && (
-                  <Descriptions.Item label="Запись регистрации в ЕГРН (дата, №)">{conclusion.registrationRecord}</Descriptions.Item>
-                )}
-                {conclusion.registrationDocument && (
-                  <Descriptions.Item label="Правоподтверждающий документ">
-                    <Paragraph style={{ margin: 0 }}>{conclusion.registrationDocument}</Paragraph>
-                  </Descriptions.Item>
-                )}
-              </Descriptions>
-            </>
-          )}
-
-          {/* Проверка */}
-          {conclusion.inspectionDate && (
-            <>
-              <Divider orientation="left" style={{ margin: '8px 0' }}>Проверка</Divider>
-              <Descriptions bordered column={2} size="small">
-                <Descriptions.Item label="Дата осмотра">{conclusion.inspectionDate}</Descriptions.Item>
-                {conclusion.inspectorName && (
-                  <Descriptions.Item label="Сотрудник проводивший осмотр">{conclusion.inspectorName}</Descriptions.Item>
-                )}
-              </Descriptions>
-            </>
-          )}
-        </Space>
-      ),
-    });
-
-    // 2. Отлагательные условия
-    items.push({
-      key: 'suspensive',
-      label: 'отлагательные',
-      children: (
-          <div>
-            {conclusion.suspensiveConditions && conclusion.suspensiveConditions.length > 0 ? (
-              <Table
-                dataSource={conclusion.suspensiveConditions}
-                rowKey="id"
-                pagination={false}
-                size="small"
-                columns={[
-                  { title: '№', dataIndex: 'number', width: 60, align: 'center' },
-                  { title: 'Перечень отлагательных и дополнительных условий', dataIndex: 'description', key: 'description' },
-                  { 
-                    title: 'Отлагательные условия', 
-                    dataIndex: 'suspensiveCondition', 
-                    width: 150,
-                    align: 'center',
-                    render: (val) => val === '+' ? <Tag color="green">+</Tag> : <Tag color="red">-</Tag>
-                  },
-                  { 
-                    title: 'Доп. условия', 
-                    dataIndex: 'additionalCondition', 
-                    width: 150,
-                    align: 'center',
-                    render: (val) => val ? <Tag color="blue">+</Tag> : <Tag color="default">-</Tag>
-                  },
-                ]}
-              />
-            ) : (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-                Отлагательные условия не указаны
-              </div>
-            )}
-          </div>
-        ),
-      });
-
-    // 3. Описание
-    items.push({
-      key: 'detailed',
-      label: 'Описание',
-      children: (() => {
-        if (conclusion.detailedDescriptions && conclusion.detailedDescriptions.length > 0) {
-          const firstObj = conclusion.detailedDescriptions[0];
-          const columns = Object.keys(firstObj)
-            .filter(key => key !== 'id' && firstObj[key] !== null && firstObj[key] !== undefined)
-            .slice(0, 15)
-            .map(key => ({
-              title: key,
-              dataIndex: key,
-              key: key,
-              width: 150,
-              ellipsis: true,
-              render: (text: any) => {
-                if (text === null || text === undefined) return '—';
-                if (typeof text === 'object') return JSON.stringify(text).slice(0, 50);
-                return String(text).slice(0, 50);
-              },
-            }));
-
-          return (
-            <Table
-              dataSource={conclusion.detailedDescriptions}
-              rowKey="id"
-              columns={columns}
-              pagination={false}
-              scroll={{ x: 'max-content' }}
-              size="small"
-            />
-          );
-        }
-        return (
-          <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-            Описание объектов отсутствует
-          </div>
-        );
-      })(),
-    });
-
-    // 4. Фото
-    items.push({
-      key: 'photos',
-      label: 'Фото',
-
-      children: (
-        <div>
-          {conclusion.photos && conclusion.photos.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
-              {conclusion.photos.map(photo => (
-                <div key={photo.id} style={{ textAlign: 'center' }}>
-                  <Image
-                    src={photo.url}
-                    alt={photo.description || 'Фото'}
-                    width={200}
-                    height={150}
-                    style={{ objectFit: 'cover', borderRadius: '4px' }}
-                    fallback="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4="
-                  />
-                  {photo.description && (
-                    <Text type="secondary" style={{ display: 'block', marginTop: '8px' }}>
-                      {photo.description}
-                    </Text>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-              Фотографии отсутствуют
-            </div>
-          )}
-        </div>
-      ),
-    });
-
-    // 5. Аналоги
-    items.push({
-      key: 'analogs',
-      label: 'Аналоги',
-      children: (
-        <div>
-          {conclusion.calculations && conclusion.calculations.some(calc => 
-            calc.data && calc.data.analogs && Array.isArray(calc.data.analogs)
-          ) ? (
-            <div>
-              {conclusion.calculations
-                .filter(calc => calc.data && calc.data.analogs && Array.isArray(calc.data.analogs))
-                .map(calc => (
-                  <div key={calc.id} style={{ marginBottom: '24px' }}>
-                    <Title level={5}>{calc.type}</Title>
-                    <Table
-                      dataSource={calc.data.analogs}
-                      rowKey={(_, index) => `analog-${index}`}
-                      pagination={false}
-                      size="small"
-                      columns={[
-                        { title: '№', dataIndex: 'number', width: 60, align: 'center' },
-                        { title: 'Адрес', dataIndex: 'address', key: 'address' },
-                        { title: 'Краткое описание', dataIndex: 'description', key: 'description' },
-                        { 
-                          title: 'Цена предложения, руб.', 
-                          dataIndex: 'price', 
-                          key: 'price',
-                          align: 'right',
-                          render: (val) => formatCurrency(val)
-                        },
-                        { 
-                          title: 'Площадь, кв.м.', 
-                          dataIndex: 'area', 
-                          key: 'area',
-                          align: 'right'
-                        },
-                      ]}
-                    />
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-              Аналоги отсутствуют
-            </div>
-          )}
-        </div>
-      ),
-    });
-
-    // 6. расчеты
-    items.push({
-      key: 'calculations',
-      label: 'расчеты',
-      children: (
-        <div>
-          {conclusion.calculations && conclusion.calculations.length > 0 ? (
-            <div>
-              {conclusion.calculations
-                .filter(calc => !calc.data.analogs || !Array.isArray(calc.data.analogs)) // Исключаем расчеты с аналогами (они в отдельной вкладке)
-                .map(calc => (
-                  <div key={calc.id} style={{ marginBottom: '24px' }}>
-                    <Title level={5}>{calc.type}</Title>
-                    <Descriptions bordered column={2} size="small">
-                      {Object.entries(calc.data)
-                        .filter(([key]) => key !== 'analogs')
-                        .map(([key, value]) => (
-                          <Descriptions.Item key={key} label={key}>
-                            {typeof value === 'object' && value !== null ? (
-                              <pre style={{ margin: 0, fontSize: '12px', maxHeight: '200px', overflow: 'auto' }}>
-                                {JSON.stringify(value, null, 2)}
-                              </pre>
-                            ) : (
-                              String(value)
-                            )}
-                          </Descriptions.Item>
-                        ))}
-                    </Descriptions>
-                  </div>
-                ))}
-              {conclusion.calculations.filter(calc => !calc.data.analogs || !Array.isArray(calc.data.analogs)).length === 0 && (
-                <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-                  Расчеты отсутствуют
-                </div>
-              )}
-            </div>
-          ) : (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-              Расчеты отсутствуют
-            </div>
-          )}
-        </div>
-      ),
-    });
-
-    // 7. Рецензия
-    items.push({
-      key: 'review',
-      label: 'Рецензия',
-      children: (
-        <div>
-          {conclusion.review ? (
-            <Descriptions bordered column={1} size="small">
-              {conclusion.review.reviewer && (
-                <Descriptions.Item label="Сотрудник составляющий рецензию">{conclusion.review.reviewer}</Descriptions.Item>
-              )}
-              {conclusion.review.reviewerPosition && (
-                <Descriptions.Item label="Должность">{conclusion.review.reviewerPosition}</Descriptions.Item>
-              )}
-              {conclusion.review.reviewDate && (
-                <Descriptions.Item label="Дата составления рецензии">{conclusion.review.reviewDate}</Descriptions.Item>
-              )}
-              {conclusion.review.reviewText && (
-                <Descriptions.Item label="Текст рецензии">
-                  <Paragraph style={{ margin: 0 }}>{conclusion.review.reviewText}</Paragraph>
-                </Descriptions.Item>
-              )}
-              {conclusion.review.conclusion && (
-                <Descriptions.Item label="Заключение">
-                  <Tag color="green">{conclusion.review.conclusion}</Tag>
-                </Descriptions.Item>
-              )}
-              {conclusion.review.compliance && (
-                <Descriptions.Item label="Соответствие требованиям">
-                  <Paragraph style={{ margin: 0 }}>{conclusion.review.compliance}</Paragraph>
-                </Descriptions.Item>
-              )}
-              {conclusion.review.reportCompliance && (
-                <Descriptions.Item label="Соответствие отчета требованиям">
-                  <Paragraph style={{ margin: 0 }}>{conclusion.review.reportCompliance}</Paragraph>
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          ) : (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-              Рецензия отсутствует
-            </div>
-          )}
-        </div>
-      ),
-    });
-
-    // 8. для договора
-    items.push({
-      key: 'for-contract',
-      label: 'для договора',
-
-      children: (
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Divider orientation="left" style={{ margin: '8px 0' }}>Согласование</Divider>
           <Descriptions bordered column={2} size="small">
             <Descriptions.Item label="Автор">{conclusion.author}</Descriptions.Item>
             <Descriptions.Item label="Дата создания">{conclusion.authorDate}</Descriptions.Item>
@@ -589,31 +102,316 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
               <Descriptions.Item label="Проводивший осмотр">{conclusion.inspectorName}</Descriptions.Item>
             )}
           </Descriptions>
+        </Space>
+      ),
+    });
 
-          {conclusion.specialOpinion && (
-            <>
-              <Divider orientation="left" style={{ margin: '8px 0' }}>Особое мнение</Divider>
-              <Paragraph>{conclusion.specialOpinion}</Paragraph>
-            </>
-          )}
-          {conclusion.recommendations && (
-            <>
-              <Divider orientation="left" style={{ margin: '8px 0' }}>Рекомендации</Divider>
-              <Paragraph>{conclusion.recommendations}</Paragraph>
-            </>
-          )}
-          {conclusion.conclusionText && (
-            <>
-              <Divider orientation="left" style={{ margin: '8px 0' }}>Текст заключения</Divider>
-              <Paragraph>{conclusion.conclusionText}</Paragraph>
-            </>
-          )}
-          {conclusion.notes && (
-            <>
-              <Divider orientation="left" style={{ margin: '8px 0' }}>Примечания</Divider>
-              <Paragraph>{conclusion.notes}</Paragraph>
-            </>
-          )}
+    // 2. Отлагательные условия
+    if (conclusion.suspensiveConditions && conclusion.suspensiveConditions.length > 0) {
+      items.push({
+        key: 'suspensive',
+        label: 'отлагательные',
+        children: (
+          <Table
+            dataSource={conclusion.suspensiveConditions}
+            rowKey="id"
+            pagination={false}
+            size="small"
+            columns={[
+              { title: '№', dataIndex: 'number', width: 60, align: 'center' },
+              { title: 'Перечень отлагательных и дополнительных условий', dataIndex: 'description', key: 'description' },
+              { 
+                title: 'Отлагательные условия', 
+                dataIndex: 'suspensiveCondition', 
+                width: 150,
+                align: 'center',
+                render: (val) => val === '+' ? <Tag color="green">+</Tag> : <Tag color="red">-</Tag>
+              },
+              { 
+                title: 'Доп. условия', 
+                dataIndex: 'additionalCondition', 
+                width: 150,
+                align: 'center',
+                render: (val) => val ? <Tag color="blue">+</Tag> : <Tag color="default">-</Tag>
+              },
+            ]}
+          />
+        ),
+      });
+    } else {
+      // Всегда показываем вкладку, даже если нет данных
+      items.push({
+        key: 'suspensive',
+        label: 'отлагательные',
+        children: <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>Нет отлагательных условий</div>,
+      });
+    }
+
+    // 3. Описание
+    if (conclusion.detailedDescriptions && conclusion.detailedDescriptions.length > 0) {
+      const firstObj = conclusion.detailedDescriptions[0];
+      const columns = Object.keys(firstObj)
+        .filter(key => key !== 'id' && firstObj[key] !== null && firstObj[key] !== undefined)
+        .slice(0, 10) // Ограничиваем количество колонок для компактности
+        .map(key => ({
+          title: key,
+          dataIndex: key,
+          key: key,
+          width: 150,
+          ellipsis: true,
+          render: (text: any) => {
+            if (text === null || text === undefined) return '—';
+            if (typeof text === 'object') return JSON.stringify(text).slice(0, 50);
+            return String(text).slice(0, 50);
+          },
+        }));
+
+      items.push({
+        key: 'detailed',
+        label: 'Описание',
+        children: (
+          <Table
+            dataSource={conclusion.detailedDescriptions}
+            rowKey="id"
+            columns={columns}
+            pagination={false}
+            scroll={{ x: 'max-content' }}
+            size="small"
+          />
+        ),
+      });
+    } else {
+      items.push({
+        key: 'detailed',
+        label: 'Описание',
+        children: <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>Нет описания объектов</div>,
+      });
+    }
+
+    // 4. Фото
+    if (conclusion.photos && conclusion.photos.length > 0) {
+      items.push({
+        key: 'photos',
+        label: 'Фото',
+        children: (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+            {conclusion.photos.map(photo => (
+              <div key={photo.id} style={{ textAlign: 'center' }}>
+                <Image
+                  src={photo.url}
+                  alt={photo.description || 'Фото'}
+                  width={200}
+                  height={150}
+                  style={{ objectFit: 'cover', borderRadius: '4px' }}
+                  fallback="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4="
+                />
+                {photo.description && (
+                  <Text type="secondary" style={{ display: 'block', marginTop: '8px' }}>
+                    {photo.description}
+                  </Text>
+                )}
+              </div>
+            ))}
+          </div>
+        ),
+      });
+    } else {
+      items.push({
+        key: 'photos',
+        label: 'Фото',
+        children: <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>Нет фотографий</div>,
+      });
+    }
+
+    // 5. Аналоги (для расчетов)
+    if (conclusion.calculations && conclusion.calculations.length > 0) {
+      // Извлекаем аналоги из расчетов
+      const analogsData: any[] = [];
+      conclusion.calculations.forEach(calc => {
+        if (calc.data && calc.data.analogs && Array.isArray(calc.data.analogs)) {
+          calc.data.analogs.forEach((analog: any, idx: number) => {
+            analogsData.push({
+              id: `analog-${calc.id}-${idx}`,
+              number: analog.number || idx + 1,
+              address: analog.address || '—',
+              description: analog.description || '—',
+              price: analog.price || '—',
+              area: analog.area || '—',
+              type: calc.type,
+            });
+          });
+        }
+      });
+
+      if (analogsData.length > 0) {
+        items.push({
+          key: 'analogs',
+          label: 'Аналоги',
+          children: (
+            <Table
+              dataSource={analogsData}
+              rowKey="id"
+              pagination={false}
+              size="small"
+              columns={[
+                { title: '№', dataIndex: 'number', width: 60, align: 'center' },
+                { title: 'Адрес', dataIndex: 'address', key: 'address' },
+                { title: 'Краткое описание', dataIndex: 'description', key: 'description' },
+                { 
+                  title: 'Цена предложения, руб.', 
+                  dataIndex: 'price', 
+                  key: 'price',
+                  align: 'right',
+                  render: (val) => typeof val === 'number' ? formatCurrency(val) : val
+                },
+                { 
+                  title: 'Площадь, кв.м.', 
+                  dataIndex: 'area', 
+                  key: 'area',
+                  align: 'right'
+                },
+                { title: 'Тип расчета', dataIndex: 'type', key: 'type' },
+              ]}
+            />
+          ),
+        });
+      } else {
+        items.push({
+          key: 'analogs',
+          label: 'Аналоги',
+          children: <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>Нет данных об аналогах</div>,
+        });
+      }
+    } else {
+      items.push({
+        key: 'analogs',
+        label: 'Аналоги',
+        children: <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>Нет данных об аналогах</div>,
+      });
+    }
+
+    // 6. Расчеты
+    if (conclusion.calculations && conclusion.calculations.length > 0) {
+      const calcItems: TabsProps['items'] = conclusion.calculations.map(calc => ({
+        key: calc.id,
+        label: calc.type,
+        children: (
+          <Descriptions bordered column={2} size="small">
+            {Object.entries(calc.data).map(([key, value]) => (
+              <Descriptions.Item key={key} label={key}>
+                {typeof value === 'object' ? (
+                  <pre style={{ margin: 0, fontSize: '12px' }}>{JSON.stringify(value, null, 2)}</pre>
+                ) : (
+                  String(value)
+                )}
+              </Descriptions.Item>
+            ))}
+          </Descriptions>
+        ),
+      }));
+
+      items.push({
+        key: 'calculations',
+        label: 'расчеты',
+        children: <Tabs items={calcItems} size="small" />,
+      });
+    } else {
+      items.push({
+        key: 'calculations',
+        label: 'расчеты',
+        children: <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>Нет расчетов</div>,
+      });
+    }
+
+    // 7. Рецензия
+    if (conclusion.review) {
+      items.push({
+        key: 'review',
+        label: 'Рецензия',
+        children: (
+          <Descriptions bordered column={1} size="small">
+            {conclusion.review.reviewer && (
+              <Descriptions.Item label="Рецензент">{conclusion.review.reviewer}</Descriptions.Item>
+            )}
+            {conclusion.review.reviewerPosition && (
+              <Descriptions.Item label="Должность">{conclusion.review.reviewerPosition}</Descriptions.Item>
+            )}
+            {conclusion.review.reviewDate && (
+              <Descriptions.Item label="Дата рецензии">{conclusion.review.reviewDate}</Descriptions.Item>
+            )}
+            {conclusion.review.reviewText && (
+              <Descriptions.Item label="Текст рецензии">
+                <Paragraph style={{ margin: 0 }}>{conclusion.review.reviewText}</Paragraph>
+              </Descriptions.Item>
+            )}
+            {conclusion.review.conclusion && (
+              <Descriptions.Item label="Заключение">
+                <Tag color="green">{conclusion.review.conclusion}</Tag>
+              </Descriptions.Item>
+            )}
+            {conclusion.review.compliance && (
+              <Descriptions.Item label="Соответствие требованиям">
+                <Paragraph style={{ margin: 0 }}>{conclusion.review.compliance}</Paragraph>
+              </Descriptions.Item>
+            )}
+          </Descriptions>
+        ),
+      });
+    } else {
+      items.push({
+        key: 'review',
+        label: 'Рецензия',
+        children: <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>Рецензия не проведена</div>,
+      });
+    }
+
+    // 8. Для договора (приложение к договору залога)
+    items.push({
+      key: 'contract',
+      label: 'для договора',
+      children: (
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Descriptions bordered column={1} size="small">
+            <Descriptions.Item label="Приложение к договору залога">
+              <Paragraph>
+                Настоящее заключение является приложением к договору залога и содержит полную информацию 
+                о предмете залога, его оценке и условиях принятия в залог.
+              </Paragraph>
+            </Descriptions.Item>
+            {conclusion.conclusionNumber && (
+              <Descriptions.Item label="Номер заключения">{conclusion.conclusionNumber}</Descriptions.Item>
+            )}
+            {conclusion.conclusionDate && (
+              <Descriptions.Item label="Дата заключения">{conclusion.conclusionDate}</Descriptions.Item>
+            )}
+            {conclusion.contractNumber && (
+              <Descriptions.Item label="Номер договора залога">{conclusion.contractNumber}</Descriptions.Item>
+            )}
+            {conclusion.collateralType && (
+              <Descriptions.Item label="Тип залога">{conclusion.collateralType}</Descriptions.Item>
+            )}
+            {conclusion.marketValue && (
+              <Descriptions.Item label="Рыночная стоимость">{formatCurrency(conclusion.marketValue)}</Descriptions.Item>
+            )}
+            {conclusion.collateralValue && (
+              <Descriptions.Item label="Залоговая стоимость">{formatCurrency(conclusion.collateralValue)}</Descriptions.Item>
+            )}
+            {conclusion.specialOpinion && (
+              <Descriptions.Item label="Особое мнение">
+                <Paragraph style={{ margin: 0 }}>{conclusion.specialOpinion}</Paragraph>
+              </Descriptions.Item>
+            )}
+            {conclusion.recommendations && (
+              <Descriptions.Item label="Рекомендации">
+                <Paragraph style={{ margin: 0 }}>{conclusion.recommendations}</Paragraph>
+              </Descriptions.Item>
+            )}
+            {conclusion.conclusionText && (
+              <Descriptions.Item label="Текст заключения">
+                <Paragraph style={{ margin: 0 }}>{conclusion.conclusionText}</Paragraph>
+              </Descriptions.Item>
+            )}
+          </Descriptions>
         </Space>
       ),
     });
@@ -648,14 +446,10 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
       {/* Вкладки */}
       <Tabs
         items={tabItems}
-        defaultActiveKey="main"
+        defaultActiveKey="conclusion"
         size="small"
         type="card"
         style={{ minHeight: '400px' }}
-        tabBarStyle={{ 
-          marginBottom: '16px',
-          borderBottom: '1px solid #f0f0f0'
-        }}
       />
     </div>
   );

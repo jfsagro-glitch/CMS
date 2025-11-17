@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Form, Select, Input, DatePicker, Button, message } from 'antd';
 import dayjs from 'dayjs';
 import type { CollateralConclusion } from '@/types/collateralConclusion';
+import CollateralAttributesForm from '@/components/CollateralAttributesForm/CollateralAttributesForm';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -20,6 +21,7 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [portfolioData, setPortfolioData] = useState<any[]>([]);
+  const [selectedCollateralType, setSelectedCollateralType] = useState<string | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -167,12 +169,14 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
   const handleReferenceChange = (reference: string) => {
     const deal = portfolioData.find((d: any) => String(d.reference) === String(reference));
     if (deal) {
+      const collateralType = deal.collateralType || null;
+      setSelectedCollateralType(collateralType);
       form.setFieldsValue({
         contractNumber: deal.contractNumber || null,
         pledger: deal.pledger || null,
         pledgerInn: deal.inn || null,
         borrower: deal.borrower || null,
-        collateralType: deal.collateralType || null,
+        collateralType: collateralType,
         collateralLocation: deal.collateralLocation || null,
         collateralValue: deal.collateralValue || null,
         marketValue: deal.marketValue || deal.currentMarketValue || null,
@@ -261,40 +265,41 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
         </Form.Item>
 
         <Form.Item name="collateralType" label="Тип залога">
-          <Input placeholder="Тип залога" />
-        </Form.Item>
-
-        <Form.Item name="collateralName" label="Наименование, назначение">
-          <Input placeholder="Наименование и назначение имущества" />
+          <Select
+            placeholder="Выберите тип залога"
+            allowClear
+            onChange={(value) => setSelectedCollateralType(value || null)}
+            showSearch
+            filterOption={(input, option) =>
+              String(option?.children || '').toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            <Option value="Недвижимость">Недвижимость</Option>
+            <Option value="Транспортные средства">Транспортные средства</Option>
+            <Option value="Оборудование">Оборудование</Option>
+            <Option value="Товары в обороте">Товары в обороте</Option>
+            <Option value="Ценные бумаги">Ценные бумаги</Option>
+            <Option value="Права требования">Права требования</Option>
+            {/* Детальные типы для недвижимости */}
+            <Option value="apartment">Квартира</Option>
+            <Option value="house">Жилой дом</Option>
+            <Option value="office">Офис</Option>
+            <Option value="retail">Торговое помещение</Option>
+            <Option value="warehouse">Склад</Option>
+            <Option value="gas_station">АЗС</Option>
+            <Option value="car_passenger">Легковой автомобиль</Option>
+            <Option value="car_truck">Грузовой автомобиль</Option>
+            <Option value="equipment">Оборудование</Option>
+            <Option value="machinery">Техника</Option>
+          </Select>
         </Form.Item>
 
         <Form.Item name="collateralPurpose" label="Назначение обеспечения">
           <Input placeholder="Назначение обеспечения" />
         </Form.Item>
 
-        <Form.Item name="collateralLocation" label="Местоположение">
-          <Input placeholder="Местоположение предмета залога" />
-        </Form.Item>
-
-        <Form.Item name="totalAreaSqm" label="Общая площадь, кв.м.">
-          <Input type="number" placeholder="Площадь в квадратных метрах" />
-        </Form.Item>
-
-        <Form.Item name="totalAreaHectares" label="Общая площадь, сот.">
-          <Input type="number" step="0.01" placeholder="Площадь в сотках" />
-        </Form.Item>
-
-        <Form.Item name="objectsCount" label="Количество объектов">
-          <Input type="number" placeholder="Количество объектов" />
-        </Form.Item>
-
-        <Form.Item name="ownershipShare" label="Доля в праве, %">
-          <Input type="number" placeholder="Доля в праве" />
-        </Form.Item>
-
-        <Form.Item name="landCadastralNumber" label="Кадастровый номер земельного участка">
-          <Input placeholder="Кадастровый номер" />
-        </Form.Item>
+        {/* Динамические атрибуты в зависимости от типа имущества */}
+        <CollateralAttributesForm collateralType={selectedCollateralType} form={form} />
 
         <Form.Item name="landCategory" label="Категория земель">
           <Input placeholder="Категория земель" />
