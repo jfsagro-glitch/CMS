@@ -66,6 +66,9 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({ con
               <Descriptions.Item label="Продукт">{conclusion.creditProduct}</Descriptions.Item>
               <Descriptions.Item label="Сумма, руб.">{formatCurrency(conclusion.creditAmount)}</Descriptions.Item>
               <Descriptions.Item label="Срок, мес.">{conclusion.creditTermMonths || '—'}</Descriptions.Item>
+              {conclusion.creditContractNumber && (
+                <Descriptions.Item label="№ Кредитного договора">{conclusion.creditContractNumber}</Descriptions.Item>
+              )}
             </Descriptions>
           )}
         </Space>
@@ -107,8 +110,36 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({ con
               <Descriptions.Item label="Разрешенный вид использования">
                 {conclusion.landPermittedUse || '—'}
               </Descriptions.Item>
-              {conclusion.landAreaSqm && (
-                <Descriptions.Item label="Площадь, кв.м.">{conclusion.landAreaSqm}</Descriptions.Item>
+            {conclusion.landAreaSqm && (
+              <Descriptions.Item label="Площадь, кв.м.">{conclusion.landAreaSqm}</Descriptions.Item>
+            )}
+            {conclusion.landAreaHectares && (
+              <Descriptions.Item label="Площадь, га">{conclusion.landAreaHectares}</Descriptions.Item>
+            )}
+          </Descriptions>
+          )}
+
+          {(conclusion.ownershipBasis || conclusion.ownershipDocuments || conclusion.registrationRecord) && (
+            <Descriptions title="Права на объект" bordered column={1} size="small">
+              {conclusion.ownershipBasis && (
+                <Descriptions.Item label="Право, на основании которого объект принадлежит Залогодателю">
+                  <Paragraph>{conclusion.ownershipBasis}</Paragraph>
+                </Descriptions.Item>
+              )}
+              {conclusion.ownershipDocuments && (
+                <Descriptions.Item label="Документы-основания возникновения права собственности">
+                  <Paragraph>{conclusion.ownershipDocuments}</Paragraph>
+                </Descriptions.Item>
+              )}
+              {conclusion.registrationRecord && (
+                <Descriptions.Item label="Запись регистрации в ЕГРН (дата, №)">
+                  {conclusion.registrationRecord}
+                </Descriptions.Item>
+              )}
+              {conclusion.registrationDocument && (
+                <Descriptions.Item label="Правоподтверждающий документ">
+                  <Paragraph>{conclusion.registrationDocument}</Paragraph>
+                </Descriptions.Item>
               )}
             </Descriptions>
           )}
@@ -123,6 +154,11 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({ con
             {conclusion.hasReplanning !== null && (
               <Descriptions.Item label="Наличие перепланировок">
                 {conclusion.hasReplanning ? 'Да' : 'Нет'}
+              </Descriptions.Item>
+            )}
+            {conclusion.replanningDescription && (
+              <Descriptions.Item label="Выявленные перепланировки">
+                <Paragraph>{conclusion.replanningDescription}</Paragraph>
               </Descriptions.Item>
             )}
             {conclusion.landFunctionalProvision && (
@@ -142,6 +178,22 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({ con
                   <Paragraph>{conclusion.encumbrancesDescription}</Paragraph>
                 </Descriptions.Item>
               )}
+              {conclusion.encumbrancesDetails && (
+                <Descriptions.Item label="Выявленные обременения">
+                  <Paragraph>{conclusion.encumbrancesDetails}</Paragraph>
+                </Descriptions.Item>
+              )}
+            </Descriptions>
+          )}
+
+          {(conclusion.bankruptcyCheckDate || conclusion.bankruptcyCheckResult) && (
+            <Descriptions title="Проверка на банкротство" bordered column={2} size="small">
+              {conclusion.bankruptcyCheckDate && (
+                <Descriptions.Item label="Дата проверки">{conclusion.bankruptcyCheckDate}</Descriptions.Item>
+              )}
+              {conclusion.bankruptcyCheckResult && (
+                <Descriptions.Item label="Результат">{conclusion.bankruptcyCheckResult}</Descriptions.Item>
+              )}
             </Descriptions>
           )}
         </Space>
@@ -160,6 +212,19 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({ con
               {formatCurrency(conclusion.collateralValue)}
             </Descriptions.Item>
             <Descriptions.Item label="Справедливая стоимость">{formatCurrency(conclusion.fairValue)}</Descriptions.Item>
+            {conclusion.cadastralValue && (
+              <Descriptions.Item label="Кадастровая стоимость">{formatCurrency(conclusion.cadastralValue)}</Descriptions.Item>
+            )}
+            {conclusion.marketValuePerSqm && (
+              <Descriptions.Item label="Рыночная стоимость, руб./кв.м.">
+                {formatCurrency(conclusion.marketValuePerSqm)}
+              </Descriptions.Item>
+            )}
+            {conclusion.marketValuePerHectare && (
+              <Descriptions.Item label="Рыночная стоимость, руб./сот.">
+                {formatCurrency(conclusion.marketValuePerHectare)}
+              </Descriptions.Item>
+            )}
           </Descriptions>
 
           <Descriptions title="Характеристики" bordered column={3} size="small">
@@ -168,6 +233,11 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({ con
             {conclusion.liquidityFairValue && (
               <Descriptions.Item label="Ликвидность при справедливой стоимости">
                 {conclusion.liquidityFairValue}
+              </Descriptions.Item>
+            )}
+            {conclusion.liquidityMovable && (
+              <Descriptions.Item label="Ликвидность движимого имущества">
+                {conclusion.liquidityMovable}
               </Descriptions.Item>
             )}
             {conclusion.riskLevel && (
@@ -278,6 +348,33 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({ con
                 <Paragraph>{conclusion.review.conclusion}</Paragraph>
               </Descriptions.Item>
             )}
+            {conclusion.review.compliance && (
+              <Descriptions.Item label="Соответствие требованиям">
+                <Paragraph>{conclusion.review.compliance}</Paragraph>
+              </Descriptions.Item>
+            )}
+            {conclusion.review.reportCompliance && (
+              <Descriptions.Item label="Соответствие отчета требованиям">
+                <Paragraph>{conclusion.review.reportCompliance}</Paragraph>
+              </Descriptions.Item>
+            )}
+          </Descriptions>
+        ),
+      });
+    }
+
+    // Дополнительные данные (если есть)
+    if (conclusion.additionalData && Object.keys(conclusion.additionalData).length > 0) {
+      items.push({
+        key: 'additional',
+        label: 'Дополнительные данные',
+        children: (
+          <Descriptions bordered column={2} size="small">
+            {Object.entries(conclusion.additionalData).map(([key, value]) => (
+              <Descriptions.Item key={key} label={key}>
+                {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+              </Descriptions.Item>
+            ))}
           </Descriptions>
         ),
       });

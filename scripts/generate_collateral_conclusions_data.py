@@ -212,6 +212,11 @@ def generate_conclusions(count: int = 50) -> List[Dict[str, Any]]:
         # Состояние и описание
         collateral_condition = random.choice(CONDITIONS) if random.random() > 0.3 else None
         has_replanning = random.choice([True, False]) if random.random() > 0.5 else None
+        replanning_description = (
+            "Выявлены несущественные перепланировки" if has_replanning and random.random() > 0.5
+            else "Перепланировки не выявлены" if not has_replanning
+            else None
+        )
         land_functional_provision = random.choice([
             "функционально обеспечивает",
             "не обеспечивает"
@@ -228,6 +233,34 @@ def generate_conclusions(count: int = 50) -> List[Dict[str, Any]]:
         encumbrances_description = (
             "Имеются зарегистрированные обременения. Требуется снятие обременений."
         ) if has_encumbrances else None
+        encumbrances_details = (
+            "Обременения не выявлены, имеются ограничения прав на часть земельного участка."
+        ) if has_encumbrances and random.random() > 0.5 else None
+        
+        # Права на объект
+        ownership_basis = random.choice([
+            "Право собственности",
+            "Право аренды",
+            "Право пользования земельным участком"
+        ]) if random.random() > 0.4 else None
+        ownership_documents = (
+            f"Договор купли-продажи от {random_date(datetime.strptime(conclusion_date, "%Y-%m-%d") - timedelta(days=365), datetime.strptime(conclusion_date, "%Y-%m-%d"))}"
+        ) if ownership_basis and random.random() > 0.5 else None
+        registration_record = (
+            f"Запись № {random.randint(100000, 999999)}-{random.randint(1, 99)}/{random.randint(2000, 2024)}-{random.randint(1, 10)} от {random_date(datetime.strptime(conclusion_date, "%Y-%m-%d") - timedelta(days=180), datetime.strptime(conclusion_date, "%Y-%m-%d"))}"
+        ) if random.random() > 0.5 else None
+        registration_document = (
+            f"Выписка из Единого государственного реестра недвижимости об объекте недвижимости № {random.randint(99, 999)}/{random.randint(2020, 2024)}/{random.randint(100000000, 999999999)}"
+        ) if random.random() > 0.6 else None
+        
+        # Проверка на банкротство
+        bankruptcy_check_date = random_date(
+            datetime.strptime(conclusion_date, "%Y-%m-%d") - timedelta(days=30),
+            datetime.strptime(conclusion_date, "%Y-%m-%d")
+        ) if random.random() > 0.5 else None
+        bankruptcy_check_result = (
+            "Признаков банкротства не выявлено"
+        ) if bankruptcy_check_date and random.random() > 0.3 else None
         
         # Проверка
         inspection_date = random_date(
@@ -263,12 +296,36 @@ def generate_conclusions(count: int = 50) -> List[Dict[str, Any]]:
         detailed_descriptions = []
         if objects_count and objects_count > 1 and random.random() > 0.6:
             for j in range(1, min(objects_count + 1, 6)):
+                obj_area = random.randint(20, 200) if is_real_estate else None
+                obj_cadastral = f"{random.randint(77, 99)}:{random.randint(1, 99)}:{random.randint(1000000, 9999999)}:{random.randint(1, 9999)}" if is_real_estate and random.random() > 0.5 else None
+                obj_market_value = int((float(market_value) if market_value else 0) / objects_count) if market_value and objects_count else None
+                obj_collateral_value = int((float(collateral_value) if collateral_value else 0) / objects_count) if collateral_value and objects_count else None
+                
                 detailed_descriptions.append({
                     "id": f"desc-{i}-{j}",
                     "objectNumber": j,
-                    "description": f"Описание объекта {j}",
-                    "area": random.randint(20, 200) if is_real_estate else None,
-                    "value": int((float(market_value) if market_value else 0) / objects_count) if market_value and objects_count else None,
+                    "objectName": f"{collateral_type} - объект {j}",
+                    "objectType": collateral_type,
+                    "cadastralNumber": obj_cadastral,
+                    "address": f"{collateral_location}, объект {j}",
+                    "areaSqm": obj_area,
+                    "areaHectares": round((obj_area or 0) / 100, 2) if obj_area and random.random() > 0.7 else None,
+                    "floor": f"{random.randint(1, 10)} этаж" if is_real_estate and random.random() > 0.5 else None,
+                    "floorsCount": random.randint(1, 10) if is_real_estate and random.random() > 0.5 else None,
+                    "undergroundFloors": random.randint(0, 2) if is_real_estate and random.random() > 0.7 else None,
+                    "purpose": collateral_purpose or collateral_type,
+                    "condition": collateral_condition or "хорошее",
+                    "material": random.choice(["Кирпич", "Бетон", "Металл"]) if is_real_estate and random.random() > 0.5 else None,
+                    "yearBuilt": random.randint(1990, 2020) if random.random() > 0.5 else None,
+                    "yearCommissioned": random.randint(1990, 2020) if random.random() > 0.5 else None,
+                    "marketValue": obj_market_value,
+                    "collateralValue": obj_collateral_value,
+                    "ownershipShare": ownership_share,
+                    "ownershipBasis": ownership_basis,
+                    "registrationRecord": registration_record if random.random() > 0.5 else None,
+                    "encumbrances": "Не выявлены" if not has_encumbrances else "Имеются обременения",
+                    "replanning": replanning_description,
+                    "description": f"Детальное описание объекта {j}: {collateral_description or 'Описание отсутствует'}",
                 })
         
         # Фото (демо)
@@ -346,12 +403,25 @@ def generate_conclusions(count: int = 50) -> List[Dict[str, Any]]:
             "collateralDescription": collateral_description,
             "collateralCondition": collateral_condition,
             "hasReplanning": has_replanning,
+            "replanningDescription": replanning_description,
             "landFunctionalProvision": land_functional_provision,
             "hasEncumbrances": has_encumbrances,
             "encumbrancesDescription": encumbrances_description,
+            "encumbrancesDetails": encumbrances_details,
+            "ownershipBasis": ownership_basis,
+            "ownershipDocuments": ownership_documents,
+            "registrationRecord": registration_record,
+            "registrationDocument": registration_document,
             "inspectionDate": inspection_date,
             "inspectorName": inspector_name,
+            "bankruptcyCheckDate": bankruptcy_check_date,
+            "bankruptcyCheckResult": bankruptcy_check_result,
             "specialOpinion": special_opinion,
+            "creditContractNumber": f"КРД-{random.randint(10000, 99999)}" if credit_product and random.random() > 0.5 else None,
+            "cadastralValue": int((market_value or 0) * random.uniform(0.7, 0.9)) if market_value and random.random() > 0.5 else None,
+            "marketValuePerSqm": int((market_value or 0) / (total_area_sqm or 1)) if market_value and total_area_sqm and random.random() > 0.5 else None,
+            "marketValuePerHectare": int((market_value or 0) / (total_area_hectares or 0.01)) if market_value and total_area_hectares and random.random() > 0.5 else None,
+            "liquidityMovable": random.choice(LIQUIDITY_OPTIONS) if collateral_type and "транспорт" in str(collateral_type).lower() and random.random() > 0.5 else None,
             "suspensiveConditions": suspensive_conditions if suspensive_conditions else None,
             "detailedDescriptions": detailed_descriptions if detailed_descriptions else None,
             "photos": photos if photos else None,

@@ -97,9 +97,23 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
         landFunctionalProvision: values.landFunctionalProvision || null,
         hasEncumbrances: values.hasEncumbrances !== undefined ? values.hasEncumbrances : null,
         encumbrancesDescription: values.encumbrancesDescription || null,
+        encumbrancesDetails: values.encumbrancesDetails || null,
+        ownershipBasis: values.ownershipBasis || null,
+        ownershipDocuments: values.ownershipDocuments || null,
+        registrationRecord: values.registrationRecord || null,
+        registrationDocument: values.registrationDocument || null,
+        replanningDescription: values.replanningDescription || null,
         inspectionDate: values.inspectionDate ? values.inspectionDate.format('YYYY-MM-DD') : null,
         inspectorName: values.inspectorName || null,
+        bankruptcyCheckDate: values.bankruptcyCheckDate ? values.bankruptcyCheckDate.format('YYYY-MM-DD') : null,
+        bankruptcyCheckResult: values.bankruptcyCheckResult || null,
         specialOpinion: values.specialOpinion || null,
+        creditContractNumber: values.creditContractNumber || null,
+        cadastralValue: values.cadastralValue ? parseFloat(values.cadastralValue) : null,
+        marketValuePerSqm: values.marketValuePerSqm ? parseFloat(values.marketValuePerSqm) : null,
+        marketValuePerHectare: values.marketValuePerHectare ? parseFloat(values.marketValuePerHectare) : null,
+        liquidityMovable: values.liquidityMovable || null,
+        landAreaHectares: values.landAreaHectares ? parseFloat(values.landAreaHectares) : null,
         conclusionType: values.conclusionType,
         status: values.status,
         statusColor:
@@ -294,6 +308,10 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
           <Input type="number" placeholder="Площадь земельного участка" />
         </Form.Item>
 
+        <Form.Item name="landAreaHectares" label="Площадь земельного участка, га">
+          <Input type="number" step="0.01" placeholder="Площадь в гектарах" />
+        </Form.Item>
+
         <Form.Item name="collateralDescription" label="Описание имущества">
           <TextArea rows={4} placeholder="Состояние и краткое описание имущества" />
         </Form.Item>
@@ -313,6 +331,10 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
           </Select>
         </Form.Item>
 
+        <Form.Item name="replanningDescription" label="Выявленные перепланировки">
+          <TextArea rows={3} placeholder="Описание перепланировок" />
+        </Form.Item>
+
         <Form.Item name="hasEncumbrances" label="Наличие обременений">
           <Select placeholder="Выберите">
             <Option value={true}>Да</Option>
@@ -324,12 +346,40 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
           <TextArea rows={3} placeholder="Описание обременений" />
         </Form.Item>
 
+        <Form.Item name="encumbrancesDetails" label="Выявленные обременения">
+          <TextArea rows={3} placeholder="Детальное описание выявленных обременений" />
+        </Form.Item>
+
+        <Form.Item name="ownershipBasis" label="Право, на основании которого объект принадлежит Залогодателю">
+          <Input placeholder="Право собственности, аренды и т.д." />
+        </Form.Item>
+
+        <Form.Item name="ownershipDocuments" label="Документы-основания возникновения права собственности">
+          <TextArea rows={3} placeholder="Описание документов" />
+        </Form.Item>
+
+        <Form.Item name="registrationRecord" label="Запись регистрации в ЕГРН (дата, №)">
+          <Input placeholder="Запись регистрации" />
+        </Form.Item>
+
+        <Form.Item name="registrationDocument" label="Правоподтверждающий документ">
+          <TextArea rows={2} placeholder="Выписка из ЕГРН и т.д." />
+        </Form.Item>
+
         <Form.Item name="inspectionDate" label="Дата осмотра / проверки">
           <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
         </Form.Item>
 
         <Form.Item name="inspectorName" label="Сотрудник ПР, проводивший проверку">
           <Input placeholder="ФИО сотрудника" />
+        </Form.Item>
+
+        <Form.Item name="bankruptcyCheckDate" label="Дата проверки на банкротство">
+          <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+        </Form.Item>
+
+        <Form.Item name="bankruptcyCheckResult" label="Результат проверки на банкротство">
+          <Input placeholder="Результат проверки" />
         </Form.Item>
 
         <Form.Item name="category" label="Категория обеспечения">
@@ -368,6 +418,18 @@ const CreateConclusionModal: React.FC<CreateConclusionModalProps> = ({
 
         <Form.Item name="fairValue" label="Справедливая стоимость, руб.">
           <Input type="number" placeholder="Справедливая стоимость" />
+        </Form.Item>
+
+        <Form.Item name="cadastralValue" label="Кадастровая стоимость, руб.">
+          <Input type="number" placeholder="Кадастровая стоимость" />
+        </Form.Item>
+
+        <Form.Item name="marketValuePerSqm" label="Рыночная стоимость, руб./кв.м.">
+          <Input type="number" placeholder="Стоимость за кв.м." />
+        </Form.Item>
+
+        <Form.Item name="marketValuePerHectare" label="Рыночная стоимость, руб./сот.">
+          <Input type="number" placeholder="Стоимость за сотку" />
         </Form.Item>
 
         <Form.Item name="conclusionText" label="Текст заключения" rules={[{ required: true }]}>
