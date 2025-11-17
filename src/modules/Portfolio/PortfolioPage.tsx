@@ -22,12 +22,15 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { EnvironmentOutlined, LineChartOutlined, SearchOutlined } from '@ant-design/icons';
 import type { CollateralPortfolioEntry } from '@/types/portfolio';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
 import Timeline from '@/components/Timeline/Timeline';
 import CreateTaskModal from '@/components/CreateTaskModal/CreateTaskModal';
 import { getDealTimeline } from '@/utils/timelineUtils';
 import type { TimelineEvent } from '@/types/timeline';
+import type { ExtendedCollateralCard } from '@/types';
+import extendedStorageService from '@/services/ExtendedStorageService';
+import { LinkOutlined } from '@ant-design/icons';
 import './PortfolioPage.css';
 
 type PortfolioRow = CollateralPortfolioEntry & { key: string };
@@ -77,6 +80,7 @@ const liquidityColor: Record<string, string> = {
 
 const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchValue, setSearchValue] = useState('');
   const [segmentFilter, setSegmentFilter] = useState<string | null>(null);
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
@@ -93,6 +97,8 @@ const PortfolioPage: React.FC = () => {
   const [dossierLoading, setDossierLoading] = useState(true);
   const [createTaskModalVisible, setCreateTaskModalVisible] = useState(false);
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [registryObjects, setRegistryObjects] = useState<ExtendedCollateralCard[]>([]);
+  const [registryObjectsLoading, setRegistryObjectsLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -163,6 +169,28 @@ const PortfolioPage: React.FC = () => {
     };
   }, []);
 
+  // Обработка deep linking - поиск по query параметру
+  useEffect(() => {
+    if (portfolioRows.length > 0) {
+      const params = new URLSearchParams(location.search);
+      const query = params.get('q');
+      if (query) {
+        setSearchValue(query);
+        // Находим сделку и открываем её
+        const deal = portfolioRows.find(
+          d => String(d.reference) === query || String(d.contractNumber) === query || 
+               String(d.borrower)?.toLowerCase().includes(query.toLowerCase()) ||
+               String(d.pledger)?.toLowerCase().includes(query.toLowerCase())
+        );
+        if (deal) {
+          setTimeout(() => {
+            handleOpenDeal(deal);
+          }, 500);
+        }
+      }
+    }
+  }, [portfolioRows, location.search]);
+
   const filterOptions = useMemo(() => {
     const unique = <T extends keyof CollateralPortfolioEntry>(key: T) => {
       const values = portfolioRows
@@ -205,12 +233,39 @@ const PortfolioPage: React.FC = () => {
     });
   }, [portfolioRows, searchValue, segmentFilter, groupFilter, liquidityFilter, monitoringFilter]);
 
-  const handleOpenDeal = (record: PortfolioRow) => {
+  const handleOpenDeal = async (record: PortfolioRow) => {
     setSelectedDeal(record);
     setDealModalVisible(true);
     // Загружаем хронологию событий
     const events = getDealTimeline(record);
     setTimelineEvents(events);
+    
+    // Загружаем объекты из реестра по REFERENCE
+    await loadRegistryObjects(record);
+  };
+
+  const loadRegistryObjects = async (deal: PortfolioRow) => {
+    setRegistryObjectsLoading(true);
+    try {
+      const reference = String(deal.reference ?? deal.contractNumber ?? '');
+      const allCards = await extendedStorageService.getExtendedCards();
+      // Фильтруем объекты по REFERENCE или contractNumber
+      const relatedObjects = allCards.filter(
+        card =>
+          (card.reference && String(card.reference) === reference) ||
+          (card.contractNumber && card.contractNumber === deal.contractNumber)
+      );
+      setRegistryObjects(relatedObjects);
+    } catch (error) {
+      console.error('Ошибка загрузки объектов из реестра:', error);
+      setRegistryObjects([]);
+    } finally {
+      setRegistryObjectsLoading(false);
+    }
+  };
+
+  const handleGoToRegistryObject = (objectId: string) => {
+    navigate(`/registry?objectId=${objectId}`);
   };
 
   const closeDealModal = () => {
@@ -654,6 +709,68 @@ const PortfolioPage: React.FC = () => {
                 <Descriptions.Item label="Ответственный сотрудник">{formatText(selectedDeal.owner)}</Descriptions.Item>
                 <Descriptions.Item label="Счет 9131">{formatText(selectedDeal.account9131)}</Descriptions.Item>
               </Descriptions>
+
+              <div>
+                <Typography.Title level={5}>Объекты в договоре залога</Typography.Title>
+                {registryObjectsLoading ? (
+                  <Spin tip="Загрузка объектов..." />
+                ) : registryObjects.length > 0 ? (
+                  <List
+                    dataSource={registryObjects}
+                    renderItem={obj => (
+                      <List.Item
+                        actions={[
+                          <Button
+                            key="view"
+                            type="link"
+                            icon={<LinkOutlined />}
+                            onClick={() => handleGoToRegistryObject(obj.id)}
+                          >
+                            Открыть в реестре
+                          </Button>,
+                        ]}
+                      >
+                        <List.Item.Meta
+                          title={
+                            <Space>
+                              <Typography.Text strong>{obj.name}</Typography.Text>
+                              <Tag>{obj.number}</Tag>
+                              {obj.status === 'approved' && <Tag color="green">Согласовано</Tag>}
+                              {obj.status === 'editing' && <Tag color="orange">Редактирование</Tag>}
+                            </Space>
+                          }
+                          description={
+                            <Space direction="vertical" size="small" style={{ fontSize: '12px' }}>
+                              <div>
+                                <Typography.Text type="secondary">
+                                  {obj.classification?.level0} → {obj.classification?.level1} → {obj.classification?.level2}
+                                </Typography.Text>
+                              </div>
+                              {obj.address?.fullAddress && (
+                                <div>
+                                  <EnvironmentOutlined /> {obj.address.fullAddress}
+                                </div>
+                              )}
+                              {obj.characteristics?.marketValue && (
+                                <div>
+                                  Рыночная стоимость: {formatCurrency(obj.characteristics.marketValue)}
+                                </div>
+                              )}
+                              {obj.characteristics?.collateralValue && (
+                                <div>
+                                  Залоговая стоимость: {formatCurrency(obj.characteristics.collateralValue)}
+                                </div>
+                              )}
+                            </Space>
+                          }
+                        />
+                      </List.Item>
+                    )}
+                  />
+                ) : (
+                  <Empty description="Объекты по данному договору не найдены в реестре" />
+                )}
+              </div>
 
               <div>
                 <Typography.Title level={5}>Хронология</Typography.Title>

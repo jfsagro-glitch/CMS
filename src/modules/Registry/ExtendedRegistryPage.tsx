@@ -16,9 +16,13 @@ import {
 import extendedStorageService from '@/services/ExtendedStorageService';
 import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
 import type { ExtendedCollateralCard } from '@/types';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { LinkOutlined } from '@ant-design/icons';
 
 const ExtendedRegistryPage: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { filteredItems: cards, loading } = useAppSelector((state: any) => state.extendedCards);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCard, setEditingCard] = useState<ExtendedCollateralCard | null>(null);
@@ -47,6 +51,23 @@ const ExtendedRegistryPage: React.FC = () => {
     loadCards();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Обработка deep linking - открытие объекта по ID из URL
+  useEffect(() => {
+    if (cards.length > 0) {
+      const params = new URLSearchParams(location.search);
+      const objectId = params.get('objectId');
+      if (objectId) {
+        const card = cards.find((c: ExtendedCollateralCard) => c.id === objectId);
+        if (card) {
+          setViewingCard(card);
+          setViewModalVisible(true);
+          // Очищаем параметр из URL
+          window.history.replaceState({}, '', location.pathname);
+        }
+      }
+    }
+  }, [cards, location.search, location.pathname]);
 
   useEffect(() => {
     const loadDossierData = async () => {
@@ -188,10 +209,31 @@ const ExtendedRegistryPage: React.FC = () => {
       </Modal>
 
       <Modal
-        title="Карточка договора"
+        title={
+          <Space>
+            <span>Карточка объекта</span>
+            {viewingCard && (
+              <Typography.Text type="secondary" style={{ fontSize: '14px', fontWeight: 'normal' }}>
+                ID: {viewingCard.id}
+              </Typography.Text>
+            )}
+          </Space>
+        }
         open={viewModalVisible}
         onCancel={closeViewModal}
         footer={[
+          viewingCard?.reference && (
+            <Button
+              key="portfolio"
+              icon={<LinkOutlined />}
+              onClick={() => {
+                navigate(`/portfolio?q=${viewingCard.reference}`);
+                closeViewModal();
+              }}
+            >
+              Перейти в портфель
+            </Button>
+          ),
           <Button key="dossier" type="primary" onClick={openDossierModal} disabled={!viewingCard}>
             Залоговое досье
           </Button>,

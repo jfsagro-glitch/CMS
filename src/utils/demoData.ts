@@ -322,8 +322,44 @@ export const loadDemoData = async (storageService: any): Promise<void> => {
   try {
     console.log('Loading demo data...');
     
+    // Загружаем базовые демо-карточки
     for (const card of demoExtendedCards) {
       await storageService.saveExtendedCard(card);
+    }
+    
+    // Загружаем дополнительные объекты из registryObjects.json
+    try {
+      const base = import.meta.env.BASE_URL ?? '/';
+      const resolvedBase = new URL(base, window.location.origin);
+      const normalizedPath = resolvedBase.pathname.endsWith('/')
+        ? resolvedBase.pathname
+        : `${resolvedBase.pathname}/`;
+      const url = `${resolvedBase.origin}${normalizedPath}registryObjects.json?v=${Date.now()}`;
+      const response = await fetch(url, { cache: 'no-store' });
+      if (response.ok) {
+        const additionalObjects = await response.json();
+        for (const obj of additionalObjects) {
+          // Преобразуем даты из строк в Date объекты
+          if (typeof obj.createdAt === 'string') {
+            obj.createdAt = new Date(obj.createdAt);
+          }
+          if (typeof obj.updatedAt === 'string') {
+            obj.updatedAt = new Date(obj.updatedAt);
+          }
+          // Преобразуем даты в партнерах
+          if (obj.partners) {
+            obj.partners = obj.partners.map((p: any) => ({
+              ...p,
+              createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
+              updatedAt: p.updatedAt ? new Date(p.updatedAt) : new Date(),
+            }));
+          }
+          await storageService.saveExtendedCard(obj);
+        }
+        console.log(`Loaded ${additionalObjects.length} additional objects from registryObjects.json`);
+      }
+    } catch (error) {
+      console.warn('Failed to load additional registry objects:', error);
     }
     
     console.log(`Loaded ${demoExtendedCards.length} demo cards successfully`);

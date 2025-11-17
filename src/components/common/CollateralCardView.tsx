@@ -168,6 +168,20 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
                 <Tag color={getStatusColor(card.status)}>{getStatusText(card.status)}</Tag>
                 <Tag>{getCategoryName()}</Tag>
               </Space>
+              {(card.reference || card.contractNumber) && (
+                <Space direction="vertical" size="small" style={{ marginTop: 8 }}>
+                  {card.reference && (
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      REFERENCE: {card.reference}
+                    </Text>
+                  )}
+                  {card.contractNumber && (
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      Договор залога: {card.contractNumber}
+                    </Text>
+                  )}
+                </Space>
+              )}
             </Space>
           </Col>
         </Row>

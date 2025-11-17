@@ -228,6 +228,10 @@ export interface ExtendedCollateralCard extends CollateralCard {
   // Дополнительная информация
   description?: string;
   notes?: string;
+
+  // Связь с портфелем (для сквозных ссылок)
+  reference?: string | number; // REFERENCE сделки из портфеля
+  contractNumber?: string; // Номер договора залога
 }
 
 // Тип объекта для определения набора характеристик
