@@ -72,8 +72,11 @@ const KPIPage: React.FC = () => {
 
   useEffect(() => {
     loadKPIData();
-    loadRegionStats();
   }, [dateRange, period]);
+
+  useEffect(() => {
+    loadRegionStats();
+  }, []); // loadRegionStats не зависит от dateRange и period
 
   const loadRegionStats = () => {
     try {

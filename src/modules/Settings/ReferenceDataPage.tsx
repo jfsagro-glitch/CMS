@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Card,
   Table,
@@ -40,20 +40,20 @@ const ReferenceDataPage: React.FC = () => {
   const [editingItem, setEditingItem] = useState<ReferenceItem | null>(null);
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    loadDictionaries();
-  }, []);
-
-  const loadDictionaries = () => {
+  const loadDictionaries = useCallback(() => {
     try {
       const data = referenceDataService.getDictionaries();
       setDictionaries(data);
     } catch (error) {
       message.error('Ошибка загрузки справочников');
     }
-  };
+  }, []);
 
-  const handleAddItem = (dictionary: ReferenceDictionary) => {
+  useEffect(() => {
+    loadDictionaries();
+  }, [loadDictionaries]);
+
+  const handleAddItem = useCallback((dictionary: ReferenceDictionary) => {
     setSelectedDictionary(dictionary);
     setEditingItem(null);
     form.resetFields();
@@ -62,18 +62,18 @@ const ReferenceDataPage: React.FC = () => {
       sortOrder: dictionary.items.length + 1,
     });
     setItemModalVisible(true);
-  };
+  }, [form]);
 
-  const handleEditItem = (dictionary: ReferenceDictionary, item: ReferenceItem) => {
+  const handleEditItem = useCallback((dictionary: ReferenceDictionary, item: ReferenceItem) => {
     setSelectedDictionary(dictionary);
     setEditingItem(item);
     form.setFieldsValue({
       ...item,
     });
     setItemModalVisible(true);
-  };
+  }, [form]);
 
-  const handleDeleteItem = (dictionary: ReferenceDictionary, itemId: string) => {
+  const handleDeleteItem = useCallback((dictionary: ReferenceDictionary, itemId: string) => {
     try {
       referenceDataService.deleteItemFromDictionary(dictionary.id, itemId);
       message.success('Элемент удален');
@@ -81,9 +81,9 @@ const ReferenceDataPage: React.FC = () => {
     } catch (error) {
       message.error('Ошибка удаления элемента');
     }
-  };
+  }, [loadDictionaries]);
 
-  const handleSaveItem = async () => {
+  const handleSaveItem = useCallback(async () => {
     if (!selectedDictionary) return;
 
     try {
@@ -102,9 +102,9 @@ const ReferenceDataPage: React.FC = () => {
     } catch (error) {
       console.error('Ошибка сохранения:', error);
     }
-  };
+  }, [loadDictionaries]);
 
-  const getItemColumns = (dictionary: ReferenceDictionary): ColumnsType<ReferenceItem> => [
+  const getItemColumns = React.useCallback((dictionary: ReferenceDictionary): ColumnsType<ReferenceItem> => [
     {
       title: 'Код',
       dataIndex: 'code',
@@ -169,9 +169,9 @@ const ReferenceDataPage: React.FC = () => {
         </Space>
       ),
     },
-  ];
+  ], [handleEditItem, handleDeleteItem]);
 
-  const tabItems: TabsProps['items'] = dictionaries.map(dictionary => ({
+  const tabItems: TabsProps['items'] = useMemo(() => dictionaries.map(dictionary => ({
     key: dictionary.id,
     label: dictionary.name,
     children: (
@@ -199,7 +199,7 @@ const ReferenceDataPage: React.FC = () => {
         />
       </div>
     ),
-  }));
+  })), [dictionaries, getItemColumns, handleAddItem]);
 
   return (
     <div className="reference-data-page">

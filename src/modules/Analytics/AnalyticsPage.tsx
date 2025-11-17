@@ -154,11 +154,14 @@ const AnalyticsPage: React.FC = () => {
   ]);
   const [period, setPeriod] = useState<string>('all');
 
-  useEffect(() => {
-    loadAnalyticsData();
-  }, [dateRange, period]);
+  // Вспомогательная функция для безопасного парсинга чисел
+  const parseNumber = React.useCallback((value: any): number => {
+    if (value === null || value === undefined || value === '') return 0;
+    const parsed = parseFloat(String(value));
+    return isNaN(parsed) ? 0 : parsed;
+  }, []);
 
-  const loadAnalyticsData = async () => {
+  const loadAnalyticsData = React.useCallback(async () => {
     setLoading(true);
     try {
       const base = import.meta.env.BASE_URL ?? '/';
@@ -174,8 +177,13 @@ const AnalyticsPage: React.FC = () => {
       }
       const data = (await response.json()) as PortfolioEntry[];
 
-      const totalValue = data.reduce((sum, item) => sum + (parseFloat(String(item.collateralValue || 0)) || 0), 0);
-      const totalDebt = data.reduce((sum, item) => sum + (parseFloat(String(item.debtRub || 0)) || 0), 0);
+      // Оптимизированный расчет с одним проходом
+      let totalValue = 0;
+      let totalDebt = 0;
+      for (const item of data) {
+        totalValue += parseNumber(item.collateralValue);
+        totalDebt += parseNumber(item.debtRub);
+      }
 
       setAnalyticsData({
         portfolioData: data,
@@ -187,61 +195,75 @@ const AnalyticsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [parseNumber]);
+
+  useEffect(() => {
+    loadAnalyticsData();
+  }, [loadAnalyticsData]);
 
   // 1. Структура портфеля по категориям имущества (используем "Категория обеспечения" из карточек сделок)
+  // ВАЖНО: Используем ТОЛЬКО collateralCategory, НЕ сегменты бизнеса
   const propertyCategoryStructure = useMemo(() => {
     const categoryMap = new Map<string, { count: number; value: number; debt: number }>();
     
-    analyticsData.portfolioData.forEach(item => {
+    // Список известных сегментов бизнеса, которые не должны попадать в категории имущества
+    // Реальные сегменты из залогового портфеля: МБ (Малый бизнес), СРБ (Средний бизнес), КБ (Крупный бизнес)
+    const businessSegments = new Set([
+      'МБ', 'СРБ', 'КБ', 'Малый бизнес', 'Средний бизнес', 'Крупный бизнес',
+      'Сегмент ВЭД', 'ВЭД', 'МСБ', 'Корпоративный', 'Розничный'
+    ]);
+    
+    for (const item of analyticsData.portfolioData) {
       // Используем поле collateralCategory (Категория обеспечения) из карточки сделки
       // Если его нет, используем автоматическое определение по типу имущества
-      const category = item.collateralCategory || getPropertyCategory(item.collateralType) || 'Не указана';
-      const value = parseFloat(String(item.collateralValue || 0)) || 0;
-      const debt = parseFloat(String(item.debtRub || 0)) || 0;
+      let category = item.collateralCategory || getPropertyCategory(item.collateralType) || 'Не указана';
       
-      if (!categoryMap.has(category)) {
-        categoryMap.set(category, { count: 0, value: 0, debt: 0 });
+      // Пропускаем, если это сегмент бизнеса (чтобы не смешивать с категориями имущества)
+      if (businessSegments.has(category) || item.segment === category) {
+        continue;
       }
       
-      const stats = categoryMap.get(category)!;
+      const value = parseNumber(item.collateralValue);
+      const debt = parseNumber(item.debtRub);
+      
+      const stats = categoryMap.get(category) || { count: 0, value: 0, debt: 0 };
       stats.count++;
       stats.value += value;
       stats.debt += debt;
-    });
+      categoryMap.set(category, stats);
+    }
 
+    const totalValue = analyticsData.totalValue;
     return Array.from(categoryMap.entries())
       .map(([category, stats]) => ({
         category,
         count: stats.count,
         value: stats.value,
         debt: stats.debt,
-        share: analyticsData.totalValue > 0 ? (stats.value / analyticsData.totalValue) * 100 : 0,
+        share: totalValue > 0 ? (stats.value / totalValue) * 100 : 0,
         coverageRatio: stats.debt > 0 ? (stats.value / stats.debt) * 100 : 0,
       }))
       .sort((a, b) => b.value - a.value);
-  }, [analyticsData]);
+  }, [analyticsData, parseNumber]);
 
   // 1.1. Детальная структура по типам залогового имущества
   const collateralTypeStructure = useMemo(() => {
     const typeMap = new Map<string, { count: number; value: number; debt: number; category: string }>();
     
-    analyticsData.portfolioData.forEach(item => {
+    for (const item of analyticsData.portfolioData) {
       const type = item.collateralType || 'Не указан';
       const category = getPropertyCategory(item.collateralType);
-      const value = parseFloat(String(item.collateralValue || 0)) || 0;
-      const debt = parseFloat(String(item.debtRub || 0)) || 0;
+      const value = parseNumber(item.collateralValue);
+      const debt = parseNumber(item.debtRub);
       
-      if (!typeMap.has(type)) {
-        typeMap.set(type, { count: 0, value: 0, debt: 0, category });
-      }
-      
-      const stats = typeMap.get(type)!;
+      const stats = typeMap.get(type) || { count: 0, value: 0, debt: 0, category };
       stats.count++;
       stats.value += value;
       stats.debt += debt;
-    });
+      typeMap.set(type, stats);
+    }
 
+    const totalValue = analyticsData.totalValue;
     return Array.from(typeMap.entries())
       .map(([type, stats]) => ({
         type,
@@ -249,10 +271,10 @@ const AnalyticsPage: React.FC = () => {
         count: stats.count,
         value: stats.value,
         debt: stats.debt,
-        share: analyticsData.totalValue > 0 ? (stats.value / analyticsData.totalValue) * 100 : 0,
+        share: totalValue > 0 ? (stats.value / totalValue) * 100 : 0,
       }))
       .sort((a, b) => b.value - a.value);
-  }, [analyticsData]);
+  }, [analyticsData, parseNumber]);
 
   // Динамика портфеля за выбранный период
   const portfolioDynamics = useMemo(() => {
@@ -283,15 +305,23 @@ const AnalyticsPage: React.FC = () => {
       return date.isAfter(previousStartDate) && date.isBefore(previousEndDate);
     });
 
-    // Вычисляем показатели текущего периода
+    // Вычисляем показатели текущего периода (оптимизировано)
+    let currentValue = 0;
+    let currentDebt = 0;
+    for (const item of periodData) {
+      currentValue += parseNumber(item.collateralValue);
+      currentDebt += parseNumber(item.debtRub);
+    }
     const currentCount = periodData.length;
-    const currentValue = periodData.reduce((sum, item) => sum + (parseFloat(String(item.collateralValue || 0)) || 0), 0);
-    const currentDebt = periodData.reduce((sum, item) => sum + (parseFloat(String(item.debtRub || 0)) || 0), 0);
 
-    // Вычисляем показатели предыдущего периода
+    // Вычисляем показатели предыдущего периода (оптимизировано)
+    let previousValue = 0;
+    let previousDebt = 0;
+    for (const item of previousPeriodData) {
+      previousValue += parseNumber(item.collateralValue);
+      previousDebt += parseNumber(item.debtRub);
+    }
     const previousCount = previousPeriodData.length;
-    const previousValue = previousPeriodData.reduce((sum, item) => sum + (parseFloat(String(item.collateralValue || 0)) || 0), 0);
-    const previousDebt = previousPeriodData.reduce((sum, item) => sum + (parseFloat(String(item.debtRub || 0)) || 0), 0);
 
     // Вычисляем изменения
     const countChange = currentCount - previousCount;
@@ -327,89 +357,92 @@ const AnalyticsPage: React.FC = () => {
       previousPeriodStart: previousStartDate.format('DD.MM.YYYY'),
       previousPeriodEnd: previousEndDate.format('DD.MM.YYYY'),
     };
-  }, [analyticsData, dateRange]);
+  }, [analyticsData, dateRange, parseNumber]);
 
   // 2. Структура по сегментам бизнеса
   const segmentStructure = useMemo(() => {
     const segmentMap = new Map<string, { count: number; value: number; debt: number }>();
     
-    analyticsData.portfolioData.forEach(item => {
+    for (const item of analyticsData.portfolioData) {
       const segment = item.segment || 'Не указан';
-      const value = parseFloat(String(item.collateralValue || 0)) || 0;
-      const debt = parseFloat(String(item.debtRub || 0)) || 0;
+      const value = parseNumber(item.collateralValue);
+      const debt = parseNumber(item.debtRub);
       
-      if (!segmentMap.has(segment)) {
-        segmentMap.set(segment, { count: 0, value: 0, debt: 0 });
-      }
-      
-      const stats = segmentMap.get(segment)!;
+      const stats = segmentMap.get(segment) || { count: 0, value: 0, debt: 0 };
       stats.count++;
       stats.value += value;
       stats.debt += debt;
-    });
+      segmentMap.set(segment, stats);
+    }
 
+    const totalValue = analyticsData.totalValue;
     return Array.from(segmentMap.entries())
       .map(([segment, stats]) => ({
         segment,
         count: stats.count,
         value: stats.value,
         debt: stats.debt,
-        share: analyticsData.totalValue > 0 ? (stats.value / analyticsData.totalValue) * 100 : 0,
+        share: totalValue > 0 ? (stats.value / totalValue) * 100 : 0,
         coverageRatio: stats.debt > 0 ? (stats.value / stats.debt) * 100 : 0,
       }))
       .sort((a, b) => b.value - a.value);
-  }, [analyticsData]);
+  }, [analyticsData, parseNumber]);
 
   // 3. Анализ просроченной задолженности
   const overdueAnalysis = useMemo(() => {
-    const overdueItems = analyticsData.portfolioData.filter(item => {
+    const overdueItems: PortfolioEntry[] = [];
+    let overdueValue = 0;
+    let overdueDebt = 0;
+
+    for (const item of analyticsData.portfolioData) {
       // Предполагаем, что просроченные имеют определенный статус или дату
       const status = String(item.status || '').toLowerCase();
-      return status.includes('просроч') || status.includes('overdue') || status.includes('проблем');
-    });
+      if (status.includes('просроч') || status.includes('overdue') || status.includes('проблем')) {
+        overdueItems.push(item);
+        overdueValue += parseNumber(item.collateralValue);
+        overdueDebt += parseNumber(item.debtRub);
+      }
+    }
 
-    const overdueValue = overdueItems.reduce((sum, item) => sum + (parseFloat(String(item.collateralValue || 0)) || 0), 0);
-    const overdueDebt = overdueItems.reduce((sum, item) => sum + (parseFloat(String(item.debtRub || 0)) || 0), 0);
-
+    const totalValue = analyticsData.totalValue;
+    const totalDebt = analyticsData.totalDebt;
     return {
       count: overdueItems.length,
       totalCount: analyticsData.portfolioData.length,
       value: overdueValue,
       debt: overdueDebt,
-      share: analyticsData.totalValue > 0 ? (overdueValue / analyticsData.totalValue) * 100 : 0,
-      debtShare: analyticsData.totalDebt > 0 ? (overdueDebt / analyticsData.totalDebt) * 100 : 0,
+      share: totalValue > 0 ? (overdueValue / totalValue) * 100 : 0,
+      debtShare: totalDebt > 0 ? (overdueDebt / totalDebt) * 100 : 0,
     };
-  }, [analyticsData]);
+  }, [analyticsData, parseNumber]);
 
   // 4. Структура по группам
   const groupStructure = useMemo(() => {
     const groupMap = new Map<string, { count: number; value: number; debt: number }>();
     
-    analyticsData.portfolioData.forEach(item => {
+    for (const item of analyticsData.portfolioData) {
       const group = item.group || 'Не указана';
-      const value = parseFloat(String(item.collateralValue || 0)) || 0;
-      const debt = parseFloat(String(item.debtRub || 0)) || 0;
+      const value = parseNumber(item.collateralValue);
+      const debt = parseNumber(item.debtRub);
       
-      if (!groupMap.has(group)) {
-        groupMap.set(group, { count: 0, value: 0, debt: 0 });
-      }
-      
-      const stats = groupMap.get(group)!;
+      const stats = groupMap.get(group) || { count: 0, value: 0, debt: 0 };
       stats.count++;
       stats.value += value;
       stats.debt += debt;
-    });
+      groupMap.set(group, stats);
+    }
 
+    const totalValue = analyticsData.totalValue;
     return Array.from(groupMap.entries())
       .map(([group, stats]) => ({
         group,
         count: stats.count,
         value: stats.value,
         debt: stats.debt,
-        share: analyticsData.totalValue > 0 ? (stats.value / analyticsData.totalValue) * 100 : 0,
+        share: totalValue > 0 ? (stats.value / totalValue) * 100 : 0,
       }))
       .sort((a, b) => b.value - a.value);
-  }, [analyticsData]);
+  }, [analyticsData, parseNumber]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('ru-RU', {
@@ -839,23 +872,41 @@ const AnalyticsPage: React.FC = () => {
         </Card>
       )}
 
-      {/* Структура портфеля по категориям имущества */}
-      <Card
-        title={
-          <Space>
-            <PieChartOutlined />
-            <span>Структура портфеля по категориям имущества</span>
-          </Space>
-        }
-        style={{ marginBottom: 24 }}
-      >
-        <Table
-          columns={propertyCategoryColumns}
-          dataSource={propertyCategoryStructure.map((item, index) => ({ ...item, key: index }))}
-          pagination={false}
-          size="small"
-        />
-      </Card>
+          {/* Структура портфеля по сегментам бизнеса */}
+          <Card
+            title={
+              <Space>
+                <BarChartOutlined />
+                <span>Структура портфеля по сегментам бизнеса</span>
+              </Space>
+            }
+            style={{ marginBottom: 24 }}
+          >
+            <Table
+              columns={segmentColumns}
+              dataSource={segmentStructure.map((item, index) => ({ ...item, key: index }))}
+              pagination={false}
+              size="small"
+            />
+          </Card>
+
+          {/* Структура портфеля по категориям имущества */}
+          <Card
+            title={
+              <Space>
+                <PieChartOutlined />
+                <span>Структура портфеля по категориям имущества</span>
+              </Space>
+            }
+            style={{ marginBottom: 24 }}
+          >
+            <Table
+              columns={propertyCategoryColumns}
+              dataSource={propertyCategoryStructure.map((item, index) => ({ ...item, key: index }))}
+              pagination={false}
+              size="small"
+            />
+          </Card>
 
       {/* Детальная структура портфеля по типам залогового имущества */}
       <Card
@@ -871,24 +922,6 @@ const AnalyticsPage: React.FC = () => {
           columns={collateralTypeColumns}
           dataSource={collateralTypeStructure.map((item, index) => ({ ...item, key: index }))}
           pagination={{ pageSize: 20 }}
-          size="small"
-        />
-      </Card>
-
-      {/* Структура по сегментам бизнеса */}
-      <Card
-        title={
-          <Space>
-            <PieChartOutlined />
-            <span>Структура портфеля по сегментам бизнеса</span>
-          </Space>
-        }
-        style={{ marginBottom: 24 }}
-      >
-        <Table
-          columns={segmentColumns}
-          dataSource={segmentStructure.map((item, index) => ({ ...item, key: index }))}
-          pagination={false}
           size="small"
         />
       </Card>
