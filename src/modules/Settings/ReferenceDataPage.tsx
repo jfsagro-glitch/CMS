@@ -51,7 +51,31 @@ const ReferenceDataPage: React.FC = () => {
 
   useEffect(() => {
     loadDictionaries();
+    
+    // Проверяем, есть ли параметр dict в URL для открытия конкретного справочника
+    const params = new URLSearchParams(window.location.search);
+    const dictId = params.get('dict');
+    if (dictId) {
+      const dict = dictionaries.find(d => d.id === dictId);
+      if (dict) {
+        setSelectedDictionary(dict);
+      }
+    }
   }, [loadDictionaries]);
+
+  // Обновляем выбранный справочник при изменении списка справочников
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const dictId = params.get('dict');
+    if (dictId && dictionaries.length > 0) {
+      const dict = dictionaries.find(d => d.id === dictId);
+      if (dict) {
+        setSelectedDictionary(dict);
+      }
+    } else if (dictionaries.length > 0 && !selectedDictionary) {
+      setSelectedDictionary(dictionaries[0]);
+    }
+  }, [dictionaries]);
 
   const handleAddItem = useCallback((dictionary: ReferenceDictionary) => {
     setSelectedDictionary(dictionary);

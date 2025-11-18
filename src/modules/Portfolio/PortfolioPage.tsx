@@ -15,12 +15,11 @@ import {
   Statistic,
   Table,
   Tag,
-  Tooltip,
   Typography,
   List,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EnvironmentOutlined, LineChartOutlined, SearchOutlined } from '@ant-design/icons';
+import { EnvironmentOutlined, LineChartOutlined, SearchOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { CollateralPortfolioEntry } from '@/types/portfolio';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
@@ -82,6 +81,7 @@ const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchValue, setSearchValue] = useState('');
+  const [searchAttribute, setSearchAttribute] = useState<string>('all'); // Атрибут для поиска
   const [segmentFilter, setSegmentFilter] = useState<string | null>(null);
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
   const [liquidityFilter, setLiquidityFilter] = useState<string | null>(null);
@@ -262,7 +262,7 @@ const PortfolioPage: React.FC = () => {
 
       return matchesSearch && matchesSegment && matchesGroup && matchesLiquidity && matchesMonitoring;
     });
-  }, [portfolioRows, searchValue, segmentFilter, groupFilter, liquidityFilter, monitoringFilter]);
+  }, [portfolioRows, searchValue, searchAttribute, segmentFilter, groupFilter, liquidityFilter, monitoringFilter]);
 
   const handleGoToRegistryObject = (objectId: string) => {
     navigate(`/registry?objectId=${objectId}`);
@@ -476,18 +476,69 @@ const PortfolioPage: React.FC = () => {
           </Typography.Paragraph>
         </div>
 
-        <Space size="middle" direction="vertical">
-          <Tooltip title="Быстрый поиск по залогам, компаниям и договорам">
+        <Space size="middle">
+          <Space.Compact style={{ width: 500 }}>
+            <Select
+              value={searchAttribute}
+              onChange={setSearchAttribute}
+              style={{ width: 200 }}
+              options={[
+                { label: 'Все поля', value: 'all' },
+                { label: 'ИНН', value: 'inn' },
+                { label: 'Залогодатель', value: 'pledger' },
+                { label: 'Заемщик', value: 'borrower' },
+                { label: 'REFERENCE залога', value: 'reference' },
+                { label: 'Номер договора залога (ипотеки)', value: 'contractNumber' },
+                { label: '№ договора (9131)', value: 'account9131' },
+              ]}
+            />
             <Input
               allowClear
               size="large"
-              placeholder="Поиск по залогам, контрагентам или счету 9131"
+              placeholder="Введите значение для поиска"
               prefix={<SearchOutlined />}
               value={searchValue}
               onChange={event => setSearchValue(event.target.value)}
-              style={{ width: 360 }}
+              style={{ flex: 1 }}
             />
-          </Tooltip>
+          </Space.Compact>
+          <Button
+            type="primary"
+            icon={<DownloadOutlined />}
+            onClick={() => {
+              // Экспорт в Excel
+              const headers = ['REFERENCE', 'Номер договора', 'Залогодатель', 'Заемщик', 'ИНН', 'Тип залога', 'Стоимость залога', 'Задолженность', 'Сегмент', 'Группа'];
+              const rows = filteredData.map(item => [
+                item.reference || '',
+                item.contractNumber || '',
+                item.pledger || '',
+                item.borrower || '',
+                item.inn || '',
+                item.collateralType || '',
+                item.collateralValue || '',
+                item.debtRub || '',
+                item.segment || '',
+                item.group || '',
+              ]);
+              
+              const csvContent = [
+                headers.join('\t'),
+                ...rows.map(row => row.join('\t'))
+              ].join('\n');
+              
+              const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+              const link = document.createElement('a');
+              const url = URL.createObjectURL(blob);
+              link.setAttribute('href', url);
+              link.setAttribute('download', `Залоговый_портфель_${new Date().toISOString().split('T')[0]}.xls`);
+              link.style.visibility = 'hidden';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
+          >
+            Выгрузить в EXCEL
+          </Button>
         </Space>
       </div>
 

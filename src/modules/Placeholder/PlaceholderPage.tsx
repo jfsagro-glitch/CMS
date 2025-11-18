@@ -2,6 +2,7 @@ import React from 'react';
 import { Result, Button, Space } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { UserOutlined, DatabaseOutlined } from '@ant-design/icons';
+import referenceDataService from '@/services/ReferenceDataService';
 
 interface PlaceholderPageProps {
   title: string;
@@ -37,6 +38,21 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
                 onClick={() => navigate('/settings/reference-data')}
               >
                 Справочники
+              </Button>
+              <Button
+                type="primary"
+                icon={<DatabaseOutlined />}
+                onClick={() => {
+                  const dictionaries = referenceDataService.getDictionaries();
+                  const attributesDict = dictionaries.find(d => d.code === 'collateral_attributes');
+                  if (attributesDict) {
+                    navigate(`/settings/reference-data?dict=${attributesDict.id}`);
+                  } else {
+                    navigate('/settings/reference-data');
+                  }
+                }}
+              >
+                Атрибуты залогового имущества
               </Button>
             </>
           )}
