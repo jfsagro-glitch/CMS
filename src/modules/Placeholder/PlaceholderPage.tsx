@@ -1,7 +1,7 @@
-import React from 'react';
-import { Result, Button, Space } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Result, Button, Card, Row, Col } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserOutlined, DatabaseOutlined } from '@ant-design/icons';
+import { UserOutlined, DatabaseOutlined, FileTextOutlined } from '@ant-design/icons';
 import referenceDataService from '@/services/ReferenceDataService';
 
 interface PlaceholderPageProps {
@@ -12,9 +12,75 @@ interface PlaceholderPageProps {
 const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [attributesDictId, setAttributesDictId] = useState<string | null>(null);
 
   // Если это страница настроек, показываем ссылки на подразделы
-  const isSettingsPage = location.pathname === '/settings' || location.pathname === '#/settings';
+  const isSettingsPage = location.pathname === '/settings' || location.pathname === '#/settings' || location.hash === '#/settings';
+
+  useEffect(() => {
+    if (isSettingsPage) {
+      const dictionaries = referenceDataService.getDictionaries();
+      const attributesDict = dictionaries.find(d => d.code === 'collateral_attributes');
+      if (attributesDict) {
+        setAttributesDictId(attributesDict.id);
+      }
+    }
+  }, [isSettingsPage]);
+
+  if (isSettingsPage) {
+    return (
+      <div style={{ padding: '24px' }}>
+        <h1 style={{ marginBottom: '24px' }}>Настройки</h1>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} lg={8}>
+            <Card
+              hoverable
+              style={{ height: '100%' }}
+              onClick={() => navigate('/settings/employees')}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <UserOutlined style={{ fontSize: '48px', color: '#1890ff', marginBottom: '16px' }} />
+                <h3>Управление сотрудниками</h3>
+                <p style={{ color: '#8c8c8c' }}>Добавление и редактирование сотрудников, их ролей и прав доступа</p>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card
+              hoverable
+              style={{ height: '100%' }}
+              onClick={() => navigate('/settings/reference-data')}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <DatabaseOutlined style={{ fontSize: '48px', color: '#52c41a', marginBottom: '16px' }} />
+                <h3>Справочники</h3>
+                <p style={{ color: '#8c8c8c' }}>Управление всеми справочниками системы</p>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card
+              hoverable
+              style={{ height: '100%' }}
+              onClick={() => {
+                if (attributesDictId) {
+                  navigate(`/settings/reference-data?dict=${attributesDictId}`);
+                } else {
+                  navigate('/settings/reference-data');
+                }
+              }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <FileTextOutlined style={{ fontSize: '48px', color: '#fa8c16', marginBottom: '16px' }} />
+                <h3>Атрибуты залогового имущества</h3>
+                <p style={{ color: '#8c8c8c' }}>Справочник атрибутов для различных типов залогового имущества</p>
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+    );
+  }
 
   return (
     <Result
@@ -22,44 +88,9 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
       title={title}
       subTitle={subtitle || 'Этот раздел находится в разработке'}
       extra={
-        <Space>
-          {isSettingsPage && (
-            <>
-              <Button
-                type="primary"
-                icon={<UserOutlined />}
-                onClick={() => navigate('/settings/employees')}
-              >
-                Управление сотрудниками
-              </Button>
-              <Button
-                type="primary"
-                icon={<DatabaseOutlined />}
-                onClick={() => navigate('/settings/reference-data')}
-              >
-                Справочники
-              </Button>
-              <Button
-                type="primary"
-                icon={<DatabaseOutlined />}
-                onClick={() => {
-                  const dictionaries = referenceDataService.getDictionaries();
-                  const attributesDict = dictionaries.find(d => d.code === 'collateral_attributes');
-                  if (attributesDict) {
-                    navigate(`/settings/reference-data?dict=${attributesDict.id}`);
-                  } else {
-                    navigate('/settings/reference-data');
-                  }
-                }}
-              >
-                Атрибуты залогового имущества
-              </Button>
-            </>
-          )}
-          <Button onClick={() => navigate('/registry')}>
-            Вернуться к реестру
-          </Button>
-        </Space>
+        <Button onClick={() => navigate('/registry')}>
+          Вернуться к реестру
+        </Button>
       }
     />
   );
