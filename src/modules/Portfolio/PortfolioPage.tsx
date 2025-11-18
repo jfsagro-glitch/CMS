@@ -262,7 +262,7 @@ const PortfolioPage: React.FC = () => {
 
       return matchesSearch && matchesSegment && matchesGroup && matchesLiquidity && matchesMonitoring;
     });
-  }, [portfolioRows, searchValue, searchAttribute, segmentFilter, groupFilter, liquidityFilter, monitoringFilter]);
+  }, [portfolioRows, searchValue, segmentFilter, groupFilter, liquidityFilter, monitoringFilter]);
 
   const handleGoToRegistryObject = (objectId: string) => {
     navigate(`/registry?objectId=${objectId}`);

@@ -119,19 +119,19 @@ const ReportsPage: React.FC = () => {
     return { total, draft, submitted, approved };
   }, [filteredReports]);
 
-  const statusColor: Record<string, string> = {
+  const statusColor: Record<string, string> = useMemo(() => ({
     draft: 'default',
     submitted: 'processing',
     approved: 'success',
     rejected: 'error',
-  };
+  }), []);
 
-  const statusLabel: Record<string, string> = {
+  const statusLabel: Record<string, string> = useMemo(() => ({
     draft: 'Черновик',
     submitted: 'Отправлен',
     approved: 'Утвержден',
     rejected: 'Отклонен',
-  };
+  }), []);
 
   const columns: ColumnsType<ReportRow> = useMemo(
     () => [

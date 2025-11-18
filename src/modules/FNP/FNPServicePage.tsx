@@ -262,7 +262,7 @@ const FNPServicePage: React.FC = () => {
     setFormVisible(true);
   };
 
-  const handleEditRegistration = (record: FNPRegistrationRow) => {
+  const handleEditRegistration = React.useCallback((record: FNPRegistrationRow) => {
     setSelectedRegistration(record);
     form.setFieldsValue({
       ...record,
@@ -270,7 +270,7 @@ const FNPServicePage: React.FC = () => {
       registrationDate: record.registrationDate ? dayjs(record.registrationDate) : undefined,
     });
     setFormVisible(true);
-  };
+  }, [form]);
 
   const handleFormSubmit = async () => {
     try {
@@ -349,11 +349,11 @@ const FNPServicePage: React.FC = () => {
     }
   };
 
-  const handleGoToPortfolio = (reference?: string | null) => {
+  const handleGoToPortfolio = React.useCallback((reference?: string | null) => {
     if (reference) {
       navigate(`/portfolio?q=${reference}`);
     }
-  };
+  }, [navigate]);
 
   const columns: ColumnsType<FNPRegistrationRow> = useMemo(
     () => [

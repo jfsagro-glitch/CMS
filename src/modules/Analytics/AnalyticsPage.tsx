@@ -216,7 +216,7 @@ const AnalyticsPage: React.FC = () => {
     for (const item of analyticsData.portfolioData) {
       // Используем поле collateralCategory (Категория обеспечения) из карточки сделки
       // Если его нет, используем автоматическое определение по типу имущества
-      let category = item.collateralCategory || getPropertyCategory(item.collateralType) || 'Не указана';
+      const category = item.collateralCategory || getPropertyCategory(item.collateralType) || 'Не указана';
       
       // Пропускаем, если это сегмент бизнеса (чтобы не смешивать с категориями имущества)
       if (businessSegments.has(category) || item.segment === category) {

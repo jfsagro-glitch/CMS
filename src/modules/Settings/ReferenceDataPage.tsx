@@ -51,8 +51,12 @@ const ReferenceDataPage: React.FC = () => {
 
   useEffect(() => {
     loadDictionaries();
+  }, [loadDictionaries]);
+
+  // Проверяем параметр dict в URL для открытия конкретного справочника
+  useEffect(() => {
+    if (dictionaries.length === 0) return;
     
-    // Проверяем, есть ли параметр dict в URL для открытия конкретного справочника
     const params = new URLSearchParams(window.location.search);
     const dictId = params.get('dict');
     if (dictId) {
@@ -61,7 +65,7 @@ const ReferenceDataPage: React.FC = () => {
         setSelectedDictionary(dict);
       }
     }
-  }, [loadDictionaries]);
+  }, [dictionaries, selectedDictionary]);
 
   // Обновляем выбранный справочник при изменении списка справочников
   useEffect(() => {
@@ -75,7 +79,7 @@ const ReferenceDataPage: React.FC = () => {
     } else if (dictionaries.length > 0 && !selectedDictionary) {
       setSelectedDictionary(dictionaries[0]);
     }
-  }, [dictionaries]);
+  }, [dictionaries, selectedDictionary]);
 
   const handleAddItem = useCallback((dictionary: ReferenceDictionary) => {
     setSelectedDictionary(dictionary);
@@ -126,7 +130,7 @@ const ReferenceDataPage: React.FC = () => {
     } catch (error) {
       console.error('Ошибка сохранения:', error);
     }
-  }, [loadDictionaries]);
+  }, [loadDictionaries, selectedDictionary, editingItem, form]);
 
   const getItemColumns = React.useCallback((dictionary: ReferenceDictionary): ColumnsType<ReferenceItem> => [
     {
