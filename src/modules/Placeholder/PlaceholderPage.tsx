@@ -19,10 +19,14 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
   useEffect(() => {
     if (isSettingsPage) {
-      const dictionaries = referenceDataService.getDictionaries();
-      const attributesDict = dictionaries.find(d => d.code === 'collateral_attributes');
-      if (attributesDict) {
-        setAttributesDictId(attributesDict.id);
+      try {
+        const dictionaries = referenceDataService.getDictionaries();
+        const attributesDict = dictionaries.find(d => d.code === 'collateral_attributes');
+        if (attributesDict) {
+          setAttributesDictId(attributesDict.id);
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки справочника атрибутов:', error);
       }
     }
   }, [isSettingsPage]);
