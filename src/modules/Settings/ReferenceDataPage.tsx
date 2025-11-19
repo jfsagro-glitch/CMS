@@ -69,12 +69,15 @@ const ReferenceDataPage: React.FC = () => {
     console.log('ReferenceDataPage: window.location.search =', window.location.search);
     console.log('ReferenceDataPage: window.location.hash =', window.location.hash);
     
-    // Пробуем получить параметры из search или из hash
+    // Пробуем получить параметры из hash или из search
+    // В HashRouter параметры находятся в hash после знака ?
     let searchParams: URLSearchParams;
-    if (search) {
+    if (hash.includes('?')) {
+      // Параметры в hash: #/settings/reference-data?dict=...
+      const hashPart = hash.split('?')[1];
+      searchParams = new URLSearchParams(hashPart);
+    } else if (search) {
       searchParams = new URLSearchParams(search);
-    } else if (hash.includes('?')) {
-      searchParams = new URLSearchParams(hash.split('?')[1]);
     } else {
       searchParams = new URLSearchParams();
     }
@@ -101,7 +104,7 @@ const ReferenceDataPage: React.FC = () => {
       console.log('ReferenceDataPage: параметр dict отсутствует, выбираем первый справочник');
       setSelectedDictionary(dictionaries[0]);
     }
-  }, [dictionaries, location.search, location.hash]);
+  }, [dictionaries, location.search, location.hash, selectedDictionary]);
 
   const handleAddItem = useCallback((dictionary: ReferenceDictionary) => {
     setSelectedDictionary(dictionary);

@@ -98,9 +98,10 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
               onClick={() => {
                 console.log('Клик по кнопке "Атрибуты залога", zalogAttributesDictId:', zalogAttributesDictId);
                 if (zalogAttributesDictId) {
-                  const url = `/settings/reference-data?dict=${zalogAttributesDictId}`;
+                  // Для HashRouter параметры должны быть в формате #/path?param=value
+                  const url = `#/settings/reference-data?dict=${zalogAttributesDictId}`;
                   console.log('Переход на:', url);
-                  navigate(url);
+                  window.location.hash = url;
                 } else {
                   console.warn('zalogAttributesDictId не установлен, переход на общую страницу справочников');
                   navigate('/settings/reference-data');

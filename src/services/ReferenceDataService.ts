@@ -35,7 +35,22 @@ class ReferenceDataService {
         // Возвращаем справочники по умолчанию
         return this.getDefaultDictionaries();
       }
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      
+      // Проверяем, есть ли справочник "Атрибуты залога" в загруженных данных
+      const hasZalogDict = parsed.some((d: ReferenceDictionary) => d.code === 'collateral_attributes_zalog');
+      if (!hasZalogDict) {
+        // Если справочника нет, добавляем его из дефолтных
+        const defaultDicts = this.getDefaultDictionaries();
+        const zalogDict = defaultDicts.find(d => d.code === 'collateral_attributes_zalog');
+        if (zalogDict) {
+          parsed.push(zalogDict);
+          this.saveDictionaries(parsed);
+          console.log('Добавлен отсутствующий справочник "Атрибуты залога"');
+        }
+      }
+      
+      return parsed;
     } catch (error) {
       console.error('Ошибка загрузки справочников:', error);
       return this.getDefaultDictionaries();
