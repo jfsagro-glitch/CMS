@@ -22,13 +22,18 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
     if (isSettingsPage) {
       try {
         const dictionaries = referenceDataService.getDictionaries();
+        console.log('Загружено справочников:', dictionaries.length);
         const attributesDict = dictionaries.find(d => d.code === 'collateral_attributes');
         if (attributesDict) {
           setAttributesDictId(attributesDict.id);
+          console.log('Найден справочник collateral_attributes:', attributesDict.id);
         }
         const zalogAttributesDict = dictionaries.find(d => d.code === 'collateral_attributes_zalog');
         if (zalogAttributesDict) {
           setZalogAttributesDictId(zalogAttributesDict.id);
+          console.log('Найден справочник collateral_attributes_zalog:', zalogAttributesDict.id);
+        } else {
+          console.warn('Справочник collateral_attributes_zalog не найден! Доступные коды:', dictionaries.map(d => d.code));
         }
       } catch (error) {
         console.error('Ошибка загрузки справочников атрибутов:', error);
@@ -91,9 +96,13 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
               hoverable
               style={{ height: '100%' }}
               onClick={() => {
+                console.log('Клик по кнопке "Атрибуты залога", zalogAttributesDictId:', zalogAttributesDictId);
                 if (zalogAttributesDictId) {
-                  navigate(`/settings/reference-data?dict=${zalogAttributesDictId}`);
+                  const url = `/settings/reference-data?dict=${zalogAttributesDictId}`;
+                  console.log('Переход на:', url);
+                  navigate(url);
                 } else {
+                  console.warn('zalogAttributesDictId не установлен, переход на общую страницу справочников');
                   navigate('/settings/reference-data');
                 }
               }}

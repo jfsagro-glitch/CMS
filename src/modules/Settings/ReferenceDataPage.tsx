@@ -64,6 +64,11 @@ const ReferenceDataPage: React.FC = () => {
     const search = location.search || window.location.search;
     const hash = location.hash || window.location.hash;
     
+    console.log('ReferenceDataPage: location.search =', location.search);
+    console.log('ReferenceDataPage: location.hash =', location.hash);
+    console.log('ReferenceDataPage: window.location.search =', window.location.search);
+    console.log('ReferenceDataPage: window.location.hash =', window.location.hash);
+    
     // Пробуем получить параметры из search или из hash
     let searchParams: URLSearchParams;
     if (search) {
@@ -75,10 +80,14 @@ const ReferenceDataPage: React.FC = () => {
     }
     
     const dictId = searchParams.get('dict');
+    console.log('ReferenceDataPage: dictId из URL =', dictId);
+    console.log('ReferenceDataPage: доступно справочников =', dictionaries.length);
+    console.log('ReferenceDataPage: ID справочников =', dictionaries.map(d => d.id));
     
     if (dictId) {
       const dict = dictionaries.find(d => d.id === dictId);
       if (dict) {
+        console.log('ReferenceDataPage: найден справочник по ID:', dict.name);
         // Всегда устанавливаем справочник, если он найден по ID из URL
         setSelectedDictionary(dict);
         return;
@@ -89,9 +98,10 @@ const ReferenceDataPage: React.FC = () => {
     
     // Если параметра нет и справочник не выбран, выбираем первый
     if (!selectedDictionary && dictionaries.length > 0) {
+      console.log('ReferenceDataPage: параметр dict отсутствует, выбираем первый справочник');
       setSelectedDictionary(dictionaries[0]);
     }
-  }, [dictionaries, location.search, location.hash, selectedDictionary]);
+  }, [dictionaries, location.search, location.hash]);
 
   const handleAddItem = useCallback((dictionary: ReferenceDictionary) => {
     setSelectedDictionary(dictionary);
