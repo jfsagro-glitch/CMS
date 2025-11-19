@@ -56,6 +56,8 @@ jobs:
           
           python scripts/generate_monitoring_plan.py 2>&1 || echo "⚠️ Monitoring plan generation failed"
           
+          python scripts/generate_revaluation_plan.py 2>&1 || echo "⚠️ Revaluation plan generation failed"
+          
           if [ -f "INS/INS.xlsx" ] || [ -d "INS" ]; then
             python scripts/generate_insurance_data.py 2>&1 || echo "⚠️ Insurance data generation failed"
           else

@@ -241,7 +241,7 @@ const CollateralConclusionsPage: React.FC = () => {
         ),
       },
     ],
-    [navigate, handleGoToDossier, handleGoToPledger]
+    [handleGoToDossier, handleGoToPledger]
   );
 
   const handleCreateSuccess = () => {
