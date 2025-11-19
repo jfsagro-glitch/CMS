@@ -13,6 +13,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
   const navigate = useNavigate();
   const location = useLocation();
   const [attributesDictId, setAttributesDictId] = useState<string | null>(null);
+  const [zalogAttributesDictId, setZalogAttributesDictId] = useState<string | null>(null);
 
   // Если это страница настроек, показываем ссылки на подразделы
   const isSettingsPage = location.pathname === '/settings' || location.pathname === '#/settings' || location.hash === '#/settings';
@@ -25,8 +26,12 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
         if (attributesDict) {
           setAttributesDictId(attributesDict.id);
         }
+        const zalogAttributesDict = dictionaries.find(d => d.code === 'collateral_attributes_zalog');
+        if (zalogAttributesDict) {
+          setZalogAttributesDictId(zalogAttributesDict.id);
+        }
       } catch (error) {
-        console.error('Ошибка загрузки справочника атрибутов:', error);
+        console.error('Ошибка загрузки справочников атрибутов:', error);
       }
     }
   }, [isSettingsPage]);
@@ -78,6 +83,25 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
                 <FileTextOutlined style={{ fontSize: '48px', color: '#fa8c16', marginBottom: '16px' }} />
                 <h3>Атрибуты залогового имущества</h3>
                 <p style={{ color: '#8c8c8c' }}>Справочник атрибутов для различных типов залогового имущества</p>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card
+              hoverable
+              style={{ height: '100%' }}
+              onClick={() => {
+                if (zalogAttributesDictId) {
+                  navigate(`/settings/reference-data?dict=${zalogAttributesDictId}`);
+                } else {
+                  navigate('/settings/reference-data');
+                }
+              }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <FileTextOutlined style={{ fontSize: '48px', color: '#722ed1', marginBottom: '16px' }} />
+                <h3>Атрибуты залога</h3>
+                <p style={{ color: '#8c8c8c' }}>Справочник атрибутов залога из файла atr1.xlsx</p>
               </div>
             </Card>
           </Col>
