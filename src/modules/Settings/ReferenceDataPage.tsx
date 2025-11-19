@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Card,
   Table,
@@ -34,6 +35,7 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const ReferenceDataPage: React.FC = () => {
+  const location = useLocation();
   const [dictionaries, setDictionaries] = useState<ReferenceDictionary[]>([]);
   const [selectedDictionary, setSelectedDictionary] = useState<ReferenceDictionary | null>(null);
   const [itemModalVisible, setItemModalVisible] = useState(false);
@@ -57,29 +59,24 @@ const ReferenceDataPage: React.FC = () => {
   useEffect(() => {
     if (dictionaries.length === 0) return;
     
-    const params = new URLSearchParams(window.location.search);
-    const dictId = params.get('dict');
+    // Получаем параметры из hash или search (для HashRouter)
+    const hash = location.hash || window.location.hash;
+    const searchParams = hash.includes('?') 
+      ? new URLSearchParams(hash.split('?')[1])
+      : new URLSearchParams(location.search || window.location.search);
+    const dictId = searchParams.get('dict');
+    
     if (dictId) {
       const dict = dictionaries.find(d => d.id === dictId);
-      if (dict) {
+      if (dict && (!selectedDictionary || selectedDictionary.id !== dict.id)) {
         setSelectedDictionary(dict);
+        return;
       }
-    }
-  }, [dictionaries, selectedDictionary]);
-
-  // Обновляем выбранный справочник при изменении списка справочников
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const dictId = params.get('dict');
-    if (dictId && dictionaries.length > 0) {
-      const dict = dictionaries.find(d => d.id === dictId);
-      if (dict) {
-        setSelectedDictionary(dict);
-      }
-    } else if (dictionaries.length > 0 && !selectedDictionary) {
+    } else if (!selectedDictionary && dictionaries.length > 0) {
+      // Если параметра нет и справочник не выбран, выбираем первый
       setSelectedDictionary(dictionaries[0]);
     }
-  }, [dictionaries, selectedDictionary]);
+  }, [dictionaries, location.hash, location.search, selectedDictionary]);
 
   const handleAddItem = useCallback((dictionary: ReferenceDictionary) => {
     setSelectedDictionary(dictionary);

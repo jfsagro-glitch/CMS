@@ -174,7 +174,7 @@ const MonitoringPage: React.FC = () => {
     return counters;
   }, [plan]);
 
-  const columns: ColumnsType<TableRow> = [
+  const columns: ColumnsType<TableRow> = useMemo(() => [
     {
       title: 'Сделка',
       dataIndex: 'reference',
@@ -270,7 +270,7 @@ const MonitoringPage: React.FC = () => {
         </Tooltip>
       ),
     },
-  ];
+  ], [setSelectedEntry, setCardModalVisible]);
 
   // Load revaluation plan
   useEffect(() => {
@@ -390,7 +390,7 @@ const MonitoringPage: React.FC = () => {
     return counters;
   }, [revaluationPlan]);
 
-  const revaluationColumns: ColumnsType<RevaluationTableRow> = [
+  const revaluationColumns: ColumnsType<RevaluationTableRow> = useMemo(() => [
     {
       title: 'Сделка',
       dataIndex: 'reference',
@@ -482,7 +482,7 @@ const MonitoringPage: React.FC = () => {
       width: 160,
       render: value => <span>{value ?? '—'}</span>,
     },
-  ];
+  ], []);
 
   const renderMonitoringPlan = useCallback(() => (
     <>
