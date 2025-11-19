@@ -59,24 +59,39 @@ const ReferenceDataPage: React.FC = () => {
   useEffect(() => {
     if (dictionaries.length === 0) return;
     
-    // Получаем параметры из hash или search (для HashRouter)
+    // В HashRouter параметры находятся в location.search
+    // Также проверяем window.location.hash на случай, если параметры там
+    const search = location.search || window.location.search;
     const hash = location.hash || window.location.hash;
-    const searchParams = hash.includes('?') 
-      ? new URLSearchParams(hash.split('?')[1])
-      : new URLSearchParams(location.search || window.location.search);
+    
+    // Пробуем получить параметры из search или из hash
+    let searchParams: URLSearchParams;
+    if (search) {
+      searchParams = new URLSearchParams(search);
+    } else if (hash.includes('?')) {
+      searchParams = new URLSearchParams(hash.split('?')[1]);
+    } else {
+      searchParams = new URLSearchParams();
+    }
+    
     const dictId = searchParams.get('dict');
     
     if (dictId) {
       const dict = dictionaries.find(d => d.id === dictId);
-      if (dict && (!selectedDictionary || selectedDictionary.id !== dict.id)) {
+      if (dict) {
+        // Всегда устанавливаем справочник, если он найден по ID из URL
         setSelectedDictionary(dict);
         return;
+      } else {
+        console.warn(`Справочник с ID "${dictId}" не найден. Доступные справочники:`, dictionaries.map(d => d.id));
       }
-    } else if (!selectedDictionary && dictionaries.length > 0) {
-      // Если параметра нет и справочник не выбран, выбираем первый
+    }
+    
+    // Если параметра нет и справочник не выбран, выбираем первый
+    if (!selectedDictionary && dictionaries.length > 0) {
       setSelectedDictionary(dictionaries[0]);
     }
-  }, [dictionaries, location.hash, location.search, selectedDictionary]);
+  }, [dictionaries, location.search, location.hash, selectedDictionary]);
 
   const handleAddItem = useCallback((dictionary: ReferenceDictionary) => {
     setSelectedDictionary(dictionary);
