@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Result, Button, Card, Row, Col } from 'antd';
+import React, { useState } from 'react';
+import { Result, Button, Card, Row, Col, message } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserOutlined, DatabaseOutlined, FileTextOutlined, SwapOutlined } from '@ant-design/icons';
-import referenceDataService from '@/services/ReferenceDataService';
+import { UserOutlined, DatabaseOutlined, SwapOutlined, FilePdfOutlined } from '@ant-design/icons';
+import { downloadPdfFromMarkdownFile } from '@/utils/pdfGenerator';
 
 interface PlaceholderPageProps {
   title: string;
@@ -12,39 +12,41 @@ interface PlaceholderPageProps {
 const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [attributesDictId, setAttributesDictId] = useState<string | null>(null);
-  const [zalogAttributesDictId, setZalogAttributesDictId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Если это страница настроек, показываем ссылки на подразделы
   const isSettingsPage = location.pathname === '/settings' || location.pathname === '#/settings' || location.hash === '#/settings';
 
-  useEffect(() => {
-    if (isSettingsPage) {
-      try {
-        const dictionaries = referenceDataService.getDictionaries();
-        console.log('Загружено справочников:', dictionaries.length);
-        const attributesDict = dictionaries.find(d => d.code === 'collateral_attributes');
-        if (attributesDict) {
-          setAttributesDictId(attributesDict.id);
-          console.log('Найден справочник collateral_attributes:', attributesDict.id);
-        }
-        const zalogAttributesDict = dictionaries.find(d => d.code === 'collateral_attributes_zalog');
-        if (zalogAttributesDict) {
-          setZalogAttributesDictId(zalogAttributesDict.id);
-          console.log('Найден справочник collateral_attributes_zalog:', zalogAttributesDict.id);
-        } else {
-          console.warn('Справочник collateral_attributes_zalog не найден! Доступные коды:', dictionaries.map(d => d.code));
-        }
-      } catch (error) {
-        console.error('Ошибка загрузки справочников атрибутов:', error);
-      }
+  const handleDownloadPdf = async () => {
+    try {
+      setLoading(true);
+      const base = import.meta.env.BASE_URL ?? './';
+      const markdownPath = `${base}INSTRUCTION/CMS_USER_MANUAL.md`;
+      await downloadPdfFromMarkdownFile(markdownPath, 'CMS_User_Manual.pdf');
+      message.success('PDF инструкция открыта для печати');
+    } catch (error: any) {
+      console.error('Ошибка генерации PDF:', error);
+      message.error(`Ошибка генерации PDF: ${error.message || 'Неизвестная ошибка'}`);
+    } finally {
+      setLoading(false);
     }
-  }, [isSettingsPage]);
+  };
 
   if (isSettingsPage) {
     return (
       <div style={{ padding: '24px' }}>
-        <h1 style={{ marginBottom: '24px' }}>Настройки</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h1 style={{ margin: 0 }}>Настройки</h1>
+          <Button
+            type="primary"
+            icon={<FilePdfOutlined />}
+            loading={loading}
+            onClick={handleDownloadPdf}
+            size="large"
+          >
+            Выгрузить инструкцию в PDF
+          </Button>
+        </div>
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} lg={8}>
             <Card
@@ -69,49 +71,6 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
                 <DatabaseOutlined style={{ fontSize: '48px', color: '#52c41a', marginBottom: '16px' }} />
                 <h3>Справочники</h3>
                 <p style={{ color: '#8c8c8c' }}>Управление всеми справочниками системы</p>
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={8}>
-            <Card
-              hoverable
-              style={{ height: '100%' }}
-              onClick={() => {
-                if (attributesDictId) {
-                  navigate(`/settings/reference-data?dict=${attributesDictId}`);
-                } else {
-                  navigate('/settings/reference-data');
-                }
-              }}
-            >
-              <div style={{ textAlign: 'center' }}>
-                <FileTextOutlined style={{ fontSize: '48px', color: '#fa8c16', marginBottom: '16px' }} />
-                <h3>Атрибуты залогового имущества</h3>
-                <p style={{ color: '#8c8c8c' }}>Справочник атрибутов для различных типов залогового имущества</p>
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={8}>
-            <Card
-              hoverable
-              style={{ height: '100%' }}
-              onClick={() => {
-                console.log('Клик по кнопке "Атрибуты залога", zalogAttributesDictId:', zalogAttributesDictId);
-                if (zalogAttributesDictId) {
-                  // Для HashRouter параметры должны быть в формате #/path?param=value
-                  const url = `#/settings/reference-data?dict=${zalogAttributesDictId}`;
-                  console.log('Переход на:', url);
-                  window.location.hash = url;
-                } else {
-                  console.warn('zalogAttributesDictId не установлен, переход на общую страницу справочников');
-                  navigate('/settings/reference-data');
-                }
-              }}
-            >
-              <div style={{ textAlign: 'center' }}>
-                <FileTextOutlined style={{ fontSize: '48px', color: '#722ed1', marginBottom: '16px' }} />
-                <h3>Атрибуты залога</h3>
-                <p style={{ color: '#8c8c8c' }}>Справочник атрибутов залога из файла atr1.xlsx</p>
               </div>
             </Card>
           </Col>

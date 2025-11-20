@@ -10,6 +10,8 @@ const distDir = path.join(__dirname, '../dist');
 const indexHtmlPath = path.join(distDir, 'index.html');
 const notFoundHtmlPath = path.join(distDir, '404.html');
 const noJekyllPath = path.join(distDir, '.nojekyll');
+const instructionSourceDir = path.join(__dirname, '../INSTRUCTION');
+const instructionDestDir = path.join(distDir, 'INSTRUCTION');
 
 console.log('🔧 Post-build processing for GitHub Pages...\n');
 
@@ -25,6 +27,27 @@ if (fs.existsSync(indexHtmlPath)) {
 // 2. Создаем .nojekyll для отключения Jekyll processing на GitHub Pages
 fs.writeFileSync(noJekyllPath, '');
 console.log('✅ Created .nojekyll file');
+
+// 3. Копируем папку INSTRUCTION в dist
+if (fs.existsSync(instructionSourceDir)) {
+  // Создаем папку назначения, если её нет
+  if (!fs.existsSync(instructionDestDir)) {
+    fs.mkdirSync(instructionDestDir, { recursive: true });
+  }
+  
+  // Копируем все файлы из INSTRUCTION
+  const files = fs.readdirSync(instructionSourceDir);
+  files.forEach(file => {
+    const sourcePath = path.join(instructionSourceDir, file);
+    const destPath = path.join(instructionDestDir, file);
+    if (fs.statSync(sourcePath).isFile()) {
+      fs.copyFileSync(sourcePath, destPath);
+    }
+  });
+  console.log('✅ Copied INSTRUCTION folder to dist');
+} else {
+  console.warn('⚠️  INSTRUCTION folder not found, skipping copy');
+}
 
 // 3. Создаем CNAME файл (если нужен custom domain)
 // const cnameContent = 'your-custom-domain.com';

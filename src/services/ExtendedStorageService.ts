@@ -39,7 +39,7 @@ class ExtendedCMSDatabase extends Dexie {
       documents: 'id, name, type, category, uploadDate',
       settings: 'id',
       inspections: 'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt'
-    }).upgrade(async (trans) => {
+    }).upgrade(async () => {
       // Миграция данных из версии 2
       console.log('Upgrading database to version 3...');
     });

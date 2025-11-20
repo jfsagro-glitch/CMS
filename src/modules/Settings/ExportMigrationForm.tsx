@@ -16,7 +16,7 @@ import extendedStorageService from '@/services/ExtendedStorageService';
 import employeeService from '@/services/EmployeeService';
 import referenceDataService from '@/services/ReferenceDataService';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface ExportMigrationFormProps {
   visible: boolean;
@@ -164,10 +164,11 @@ const ExportMigrationForm: React.FC<ExportMigrationFormProps> = ({
       for (const moduleKey of modules) {
         try {
           switch (moduleKey) {
-            case 'registry':
+            case 'registry': {
               const cards = await extendedStorageService.getExtendedCards();
               exportData.modules.registry = cards;
               break;
+            }
 
             case 'portfolio':
               // Данные портфеля (если есть сервис)
@@ -239,20 +240,23 @@ const ExportMigrationForm: React.FC<ExportMigrationFormProps> = ({
               exportData.modules.monitoring = [];
               break;
 
-            case 'employees':
+            case 'employees': {
               const employees = employeeService.getEmployees();
               exportData.modules.employees = employees;
               break;
+            }
 
-            case 'reference-data':
+            case 'reference-data': {
               const dictionaries = referenceDataService.getDictionaries();
               exportData.modules['reference-data'] = dictionaries;
               break;
+            }
 
-            case 'settings':
+            case 'settings': {
               const settings = await extendedStorageService.getSettings();
               exportData.modules.settings = settings;
               break;
+            }
           }
         } catch (error) {
           console.error(`Ошибка выгрузки модуля ${moduleKey}:`, error);

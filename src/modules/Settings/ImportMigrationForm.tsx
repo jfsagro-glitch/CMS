@@ -25,7 +25,7 @@ import referenceDataService from '@/services/ReferenceDataService';
 import { useAppDispatch } from '@/store/hooks';
 import { setCards } from '@/store/slices/cardsSlice';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { Dragger } = Upload;
 
 interface ImportMigrationFormProps {
@@ -316,7 +316,7 @@ const ImportMigrationForm: React.FC<ImportMigrationFormProps> = ({
         <Button key="cancel" onClick={handleClose}>
           {importCompleted ? 'Закрыть' : 'Отмена'}
         </Button>,
-        {!importCompleted && (
+        ...(!importCompleted ? [
           <Button
             key="import"
             type="primary"
@@ -327,7 +327,7 @@ const ImportMigrationForm: React.FC<ImportMigrationFormProps> = ({
           >
             Загрузить данные
           </Button>
-        )}
+        ] : [])
       ]}
     >
       <Form form={form} layout="vertical">
