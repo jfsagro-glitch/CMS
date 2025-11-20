@@ -199,13 +199,14 @@ class EmployeeService {
     
     // Генерируем сотрудников по каждому региональному центру
     REGION_CENTERS.forEach((center, centerIndex) => {
-      // 20-35 сотрудников на регион
-      const employeesPerRegion = 20 + Math.floor(Math.random() * 16); // 20-35
+      // 15-20 сотрудников на региональный центр
+      const employeesPerRegion = 15 + Math.floor(Math.random() * 6); // 15-20
       
       center.cities.forEach((city, cityIndex) => {
-        // Распределяем сотрудников по городам региона
-        const employeesPerCity = Math.floor(employeesPerRegion / center.cities.length) + 
-          (cityIndex < employeesPerRegion % center.cities.length ? 1 : 0);
+        // Распределяем сотрудников по городам региона равномерно
+        const baseEmployeesPerCity = Math.floor(employeesPerRegion / center.cities.length);
+        const remainder = employeesPerRegion % center.cities.length;
+        const employeesPerCity = baseEmployeesPerCity + (cityIndex < remainder ? 1 : 0);
         
         for (let i = 0; i < employeesPerCity; i++) {
           const nameIndex = (globalIndex - 1) % surnames.length;
