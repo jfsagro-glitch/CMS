@@ -21,9 +21,10 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { CalendarOutlined, ClockCircleOutlined, SearchOutlined, EyeOutlined, DollarOutlined } from '@ant-design/icons';
+import { CalendarOutlined, ClockCircleOutlined, SearchOutlined, EyeOutlined, DollarOutlined, SettingOutlined } from '@ant-design/icons';
 import type { MonitoringPlanEntry, MonitoringTimeframe, RevaluationPlanEntry } from '@/types/monitoring';
 import MonitoringCardModal from '@/components/MonitoringCardModal/MonitoringCardModal';
+import MonitoringSettings from './MonitoringSettings';
 import './MonitoringPage.css';
 
 dayjs.extend(relativeTime);
@@ -805,6 +806,16 @@ const MonitoringPage: React.FC = () => {
               </span>
             ),
             children: renderRevaluationPlan(),
+          },
+          {
+            key: 'settings',
+            label: (
+              <span>
+                <SettingOutlined />
+                Настройка
+              </span>
+            ),
+            children: <MonitoringSettings />,
           },
         ]}
       />
