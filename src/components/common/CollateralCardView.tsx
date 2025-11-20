@@ -1,28 +1,29 @@
 import React, { useMemo } from 'react';
-import { Card, Descriptions, Tag, Row, Col, Divider, Typography, Space, Statistic } from 'antd';
-import type { DescriptionsProps } from 'antd';
+import { Card, Descriptions, Tag, Row, Col, Divider, Typography, Space, Statistic, Tabs, Button, List } from 'antd';
 import {
   HomeOutlined,
   CarOutlined,
   DollarOutlined,
-  CalendarOutlined,
-  UserOutlined,
   FileTextOutlined,
-  EnvironmentOutlined,
   InfoCircleOutlined,
+  LinkOutlined,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import type { ExtendedCollateralCard } from '../../types';
-import { getGroupedCollateralAttributes, getAttributeValue } from '@/utils/collateralAttributesConfig';
-import { getObjectTypeKey } from '@/utils/extendedClassification';
+import { getAttributesForPropertyType, distributeAttributesByTabs } from '@/utils/collateralAttributesFromDict';
+import { useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
 import './CollateralCardView.css';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 interface CollateralCardViewProps {
   card: ExtendedCollateralCard;
 }
 
 export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) => {
+  const navigate = useNavigate();
+  
   // Функции для определения цвета статуса
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -81,89 +82,297 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
     }).format(value);
   };
 
-  // Определяем тип объекта для получения правильных атрибутов
-  const objectTypeKey = useMemo(() => {
-    if (card.classification) {
-      return getObjectTypeKey(card.classification.level1, card.classification.level2);
-    }
-    return null;
-  }, [card.classification]);
+  // Получаем атрибуты для типа имущества
+  const propertyAttributes = useMemo(() => {
+    if (!card.propertyType) return [];
+    return getAttributesForPropertyType(card.propertyType);
+  }, [card.propertyType]);
+  
+  const distributedAttributes = useMemo(() => {
+    return distributeAttributesByTabs(propertyAttributes);
+  }, [propertyAttributes]);
 
-  // Получаем сгруппированные атрибуты
-  const groupedAttributes = useMemo(() => {
-    return getGroupedCollateralAttributes(objectTypeKey || undefined);
-  }, [objectTypeKey]);
+  // Получаем заемщика и залогодателя
+  const borrower = useMemo(() => card.partners?.find(p => p.role === 'owner' || (p.role === 'pledgor' && !card.partners?.find(p2 => p2.role === 'owner'))), [card.partners]);
+  const pledgor = useMemo(() => card.partners?.find(p => p.role === 'pledgor'), [card.partners]);
+  
+  // Проверка, нужно ли показывать кнопку заказа выписки ЕГРН
+  const shouldShowOrderEgrnButton = useMemo(() => {
+    if (!card.egrnStatementDate || card.mainCategory !== 'real_estate') {
+      return false;
+    }
+    const statementDate = dayjs(card.egrnStatementDate);
+    const daysSinceStatement = dayjs().diff(statementDate, 'days');
+    return daysSinceStatement > 30;
+  }, [card.egrnStatementDate, card.mainCategory]);
+  
+  // Обработчик заказа выписки ЕГРН
+  const handleOrderEgrn = () => {
+    const cadastralNumber = card.address?.cadastralNumber || card.characteristics?.objectCadastralNumber;
+    navigate(`/egrn?objectId=${card.id}&cadastralNumber=${cadastralNumber}&objectName=${encodeURIComponent(card.name || '')}`);
+  };
+  
+  // Переход к договору
+  const handleGoToContract = () => {
+    if (card.contractId) {
+      navigate(`/portfolio?contractId=${card.contractId}`);
+    } else if (card.contractNumber) {
+      navigate(`/portfolio?contractNumber=${card.contractNumber}`);
+    } else if (card.reference) {
+      navigate(`/portfolio?reference=${card.reference}`);
+    }
+  };
+  
+  // Переход в залоговое досье
+  const handleGoToDossier = () => {
+    if (card.reference) {
+      window.open(`#/portfolio?reference=${card.reference}`, '_blank');
+    }
+  };
 
   // Форматирование значения атрибута
-  const formatAttributeValue = (attr: any, value: any): string => {
+  const formatAttributeValue = (value: any): string => {
     if (value === null || value === undefined || value === '') return '—';
-    
-    if (attr.type === 'boolean') {
-      return value ? 'Да' : 'Нет';
+    if (typeof value === 'boolean') return value ? 'Да' : 'Нет';
+    if (typeof value === 'number') return String(value);
+    if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/)) {
+      return dayjs(value).format('DD.MM.YYYY');
     }
-    
-    if (attr.type === 'number' && attr.unit) {
-      return `${value} ${attr.unit}`;
-    }
-    
-    if (attr.type === 'number') {
-      return String(value);
-    }
-    
     return String(value);
   };
 
-  // Рендер характеристик в зависимости от типа
-  const renderCharacteristics = (): React.ReactNode => {
-    if (!card.characteristics || Object.keys(card.characteristics).length === 0) {
-      return <Text type="secondary">Характеристики не указаны</Text>;
-    }
-
-    const groups = Object.keys(groupedAttributes);
-    
-    if (groups.length === 0) {
-      // Fallback: отображаем все характеристики без группировки
-      const items: DescriptionsProps['items'] = [];
-      Object.entries(card.characteristics).forEach(([key, value]) => {
-        if (value !== null && value !== undefined && value !== '') {
-          items.push({ 
-            label: key, 
-            children: typeof value === 'boolean' ? (value ? 'Да' : 'Нет') : String(value) 
-          });
-        }
-      });
-      return <Descriptions bordered column={2} size="small" items={items} />;
-    }
-
-    // Отображаем характеристики по группам
-    return (
-      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-        {groups.map(group => {
-          const attributes = groupedAttributes[group];
-          const items: DescriptionsProps['items'] = [];
+  const tabItems = [
+    {
+      key: '1',
+      label: 'Главная',
+      children: (
+        <div>
+          <Descriptions bordered column={2} size="small">
+            <Descriptions.Item label="Наименование (NAME_OF_PROPERTY)" span={2}>
+              {card.name || '—'}
+            </Descriptions.Item>
+            
+            <Descriptions.Item label="Адрес" span={2}>
+              {card.address?.fullAddress || '—'}
+            </Descriptions.Item>
+            
+            <Descriptions.Item label="Заемщик" span={1}>
+              {borrower?.organizationName || `${borrower?.lastName || ''} ${borrower?.firstName || ''} ${borrower?.middleName || ''}`.trim() || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="ИНН заемщика" span={1}>
+              {borrower?.inn || '—'}
+            </Descriptions.Item>
+            
+            <Descriptions.Item label="Залогодатель (OWNER_TIN)" span={1}>
+              {pledgor?.organizationName || `${pledgor?.lastName || ''} ${pledgor?.firstName || ''} ${pledgor?.middleName || ''}`.trim() || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="ИНН залогодателя (OWNER_TIN)" span={1}>
+              {pledgor?.inn || '—'}
+            </Descriptions.Item>
+            
+            {card.propertyType && (
+              <Descriptions.Item label="Тип имущества" span={2}>
+                {card.propertyType}
+              </Descriptions.Item>
+            )}
+          </Descriptions>
           
-          attributes.forEach(attr => {
-            const value = getAttributeValue(card.characteristics, attr.key);
-            if (value !== null && value !== undefined && value !== '') {
-              items.push({
-                label: attr.label,
-                children: formatAttributeValue(attr, value),
-              });
-            }
-          });
+          {distributedAttributes.characteristics.length > 0 && (
+            <>
+              <Divider orientation="left">Характеристики</Divider>
+              <Descriptions bordered column={2} size="small">
+                {distributedAttributes.characteristics.map((attr) => {
+                  const value = card.characteristics?.[attr.code];
+                  if (value === null || value === undefined || value === '') return null;
+                  return (
+                    <Descriptions.Item key={attr.code} label={attr.name} span={attr.code === 'NAME_OF_PROPERTY' ? 2 : 1}>
+                      {formatAttributeValue(value)}
+                    </Descriptions.Item>
+                  );
+                })}
+              </Descriptions>
+            </>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: '2',
+      label: 'Характеристики',
+      children: (
+        <div>
+          {distributedAttributes.characteristics.length > 0 ? (
+            <Descriptions bordered column={2} size="small">
+              {distributedAttributes.characteristics.map((attr) => {
+                const value = card.characteristics?.[attr.code];
+                if (value === null || value === undefined || value === '') return null;
+                return (
+                  <Descriptions.Item key={attr.code} label={attr.name}>
+                    {formatAttributeValue(value)}
+                  </Descriptions.Item>
+                );
+              })}
+            </Descriptions>
+          ) : (
+            <Typography.Text type="secondary">Характеристики не указаны</Typography.Text>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: '3',
+      label: 'Документы',
+      children: (
+        <div>
+          {card.documents && card.documents.length > 0 ? (
+            <List
+              dataSource={card.documents}
+              renderItem={(doc: any) => (
+                <List.Item>
+                  <Space>
+                    <FileTextOutlined />
+                    <Text strong>{doc.name}</Text>
+                    <Text type="secondary">({doc.type})</Text>
+                    {doc.uploadDate && (
+                      <Text type="secondary">
+                        - {new Date(doc.uploadDate).toLocaleDateString('ru-RU')}
+                      </Text>
+                    )}
+                  </Space>
+                </List.Item>
+              )}
+            />
+          ) : (
+            <Typography.Text type="secondary">Документы не загружены</Typography.Text>
+          )}
           
-          if (items.length === 0) return null;
+          <Divider />
           
-          return (
-            <div key={group}>
-              <Divider orientation="left" style={{ margin: '8px 0' }}>{group}</Divider>
-              <Descriptions bordered column={2} size="small" items={items} />
-            </div>
-          );
-        })}
-      </Space>
-    );
-  };
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Button 
+              type="link" 
+              icon={<LinkOutlined />} 
+              onClick={handleGoToDossier}
+              style={{ paddingLeft: 0 }}
+            >
+              Перейти в Залоговое досье
+            </Button>
+            
+            {card.mainCategory === 'real_estate' && (
+              <div>
+                <Descriptions bordered column={1} size="small">
+                  <Descriptions.Item label="Дата выписки ЕГРН">
+                    {card.egrnStatementDate ? dayjs(card.egrnStatementDate).format('DD.MM.YYYY') : '—'}
+                  </Descriptions.Item>
+                </Descriptions>
+                
+                {shouldShowOrderEgrnButton && (
+                  <Button
+                    type="primary"
+                    danger
+                    icon={<ExclamationCircleOutlined />}
+                    onClick={handleOrderEgrn}
+                    style={{ marginTop: 16 }}
+                  >
+                    Заказать выписку ЕГРН (выписка более 30 дней)
+                  </Button>
+                )}
+              </div>
+            )}
+          </Space>
+        </div>
+      ),
+    },
+    {
+      key: '4',
+      label: 'Заметки',
+      children: (
+        <div>
+          <Descriptions bordered column={1} size="small">
+            <Descriptions.Item label="Комментарии">
+              {card.notes || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Отлагательные условия">
+              {card.suspensiveConditions || '—'}
+            </Descriptions.Item>
+          </Descriptions>
+        </div>
+      ),
+    },
+    {
+      key: '5',
+      label: 'Оценка',
+      children: (
+        <div>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Statistic
+                title="Рыночная стоимость"
+                value={card.marketValue || 0}
+                formatter={(value) => formatCurrency(Number(value))}
+                valueStyle={{ color: '#3f8600' }}
+              />
+            </Col>
+            <Col span={12}>
+              <Statistic
+                title="Залоговая стоимость"
+                value={card.pledgeValue || 0}
+                formatter={(value) => formatCurrency(Number(value))}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Col>
+          </Row>
+          
+          <Divider />
+          
+          <Descriptions bordered column={2} size="small">
+            <Descriptions.Item label="Наличие ликвидного рынка (HAVEL_MARKET)">
+              {card.characteristics?.HAVEL_MARKET ? 'Да' : 'Нет'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Тип обеспечения (TYPE_COLLATERAL)">
+              {card.characteristics?.TYPE_COLLATERAL || '—'}
+            </Descriptions.Item>
+            {distributedAttributes.evaluation.map((attr) => {
+              const value = card.characteristics?.[attr.code];
+              if (value === null || value === undefined || value === '') return null;
+              return (
+                <Descriptions.Item key={attr.code} label={attr.name}>
+                  {formatAttributeValue(value)}
+                </Descriptions.Item>
+              );
+            })}
+          </Descriptions>
+        </div>
+      ),
+    },
+    {
+      key: '6',
+      label: 'Договор',
+      children: (
+        <div>
+          <Descriptions bordered column={2} size="small">
+            <Descriptions.Item label="REFERENCE сделки" span={2}>
+              {card.reference || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Номер договора" span={2}>
+              {card.contractNumber || '—'}
+            </Descriptions.Item>
+          </Descriptions>
+          
+          {(card.reference || card.contractNumber) && (
+            <Button 
+              type="primary" 
+              icon={<LinkOutlined />} 
+              onClick={handleGoToContract}
+              style={{ marginTop: 16 }}
+            >
+              Перейти к договору в портфеле
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="collateral-card-view">
@@ -182,146 +391,19 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
                 <Tag color="blue">{card.number}</Tag>
                 <Tag color={getStatusColor(card.status)}>{getStatusText(card.status)}</Tag>
                 <Tag>{getCategoryName()}</Tag>
+                {card.propertyType && <Tag color="purple">{card.propertyType}</Tag>}
               </Space>
-              {(card.reference || card.contractNumber) && (
-                <Space direction="vertical" size="small" style={{ marginTop: 8 }}>
-                  {card.reference && (
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                      REFERENCE: {card.reference}
-                    </Text>
-                  )}
-                  {card.contractNumber && (
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                      Договор залога: {card.contractNumber}
-                    </Text>
-                  )}
-                </Space>
-              )}
             </Space>
           </Col>
         </Row>
       </Card>
 
-      {/* Основная информация */}
-      <Row gutter={[16, 16]}>
-        {/* Стоимость */}
-        <Col xs={24} lg={12}>
-          <Card title={<Space><DollarOutlined /> Оценка стоимости</Space>} className="info-card">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Statistic
-                  title="Рыночная стоимость"
-                  value={card.marketValue}
-                  formatter={(value) => formatCurrency(Number(value))}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="Залоговая стоимость"
-                  value={card.pledgeValue}
-                  formatter={(value) => formatCurrency(Number(value))}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Col>
-            </Row>
-            {card.evaluationDate && (
-              <Divider style={{ margin: '16px 0' }} />
-            )}
-            {card.evaluationDate && (
-              <Text type="secondary">
-                <CalendarOutlined /> Дата оценки: {new Date(card.evaluationDate).toLocaleDateString('ru-RU')}
-              </Text>
-            )}
-          </Card>
-        </Col>
-
-        {/* Адрес */}
-        <Col xs={24} lg={12}>
-          <Card title={<Space><EnvironmentOutlined /> Местоположение</Space>} className="info-card">
-            <Descriptions column={1} size="small">
-              <Descriptions.Item label="Адрес">{card.address?.fullAddress || 'Не указан'}</Descriptions.Item>
-              {card.address?.postalCode && (
-                <Descriptions.Item label="Индекс">{card.address.postalCode}</Descriptions.Item>
-              )}
-              {card.address?.coordinates && (
-                <Descriptions.Item label="Координаты">
-                  {card.address.coordinates.lat.toFixed(4)}, {card.address.coordinates.lon.toFixed(4)}
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Классификация */}
-      <Card title={<Space><InfoCircleOutlined /> Классификация</Space>} className="info-card">
-        <Descriptions column={{ xs: 1, sm: 2, lg: 3 }} size="small">
-          <Descriptions.Item label="Основная категория">{getCategoryName()}</Descriptions.Item>
-          <Descriptions.Item label="Уровень 0">{card.classification.level0}</Descriptions.Item>
-          <Descriptions.Item label="Уровень 1">{card.classification.level1}</Descriptions.Item>
-          <Descriptions.Item label="Уровень 2">{card.classification.level2}</Descriptions.Item>
-          <Descriptions.Item label="Код ЦБ">{card.cbCode}</Descriptions.Item>
-        </Descriptions>
-      </Card>
-
-      {/* Характеристики */}
-      <Card title={<Space><FileTextOutlined /> Характеристики</Space>} className="info-card">
-        {renderCharacteristics()}
-      </Card>
-
-      {/* Собственник */}
-      {card.owner && (
-        <Card title={<Space><UserOutlined /> Собственник</Space>} className="info-card">
-          <Descriptions column={{ xs: 1, sm: 2 }} size="small">
-            <Descriptions.Item label="Наименование">{card.owner.name}</Descriptions.Item>
-            <Descriptions.Item label="ИНН">{card.owner.inn}</Descriptions.Item>
-            <Descriptions.Item label="Тип">
-              {card.owner.type === 'legal' ? 'Юридическое лицо' : 'Физическое лицо'}
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
-      )}
-
-      {/* Документы */}
-      {card.documents && card.documents.length > 0 && (
-        <Card title={<Space><FileTextOutlined /> Документы</Space>} className="info-card">
-          <Space direction="vertical" style={{ width: '100%' }}>
-            {card.documents.map((doc: any) => (
-              <Card key={doc.id} size="small" type="inner">
-                <Space>
-                  <FileTextOutlined />
-                  <Text strong>{doc.name}</Text>
-                  <Text type="secondary">({doc.type})</Text>
-                  {doc.uploadDate && <Text type="secondary">- {doc.uploadDate}</Text>}
-                </Space>
-              </Card>
-            ))}
-          </Space>
-        </Card>
-      )}
-
-      {/* Заметки */}
-      {card.notes && (
-        <Card title="Заметки" className="info-card">
-          <Paragraph>{card.notes}</Paragraph>
-        </Card>
-      )}
-
-      {/* Даты */}
-      <Card className="info-card">
-        <Descriptions column={{ xs: 1, sm: 2 }} size="small">
-          <Descriptions.Item label="Дата создания">
-            {new Date(card.createdAt).toLocaleString('ru-RU')}
-          </Descriptions.Item>
-          <Descriptions.Item label="Дата изменения">
-            {new Date(card.updatedAt).toLocaleString('ru-RU')}
-          </Descriptions.Item>
-        </Descriptions>
+      {/* Вкладки с информацией */}
+      <Card style={{ marginTop: 16 }}>
+        <Tabs items={tabItems} defaultActiveKey="1" />
       </Card>
     </div>
   );
 };
 
 export default CollateralCardView;
-

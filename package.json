@@ -13,7 +13,8 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "type-check": "tsc --noEmit",
-    "check-deploy": "node scripts/pre-deploy-check.js"
+    "check-deploy": "node scripts/pre-deploy-check.js",
+    "generate-portfolio": "node scripts/generate_portfolio_demo.js"
   },
   "dependencies": {
     "react": "^18.2.0",

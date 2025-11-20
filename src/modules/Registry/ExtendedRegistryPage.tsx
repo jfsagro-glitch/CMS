@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, message, Button, Space, List, Tag, Empty, Typography } from 'antd';
+import { Modal, message, Button, Space, List, Tag, Empty, Typography, Popconfirm } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import CollateralCardForm from '@/components/common/CollateralCardForm';
 import CollateralCardView from '@/components/common/CollateralCardView';
 import RegistryTable from '@/components/common/RegistryTable';
@@ -17,7 +18,8 @@ import extendedStorageService from '@/services/ExtendedStorageService';
 import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
 import type { ExtendedCollateralCard } from '@/types';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LinkOutlined } from '@ant-design/icons';
+import { LinkOutlined, DatabaseOutlined } from '@ant-design/icons';
+import { generateAllCollateralDemoCards } from '@/utils/collateralDemoData';
 
 const ExtendedRegistryPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -172,9 +174,58 @@ const ExtendedRegistryPage: React.FC = () => {
       console.error(error);
     }
   };
+  
+  const handleCreate = () => {
+    setEditingCard(null);
+    setModalVisible(true);
+  };
+  
+  const handleGenerateDemoData = async () => {
+    try {
+      message.loading({ content: 'Генерация демо-карточек...', key: 'generating', duration: 0 });
+      const demoCards = await generateAllCollateralDemoCards();
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (const card of demoCards) {
+        try {
+          await extendedStorageService.saveExtendedCard(card);
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          console.error(`Ошибка создания карточки ${card.number}:`, error);
+        }
+      }
+      
+      await loadCards();
+      message.destroy('generating');
+      message.success(`Создано ${successCount} демо-карточек${errorCount > 0 ? `, ошибок: ${errorCount}` : ''}`);
+    } catch (error) {
+      message.destroy('generating');
+      message.error('Ошибка генерации демо-данных');
+      console.error(error);
+    }
+  };
 
   return (
     <div>
+      <Space style={{ marginBottom: 16 }} wrap>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+          Создать карточку
+        </Button>
+        <Popconfirm
+          title="Генерация демо-данных"
+          description="Создать 50 карточек на каждый тип имущества из справочника? Это может занять некоторое время."
+          onConfirm={handleGenerateDemoData}
+          okText="Да"
+          cancelText="Нет"
+        >
+          <Button icon={<DatabaseOutlined />}>
+            Создать демо-данные (50 карточек на каждый тип)
+          </Button>
+        </Popconfirm>
+      </Space>
+      
       <RegistryTable
         data={tableData}
         loading={loading}

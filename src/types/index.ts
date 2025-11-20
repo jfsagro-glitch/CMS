@@ -232,6 +232,17 @@ export interface ExtendedCollateralCard extends CollateralCard {
   // Связь с портфелем (для сквозных ссылок)
   reference?: string | number; // REFERENCE сделки из портфеля
   contractNumber?: string; // Номер договора залога
+  contractId?: string; // ID договора для навигации
+  
+  // Тип имущества из справочника атрибутов залога
+  propertyType?: string; // Например: "Будущий урожай", "Аффинированные драгоценные металлы в слитках"
+  
+  // Выписка ЕГРН (для недвижимости)
+  egrnStatementDate?: string; // Дата выписки ЕГРН
+  egrnStatementId?: string; // ID выписки ЕГРН в модуле ЕГРН
+  
+  // Отлагательные условия
+  suspensiveConditions?: string; // Отлагательные условия по данному имуществу
 }
 
 // Тип объекта для определения набора характеристик

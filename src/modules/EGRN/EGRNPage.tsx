@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Button,
   Card,
@@ -47,6 +48,7 @@ const { TextArea } = Input;
 type EGRNRequestRow = EGRNRequest & { key: string };
 
 const EGRNPage: React.FC = () => {
+  const location = useLocation();
   const [form] = Form.useForm();
   const [activeTab, setActiveTab] = useState<EGRNServiceType>('mortgage_registration');
   const [requests, setRequests] = useState<EGRNRequestRow[]>([]);
@@ -56,6 +58,22 @@ const EGRNPage: React.FC = () => {
   const [selectedRequest, setSelectedRequest] = useState<EGRNRequestRow | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  
+  const handleCreateFromCard = (objectId: string, cadastralNumber: string, objectName: string) => {
+    setSelectedRequest(null);
+    form.resetFields();
+    form.setFieldsValue({
+      serviceType: 'extract',
+      objectId,
+      cadastralNumber,
+      objectName,
+      extractType: 'about_object',
+      applicantType: 'legal',
+      status: 'draft',
+    });
+    setActiveTab('extract');
+    setDrawerVisible(true);
+  };
 
   // Загрузка данных из localStorage
   useEffect(() => {
@@ -77,6 +95,20 @@ const EGRNPage: React.FC = () => {
     };
     loadRequests();
   }, []);
+  
+  // Обработка параметров URL для создания запроса из карточки
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const objectId = params.get('objectId');
+    const cadastralNumber = params.get('cadastralNumber');
+    const objectName = params.get('objectName');
+    
+    if (objectId && cadastralNumber) {
+      handleCreateFromCard(objectId, cadastralNumber, objectName || '');
+      // Очищаем параметры из URL
+      window.history.replaceState({}, '', location.pathname);
+    }
+  }, [location.search]);
 
   // Сохранение данных
   const saveRequests = (newRequests: EGRNRequest[]) => {
