@@ -29,7 +29,7 @@ import KPIPage from './modules/KPI/KPIPage';
 import AnalyticsPage from './modules/Analytics/AnalyticsPage';
 import EmployeesPage from './modules/Settings/EmployeesPage';
 import ReferenceDataPage from './modules/Settings/ReferenceDataPage';
-import DataMigrationPage from './modules/Settings/DataMigrationPage';
+import UploadPage from './modules/Upload/UploadPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -149,12 +149,11 @@ const AppContent: React.FC = () => {
                   <Route path="appraisal" element={<AppraisalPage />} />
                   <Route path="cms-check" element={<CMSCheckPage />} />
                   <Route path="egrn" element={<EGRNPage />} />
-                      <Route path="upload" element={<PlaceholderPage title="Загрузка" />} />
+                      <Route path="upload" element={<UploadPage />} />
                   <Route path="monitoring" element={<MonitoringPage />} />
                       <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
                       <Route path="settings/employees" element={<EmployeesPage />} />
                       <Route path="settings/reference-data" element={<ReferenceDataPage />} />
-                      <Route path="settings/data-migration" element={<DataMigrationPage />} />
                     </Route>
                   </Routes>
                 </HashRouter>
