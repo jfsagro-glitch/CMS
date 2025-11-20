@@ -23,7 +23,7 @@ const markdownToHtml = (markdown: string): string => {
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>');
 
   // Списки
-  html = html.replace(/^\- (.*$)/gim, '<li>$1</li>');
+  html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
   html = html.replace(/^(\d+)\. (.*$)/gim, '<li>$2</li>');
 
   // Параграфы
@@ -49,7 +49,7 @@ const markdownToHtml = (markdown: string): string => {
 /**
  * Генерация PDF из markdown текста
  */
-export const generatePdfFromMarkdown = async (markdown: string, _filename: string = 'instruction.pdf'): Promise<void> => {
+export const generatePdfFromMarkdown = async (markdown: string): Promise<void> => {
   try {
     // Конвертируем markdown в HTML
     const htmlContent = markdownToHtml(markdown);
@@ -210,7 +210,7 @@ export const generatePdfFromMarkdown = async (markdown: string, _filename: strin
 /**
  * Загрузка markdown файла и генерация PDF
  */
-export const downloadPdfFromMarkdownFile = async (filePath: string, filename: string = 'instruction.pdf'): Promise<void> => {
+export const downloadPdfFromMarkdownFile = async (filePath: string, _filename: string = 'instruction.pdf'): Promise<void> => {
   try {
     const response = await fetch(filePath);
     if (!response.ok) {
@@ -218,7 +218,7 @@ export const downloadPdfFromMarkdownFile = async (filePath: string, filename: st
     }
     
     const markdown = await response.text();
-    await generatePdfFromMarkdown(markdown, filename);
+    await generatePdfFromMarkdown(markdown);
   } catch (error) {
     console.error('Ошибка загрузки и генерации PDF:', error);
     throw error;

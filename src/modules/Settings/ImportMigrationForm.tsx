@@ -192,14 +192,17 @@ const ImportMigrationForm: React.FC<ImportMigrationFormProps> = ({
                     if (employee.id) {
                       const existing = employeeService.getEmployeeById(employee.id);
                       if (existing) {
-                        const { id, createdAt, updatedAt, ...updates } = employee;
+                        const { id, ...updates } = employee;
+                        // Удаляем служебные поля
+                        delete (updates as any).createdAt;
+                        delete (updates as any).updatedAt;
                         employeeService.updateEmployee(id, updates);
                         count++;
                         continue;
                       }
                     }
                     // Иначе создаем нового (без id, createdAt, updatedAt)
-                    const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...employeeData } = employee;
+                    const { id: _unusedId, createdAt: _unusedCreatedAt, updatedAt: _unusedUpdatedAt, ...employeeData } = employee;
                     employeeService.addEmployee(employeeData);
                     count++;
                   } catch (error) {
