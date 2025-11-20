@@ -29,6 +29,7 @@ import KPIPage from './modules/KPI/KPIPage';
 import AnalyticsPage from './modules/Analytics/AnalyticsPage';
 import EmployeesPage from './modules/Settings/EmployeesPage';
 import ReferenceDataPage from './modules/Settings/ReferenceDataPage';
+import DataMigrationPage from './modules/Settings/DataMigrationPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -64,6 +65,21 @@ const AppContent: React.FC = () => {
           }
         } else {
           dispatch(setCards(cards));
+        }
+
+        // Загрузка демо-данных осмотров при первом запуске
+        try {
+          const inspectionService = (await import('./services/InspectionService')).default;
+          await inspectionService.initDatabase();
+          const inspections = await inspectionService.getInspections();
+          
+          if (inspections.length === 0) {
+            const { loadInspectionDemoData } = await import('./utils/inspectionDemoData');
+            await loadInspectionDemoData();
+            console.log('✅ Демо-данные осмотров загружены автоматически');
+          }
+        } catch (error) {
+          console.warn('Демо-данные осмотров не загружены:', error);
         }
 
         dispatch(setInitialized(true));
@@ -138,6 +154,7 @@ const AppContent: React.FC = () => {
                       <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
                       <Route path="settings/employees" element={<EmployeesPage />} />
                       <Route path="settings/reference-data" element={<ReferenceDataPage />} />
+                      <Route path="settings/data-migration" element={<DataMigrationPage />} />
                     </Route>
                   </Routes>
                 </HashRouter>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Result, Button, Card, Row, Col } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserOutlined, DatabaseOutlined, FileTextOutlined } from '@ant-design/icons';
+import { UserOutlined, DatabaseOutlined, FileTextOutlined, SwapOutlined } from '@ant-design/icons';
 import referenceDataService from '@/services/ReferenceDataService';
 
 interface PlaceholderPageProps {
@@ -112,6 +112,19 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
                 <FileTextOutlined style={{ fontSize: '48px', color: '#722ed1', marginBottom: '16px' }} />
                 <h3>Атрибуты залога</h3>
                 <p style={{ color: '#8c8c8c' }}>Справочник атрибутов залога из файла atr1.xlsx</p>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card
+              hoverable
+              style={{ height: '100%' }}
+              onClick={() => navigate('/settings/data-migration')}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <SwapOutlined style={{ fontSize: '48px', color: '#13c2c2', marginBottom: '16px' }} />
+                <h3>Миграция данных</h3>
+                <p style={{ color: '#8c8c8c' }}>Выгрузка и загрузка данных из модулей CMS</p>
               </div>
             </Card>
           </Col>

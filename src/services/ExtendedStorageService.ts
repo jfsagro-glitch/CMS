@@ -8,6 +8,7 @@ import type {
   AppSettings,
   ExportResult,
 } from '@/types';
+import type { Inspection } from '@/types/inspection';
 
 // Расширенная схема базы данных
 class ExtendedCMSDatabase extends Dexie {
@@ -15,6 +16,7 @@ class ExtendedCMSDatabase extends Dexie {
   partners!: Table<Partner, string>;
   documents!: Table<Document, string>;
   settings!: Table<AppSettings & { id: string }, string>;
+  inspections!: Table<Inspection, string>;
 
   constructor() {
     super('CMSDatabase');
@@ -29,11 +31,26 @@ class ExtendedCMSDatabase extends Dexie {
       // Миграция данных из версии 1
       console.log('Upgrading database to version 2...');
     });
+    
+    // Версия 3 с таблицей осмотров
+    this.version(3).stores({
+      collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
+      partners: 'id, type, role, inn, lastName, organizationName',
+      documents: 'id, name, type, category, uploadDate',
+      settings: 'id',
+      inspections: 'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt'
+    }).upgrade(async (trans) => {
+      // Миграция данных из версии 2
+      console.log('Upgrading database to version 3...');
+    });
   }
 }
 
 // Создаем экземпляр базы данных
 const extendedDb = new ExtendedCMSDatabase();
+
+// Экспортируем экземпляр базы данных для использования в других сервисах
+export { extendedDb };
 
 class ExtendedStorageService {
   private db: ExtendedCMSDatabase;
