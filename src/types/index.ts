@@ -213,7 +213,14 @@ export interface ExtendedCollateralCard extends CollateralCard {
   // Стоимость
   marketValue?: number;
   pledgeValue?: number;
-  evaluationDate?: string;
+  evaluationDate?: string; // Дата оценки
+  lastEvaluationDate?: string; // Дата последней оценки
+  nextEvaluationDate?: string; // Дата следующей оценки
+  
+  // Мониторинг
+  monitoringDate?: string; // Дата последнего мониторинга
+  nextMonitoringDate?: string; // Дата следующего мониторинга
+  monitoringFrequencyMonths?: number; // Периодичность мониторинга в месяцах
 
   // Собственник
   owner?: {

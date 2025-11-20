@@ -25,6 +25,8 @@ import { CalendarOutlined, ClockCircleOutlined, SearchOutlined, EyeOutlined, Dol
 import type { MonitoringPlanEntry, MonitoringTimeframe, RevaluationPlanEntry } from '@/types/monitoring';
 import MonitoringCardModal from '@/components/MonitoringCardModal/MonitoringCardModal';
 import MonitoringSettings from './MonitoringSettings';
+import { extendedStorageService } from '@/services/ExtendedStorageService';
+import { generateMonitoringPlan, generateRevaluationPlan } from '@/utils/monitoringPlanGenerator';
 import './MonitoringPage.css';
 
 dayjs.extend(relativeTime);
@@ -73,21 +75,16 @@ const MonitoringPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const base = import.meta.env.BASE_URL ?? '/';
-        const resolvedBase = new URL(base, window.location.origin);
-        const normalizedPath = resolvedBase.pathname.endsWith('/')
-          ? resolvedBase.pathname
-          : `${resolvedBase.pathname}/`;
-        const url = `${resolvedBase.origin}${normalizedPath}monitoringPlan.json?v=${Date.now()}`;
-        const response = await fetch(url, { cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error(`Не удалось загрузить план мониторинга (${response.status})`);
-        }
-        const payload = (await response.json()) as MonitoringPlanEntry[];
+        // Загружаем карточки обеспечения из IndexedDB
+        const cards = await extendedStorageService.getExtendedCards();
+        
         if (!mounted) return;
 
-        const enriched: TableRow[] = payload.map((item, index) => {
-          const planned = dayjs(item.plannedDate);
+        // Генерируем план мониторинга на основе карточек
+        const monitoringEntries = generateMonitoringPlan(cards);
+
+        const enriched: TableRow[] = monitoringEntries.map((item, index) => {
+          const planned = dayjs(item.plannedDate, 'DD.MM.YYYY');
           const daysUntil = planned.diff(dayjs(), 'day');
           let statusColor = '#1677ff';
           if (daysUntil < 0) statusColor = '#f5222d';
@@ -280,26 +277,16 @@ const MonitoringPage: React.FC = () => {
       setRevaluationLoading(true);
       setRevaluationError(null);
       try {
-        const base = import.meta.env.BASE_URL ?? '/';
-        const resolvedBase = new URL(base, window.location.origin);
-        const normalizedPath = resolvedBase.pathname.endsWith('/')
-          ? resolvedBase.pathname
-          : `${resolvedBase.pathname}/`;
-        const url = `${resolvedBase.origin}${normalizedPath}revaluationPlan.json?v=${Date.now()}`;
-        const response = await fetch(url, { cache: 'no-store' });
-        if (!response.ok) {
-          // If file doesn't exist, use empty array
-          if (response.status === 404) {
-            setRevaluationPlan([]);
-            return;
-          }
-          throw new Error(`Не удалось загрузить план переоценок (${response.status})`);
-        }
-        const payload = (await response.json()) as RevaluationPlanEntry[];
+        // Загружаем карточки обеспечения из IndexedDB
+        const cards = await extendedStorageService.getExtendedCards();
+        
         if (!mounted) return;
 
-        const enriched: RevaluationTableRow[] = payload.map((item, index) => {
-          const planned = dayjs(item.plannedDate);
+        // Генерируем план переоценок на основе карточек
+        const revaluationEntries = generateRevaluationPlan(cards);
+
+        const enriched: RevaluationTableRow[] = revaluationEntries.map((item, index) => {
+          const planned = dayjs(item.plannedDate, 'DD.MM.YYYY');
           const daysUntil = planned.diff(dayjs(), 'day');
           let statusColor = '#1677ff';
           if (daysUntil < 0) statusColor = '#f5222d';
@@ -316,11 +303,7 @@ const MonitoringPage: React.FC = () => {
 
         setRevaluationPlan(enriched);
       } catch (fetchError) {
-        if (fetchError instanceof Error && fetchError.message.includes('404')) {
-          setRevaluationPlan([]);
-        } else {
-          setRevaluationError(fetchError instanceof Error ? fetchError.message : 'Неизвестная ошибка');
-        }
+        setRevaluationError(fetchError instanceof Error ? fetchError.message : 'Неизвестная ошибка');
       } finally {
         if (mounted) {
           setRevaluationLoading(false);

@@ -372,6 +372,51 @@ const generateCardsForPropertyType = (
       ? (typeof contract.collateralValue === 'number' ? contract.collateralValue : parseInt(String(contract.collateralValue)))
       : (characteristics.pledgeValue || randomInt(800000, 8000000));
     
+    // Генерация дат оценки (актуальные относительно текущей даты)
+    const now = new Date();
+    const lastEvaluationDate = new Date(now);
+    lastEvaluationDate.setDate(lastEvaluationDate.getDate() - randomInt(30, 365)); // От 30 дней до года назад
+    
+    // Периодичность переоценки зависит от типа имущества (обычно 12 месяцев)
+    const evaluationFrequencyMonths = mainCategory === 'real_estate' ? 12 : 6;
+    const nextEvaluationDate = new Date(lastEvaluationDate);
+    nextEvaluationDate.setMonth(nextEvaluationDate.getMonth() + evaluationFrequencyMonths);
+    // Делаем дату не намного позднее установленных сроков (в пределах 1-2 месяцев от текущей даты)
+    const daysUntilNextEvaluation = Math.floor((nextEvaluationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysUntilNextEvaluation > 60) {
+      // Если дата слишком далеко, сдвигаем её ближе (но не в прошлое)
+      nextEvaluationDate.setDate(now.getDate() + randomInt(1, 60));
+    }
+    
+    // Генерация дат мониторинга (актуальные относительно текущей даты)
+    const lastMonitoringDate = new Date(now);
+    lastMonitoringDate.setDate(lastMonitoringDate.getDate() - randomInt(0, 180)); // От сегодня до 6 месяцев назад
+    
+    // Периодичность мониторинга зависит от типа имущества
+    // Недвижимость - 12 месяцев, транспорт без страхования - 6 месяцев, товары - 3 месяца
+    let monitoringFrequencyMonths = 12;
+    if (mainCategory === 'movable') {
+      monitoringFrequencyMonths = 6;
+    } else if (propertyType.includes('товар') || propertyType.includes('сырье')) {
+      monitoringFrequencyMonths = 3;
+    }
+    
+    const nextMonitoringDate = new Date(lastMonitoringDate);
+    nextMonitoringDate.setMonth(nextMonitoringDate.getMonth() + monitoringFrequencyMonths);
+    // Делаем дату не намного позднее установленных сроков (в пределах 1-2 месяцев от текущей даты)
+    const daysUntilNextMonitoring = Math.floor((nextMonitoringDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysUntilNextMonitoring > 60) {
+      // Если дата слишком далеко, сдвигаем её ближе (но не в прошлое)
+      nextMonitoringDate.setDate(now.getDate() + randomInt(1, 60));
+    }
+    
+    const formatDate = (date: Date): string => {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}.${month}.${year}`;
+    };
+    
     const card: ExtendedCollateralCard = {
       id: generateId(),
       number: `КО-2024-${String(i + 1).padStart(4, '0')}`, // Будет перезаписано в generateAllCollateralDemoCards
@@ -387,6 +432,12 @@ const generateCardsForPropertyType = (
       propertyType,
       marketValue,
       pledgeValue,
+      evaluationDate: formatDate(lastEvaluationDate),
+      lastEvaluationDate: formatDate(lastEvaluationDate),
+      nextEvaluationDate: formatDate(nextEvaluationDate),
+      monitoringDate: formatDate(lastMonitoringDate),
+      nextMonitoringDate: formatDate(nextMonitoringDate),
+      monitoringFrequencyMonths,
       reference: contract?.reference ? String(contract.reference) : `REF-${randomInt(10000, 99999)}`,
       contractNumber: contract?.contractNumber || `ДОГ-${randomInt(1000, 9999)}/${randomInt(2020, 2024)}`,
       contractId: contract?.contractNumber || undefined,
