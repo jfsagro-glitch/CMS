@@ -210,7 +210,7 @@ export const generatePdfFromMarkdown = async (markdown: string): Promise<void> =
 /**
  * Загрузка markdown файла и генерация PDF
  */
-export const downloadPdfFromMarkdownFile = async (filePath: string, _filename: string = 'instruction.pdf'): Promise<void> => {
+export const downloadPdfFromMarkdownFile = async (filePath: string): Promise<void> => {
   try {
     const response = await fetch(filePath);
     if (!response.ok) {

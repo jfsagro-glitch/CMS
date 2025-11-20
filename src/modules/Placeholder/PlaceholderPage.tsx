@@ -22,7 +22,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
       setLoading(true);
       const base = import.meta.env.BASE_URL ?? './';
       const markdownPath = `${base}INSTRUCTION/CMS_USER_MANUAL.md`;
-      await downloadPdfFromMarkdownFile(markdownPath, 'CMS_User_Manual.pdf');
+      await downloadPdfFromMarkdownFile(markdownPath);
       message.success('PDF инструкция открыта для печати');
     } catch (error: any) {
       console.error('Ошибка генерации PDF:', error);

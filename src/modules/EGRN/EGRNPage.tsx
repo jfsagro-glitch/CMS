@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   Button,
@@ -59,7 +59,7 @@ const EGRNPage: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   
-  const handleCreateFromCard = (objectId: string, cadastralNumber: string, objectName: string) => {
+  const handleCreateFromCard = useCallback((objectId: string, cadastralNumber: string, objectName: string) => {
     setSelectedRequest(null);
     form.resetFields();
     form.setFieldsValue({
@@ -73,7 +73,7 @@ const EGRNPage: React.FC = () => {
     });
     setActiveTab('extract');
     setDrawerVisible(true);
-  };
+  }, [form]);
 
   // Загрузка данных из localStorage
   useEffect(() => {
@@ -108,7 +108,7 @@ const EGRNPage: React.FC = () => {
       // Очищаем параметры из URL
       window.history.replaceState({}, '', location.pathname);
     }
-  }, [location.search]);
+  }, [location.search, location.pathname, handleCreateFromCard]);
 
   // Сохранение данных
   const saveRequests = (newRequests: EGRNRequest[]) => {

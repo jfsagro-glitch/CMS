@@ -202,7 +202,7 @@ const ImportMigrationForm: React.FC<ImportMigrationFormProps> = ({
                       }
                     }
                     // Иначе создаем нового (без id, createdAt, updatedAt)
-                    const { id: _unusedId, createdAt: _unusedCreatedAt, updatedAt: _unusedUpdatedAt, ...employeeData } = employee;
+                    const { id, createdAt, updatedAt, ...employeeData } = employee;
                     employeeService.addEmployee(employeeData);
                     count++;
                   } catch (error) {

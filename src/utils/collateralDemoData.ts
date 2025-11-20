@@ -113,10 +113,11 @@ const generateAttributeValue = (attr: any, index: number): any => {
       return randomInt(1, 1000);
     case 'boolean':
       return Math.random() > 0.5;
-    case 'date':
+    case 'date': {
       const date = new Date();
       date.setDate(date.getDate() - randomInt(0, 365));
       return date.toISOString().split('T')[0];
+    }
     case 'string':
     default:
       if (attr.code === 'OWNER_TIN') {
