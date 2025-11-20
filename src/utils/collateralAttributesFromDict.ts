@@ -32,14 +32,36 @@ export const getPropertyTypes = (): string[] => {
 };
 
 /**
- * Получить атрибуты для конкретного типа имущества
+ * Получить атрибуты для конкретного типа имущества или группы атрибутов
+ * Может принимать как тип имущества, так и группу атрибутов из справочника
  */
-export const getAttributesForPropertyType = (propertyType: string): CollateralAttributeConfig[] => {
+export const getAttributesForPropertyType = (propertyTypeOrGroup: string): CollateralAttributeConfig[] => {
   const dict = referenceDataService.getDictionaryByCode('collateral_attributes_zalog');
   if (!dict) return [];
   
-  return dict.items
-    .filter(item => item.metadata?.group === propertyType)
+  // Ищем по точному совпадению группы
+  let items = dict.items.filter(item => item.metadata?.group === propertyTypeOrGroup);
+  
+  // Если не нашли, ищем по частичному совпадению
+  if (items.length === 0) {
+    items = dict.items.filter(item => {
+      const group = item.metadata?.group || '';
+      return group.toLowerCase().includes(propertyTypeOrGroup.toLowerCase()) ||
+             propertyTypeOrGroup.toLowerCase().includes(group.toLowerCase());
+    });
+  }
+  
+  // Если все еще не нашли, ищем по коду или названию
+  if (items.length === 0) {
+    items = dict.items.filter(item => {
+      const code = item.code || '';
+      const name = item.name || '';
+      return code.toLowerCase().includes(propertyTypeOrGroup.toLowerCase()) ||
+             name.toLowerCase().includes(propertyTypeOrGroup.toLowerCase());
+    });
+  }
+  
+  return items
     .map(item => ({
       code: item.code || '',
       name: item.name,
@@ -49,7 +71,12 @@ export const getAttributesForPropertyType = (propertyType: string): CollateralAt
       group: item.metadata?.group || '',
       section: item.metadata?.section || '',
     }))
-    .sort((a, b) => (a.naturalKey ? -1 : 0) - (b.naturalKey ? -1 : 0));
+    .sort((a, b) => {
+      // Сначала naturalKey, потом по названию
+      if (a.naturalKey && !b.naturalKey) return -1;
+      if (!a.naturalKey && b.naturalKey) return 1;
+      return a.name.localeCompare(b.name);
+    });
 };
 
 /**

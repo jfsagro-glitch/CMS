@@ -8,6 +8,7 @@ import type { CollateralPortfolioEntry } from '@/types/portfolio';
 import { generateId } from './helpers';
 import { getPropertyTypes, getAttributesForPropertyType } from './collateralAttributesFromDict';
 import { generateAllPortfolioDemoContracts, getContractsForPropertyType } from './portfolioDemoData';
+import { getAttributeGroupForPropertyType } from './propertyTypeToAttributeGroup';
 
 // Генераторы случайных данных
 const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -139,14 +140,113 @@ const generateAttributeValue = (attr: any, index: number): any => {
 
 /**
  * Генерация характеристик для типа имущества
+ * Использует маппинг типов имущества к группам атрибутов из справочника
  */
-const generateCharacteristics = (propertyType: string, index: number): Record<string, any> => {
-  const attributes = getAttributesForPropertyType(propertyType);
+const generateCharacteristics = (
+  propertyType: string, 
+  index: number,
+  contract?: CollateralPortfolioEntry
+): Record<string, any> => {
+  // Получаем группу атрибутов для типа имущества
+  const attributeGroup = getAttributeGroupForPropertyType(propertyType);
+  
+  // Получаем атрибуты для этой группы
+  const attributes = attributeGroup ? getAttributesForPropertyType(attributeGroup) : [];
+  
+  // Если не нашли по группе, пробуем по самому типу имущества
+  const fallbackAttributes = attributes.length === 0 ? getAttributesForPropertyType(propertyType) : [];
+  const allAttributes = attributes.length > 0 ? attributes : fallbackAttributes;
+  
   const characteristics: Record<string, any> = {};
   
-  attributes.forEach(attr => {
+  // Генерируем значения для всех атрибутов
+  allAttributes.forEach(attr => {
     characteristics[attr.code] = generateAttributeValue(attr, index);
   });
+  
+  // Добавляем данные из договора в характеристики
+  if (contract) {
+    // Данные о договоре
+    if (contract.reference) {
+      characteristics.CONTRACT_REFERENCE = String(contract.reference);
+    }
+    if (contract.contractNumber) {
+      characteristics.CONTRACT_NUMBER = contract.contractNumber;
+    }
+    if (contract.contractDate) {
+      characteristics.CONTRACT_DATE = contract.contractDate;
+    }
+    if (contract.collateralContractNumber) {
+      characteristics.COLLATERAL_CONTRACT_NUMBER = contract.collateralContractNumber;
+    }
+    if (contract.collateralContractDate) {
+      characteristics.COLLATERAL_CONTRACT_DATE = contract.collateralContractDate;
+    }
+    
+    // Финансовые данные
+    if (contract.limitRub) {
+      characteristics.CREDIT_LIMIT = typeof contract.limitRub === 'number' ? contract.limitRub : parseFloat(String(contract.limitRub));
+    }
+    if (contract.debtRub) {
+      characteristics.CURRENT_DEBT = typeof contract.debtRub === 'number' ? contract.debtRub : parseFloat(String(contract.debtRub));
+    }
+    if (contract.currentMarketValue) {
+      characteristics.MARKET_VALUE = typeof contract.currentMarketValue === 'number' ? contract.currentMarketValue : parseFloat(String(contract.currentMarketValue));
+    }
+    if (contract.collateralValue) {
+      characteristics.COLLATERAL_VALUE = typeof contract.collateralValue === 'number' ? contract.collateralValue : parseFloat(String(contract.collateralValue));
+    }
+    
+    // Данные о залоге
+    if (contract.collateralCategory) {
+      characteristics.COLLATERAL_CATEGORY = contract.collateralCategory;
+    }
+    if (contract.collateralType) {
+      characteristics.COLLATERAL_TYPE = contract.collateralType;
+    }
+    if (contract.collateralPurpose) {
+      characteristics.COLLATERAL_PURPOSE = contract.collateralPurpose;
+    }
+    if (contract.collateralInfo) {
+      characteristics.COLLATERAL_INFO = contract.collateralInfo;
+    }
+    if (contract.collateralLocation) {
+      characteristics.COLLATERAL_LOCATION = contract.collateralLocation;
+    }
+    if (contract.liquidity) {
+      characteristics.LIQUIDITY = contract.liquidity;
+    }
+    if (contract.priority) {
+      characteristics.PRIORITY = contract.priority;
+    }
+    if (contract.monitoringType) {
+      characteristics.MONITORING_TYPE = contract.monitoringType;
+    }
+    if (contract.lastMonitoringDate) {
+      characteristics.LAST_MONITORING_DATE = contract.lastMonitoringDate;
+    }
+    if (contract.nextMonitoringDate) {
+      characteristics.NEXT_MONITORING_DATE = contract.nextMonitoringDate;
+    }
+    if (contract.initialValuationDate) {
+      characteristics.INITIAL_VALUATION_DATE = contract.initialValuationDate;
+    }
+    if (contract.currentValuationDate) {
+      characteristics.CURRENT_VALUATION_DATE = contract.currentValuationDate;
+    }
+    
+    // Данные о заемщике и залогодателе
+    if (contract.borrower) {
+      characteristics.BORROWER_NAME = contract.borrower;
+    }
+    if (contract.pledger) {
+      characteristics.PLEDGER_NAME = contract.pledger;
+    }
+    if (contract.inn) {
+      characteristics.BORROWER_INN = String(contract.inn);
+      characteristics.PLEDGER_INN = String(contract.inn);
+    }
+  }
   
   return characteristics;
 };
@@ -239,7 +339,7 @@ const generateCardsForPropertyType = (
     }
     
     const address = generateAddress();
-    const characteristics = generateCharacteristics(propertyType, i);
+    const characteristics = generateCharacteristics(propertyType, i, contract);
     
     // Добавляем обязательные поля
     if (!characteristics.NAME_OF_PROPERTY) {
@@ -247,6 +347,20 @@ const generateCardsForPropertyType = (
     }
     if (!characteristics.OWNER_TIN) {
       characteristics.OWNER_TIN = pledgor.inn;
+    }
+    
+    // Обновляем данные из договора, если они есть в характеристиках
+    if (contract && characteristics.BORROWER_NAME) {
+      borrower.organizationName = characteristics.BORROWER_NAME;
+    }
+    if (contract && characteristics.PLEDGER_NAME) {
+      pledgor.organizationName = characteristics.PLEDGER_NAME;
+    }
+    if (contract && characteristics.BORROWER_INN) {
+      borrower.inn = characteristics.BORROWER_INN;
+    }
+    if (contract && characteristics.PLEDGER_INN) {
+      pledgor.inn = characteristics.PLEDGER_INN;
     }
     
     // Используем данные из договора, если он есть
