@@ -3,6 +3,7 @@
  */
 
 import type { Employee } from '@/types/employee';
+import { REGION_CENTERS } from '@/utils/regionCenters';
 
 const STORAGE_KEY = 'cms_employees';
 
@@ -153,65 +154,107 @@ class EmployeeService {
 
   /**
    * Демо-данные сотрудников
+   * По региональным центрам: 20-35 сотрудников на регион
    * 15% для мониторинга, 30% для оценки
    */
   private getDefaultEmployees(): Employee[] {
-    const regions = ['Москва', 'Санкт-Петербург', 'Новосибирск', 'Екатеринбург', 'Краснодар', 'Ростов-на-Дону', 'Казань', 'Нижний Новгород'];
     const defaultEmployees: Employee[] = [];
     
-    // Генерируем ~33 сотрудника (для 15% мониторинга = 5, для 30% оценки = 10)
-    const totalEmployees = 33;
-    let monitoringCount = 0;
-    let appraisalCount = 0;
+    const surnames = [
+      'Иванов', 'Петров', 'Сидоров', 'Смирнов', 'Кузнецов', 'Попов', 'Соколов', 'Лебедев', 'Козлов', 'Новиков',
+      'Морозов', 'Волков', 'Соловьев', 'Васильев', 'Зайцев', 'Павлов', 'Семенов', 'Голубев', 'Виноградов', 'Богданов',
+      'Воробьев', 'Федоров', 'Михайлов', 'Белов', 'Тарасов', 'Беляев', 'Комаров', 'Орлов', 'Киселев', 'Макаров',
+      'Андреев', 'Ковалев', 'Ильин', 'Гусев', 'Титов', 'Кузьмин', 'Кудрявцев', 'Баранов', 'Куликов', 'Алексеев',
+    ];
+    const firstNames = [
+      'Иван', 'Петр', 'Сергей', 'Александр', 'Дмитрий', 'Андрей', 'Михаил', 'Николай', 'Владимир', 'Алексей',
+      'Мария', 'Елена', 'Анна', 'Ольга', 'Татьяна', 'Наталья', 'Ирина', 'Светлана', 'Екатерина', 'Юлия',
+      'Анастасия', 'Дарья', 'Виктория', 'Евгения', 'Кристина', 'Ангелина', 'Валентина', 'Галина', 'Людмила', 'Надежда',
+    ];
+    const middleNames = [
+      'Иванович', 'Петрович', 'Сергеевич', 'Александрович', 'Дмитриевич', 'Андреевич', 'Михайлович', 'Николаевич', 'Владимирович', 'Алексеевич',
+      'Ивановна', 'Петровна', 'Сергеевна', 'Александровна', 'Дмитриевна', 'Андреевна', 'Михайловна', 'Николаевна', 'Владимировна', 'Алексеевна',
+    ];
     
-    for (let i = 1; i <= totalEmployees; i++) {
-      const region = regions[i % regions.length];
-      const isMonitoring = i <= 5; // Первые 5 для мониторинга (15%)
-      const isAppraisal = i > 5 && i <= 15; // Следующие 10 для оценки (30%)
+    const positions = [
+      'Менеджер по работе с залогами',
+      'Специалист по мониторингу',
+      'Специалист по оценке',
+      'Руководитель отдела',
+      'Ведущий специалист',
+      'Главный специалист',
+      'Эксперт',
+      'Аналитик',
+    ];
+    
+    const departments = [
+      'Отдел залогового обеспечения',
+      'Отдел мониторинга',
+      'Отдел оценки',
+      'Отдел рисков',
+      'Отдел кредитования',
+    ];
+    
+    let globalIndex = 1;
+    
+    // Генерируем сотрудников по каждому региональному центру
+    REGION_CENTERS.forEach((center, centerIndex) => {
+      // 20-35 сотрудников на регион
+      const employeesPerRegion = 20 + Math.floor(Math.random() * 16); // 20-35
       
-      if (isMonitoring) monitoringCount++;
-      if (isAppraisal) appraisalCount++;
-      
-      const surnames = ['Иванов', 'Петров', 'Сидоров', 'Смирнов', 'Кузнецов', 'Попов', 'Соколов', 'Лебедев', 'Козлов', 'Новиков', 'Морозов', 'Волков', 'Соловьев', 'Васильев', 'Зайцев'];
-      const firstNames = ['Иван', 'Петр', 'Сергей', 'Александр', 'Дмитрий', 'Андрей', 'Михаил', 'Николай', 'Владимир', 'Алексей', 'Мария', 'Елена', 'Анна', 'Ольга', 'Татьяна'];
-      const middleNames = ['Иванович', 'Петрович', 'Сергеевич', 'Александрович', 'Дмитриевич', 'Андреевич', 'Михайлович', 'Николаевич', 'Владимирович', 'Алексеевич', 'Ивановна', 'Петровна', 'Сергеевна', 'Александровна', 'Дмитриевна'];
-      
-      const lastName = surnames[i % surnames.length];
-      const firstName = firstNames[i % firstNames.length];
-      const middleName = middleNames[i % middleNames.length];
-      
-      let position = 'Менеджер по работе с залогами';
-      let department = 'Отдел залогового обеспечения';
-      
-      if (isMonitoring) {
-        position = 'Специалист по мониторингу';
-        department = 'Отдел мониторинга';
-      } else if (isAppraisal) {
-        position = 'Специалист по оценке';
-        department = 'Отдел оценки';
-      }
-      
-      defaultEmployees.push({
-        id: `emp-${i}`,
-        lastName,
-        firstName,
-        middleName,
-        position,
-        region,
-        email: `${lastName.toLowerCase()}${i}@bank.ru`,
-        phone: `+7 (${String(495 + i).padStart(3, '0')}) ${String(123 + i).padStart(3, '0')}-${String(45 + i).padStart(2, '0')}-${String(67 + i).padStart(2, '0')}`,
-        department,
-        permissions: ['registry_view', 'portfolio_view', 'tasks_view'],
-        isActive: true,
-        canMonitor: isMonitoring,
-        canAppraise: isAppraisal,
-        monitoringWorkload: 0,
-        appraisalWorkload: 0,
-        hireDate: `202${Math.floor(i / 10)}-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+      center.cities.forEach((city, cityIndex) => {
+        // Распределяем сотрудников по городам региона
+        const employeesPerCity = Math.floor(employeesPerRegion / center.cities.length) + 
+          (cityIndex < employeesPerRegion % center.cities.length ? 1 : 0);
+        
+        for (let i = 0; i < employeesPerCity; i++) {
+          const nameIndex = (globalIndex - 1) % surnames.length;
+          const lastName = surnames[nameIndex];
+          const firstName = firstNames[(globalIndex - 1) % firstNames.length];
+          const middleName = middleNames[(globalIndex - 1) % middleNames.length];
+          
+          // Определяем роли: 15% мониторинг, 30% оценка
+          const roleRandom = Math.random();
+          const isMonitoring = roleRandom < 0.15;
+          const isAppraisal = roleRandom >= 0.15 && roleRandom < 0.45;
+          
+          const positionIndex = isMonitoring ? 1 : isAppraisal ? 2 : 0;
+          const departmentIndex = isMonitoring ? 1 : isAppraisal ? 2 : 0;
+          
+          const position = positions[positionIndex];
+          const department = departments[departmentIndex];
+          
+          // Генерируем email и телефон
+          const emailBase = `${lastName.toLowerCase()}.${firstName.toLowerCase()}`;
+          const email = `${emailBase}${globalIndex}@bank.ru`;
+          const phoneCode = 495 + (centerIndex * 10) + cityIndex;
+          const phone = `+7 (${phoneCode}) ${String(100 + (globalIndex % 900)).padStart(3, '0')}-${String(10 + (globalIndex % 90)).padStart(2, '0')}-${String(10 + (globalIndex % 90)).padStart(2, '0')}`;
+          
+          defaultEmployees.push({
+            id: `emp-${globalIndex}`,
+            lastName,
+            firstName,
+            middleName,
+            position,
+            region: city,
+            email,
+            phone,
+            department,
+            permissions: ['registry_view', 'portfolio_view', 'tasks_view'],
+            isActive: true,
+            canMonitor: isMonitoring,
+            canAppraise: isAppraisal,
+            monitoringWorkload: 0,
+            appraisalWorkload: 0,
+            hireDate: `202${Math.floor(globalIndex / 100)}-${String((globalIndex % 12) + 1).padStart(2, '0')}-${String((globalIndex % 28) + 1).padStart(2, '0')}`,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+          
+          globalIndex++;
+        }
       });
-    }
+    });
 
     // Сохраняем демо-данные при первом запуске
     this.saveEmployees(defaultEmployees);

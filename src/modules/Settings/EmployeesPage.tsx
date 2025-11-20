@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Card,
   Table,
@@ -15,21 +15,26 @@ import {
   message,
   Row,
   Col,
+  Collapse,
+  Badge,
 } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
   UserOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import employeeService from '@/services/EmployeeService';
 import type { Employee, EmployeePermission } from '@/types/employee';
+import { REGION_CENTERS } from '@/utils/regionCenters';
 import './EmployeesPage.css';
 
 const { Title } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
+const { Panel } = Collapse;
 
 const PERMISSION_LABELS: Record<EmployeePermission, string> = {
   registry_view: 'Просмотр реестра',
@@ -47,14 +52,13 @@ const PERMISSION_LABELS: Record<EmployeePermission, string> = {
   admin: 'Администратор',
 };
 
-const REGIONS = ['Москва', 'Санкт-Петербург', 'Новосибирск', 'Екатеринбург', 'Казань', 'Нижний Новгород'];
-
 const EmployeesPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [form] = Form.useForm();
+  const [activeRegion, setActiveRegion] = useState<string | string[]>([]);
 
   useEffect(() => {
     loadEmployees();
@@ -71,6 +75,20 @@ const EmployeesPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Группировка сотрудников по региональным центрам и городам
+  const employeesByRegion = useMemo(() => {
+    const grouped: Record<string, Record<string, Employee[]>> = {};
+    
+    REGION_CENTERS.forEach(center => {
+      grouped[center.code] = {};
+      center.cities.forEach(city => {
+        grouped[center.code][city] = employees.filter(emp => emp.region === city);
+      });
+    });
+    
+    return grouped;
+  }, [employees]);
 
   const handleAdd = () => {
     setEditingEmployee(null);
@@ -212,6 +230,7 @@ const EmployeesPage: React.FC = () => {
       <Card>
         <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Title level={3} style={{ margin: 0 }}>
+            <TeamOutlined style={{ marginRight: 8 }} />
             Управление сотрудниками
           </Title>
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
@@ -219,13 +238,72 @@ const EmployeesPage: React.FC = () => {
           </Button>
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={employees}
-          rowKey="id"
-          loading={loading}
-          pagination={{ pageSize: 20 }}
-        />
+        <Collapse
+          activeKey={activeRegion}
+          onChange={setActiveRegion}
+          style={{ marginBottom: 16 }}
+        >
+          {REGION_CENTERS.map(center => {
+            const totalEmployees = Object.values(employeesByRegion[center.code] || {}).flat().length;
+            const activeEmployees = Object.values(employeesByRegion[center.code] || {})
+              .flat()
+              .filter(emp => emp.isActive).length;
+            
+            return (
+              <Panel
+                key={center.code}
+                header={
+                  <Space>
+                    <Badge count={totalEmployees} showZero>
+                      <span style={{ fontWeight: 600 }}>
+                        {center.code} - {center.name}
+                      </span>
+                    </Badge>
+                    <Tag color="green">{activeEmployees} активных</Tag>
+                  </Space>
+                }
+              >
+                {center.cities.map(city => {
+                  const cityEmployees = employeesByRegion[center.code]?.[city] || [];
+                  if (cityEmployees.length === 0) return null;
+                  
+                  return (
+                    <Card
+                      key={city}
+                      size="small"
+                      title={
+                        <Space>
+                          <UserOutlined />
+                          <span>{city}</span>
+                          <Tag>{cityEmployees.length} сотрудников</Tag>
+                        </Space>
+                      }
+                      style={{ marginBottom: 16 }}
+                    >
+                      <Table
+                        columns={columns}
+                        dataSource={cityEmployees}
+                        rowKey="id"
+                        pagination={{ pageSize: 10, size: 'small' }}
+                        size="small"
+                      />
+                    </Card>
+                  );
+                })}
+              </Panel>
+            );
+          })}
+        </Collapse>
+
+        <Card title="Все сотрудники" size="small">
+          <Table
+            columns={columns}
+            dataSource={employees}
+            rowKey="id"
+            loading={loading}
+            pagination={{ pageSize: 20 }}
+          />
+        </Card>
       </Card>
 
       <Modal
@@ -287,12 +365,14 @@ const EmployeesPage: React.FC = () => {
                 label="Регион"
                 rules={[{ required: true, message: 'Выберите регион' }]}
               >
-                <Select placeholder="Выберите регион">
-                  {REGIONS.map((region) => (
-                    <Option key={region} value={region}>
-                      {region}
-                    </Option>
-                  ))}
+                <Select placeholder="Выберите регион" showSearch>
+                  {REGION_CENTERS.flatMap(center => 
+                    center.cities.map(city => (
+                      <Option key={city} value={city}>
+                        {center.code} - {city}
+                      </Option>
+                    ))
+                  )}
                 </Select>
               </Form.Item>
             </Col>
