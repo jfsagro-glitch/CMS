@@ -4,10 +4,8 @@ import {
   Button,
   Card,
   Col,
-  Descriptions,
   Empty,
   Input,
-  Modal,
   Row,
   Select,
   Space,
@@ -16,20 +14,14 @@ import {
   Table,
   Tag,
   Typography,
-  List,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { EnvironmentOutlined, LineChartOutlined, SearchOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { CollateralPortfolioEntry } from '@/types/portfolio';
-import { useNavigate, useLocation } from 'react-router-dom';
-import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
-import Timeline from '@/components/Timeline/Timeline';
+import { useLocation } from 'react-router-dom';
 import CreateTaskModal from '@/components/CreateTaskModal/CreateTaskModal';
-import { getDealTimeline } from '@/utils/timelineUtils';
-import type { TimelineEvent } from '@/types/timeline';
-import type { ExtendedCollateralCard } from '@/types';
-import extendedStorageService from '@/services/ExtendedStorageService';
-import { LinkOutlined } from '@ant-design/icons';
+import PortfolioContractCard from '@/components/Portfolio/PortfolioContractCard';
+import { updatePortfolioFromObjects } from '@/utils/updatePortfolioFromObjects';
 import './PortfolioPage.css';
 
 type PortfolioRow = CollateralPortfolioEntry & { key: string };
@@ -45,18 +37,6 @@ const percentFormatter = new Intl.NumberFormat('ru-RU', {
   maximumFractionDigits: 1,
 });
 
-const formatCurrency = (value: number | string | null | undefined) => {
-  const numeric = parseNumber(value ?? null);
-  return numeric == null ? '—' : currencyFormatter.format(numeric);
-};
-
-const formatText = (value: string | number | null | undefined) => {
-  if (value === null || value === undefined) {
-    return '—';
-  }
-  const text = String(value).trim();
-  return text.length > 0 ? text : '—';
-};
 
 const parseNumber = (value: unknown): number | null => {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -78,7 +58,6 @@ const liquidityColor: Record<string, string> = {
 };
 
 const PortfolioPage: React.FC = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const [searchValue, setSearchValue] = useState('');
   const [searchAttribute, setSearchAttribute] = useState<string>('all'); // Атрибут для поиска
@@ -91,14 +70,7 @@ const PortfolioPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<PortfolioRow | null>(null);
   const [dealModalVisible, setDealModalVisible] = useState(false);
-  const [dossierModalVisible, setDossierModalVisible] = useState(false);
-  const [dossierDocuments, setDossierDocuments] = useState<CollateralDocument[]>([]);
-  const [dossierData, setDossierData] = useState<CollateralDocument[]>([]);
-  const [dossierLoading, setDossierLoading] = useState(true);
   const [createTaskModalVisible, setCreateTaskModalVisible] = useState(false);
-  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
-  const [registryObjects, setRegistryObjects] = useState<ExtendedCollateralCard[]>([]);
-  const [registryObjectsLoading, setRegistryObjectsLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -121,7 +93,11 @@ const PortfolioPage: React.FC = () => {
         }
         const data = (await response.json()) as CollateralPortfolioEntry[];
         if (!mounted) return;
-        const normalized: PortfolioRow[] = data.map((item, index) => ({
+        
+        // Обновляем стоимость договоров на основе привязанных объектов
+        const updatedData = await updatePortfolioFromObjects(data);
+        
+        const normalized: PortfolioRow[] = updatedData.map((item: CollateralPortfolioEntry, index: number) => ({
           ...item,
           key: `portfolio-${index}`,
           reference: item.reference != null ? String(item.reference) : null,
@@ -139,66 +115,17 @@ const PortfolioPage: React.FC = () => {
       }
     };
 
-    const loadDossier = async () => {
-      try {
-        const base = import.meta.env.BASE_URL ?? '/';
-        const resolvedBase = new URL(base, window.location.origin);
-        const normalizedPath = resolvedBase.pathname.endsWith('/')
-          ? resolvedBase.pathname
-          : `${resolvedBase.pathname}/`;
-        const url = `${resolvedBase.origin}${normalizedPath}collateralDossier.json?v=${Date.now()}`;
-        const response = await fetch(url, { cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error(`Не удалось загрузить досье (${response.status})`);
-        }
-        const payload = (await response.json()) as CollateralDossierPayload;
-        if (!mounted) return;
-        setDossierData(payload.documents);
-      } catch (fetchError) {
-        console.warn('Не удалось загрузить залоговое досье', fetchError);
-      } finally {
-        setDossierLoading(false);
-      }
-    };
-
     loadPortfolio();
-    loadDossier();
 
     return () => {
       mounted = false;
     };
   }, []);
 
-  const loadRegistryObjects = React.useCallback(async (deal: PortfolioRow) => {
-    setRegistryObjectsLoading(true);
-    try {
-      const reference = String(deal.reference ?? deal.contractNumber ?? '');
-      const allCards = await extendedStorageService.getExtendedCards();
-      // Фильтруем объекты по REFERENCE или contractNumber
-      const relatedObjects = allCards.filter(
-        card =>
-          (card.reference && String(card.reference) === reference) ||
-          (card.contractNumber && card.contractNumber === deal.contractNumber)
-      );
-      setRegistryObjects(relatedObjects);
-    } catch (error) {
-      console.error('Ошибка загрузки объектов из реестра:', error);
-      setRegistryObjects([]);
-    } finally {
-      setRegistryObjectsLoading(false);
-    }
-  }, []);
-
-  const handleOpenDeal = React.useCallback(async (record: PortfolioRow) => {
+  const handleOpenDeal = React.useCallback((record: PortfolioRow) => {
     setSelectedDeal(record);
     setDealModalVisible(true);
-    // Загружаем хронологию событий
-    const events = getDealTimeline(record);
-    setTimelineEvents(events);
-    
-    // Загружаем объекты из реестра по REFERENCE
-    await loadRegistryObjects(record);
-  }, [loadRegistryObjects]);
+  }, []);
 
   // Обработка deep linking - поиск по query параметру
   useEffect(() => {
@@ -264,27 +191,9 @@ const PortfolioPage: React.FC = () => {
     });
   }, [portfolioRows, searchValue, segmentFilter, groupFilter, liquidityFilter, monitoringFilter]);
 
-  const handleGoToRegistryObject = (objectId: string) => {
-    navigate(`/registry?objectId=${objectId}`);
-  };
-
   const closeDealModal = () => {
     setSelectedDeal(null);
     setDealModalVisible(false);
-  };
-
-  const openDossierModal = () => {
-    if (!selectedDeal) return;
-    const reference = String(selectedDeal.reference ?? selectedDeal.contractNumber ?? '');
-    const docs = dossierData.filter(doc => String(doc.reference) === reference);
-    setDossierDocuments(docs);
-    setDossierModalVisible(true);
-  };
-
-  const goToInsurance = () => {
-    if (!selectedDeal) return;
-    const ref = String(selectedDeal.reference ?? selectedDeal.contractNumber ?? '');
-    navigate(`/insurance?ref=${encodeURIComponent(ref)}`);
   };
 
   const stats = useMemo(() => {
@@ -368,8 +277,8 @@ const PortfolioPage: React.FC = () => {
         render: (_, record) => {
           const debt = parseNumber(record.debtRub);
           const limit = parseNumber(record.limitRub);
-          const collateralValue = parseNumber(record.collateralValue);
-          const ltv = debt && collateralValue ? Math.min(debt / collateralValue, 5) : null;
+          const marketValue = parseNumber(record.marketValue);
+          const ltv = debt && marketValue ? Math.min(debt / marketValue, 5) : null;
 
           return (
             <div className="portfolio-page__metrics">
@@ -383,7 +292,15 @@ const PortfolioPage: React.FC = () => {
               </div>
               <div className="portfolio-page__metrics-row">
                 <span>LTV</span>
-                <strong>{ltv ? percentFormatter.format(ltv) : '—'}</strong>
+                <strong>
+                  {ltv !== null ? (
+                    <Tag color={ltv > 0.8 ? 'red' : ltv > 0.6 ? 'orange' : 'green'}>
+                      {percentFormatter.format(ltv)}
+                    </Tag>
+                  ) : (
+                    '—'
+                  )}
+                </strong>
               </div>
             </div>
           );
@@ -655,238 +572,33 @@ const PortfolioPage: React.FC = () => {
         </div>
       )}
 
-      <Modal
-        title="Карточка сделки"
-        open={dealModalVisible}
-        onCancel={closeDealModal}
-        footer={[
-          <Button key="insurance" onClick={goToInsurance} disabled={!selectedDeal}>
-            Страхование
-          </Button>,
-          <Button key="dossier" onClick={openDossierModal} disabled={!selectedDeal}>
-            Залоговое досье
-          </Button>,
-          <Button key="create-task" type="primary" onClick={() => setCreateTaskModalVisible(true)} disabled={!selectedDeal}>
-            Создать задачу
-          </Button>,
-          <Button key="close" onClick={closeDealModal}>
-            Закрыть
-          </Button>,
-        ]}
-        width="90%"
-        style={{ top: 20 }}
-        styles={{ body: { maxHeight: '70vh', overflowY: 'auto' } }}
-      >
-        {selectedDeal && (
-          <div className="portfolio-modal">
-            <Typography.Title level={4}>{selectedDeal.borrower ?? selectedDeal.pledger ?? 'Сделка'}</Typography.Title>
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
-              <Descriptions title="Общие сведения" bordered column={3} size="small">
-                <Descriptions.Item label="Сегмент">{formatText(selectedDeal.segment)}</Descriptions.Item>
-                <Descriptions.Item label="Группа">{formatText(selectedDeal.group)}</Descriptions.Item>
-                <Descriptions.Item label="REFERENCE">{formatText(selectedDeal.reference)}</Descriptions.Item>
-                <Descriptions.Item label="Залогодатель">{formatText(selectedDeal.pledger)}</Descriptions.Item>
-                <Descriptions.Item label="ИНН">{formatText(selectedDeal.inn)}</Descriptions.Item>
-                <Descriptions.Item label="Заемщик">{formatText(selectedDeal.borrower)}</Descriptions.Item>
-                <Descriptions.Item label="№ договора">{formatText(selectedDeal.contractNumber)}</Descriptions.Item>
-                <Descriptions.Item label="Дата договора">{formatText(selectedDeal.contractDate)}</Descriptions.Item>
-                <Descriptions.Item label="Тип">{formatText(selectedDeal.type)}</Descriptions.Item>
-                <Descriptions.Item label="Дата открытия">{formatText(selectedDeal.openDate)}</Descriptions.Item>
-                <Descriptions.Item label="Дата закрытия">{formatText(selectedDeal.closeDate)}</Descriptions.Item>
-              </Descriptions>
-
-              <Descriptions title="Финансовые показатели" bordered column={3} size="small">
-                <Descriptions.Item label="Задолженность, руб.">{formatCurrency(selectedDeal.debtRub)}</Descriptions.Item>
-                <Descriptions.Item label="Лимит, руб.">{formatCurrency(selectedDeal.limitRub)}</Descriptions.Item>
-                <Descriptions.Item label="Проср. ОД, руб.">{formatCurrency(selectedDeal.overduePrincipal)}</Descriptions.Item>
-                <Descriptions.Item label="Проср. %, руб.">{formatCurrency(selectedDeal.overdueInterest)}</Descriptions.Item>
-              </Descriptions>
-
-              <Descriptions title="Договор обеспечения" bordered column={3} size="small">
-                <Descriptions.Item label="REFERENCE залога">{formatText(selectedDeal.collateralReference)}</Descriptions.Item>
-                <Descriptions.Item label="Номер договора залога (ипотеки)">
-                  {formatText(selectedDeal.collateralContractNumber)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Дата договора залога (ипотеки)">
-                  {formatText(selectedDeal.collateralContractDate)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Категория обеспечения">{formatText(selectedDeal.collateralCategory)}</Descriptions.Item>
-              </Descriptions>
-
-              <Descriptions title="Оценка обеспечения" bordered column={3} size="small">
-                <Descriptions.Item label="Залоговая стоимость, руб.">{formatCurrency(selectedDeal.collateralValue)}</Descriptions.Item>
-                <Descriptions.Item label="Рыночная стоимость, руб.">{formatCurrency(selectedDeal.marketValue)}</Descriptions.Item>
-                <Descriptions.Item label="Дата первоначального определения стоимости">
-                  {formatText(selectedDeal.initialValuationDate)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Актуальная рыночная стоимость, руб.">
-                  {formatCurrency(selectedDeal.currentMarketValue)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Дата определения текущей стоимости">
-                  {formatText(selectedDeal.currentValuationDate)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Справедливая стоимость, руб.">{formatCurrency(selectedDeal.fairValue)}</Descriptions.Item>
-              </Descriptions>
-
-              <Descriptions title="Обеспечение" bordered column={3} size="small">
-                <Descriptions.Item label="Тип обеспечения">{formatText(selectedDeal.collateralType)}</Descriptions.Item>
-                <Descriptions.Item label="Назначение обеспечения" span={2}>
-                  {formatText(selectedDeal.collateralPurpose)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Информация о залоге" span={3}>
-                  {formatText(selectedDeal.collateralInfo)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Местоположение предмета залога" span={2}>
-                  {formatText(selectedDeal.collateralLocation)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Ликвидность">{formatText(selectedDeal.liquidity)}</Descriptions.Item>
-                <Descriptions.Item label="Категория качества обеспечения">
-                  {formatText(selectedDeal.qualityCategory)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Дата регистрации обеспечения">
-                  {formatText(selectedDeal.registrationDate)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Очередность залога">{formatText(selectedDeal.priority)}</Descriptions.Item>
-              </Descriptions>
-
-              <Descriptions title="Мониторинг и ответственные" bordered column={3} size="small">
-                <Descriptions.Item label="Вид мониторинга">{formatText(selectedDeal.monitoringType)}</Descriptions.Item>
-                <Descriptions.Item label="Дата последнего мониторинга">
-                  {formatText(selectedDeal.lastMonitoringDate)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Планируемая дата мониторинга">
-                  {formatText(selectedDeal.nextMonitoringDate)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Ответственный сотрудник">{formatText(selectedDeal.owner)}</Descriptions.Item>
-                <Descriptions.Item label="Счет 9131">{formatText(selectedDeal.account9131)}</Descriptions.Item>
-              </Descriptions>
-
-              <div>
-                <Typography.Title level={5}>Объекты в договоре залога</Typography.Title>
-                {registryObjectsLoading ? (
-                  <Spin tip="Загрузка объектов..." />
-                ) : registryObjects.length > 0 ? (
-                  <List
-                    dataSource={registryObjects}
-                    renderItem={obj => (
-                      <List.Item
-                        actions={[
-                          <Button
-                            key="view"
-                            type="link"
-                            icon={<LinkOutlined />}
-                            onClick={() => handleGoToRegistryObject(obj.id)}
-                          >
-                            Открыть в реестре
-                          </Button>,
-                        ]}
-                      >
-                        <List.Item.Meta
-                          title={
-                            <Space>
-                              <Typography.Text strong>{obj.name}</Typography.Text>
-                              <Tag>{obj.number}</Tag>
-                              {obj.status === 'approved' && <Tag color="green">Согласовано</Tag>}
-                              {obj.status === 'editing' && <Tag color="orange">Редактирование</Tag>}
-                            </Space>
-                          }
-                          description={
-                            <Space direction="vertical" size="small" style={{ fontSize: '12px' }}>
-                              <div>
-                                <Typography.Text type="secondary">
-                                  {obj.classification?.level0} → {obj.classification?.level1} → {obj.classification?.level2}
-                                </Typography.Text>
-                              </div>
-                              {obj.address?.fullAddress && (
-                                <div>
-                                  <EnvironmentOutlined /> {obj.address.fullAddress}
-                                </div>
-                              )}
-                              {obj.characteristics?.marketValue && (
-                                <div>
-                                  Рыночная стоимость: {formatCurrency(obj.characteristics.marketValue)}
-                                </div>
-                              )}
-                              {obj.characteristics?.collateralValue && (
-                                <div>
-                                  Залоговая стоимость: {formatCurrency(obj.characteristics.collateralValue)}
-                                </div>
-                              )}
-                            </Space>
-                          }
-                        />
-                      </List.Item>
-                    )}
-                  />
-                ) : (
-                  <Empty description="Объекты по данному договору не найдены в реестре" />
-                )}
-              </div>
-
-              <div>
-                <Typography.Title level={5}>Хронология</Typography.Title>
-                <Timeline events={timelineEvents} />
-              </div>
-            </Space>
-          </div>
-        )}
-      </Modal>
+      {selectedDeal && (
+        <PortfolioContractCard
+          contract={selectedDeal}
+          visible={dealModalVisible}
+          onClose={closeDealModal}
+          onUpdate={(updatedContract) => {
+            // Обновляем договор в списке
+            setPortfolioRows(prev => 
+              prev.map(row => 
+                row.reference === updatedContract.reference || row.contractNumber === updatedContract.contractNumber
+                  ? { ...row, ...updatedContract, key: row.key }
+                  : row
+              )
+            );
+            setSelectedDeal({ ...updatedContract, key: selectedDeal?.key || `portfolio-${Date.now()}` });
+          }}
+        />
+      )}
 
       <CreateTaskModal
         visible={createTaskModalVisible}
         deal={selectedDeal}
         onCancel={() => setCreateTaskModalVisible(false)}
         onSuccess={() => {
-          // Обновляем хронологию после создания задачи
-          if (selectedDeal) {
-            const events = getDealTimeline(selectedDeal);
-            setTimelineEvents(events);
-          }
+          // Можно добавить обновление данных после создания задачи
         }}
       />
-
-      <Modal
-        title="Залоговое досье"
-        open={dossierModalVisible}
-        onCancel={() => setDossierModalVisible(false)}
-        footer={[
-          <Button key="close" type="primary" onClick={() => setDossierModalVisible(false)}>
-            Закрыть
-          </Button>,
-        ]}
-        width={720}
-      >
-        {dossierLoading ? (
-          <Empty description="Загрузка документов..." />
-        ) : dossierDocuments.length === 0 ? (
-          <Empty description="Документы по сделке не найдены" />
-        ) : (
-          <List
-            dataSource={dossierDocuments}
-            renderItem={item => (
-              <List.Item>
-                <List.Item.Meta
-                  title={
-                    <Space>
-                      <Tag color={item.statusColor || 'blue'}>{item.status}</Tag>
-                      <span>{item.docType}</span>
-                    </Space>
-                  }
-                  description={
-                    <Typography.Text type="secondary">
-                      {item.folderPath.join(' / ')} · {item.lastUpdated}
-                    </Typography.Text>
-                  }
-                />
-                <div>
-                  <div>{item.fileName}</div>
-                  <Typography.Text type="secondary">{item.responsible}</Typography.Text>
-                </div>
-              </List.Item>
-            )}
-          />
-        )}
-      </Modal>
     </div>
   );
 };
