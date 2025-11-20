@@ -199,8 +199,8 @@ class EmployeeService {
     
     // Генерируем сотрудников по каждому региональному центру
     REGION_CENTERS.forEach((center, centerIndex) => {
-      // 15-20 сотрудников на региональный центр (фиксированное количество для каждого центра)
-      const employeesPerRegion = 15 + (centerIndex % 6); // 15, 16, 17, 18, 19, 20 по порядку
+      // 30 сотрудников на каждый региональный центр
+      const employeesPerRegion = 30;
       
       center.cities.forEach((city, cityIndex) => {
         // Распределяем сотрудников по городам региона равномерно

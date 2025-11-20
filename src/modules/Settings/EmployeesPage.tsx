@@ -29,6 +29,7 @@ import type { ColumnsType } from 'antd/es/table';
 import employeeService from '@/services/EmployeeService';
 import type { Employee, EmployeePermission } from '@/types/employee';
 import { REGION_CENTERS } from '@/utils/regionCenters';
+import { syncEmployeesToZadachnik } from '@/utils/syncEmployeesToZadachnik';
 import './EmployeesPage.css';
 
 const { Title } = Typography;
@@ -108,6 +109,7 @@ const EmployeesPage: React.FC = () => {
   const handleDelete = (id: string) => {
     try {
       employeeService.deleteEmployee(id);
+      syncEmployeesToZadachnik(); // Синхронизируем с zadachnik
       message.success('Сотрудник удален');
       loadEmployees();
     } catch (error) {
@@ -121,9 +123,11 @@ const EmployeesPage: React.FC = () => {
       
       if (editingEmployee) {
         employeeService.updateEmployee(editingEmployee.id, values);
+        syncEmployeesToZadachnik(); // Синхронизируем с zadachnik
         message.success('Сотрудник обновлен');
       } else {
         employeeService.addEmployee(values);
+        syncEmployeesToZadachnik(); // Синхронизируем с zadachnik
         message.success('Сотрудник добавлен');
       }
       

@@ -67,6 +67,14 @@ const AppContent: React.FC = () => {
           dispatch(setCards(cards));
         }
 
+        // Синхронизация сотрудников с zadachnik
+        try {
+          const { syncEmployeesToZadachnik } = await import('./utils/syncEmployeesToZadachnik');
+          syncEmployeesToZadachnik();
+        } catch (error) {
+          console.warn('Не удалось синхронизировать сотрудников с zadachnik:', error);
+        }
+
         // Загрузка демо-данных осмотров при первом запуске
         try {
           const inspectionService = (await import('./services/InspectionService')).default;
