@@ -12,9 +12,19 @@ import {
   InputNumber,
   message,
   Alert,
+  Table,
 } from 'antd';
-import { SaveOutlined, MailOutlined, BellOutlined, SettingOutlined } from '@ant-design/icons';
+import { SaveOutlined, MailOutlined, BellOutlined, SettingOutlined, RocketOutlined, UserOutlined } from '@ant-design/icons';
 import employeeService from '@/services/EmployeeService';
+import { extendedStorageService } from '@/services/ExtendedStorageService';
+import { 
+  autopilotMonitoring, 
+  autopilotAppraisal, 
+  saveMonitoringAssignments, 
+  saveAppraisalAssignments,
+  loadMonitoringAssignments,
+  loadAppraisalAssignments,
+} from '@/utils/autopilotAssignment';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -46,6 +56,11 @@ const MonitoringSettings: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [employees, setEmployees] = useState<any[]>([]);
+  const [monitoringEmployees, setMonitoringEmployees] = useState<any[]>([]);
+  const [appraisalEmployees, setAppraisalEmployees] = useState<any[]>([]);
+  const [regions, setRegions] = useState<string[]>([]);
+  const [regionAssignments, setRegionAssignments] = useState<Record<string, { monitoring?: string; appraisal?: string }>>({});
+  const [autopilotLoading, setAutopilotLoading] = useState(false);
 
   // Загрузка настроек
   useEffect(() => {
@@ -76,12 +91,69 @@ const MonitoringSettings: React.FC = () => {
       try {
         const allEmployees = employeeService.getEmployees();
         setEmployees(allEmployees.filter(emp => emp.isActive));
+        setMonitoringEmployees(employeeService.getMonitoringEmployees());
+        setAppraisalEmployees(employeeService.getAppraisalEmployees());
+        setRegions(employeeService.getRegions());
       } catch (error) {
         console.error('Ошибка загрузки сотрудников:', error);
       }
     };
     loadEmployees();
   }, []);
+
+  // Загрузка назначений по регионам
+  useEffect(() => {
+    const loadAssignments = async () => {
+      try {
+        const monitoringAssignments = loadMonitoringAssignments();
+        const appraisalAssignments = loadAppraisalAssignments();
+        const cards = await extendedStorageService.getExtendedCards();
+        
+        const assignments: Record<string, { monitoring?: string; appraisal?: string }> = {};
+        
+        // Группируем по регионам
+        regions.forEach(region => {
+          assignments[region] = {};
+          
+          // Находим назначения для мониторинга в этом регионе
+          const monitoringCards = cards.filter(card => {
+            const cardRegion = card.address?.region || card.address?.city || 'Не указан';
+            return cardRegion === region && card.nextMonitoringDate;
+          });
+          
+          if (monitoringCards.length > 0) {
+            const firstCard = monitoringCards[0];
+            const monitoringAssignment = monitoringAssignments.find(a => a.cardId === firstCard.id);
+            if (monitoringAssignment) {
+              assignments[region].monitoring = monitoringAssignment.employeeId;
+            }
+          }
+          
+          // Находим назначения для оценки в этом регионе
+          const appraisalCards = cards.filter(card => {
+            const cardRegion = card.address?.region || card.address?.city || 'Не указан';
+            return cardRegion === region && card.nextEvaluationDate;
+          });
+          
+          if (appraisalCards.length > 0) {
+            const firstCard = appraisalCards[0];
+            const appraisalAssignment = appraisalAssignments.find(a => a.cardId === firstCard.id);
+            if (appraisalAssignment) {
+              assignments[region].appraisal = appraisalAssignment.employeeId;
+            }
+          }
+        });
+        
+        setRegionAssignments(assignments);
+      } catch (error) {
+        console.error('Ошибка загрузки назначений:', error);
+      }
+    };
+    
+    if (regions.length > 0) {
+      loadAssignments();
+    }
+  }, [regions]);
 
   const handleSave = async () => {
     try {
@@ -108,6 +180,154 @@ const MonitoringSettings: React.FC = () => {
         bankEmployeeName: `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim(),
         bankEmployeeId: employee.id,
       });
+    }
+  };
+
+  const handleRegionMonitoringChange = async (region: string, employeeId: string) => {
+    try {
+      const cards = await extendedStorageService.getExtendedCards();
+      const regionCards = cards.filter(card => {
+        const cardRegion = card.address?.region || card.address?.city || 'Не указан';
+        return cardRegion === region && card.nextMonitoringDate;
+      });
+
+      const employee = employeeService.getEmployeeById(employeeId);
+      if (!employee) return;
+
+      const assignments = loadMonitoringAssignments();
+      
+      // Обновляем назначения для всех карточек региона
+      regionCards.forEach(card => {
+        const existingIndex = assignments.findIndex(a => a.cardId === card.id);
+        const newAssignment = {
+          cardId: card.id,
+          employeeId: employee.id,
+          employeeName: `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim(),
+          region: employee.region,
+        };
+        
+        if (existingIndex >= 0) {
+          assignments[existingIndex] = newAssignment;
+        } else {
+          assignments.push(newAssignment);
+        }
+      });
+
+      saveMonitoringAssignments(assignments);
+      
+      setRegionAssignments(prev => ({
+        ...prev,
+        [region]: { ...prev[region], monitoring: employeeId },
+      }));
+
+      message.success(`Ответственный за мониторинг в регионе "${region}" назначен`);
+    } catch (error) {
+      console.error('Ошибка назначения ответственного:', error);
+      message.error('Ошибка при назначении ответственного');
+    }
+  };
+
+  const handleRegionAppraisalChange = async (region: string, employeeId: string) => {
+    try {
+      const cards = await extendedStorageService.getExtendedCards();
+      const regionCards = cards.filter(card => {
+        const cardRegion = card.address?.region || card.address?.city || 'Не указан';
+        return cardRegion === region && card.nextEvaluationDate;
+      });
+
+      const employee = employeeService.getEmployeeById(employeeId);
+      if (!employee) return;
+
+      const assignments = loadAppraisalAssignments();
+      
+      // Обновляем назначения для всех карточек региона
+      regionCards.forEach(card => {
+        const existingIndex = assignments.findIndex(a => a.cardId === card.id);
+        const newAssignment = {
+          cardId: card.id,
+          employeeId: employee.id,
+          employeeName: `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim(),
+          region: employee.region,
+        };
+        
+        if (existingIndex >= 0) {
+          assignments[existingIndex] = newAssignment;
+        } else {
+          assignments.push(newAssignment);
+        }
+      });
+
+      saveAppraisalAssignments(assignments);
+      
+      setRegionAssignments(prev => ({
+        ...prev,
+        [region]: { ...prev[region], appraisal: employeeId },
+      }));
+
+      message.success(`Ответственный за оценку в регионе "${region}" назначен`);
+    } catch (error) {
+      console.error('Ошибка назначения ответственного:', error);
+      message.error('Ошибка при назначении ответственного');
+    }
+  };
+
+  const handleAutopilotMonitoring = async () => {
+    try {
+      setAutopilotLoading(true);
+      const cards = await extendedStorageService.getExtendedCards();
+      const assignments = autopilotMonitoring(cards);
+      saveMonitoringAssignments(assignments);
+      
+      // Обновляем отображение
+      const newAssignments: Record<string, { monitoring?: string; appraisal?: string }> = {};
+      regions.forEach(region => {
+        const regionAssignment = assignments.find(a => {
+          const card = cards.find(c => c.id === a.cardId);
+          const cardRegion = card?.address?.region || card?.address?.city || 'Не указан';
+          return cardRegion === region;
+        });
+        if (regionAssignment) {
+          newAssignments[region] = { monitoring: regionAssignment.employeeId };
+        }
+      });
+      
+      setRegionAssignments(prev => ({ ...prev, ...newAssignments }));
+      message.success(`Автопилот выполнен: назначено ${assignments.length} объектов для мониторинга`);
+    } catch (error) {
+      console.error('Ошибка автопилота мониторинга:', error);
+      message.error('Ошибка при выполнении автопилота');
+    } finally {
+      setAutopilotLoading(false);
+    }
+  };
+
+  const handleAutopilotAppraisal = async () => {
+    try {
+      setAutopilotLoading(true);
+      const cards = await extendedStorageService.getExtendedCards();
+      const assignments = autopilotAppraisal(cards);
+      saveAppraisalAssignments(assignments);
+      
+      // Обновляем отображение
+      const newAssignments: Record<string, { monitoring?: string; appraisal?: string }> = {};
+      regions.forEach(region => {
+        const regionAssignment = assignments.find(a => {
+          const card = cards.find(c => c.id === a.cardId);
+          const cardRegion = card?.address?.region || card?.address?.city || 'Не указан';
+          return cardRegion === region;
+        });
+        if (regionAssignment) {
+          newAssignments[region] = { appraisal: regionAssignment.employeeId };
+        }
+      });
+      
+      setRegionAssignments(prev => ({ ...prev, ...newAssignments }));
+      message.success(`Автопилот выполнен: назначено ${assignments.length} объектов для оценки`);
+    } catch (error) {
+      console.error('Ошибка автопилота оценки:', error);
+      message.error('Ошибка при выполнении автопилота');
+    } finally {
+      setAutopilotLoading(false);
     }
   };
 
@@ -321,6 +541,134 @@ const MonitoringSettings: React.FC = () => {
                 ) : null
               }
             </Form.Item>
+          </Card>
+
+          {/* Назначение ответственных за мониторинг */}
+          <Card
+            title={
+              <Space>
+                <UserOutlined />
+                <span>Назначение ответственных за мониторинг</span>
+              </Space>
+            }
+            style={{ marginBottom: 24 }}
+            extra={
+              <Button
+                type="primary"
+                icon={<RocketOutlined />}
+                onClick={handleAutopilotMonitoring}
+                loading={autopilotLoading}
+              >
+                Автопилот
+              </Button>
+            }
+          >
+            <Alert
+              message="Распределение по регионам"
+              description="Назначьте ответственных сотрудников для мониторинга по каждому региону. Используйте 'Автопилот' для автоматического распределения с учетом загрузки сотрудников."
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+            
+            <Table
+              dataSource={regions.map(region => ({
+                key: region,
+                region,
+                monitoringEmployee: regionAssignments[region]?.monitoring,
+              }))}
+              columns={[
+                {
+                  title: 'Регион',
+                  dataIndex: 'region',
+                  key: 'region',
+                },
+                {
+                  title: 'Ответственный за мониторинг',
+                  dataIndex: 'monitoringEmployee',
+                  key: 'monitoringEmployee',
+                  render: (value, record) => (
+                    <Select
+                      style={{ width: '100%' }}
+                      placeholder="Выберите сотрудника"
+                      value={value}
+                      onChange={(employeeId) => handleRegionMonitoringChange(record.region, employeeId)}
+                      options={monitoringEmployees
+                        .filter(emp => emp.region === record.region)
+                        .map(emp => ({
+                          value: emp.id,
+                          label: `${emp.lastName} ${emp.firstName} ${emp.middleName || ''}`.trim(),
+                        }))}
+                    />
+                  ),
+                },
+              ]}
+              pagination={false}
+            />
+          </Card>
+
+          {/* Назначение ответственных за оценку */}
+          <Card
+            title={
+              <Space>
+                <UserOutlined />
+                <span>Назначение ответственных за оценку</span>
+              </Space>
+            }
+            style={{ marginBottom: 24 }}
+            extra={
+              <Button
+                type="primary"
+                icon={<RocketOutlined />}
+                onClick={handleAutopilotAppraisal}
+                loading={autopilotLoading}
+              >
+                Автопилот
+              </Button>
+            }
+          >
+            <Alert
+              message="Распределение по регионам"
+              description="Назначьте ответственных сотрудников для оценки по каждому региону. Используйте 'Автопилот' для автоматического распределения с учетом загрузки сотрудников."
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+            
+            <Table
+              dataSource={regions.map(region => ({
+                key: region,
+                region,
+                appraisalEmployee: regionAssignments[region]?.appraisal,
+              }))}
+              columns={[
+                {
+                  title: 'Регион',
+                  dataIndex: 'region',
+                  key: 'region',
+                },
+                {
+                  title: 'Ответственный за оценку',
+                  dataIndex: 'appraisalEmployee',
+                  key: 'appraisalEmployee',
+                  render: (value, record) => (
+                    <Select
+                      style={{ width: '100%' }}
+                      placeholder="Выберите сотрудника"
+                      value={value}
+                      onChange={(employeeId) => handleRegionAppraisalChange(record.region, employeeId)}
+                      options={appraisalEmployees
+                        .filter(emp => emp.region === record.region)
+                        .map(emp => ({
+                          value: emp.id,
+                          label: `${emp.lastName} ${emp.firstName} ${emp.middleName || ''}`.trim(),
+                        }))}
+                    />
+                  ),
+                },
+              ]}
+              pagination={false}
+            />
           </Card>
 
           <Divider />

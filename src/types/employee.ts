@@ -16,6 +16,12 @@ export interface Employee {
   isActive: boolean; // Активен ли сотрудник
   hireDate?: string; // Дата приема на работу
   notes?: string; // Примечания
+  // Роли для мониторинга и оценки
+  canMonitor?: boolean; // Может заниматься мониторингом
+  canAppraise?: boolean; // Может заниматься оценкой
+  // Загрузка (для автопилота)
+  monitoringWorkload?: number; // Текущая загрузка по мониторингу (количество объектов)
+  appraisalWorkload?: number; // Текущая загрузка по оценке (количество объектов)
   createdAt: string;
   updatedAt: string;
 }

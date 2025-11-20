@@ -5,6 +5,7 @@
 import type { ExtendedCollateralCard } from '@/types';
 import type { MonitoringPlanEntry, RevaluationPlanEntry, MonitoringTimeframe } from '@/types/monitoring';
 import dayjs from 'dayjs';
+import { getMonitoringEmployeeForCard, getAppraisalEmployeeForCard } from './autopilotAssignment';
 
 /**
  * Определение временного интервала на основе количества дней до даты
@@ -110,9 +111,22 @@ const getRevaluationMethod = (propertyType: string | undefined, mainCategory: st
 };
 
 /**
- * Получение ответственного сотрудника (заглушка, можно расширить)
+ * Получить ответственного сотрудника для карточки
  */
-const getOwner = (): string => {
+const getOwner = (card: ExtendedCollateralCard, type: 'monitoring' | 'appraisal'): string => {
+  if (type === 'monitoring') {
+    const employee = getMonitoringEmployeeForCard(card.id);
+    if (employee) {
+      return `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim();
+    }
+  } else {
+    const employee = getAppraisalEmployeeForCard(card.id);
+    if (employee) {
+      return `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim();
+    }
+  }
+  
+  // Fallback на случай, если нет назначения
   const owners = [
     'Иванов И.И.',
     'Петров П.П.',
@@ -165,7 +179,7 @@ export const generateMonitoringPlan = (cards: ExtendedCollateralCard[]): Monitor
       lastMonitoringDate: lastMonitoringDate ? formatDate(lastMonitoringDate) : formatDate(nextMonitoringDate),
       plannedDate: formatDate(nextMonitoringDate),
       timeframe,
-      owner: getOwner(),
+      owner: getOwner(card, 'monitoring'),
       priority: card.characteristics?.PRIORITY as string || null,
       liquidity: card.characteristics?.LIQUIDITY as string || null,
       collateralValue: card.pledgeValue || null,
@@ -220,7 +234,7 @@ export const generateRevaluationPlan = (cards: ExtendedCollateralCard[]): Revalu
       lastRevaluationDate: lastEvaluationDate ? formatDate(lastEvaluationDate) : formatDate(nextEvaluationDate),
       plannedDate: formatDate(nextEvaluationDate),
       timeframe,
-      owner: getOwner(),
+      owner: getOwner(card, 'appraisal'),
       priority: card.characteristics?.PRIORITY as string || null,
       collateralValue: card.pledgeValue || null,
       marketValue: card.marketValue || null,
