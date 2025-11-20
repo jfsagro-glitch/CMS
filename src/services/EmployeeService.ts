@@ -199,8 +199,8 @@ class EmployeeService {
     
     // Генерируем сотрудников по каждому региональному центру
     REGION_CENTERS.forEach((center, centerIndex) => {
-      // 15-20 сотрудников на региональный центр
-      const employeesPerRegion = 15 + Math.floor(Math.random() * 6); // 15-20
+      // 15-20 сотрудников на региональный центр (фиксированное количество для каждого центра)
+      const employeesPerRegion = 15 + (centerIndex % 6); // 15, 16, 17, 18, 19, 20 по порядку
       
       center.cities.forEach((city, cityIndex) => {
         // Распределяем сотрудников по городам региона равномерно
@@ -242,14 +242,14 @@ class EmployeeService {
             phone,
             department,
             permissions: ['registry_view', 'portfolio_view', 'tasks_view'],
-            isActive: true,
+        isActive: true,
             canMonitor: isMonitoring,
             canAppraise: isAppraisal,
             monitoringWorkload: 0,
             appraisalWorkload: 0,
             hireDate: `202${Math.floor(globalIndex / 100)}-${String((globalIndex % 12) + 1).padStart(2, '0')}-${String((globalIndex % 28) + 1).padStart(2, '0')}`,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
           });
           
           globalIndex++;
