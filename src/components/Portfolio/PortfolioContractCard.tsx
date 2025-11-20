@@ -99,26 +99,29 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
     }
   };
 
+  // Дисконт для расчета залоговой стоимости (70-80% от рыночной)
+  const COLLATERAL_DISCOUNT = 0.75; // 75% от рыночной стоимости
+
   // Расчет совокупной стоимости объектов
-  const totalObjectsValue = useMemo(() => {
-    return attachedObjects.reduce((sum, obj) => {
-      const marketValue = obj.marketValue || 0;
-      const pledgeValue = obj.pledgeValue || 0;
-      return sum + (pledgeValue || marketValue);
-    }, 0);
+  const totalObjectsMarketValue = useMemo(() => {
+    return attachedObjects.reduce((sum, obj) => sum + (obj.marketValue || 0), 0);
   }, [attachedObjects]);
 
-  // Расчет LTV
+  const totalObjectsPledgeValue = useMemo(() => {
+    return Math.floor(totalObjectsMarketValue * COLLATERAL_DISCOUNT);
+  }, [totalObjectsMarketValue]);
+
+  // Расчет LTV (отношение задолженности к залоговой стоимости)
   const ltv = useMemo(() => {
     const debt = typeof contract.debtRub === 'number' ? contract.debtRub : parseFloat(String(contract.debtRub || 0));
-    const marketValue = typeof contract.marketValue === 'number' 
-      ? contract.marketValue 
-      : parseFloat(String(contract.marketValue || 0));
-    if (marketValue > 0) {
-      return Math.min(debt / marketValue, 5); // Ограничиваем выбросы
+    const collateralValue = typeof contract.collateralValue === 'number' 
+      ? contract.collateralValue 
+      : parseFloat(String(contract.collateralValue || 0));
+    if (collateralValue > 0) {
+      return Math.min(debt / collateralValue, 2); // Ограничиваем выбросы (максимум 200%)
     }
     return null;
-  }, [contract.debtRub, contract.marketValue]);
+  }, [contract.debtRub, contract.collateralValue]);
 
   // Обработка отвязки объекта
   const handleUnlinkObject = async (objectId: string) => {
@@ -136,13 +139,14 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
       await extendedStorageService.saveExtendedCard(updatedObject);
 
       // Обновляем стоимость договора
-      const objectValue = object.pledgeValue || object.marketValue || 0;
-      const newCollateralValue = Math.max(0, (typeof contract.collateralValue === 'number' 
-        ? contract.collateralValue 
-        : parseFloat(String(contract.collateralValue || 0))) - objectValue);
-      const newMarketValue = Math.max(0, (typeof contract.marketValue === 'number' 
+      const objectMarketValue = object.marketValue || 0;
+      const currentMarketValue = typeof contract.marketValue === 'number' 
         ? contract.marketValue 
-        : parseFloat(String(contract.marketValue || 0))) - (object.marketValue || 0));
+        : parseFloat(String(contract.marketValue || 0));
+      const newMarketValue = Math.max(0, currentMarketValue - objectMarketValue);
+      
+      // Рассчитываем залоговую стоимость с применением дисконта
+      const newCollateralValue = Math.floor(newMarketValue * COLLATERAL_DISCOUNT);
 
       // Обновляем договор (если есть onUpdate)
       if (onUpdate) {
@@ -177,13 +181,14 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
       await extendedStorageService.saveExtendedCard(updatedObject);
 
       // Обновляем стоимость договора
-      const objectValue = object.pledgeValue || object.marketValue || 0;
-      const newCollateralValue = (typeof contract.collateralValue === 'number' 
-        ? contract.collateralValue 
-        : parseFloat(String(contract.collateralValue || 0))) + objectValue;
-      const newMarketValue = (typeof contract.marketValue === 'number' 
+      const objectMarketValue = object.marketValue || 0;
+      const currentMarketValue = typeof contract.marketValue === 'number' 
         ? contract.marketValue 
-        : parseFloat(String(contract.marketValue || 0))) + (object.marketValue || 0);
+        : parseFloat(String(contract.marketValue || 0));
+      const newMarketValue = currentMarketValue + objectMarketValue;
+      
+      // Рассчитываем залоговую стоимость с применением дисконта
+      const newCollateralValue = Math.floor(newMarketValue * COLLATERAL_DISCOUNT);
 
       // Обновляем договор (если есть onUpdate)
       if (onUpdate) {
@@ -334,7 +339,8 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
           <Descriptions title="Оценка обеспечения" bordered column={3} size="small">
             <Descriptions.Item label="Залоговая стоимость, руб.">{formatCurrency(contract.collateralValue)}</Descriptions.Item>
             <Descriptions.Item label="Рыночная стоимость, руб.">{formatCurrency(contract.marketValue)}</Descriptions.Item>
-            <Descriptions.Item label="Совокупная стоимость объектов">{formatCurrency(totalObjectsValue)}</Descriptions.Item>
+            <Descriptions.Item label="Совокупная рыночная стоимость объектов">{formatCurrency(totalObjectsMarketValue)}</Descriptions.Item>
+            <Descriptions.Item label="Совокупная залоговая стоимость объектов">{formatCurrency(totalObjectsPledgeValue)}</Descriptions.Item>
             <Descriptions.Item label="Дата первоначального определения стоимости">
               {formatText(contract.initialValuationDate)}
             </Descriptions.Item>
@@ -374,10 +380,20 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
         <div>
           <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <Typography.Text strong>Совокупная стоимость объектов: </Typography.Text>
-              <Typography.Text strong style={{ color: '#52c41a', fontSize: '16px' }}>
-                {formatCurrency(totalObjectsValue)}
-              </Typography.Text>
+              <Space direction="vertical" size="small">
+                <div>
+                  <Typography.Text strong>Рыночная стоимость: </Typography.Text>
+                  <Typography.Text strong style={{ color: '#52c41a', fontSize: '16px' }}>
+                    {formatCurrency(totalObjectsMarketValue)}
+                  </Typography.Text>
+                </div>
+                <div>
+                  <Typography.Text strong>Залоговая стоимость (с дисконтом 75%): </Typography.Text>
+                  <Typography.Text strong style={{ color: '#1890ff', fontSize: '16px' }}>
+                    {formatCurrency(totalObjectsPledgeValue)}
+                  </Typography.Text>
+                </div>
+              </Space>
             </div>
             <Button
               type="primary"

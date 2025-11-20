@@ -22,6 +22,7 @@ import { useLocation } from 'react-router-dom';
 import CreateTaskModal from '@/components/CreateTaskModal/CreateTaskModal';
 import PortfolioContractCard from '@/components/Portfolio/PortfolioContractCard';
 import { updatePortfolioFromObjects } from '@/utils/updatePortfolioFromObjects';
+import { updateAllPortfolioContracts } from '@/utils/updateExistingData';
 import './PortfolioPage.css';
 
 type PortfolioRow = CollateralPortfolioEntry & { key: string };
@@ -94,8 +95,11 @@ const PortfolioPage: React.FC = () => {
         const data = (await response.json()) as CollateralPortfolioEntry[];
         if (!mounted) return;
         
+        // Обновляем рыночную и залоговую стоимость с учетом LTV >= 70%
+        const updatedContracts = updateAllPortfolioContracts(data);
+        
         // Обновляем стоимость договоров на основе привязанных объектов
-        const updatedData = await updatePortfolioFromObjects(data);
+        const updatedData = await updatePortfolioFromObjects(updatedContracts);
         
         const normalized: PortfolioRow[] = updatedData.map((item: CollateralPortfolioEntry, index: number) => ({
           ...item,
@@ -210,9 +214,10 @@ const PortfolioPage: React.FC = () => {
         acc.collateral += collateralValue;
         acc.overdue += overdue;
 
-        if (marketValue > 0) {
+        // LTV = отношение задолженности к залоговой стоимости
+        if (collateralValue > 0) {
           acc.ltvSamples += 1;
-          acc.ltvSum += Math.min(debt / marketValue, 5); // ограничим выбросы
+          acc.ltvSum += Math.min(debt / collateralValue, 2); // ограничим выбросы (максимум 200%)
         }
 
         return acc;
@@ -277,8 +282,9 @@ const PortfolioPage: React.FC = () => {
         render: (_, record) => {
           const debt = parseNumber(record.debtRub);
           const limit = parseNumber(record.limitRub);
-          const marketValue = parseNumber(record.marketValue);
-          const ltv = debt && marketValue ? Math.min(debt / marketValue, 5) : null;
+          const collateralValue = parseNumber(record.collateralValue);
+          // LTV = отношение задолженности к залоговой стоимости (норматив 70-80%)
+          const ltv = debt && collateralValue ? Math.min(debt / collateralValue, 2) : null;
 
           return (
             <div className="portfolio-page__metrics">
@@ -291,10 +297,10 @@ const PortfolioPage: React.FC = () => {
                 <strong>{limit ? currencyFormatter.format(limit) : '—'}</strong>
               </div>
               <div className="portfolio-page__metrics-row">
-                <span>LTV</span>
+                <span>LTV (к залогу)</span>
                 <strong>
                   {ltv !== null ? (
-                    <Tag color={ltv > 0.8 ? 'red' : ltv > 0.6 ? 'orange' : 'green'}>
+                    <Tag color={ltv > 0.8 ? 'red' : ltv > 0.7 ? 'orange' : 'green'}>
                       {percentFormatter.format(ltv)}
                     </Tag>
                   ) : (

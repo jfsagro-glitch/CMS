@@ -139,12 +139,15 @@ const getOwner = (card: ExtendedCollateralCard, type: 'monitoring' | 'appraisal'
 
 /**
  * Генерация реестра мониторинга на основе карточек обеспечения
+ * Включает только Недвижимое и Движимое имущество
  */
 export const generateMonitoringPlan = (cards: ExtendedCollateralCard[]): MonitoringPlanEntry[] => {
   const entries: MonitoringPlanEntry[] = [];
   const now = dayjs();
 
   cards.forEach(card => {
+    // Включаем только Недвижимое и Движимое имущество
+    if (card.mainCategory !== 'real_estate' && card.mainCategory !== 'movable') return;
     if (!card.nextMonitoringDate) return;
 
     const nextMonitoringDate = parseDate(card.nextMonitoringDate);
@@ -193,12 +196,15 @@ export const generateMonitoringPlan = (cards: ExtendedCollateralCard[]): Monitor
 
 /**
  * Генерация реестра переоценок на основе карточек обеспечения
+ * Включает только Недвижимое и Движимое имущество
  */
 export const generateRevaluationPlan = (cards: ExtendedCollateralCard[]): RevaluationPlanEntry[] => {
   const entries: RevaluationPlanEntry[] = [];
   const now = dayjs();
 
   cards.forEach(card => {
+    // Включаем только Недвижимое и Движимое имущество
+    if (card.mainCategory !== 'real_estate' && card.mainCategory !== 'movable') return;
     if (!card.nextEvaluationDate) return;
 
     const nextEvaluationDate = parseDate(card.nextEvaluationDate);

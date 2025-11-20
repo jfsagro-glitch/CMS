@@ -363,14 +363,27 @@ const generateCardsForPropertyType = (
       pledgor.inn = characteristics.PLEDGER_INN;
     }
     
-    // Используем данные из договора, если он есть
-    const marketValue = contract?.currentMarketValue 
-      ? (typeof contract.currentMarketValue === 'number' ? contract.currentMarketValue : parseInt(String(contract.currentMarketValue)))
-      : (characteristics.marketValue || randomInt(1000000, 10000000));
+    // Рыночная стоимость должна быть обязательно заполнена
+    let marketValue: number;
+    if (contract?.currentMarketValue) {
+      marketValue = typeof contract.currentMarketValue === 'number' 
+        ? contract.currentMarketValue 
+        : parseInt(String(contract.currentMarketValue));
+    } else if (contract?.marketValue) {
+      marketValue = typeof contract.marketValue === 'number' 
+        ? contract.marketValue 
+        : parseInt(String(contract.marketValue));
+    } else if (characteristics.marketValue) {
+      marketValue = typeof characteristics.marketValue === 'number' 
+        ? characteristics.marketValue 
+        : parseInt(String(characteristics.marketValue));
+    } else {
+      // Генерируем рыночную стоимость в разумных пределах
+      marketValue = randomInt(1000000, 10000000);
+    }
     
-    const pledgeValue = contract?.collateralValue
-      ? (typeof contract.collateralValue === 'number' ? contract.collateralValue : parseInt(String(contract.collateralValue)))
-      : (characteristics.pledgeValue || randomInt(800000, 8000000));
+    // Залоговая стоимость рассчитывается от рыночной с дисконтом 75%
+    const pledgeValue = Math.floor(marketValue * 0.75);
     
     // Генерация дат оценки (актуальные относительно текущей даты)
     const now = new Date();

@@ -18,8 +18,9 @@ import extendedStorageService from '@/services/ExtendedStorageService';
 import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
 import type { ExtendedCollateralCard } from '@/types';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LinkOutlined, DatabaseOutlined } from '@ant-design/icons';
+import { LinkOutlined, DatabaseOutlined, ReloadOutlined } from '@ant-design/icons';
 import { generateAllCollateralDemoCards } from '@/utils/collateralDemoData';
+import { updateAllCollateralCards } from '@/utils/updateExistingData';
 
 const ExtendedRegistryPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -207,6 +208,20 @@ const ExtendedRegistryPage: React.FC = () => {
     }
   };
 
+  const handleUpdateExistingData = async () => {
+    try {
+      message.loading({ content: 'Обновление данных...', key: 'updating', duration: 0 });
+      const updatedCount = await updateAllCollateralCards();
+      await loadCards();
+      message.destroy('updating');
+      message.success(`Обновлено ${updatedCount} карточек`);
+    } catch (error) {
+      message.destroy('updating');
+      message.error('Ошибка обновления данных');
+      console.error(error);
+    }
+  };
+
   return (
     <div>
       <Space style={{ marginBottom: 16 }} wrap>
@@ -222,6 +237,17 @@ const ExtendedRegistryPage: React.FC = () => {
         >
           <Button icon={<DatabaseOutlined />}>
             Создать демо-данные (50 карточек на каждый тип)
+          </Button>
+        </Popconfirm>
+        <Popconfirm
+          title="Обновление данных"
+          description="Обновить рыночную и залоговую стоимость во всех карточках? Рыночная стоимость будет заполнена, залоговая = рыночная * 75%."
+          onConfirm={handleUpdateExistingData}
+          okText="Да"
+          cancelText="Нет"
+        >
+          <Button icon={<ReloadOutlined />}>
+            Обновить стоимости
           </Button>
         </Popconfirm>
       </Space>

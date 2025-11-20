@@ -118,8 +118,21 @@ const generateContract = (propertyType, index, borrower, borrowerInn, pledger, p
   
   const limitRub = randomInt(1000000, 50000000);
   const debtRub = Math.floor(limitRub * (0.3 + Math.random() * 0.5));
-  const marketValue = randomInt(500000, limitRub);
-  const collateralValue = Math.floor(marketValue * 0.7);
+  
+  // LTV должен быть >= 70%, значит: debt / collateralValue >= 0.7
+  // collateralValue <= debt / 0.7
+  // marketValue * 0.75 <= debt / 0.7
+  // marketValue <= debt / 0.525 ≈ debt * 1.905
+  // Устанавливаем рыночную стоимость так, чтобы LTV был в диапазоне 70-80%
+  const minMarketValueForLTV = Math.ceil(debtRub / 0.525); // Минимальная для LTV = 70%
+  const maxMarketValueForLTV = Math.ceil(debtRub / 0.4375); // Максимальная для LTV = 80%
+  const marketValue = randomInt(
+    Math.max(minMarketValueForLTV, 500000), 
+    Math.max(maxMarketValueForLTV, limitRub)
+  );
+  
+  // Залоговая стоимость рассчитывается от рыночной с дисконтом 75%
+  const collateralValue = Math.floor(marketValue * 0.75);
   
   const valuationDate = new Date(contractDate);
   valuationDate.setDate(valuationDate.getDate() + randomInt(1, 30));
@@ -229,12 +242,63 @@ if (fs.existsSync(outputPath)) {
   }
 }
 
-// Объединяем существующие и новые договоры, избегая дубликатов по reference
-const existingReferences = new Set(existingContracts.map(c => c.reference));
+// Функция обновления существующих договоров
+const updateContractValues = (contract) => {
+  const debtRub = typeof contract.debtRub === 'number' 
+    ? contract.debtRub 
+    : parseFloat(String(contract.debtRub || 0));
+  
+  let marketValue = typeof contract.marketValue === 'number' 
+    ? contract.marketValue 
+    : parseFloat(String(contract.marketValue || 0));
+  
+  // Если рыночная стоимость отсутствует или равна 0, устанавливаем минимальное значение
+  if (!marketValue || marketValue <= 0) {
+    marketValue = 1000000; // Минимальная рыночная стоимость 1 млн руб.
+  }
+  
+  // Рассчитываем залоговую стоимость
+  let collateralValue = Math.floor(marketValue * 0.75);
+  
+  // Проверяем LTV: debt / collateralValue >= 0.7
+  // Если LTV < 0.7, увеличиваем рыночную стоимость
+  if (debtRub > 0 && collateralValue > 0) {
+    const currentLTV = debtRub / collateralValue;
+    
+    if (currentLTV < 0.7) {
+      // Увеличиваем рыночную стоимость так, чтобы LTV был в диапазоне 70-80%
+      const minMarketValueForLTV = Math.ceil(debtRub / 0.525); // Для LTV = 70%
+      const maxMarketValueForLTV = Math.ceil(debtRub / 0.4375); // Для LTV = 80%
+      
+      // Устанавливаем рыночную стоимость в диапазоне 70-80% LTV
+      marketValue = Math.max(marketValue, minMarketValueForLTV);
+      if (marketValue > maxMarketValueForLTV) {
+        marketValue = maxMarketValueForLTV;
+      }
+      
+      // Пересчитываем залоговую стоимость
+      collateralValue = Math.floor(marketValue * 0.75);
+    }
+  }
+  
+  return {
+    ...contract,
+    marketValue,
+    collateralValue,
+    currentMarketValue: marketValue, // Обновляем текущую рыночную стоимость
+  };
+};
+
+// Обновляем существующие договоры
+const updatedExistingContracts = existingContracts.map(updateContractValues);
+
+// Объединяем существующие (обновленные) и новые договоры, избегая дубликатов по reference
+const existingReferences = new Set(updatedExistingContracts.map(c => c.reference));
 const newContracts = contracts.filter(c => !existingReferences.has(c.reference));
-const allContracts = [...existingContracts, ...newContracts];
+const allContracts = [...updatedExistingContracts, ...newContracts];
 
 fs.writeFileSync(outputPath, JSON.stringify(allContracts, null, 2), 'utf8');
+console.log(`✅ Обновлено ${updatedExistingContracts.length} существующих договоров`);
 console.log(`✅ Сгенерировано ${newContracts.length} новых договоров`);
 console.log(`📊 Всего договоров в portfolioData.json: ${allContracts.length}`);
 console.log(`📁 Файл сохранен: ${outputPath}`);

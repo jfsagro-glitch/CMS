@@ -82,6 +82,7 @@ const KPIPage: React.FC = () => {
     try {
       const tasksData = JSON.parse(localStorage.getItem('zadachnik_tasks') || '[]');
       const employees = employeeService.getEmployees();
+      // Получаем актуальные регионы из EmployeeService (использует REGION_CENTERS)
       const regions = employeeService.getRegions();
 
       const stats: RegionStats[] = regions.map(region => {

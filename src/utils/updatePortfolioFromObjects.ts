@@ -7,6 +7,18 @@ import type { ExtendedCollateralCard } from '@/types';
 import extendedStorageService from '@/services/ExtendedStorageService';
 
 /**
+ * Дисконт для расчета залоговой стоимости (70-80% от рыночной)
+ */
+const COLLATERAL_DISCOUNT = 0.75; // 75% от рыночной стоимости
+
+/**
+ * Рассчитать залоговую стоимость от рыночной с применением дисконта
+ */
+const calculatePledgeValue = (marketValue: number): number => {
+  return Math.floor(marketValue * COLLATERAL_DISCOUNT);
+};
+
+/**
  * Обновить стоимость договоров на основе привязанных объектов
  */
 export const updatePortfolioFromObjects = async (
@@ -38,9 +50,11 @@ export const updatePortfolioFromObjects = async (
         return contract; // Если нет привязанных объектов, оставляем как есть
       }
       
-      // Рассчитываем совокупную стоимость
+      // Рассчитываем совокупную рыночную стоимость
       const totalMarketValue = attachedObjects.reduce((sum, obj) => sum + (obj.marketValue || 0), 0);
-      const totalPledgeValue = attachedObjects.reduce((sum, obj) => sum + (obj.pledgeValue || 0), 0);
+      
+      // Рассчитываем залоговую стоимость с применением дисконта
+      const totalPledgeValue = calculatePledgeValue(totalMarketValue);
       
       // Обновляем стоимость договора
       return {
@@ -60,17 +74,18 @@ export const updatePortfolioFromObjects = async (
 
 /**
  * Рассчитать LTV для договора
+ * LTV = отношение задолженности к залоговой стоимости (норматив 70-80%)
  */
 export const calculateLTV = (contract: CollateralPortfolioEntry): number | null => {
   const debt = typeof contract.debtRub === 'number' 
     ? contract.debtRub 
     : parseFloat(String(contract.debtRub || 0));
-  const marketValue = typeof contract.marketValue === 'number' 
-    ? contract.marketValue 
-    : parseFloat(String(contract.marketValue || 0));
+  const collateralValue = typeof contract.collateralValue === 'number' 
+    ? contract.collateralValue 
+    : parseFloat(String(contract.collateralValue || 0));
   
-  if (marketValue > 0) {
-    return Math.min(debt / marketValue, 5); // Ограничиваем выбросы
+  if (collateralValue > 0) {
+    return Math.min(debt / collateralValue, 2); // Ограничиваем выбросы (максимум 200%)
   }
   return null;
 };

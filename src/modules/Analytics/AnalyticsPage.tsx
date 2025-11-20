@@ -25,6 +25,7 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs, { Dayjs } from 'dayjs';
+import extendedStorageService from '@/services/ExtendedStorageService';
 import './AnalyticsPage.css';
 
 const { Title, Text } = Typography;
@@ -164,6 +165,7 @@ const AnalyticsPage: React.FC = () => {
   const loadAnalyticsData = React.useCallback(async () => {
     setLoading(true);
     try {
+      // Загружаем договоры из portfolioData.json
       const base = import.meta.env.BASE_URL ?? '/';
       const resolvedBase = new URL(base, window.location.origin);
       const normalizedPath = resolvedBase.pathname.endsWith('/')
@@ -175,18 +177,42 @@ const AnalyticsPage: React.FC = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = (await response.json()) as PortfolioEntry[];
+      const portfolioData = (await response.json()) as PortfolioEntry[];
+
+      // Загружаем объекты обеспечения из IndexedDB
+      const collateralCards = await extendedStorageService.getExtendedCards();
+      
+      // Обогащаем данные портфеля информацией об объектах
+      // Можно использовать для дополнительной аналитики по объектам
+      const enrichedPortfolioData = portfolioData.map(contract => {
+        // Находим связанные объекты по reference или contractNumber
+        const relatedObjects = collateralCards.filter(card => 
+          (card.reference && String(card.reference) === String(contract.reference)) ||
+          (card.contractNumber && card.contractNumber === contract.contractNumber)
+        );
+        
+        // Если есть связанные объекты, можно обновить категорию из объекта
+        if (relatedObjects.length > 0 && relatedObjects[0].propertyType) {
+          return {
+            ...contract,
+            // Используем тип имущества из объекта, если есть
+            collateralType: relatedObjects[0].propertyType,
+          };
+        }
+        
+        return contract;
+      });
 
       // Оптимизированный расчет с одним проходом
       let totalValue = 0;
       let totalDebt = 0;
-      for (const item of data) {
+      for (const item of enrichedPortfolioData) {
         totalValue += parseNumber(item.collateralValue);
         totalDebt += parseNumber(item.debtRub);
       }
 
       setAnalyticsData({
-        portfolioData: data,
+        portfolioData: enrichedPortfolioData,
         totalValue,
         totalDebt,
       });
