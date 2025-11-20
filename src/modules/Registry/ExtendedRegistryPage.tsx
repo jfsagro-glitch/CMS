@@ -18,9 +18,9 @@ import extendedStorageService from '@/services/ExtendedStorageService';
 import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
 import type { ExtendedCollateralCard } from '@/types';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LinkOutlined, DatabaseOutlined, ReloadOutlined } from '@ant-design/icons';
+import { LinkOutlined, DatabaseOutlined } from '@ant-design/icons';
 import { generateAllCollateralDemoCards } from '@/utils/collateralDemoData';
-import { updateAllCollateralCards } from '@/utils/updateExistingData';
+import { updateCollateralCardValues } from '@/utils/updateExistingData';
 
 const ExtendedRegistryPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -190,7 +190,9 @@ const ExtendedRegistryPage: React.FC = () => {
       
       for (const card of demoCards) {
         try {
-          await extendedStorageService.saveExtendedCard(card);
+          // Автоматически обновляем рыночную и залоговую стоимость перед сохранением
+          const updatedCard = updateCollateralCardValues(card);
+          await extendedStorageService.saveExtendedCard(updatedCard);
           successCount++;
         } catch (error) {
           errorCount++;
@@ -204,20 +206,6 @@ const ExtendedRegistryPage: React.FC = () => {
     } catch (error) {
       message.destroy('generating');
       message.error('Ошибка генерации демо-данных');
-      console.error(error);
-    }
-  };
-
-  const handleUpdateExistingData = async () => {
-    try {
-      message.loading({ content: 'Обновление данных...', key: 'updating', duration: 0 });
-      const updatedCount = await updateAllCollateralCards();
-      await loadCards();
-      message.destroy('updating');
-      message.success(`Обновлено ${updatedCount} карточек`);
-    } catch (error) {
-      message.destroy('updating');
-      message.error('Ошибка обновления данных');
       console.error(error);
     }
   };
@@ -237,17 +225,6 @@ const ExtendedRegistryPage: React.FC = () => {
         >
           <Button icon={<DatabaseOutlined />}>
             Создать демо-данные (50 карточек на каждый тип)
-          </Button>
-        </Popconfirm>
-        <Popconfirm
-          title="Обновление данных"
-          description="Обновить рыночную и залоговую стоимость во всех карточках? Рыночная стоимость будет заполнена, залоговая = рыночная * 75%."
-          onConfirm={handleUpdateExistingData}
-          okText="Да"
-          cancelText="Нет"
-        >
-          <Button icon={<ReloadOutlined />}>
-            Обновить стоимости
           </Button>
         </Popconfirm>
       </Space>
