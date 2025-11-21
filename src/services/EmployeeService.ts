@@ -221,6 +221,7 @@ class EmployeeService {
       
       // Определяем, какой город будет иметь руководителя (первый город региона)
       const managerCityIndex = 0;
+      let managerAssigned = false; // Флаг, чтобы назначить только одного руководителя на регион
       
       center.cities.forEach((city, cityIndex) => {
         // Распределяем сотрудников по городам региона равномерно
@@ -229,8 +230,11 @@ class EmployeeService {
         const employeesPerCity = baseEmployeesPerCity + (cityIndex < remainder ? 1 : 0);
         
         for (let i = 0; i < employeesPerCity; i++) {
-          // Первый сотрудник в первом городе региона становится руководителем
-          const isManager = cityIndex === managerCityIndex && i === 0;
+          // Первый сотрудник в первом городе региона становится руководителем (только один на регион)
+          const isManager = !managerAssigned && cityIndex === managerCityIndex && i === 0;
+          if (isManager) {
+            managerAssigned = true;
+          }
           const nameIndex = (globalIndex - 1) % surnames.length;
           const lastName = surnames[nameIndex];
           const firstName = firstNames[(globalIndex - 1) % firstNames.length];
