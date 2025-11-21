@@ -238,6 +238,11 @@ const EmployeesPage: React.FC = () => {
       render: (_, record) => (
         <Space direction="vertical" size={2} style={{ fontSize: '11px' }}>
           <Space size={4} wrap>
+            {record.isManager && (
+              <Tag color="gold" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                Руководитель
+              </Tag>
+            )}
             {record.canMonitor && (
               <Tag color="blue" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
                 М: {record.monitoringWorkload || 0}
@@ -248,7 +253,7 @@ const EmployeesPage: React.FC = () => {
                 О: {record.appraisalWorkload || 0}
               </Tag>
             )}
-            {!record.canMonitor && !record.canAppraise && (
+            {!record.canMonitor && !record.canAppraise && !record.isManager && (
               <Tag color="default" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
                 Общие
               </Tag>
@@ -548,6 +553,7 @@ const EmployeesPage: React.FC = () => {
             permissions: [],
             canMonitor: false,
             canAppraise: false,
+            isManager: false,
             monitoringWorkload: 0,
             appraisalWorkload: 0,
             status: 'working',
@@ -693,6 +699,19 @@ const EmployeesPage: React.FC = () => {
             </Col>
             <Col span={12}>
               <Form.Item name="canAppraise" label="Может выполнять оценку" valuePropName="checked">
+                <Switch />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="isManager"
+                label="Руководитель региона"
+                valuePropName="checked"
+                tooltip="Назначить сотрудника руководителем региона"
+              >
                 <Switch />
               </Form.Item>
             </Col>

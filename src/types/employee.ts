@@ -27,6 +27,8 @@ export interface Employee {
   // Загрузка (для автопилота)
   monitoringWorkload?: number; // Текущая загрузка по мониторингу (количество объектов)
   appraisalWorkload?: number; // Текущая загрузка по оценке (количество объектов)
+  // Руководство
+  isManager?: boolean; // Является ли руководителем региона
   createdAt: string;
   updatedAt: string;
 }

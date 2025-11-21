@@ -219,6 +219,9 @@ class EmployeeService {
       // 30 сотрудников на каждый региональный центр
       const employeesPerRegion = 30;
       
+      // Определяем, какой город будет иметь руководителя (первый город региона)
+      const managerCityIndex = 0;
+      
       center.cities.forEach((city, cityIndex) => {
         // Распределяем сотрудников по городам региона равномерно
         const baseEmployeesPerCity = Math.floor(employeesPerRegion / center.cities.length);
@@ -226,6 +229,8 @@ class EmployeeService {
         const employeesPerCity = baseEmployeesPerCity + (cityIndex < remainder ? 1 : 0);
         
         for (let i = 0; i < employeesPerCity; i++) {
+          // Первый сотрудник в первом городе региона становится руководителем
+          const isManager = cityIndex === managerCityIndex && i === 0;
           const nameIndex = (globalIndex - 1) % surnames.length;
           const lastName = surnames[nameIndex];
           const firstName = firstNames[(globalIndex - 1) % firstNames.length];
@@ -236,8 +241,14 @@ class EmployeeService {
           const isMonitoring = roleRandom < 0.15;
           const isAppraisal = roleRandom >= 0.15 && roleRandom < 0.45;
           
-          const positionIndex = isMonitoring ? 1 : isAppraisal ? 2 : 0;
-          const departmentIndex = isMonitoring ? 1 : isAppraisal ? 2 : 0;
+          // Если руководитель - назначаем соответствующую должность
+          let positionIndex = isMonitoring ? 1 : isAppraisal ? 2 : 0;
+          let departmentIndex = isMonitoring ? 1 : isAppraisal ? 2 : 0;
+          
+          if (isManager) {
+            positionIndex = 3; // 'Руководитель отдела'
+            departmentIndex = 0; // 'Отдел залогового обеспечения'
+          }
           
           const position = positions[positionIndex];
           const department = departments[departmentIndex];
@@ -273,12 +284,15 @@ class EmployeeService {
             email,
             phone,
             department,
-            permissions: ['registry_view', 'portfolio_view', 'tasks_view'],
+            permissions: isManager 
+              ? ['registry_view', 'registry_edit', 'portfolio_view', 'portfolio_edit', 'tasks_view', 'tasks_edit', 'reports_view', 'reports_export', 'settings_view']
+              : ['registry_view', 'portfolio_view', 'tasks_view'],
             isActive: true,
             canMonitor: isMonitoring,
             canAppraise: isAppraisal,
             monitoringWorkload: 0,
             appraisalWorkload: 0,
+            isManager,
             birthDate,
             employeeNumber,
             status: status as 'working' | 'sick_leave' | 'vacation' | 'business_trip',
