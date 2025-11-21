@@ -16,7 +16,6 @@ import {
   Row,
   Col,
   Collapse,
-  Badge,
   DatePicker,
 } from 'antd';
 import {
@@ -199,7 +198,9 @@ const EmployeesPage: React.FC = () => {
       fixed: 'left',
       render: (_, record) => (
         <div style={{ fontSize: '13px' }}>
-          <div>{record.lastName} {record.firstName} {record.middleName || ''}</div>
+          <div>
+            {record.lastName} {record.firstName} {record.middleName || ''}
+          </div>
           {record.employeeNumber && (
             <div style={{ fontSize: '11px', color: '#999', marginTop: 2 }}>
               № {record.employeeNumber}
@@ -412,7 +413,6 @@ const EmployeesPage: React.FC = () => {
         style={{ marginBottom: 8 }}
       >
         {REGION_CENTERS.map(center => {
-          const totalEmployees = Object.values(employeesByRegion[center.code] || {}).flat().length;
           const activeEmployees = Object.values(employeesByRegion[center.code] || {})
             .flat()
             .filter(emp => emp.isActive).length;
@@ -429,11 +429,9 @@ const EmployeesPage: React.FC = () => {
               key={center.code}
               header={
                 <Space size={4} wrap style={{ fontSize: '12px' }}>
-                  <Badge count={totalEmployees} showZero size="small">
-                    <span style={{ fontWeight: 600, fontSize: '13px' }}>
-                      {center.code} - {center.name}
-                    </span>
-                  </Badge>
+                  <span style={{ fontWeight: 600, fontSize: '13px' }}>
+                    {center.code} - {center.name}
+                  </span>
                   <Tag color="green" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
                     {activeEmployees} акт.
                   </Tag>
