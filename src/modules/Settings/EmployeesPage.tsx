@@ -193,6 +193,45 @@ const EmployeesPage: React.FC = () => {
       ),
     },
     {
+      title: 'Роли',
+      key: 'roles',
+      render: (_, record) => (
+        <Space wrap>
+          {record.canMonitor && (
+            <Tag color="blue">Мониторинг</Tag>
+          )}
+          {record.canAppraise && (
+            <Tag color="purple">Оценка</Tag>
+          )}
+          {!record.canMonitor && !record.canAppraise && (
+            <Tag color="default">Общие задачи</Tag>
+          )}
+        </Space>
+      ),
+    },
+    {
+      title: 'Загрузка',
+      key: 'workload',
+      render: (_, record) => (
+        <Space direction="vertical" size="small" style={{ fontSize: '12px' }}>
+          {record.canMonitor && (
+            <div>
+              <Tag color="blue" style={{ margin: 0 }}>
+                Мониторинг: {record.monitoringWorkload || 0}
+              </Tag>
+            </div>
+          )}
+          {record.canAppraise && (
+            <div>
+              <Tag color="purple" style={{ margin: 0 }}>
+                Оценка: {record.appraisalWorkload || 0}
+              </Tag>
+            </div>
+          )}
+        </Space>
+      ),
+    },
+    {
       title: 'Статус',
       dataIndex: 'isActive',
       key: 'isActive',
@@ -233,10 +272,18 @@ const EmployeesPage: React.FC = () => {
     <div className="employees-page">
       <Card>
         <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title level={3} style={{ margin: 0 }}>
-            <TeamOutlined style={{ marginRight: 8 }} />
-            Управление сотрудниками
-          </Title>
+          <div>
+            <Title level={3} style={{ margin: 0 }}>
+              <TeamOutlined style={{ marginRight: 8 }} />
+              Управление сотрудниками
+            </Title>
+            <div style={{ marginTop: 8, color: '#666' }}>
+              Всего: {employees.length} | 
+              Активных: {employees.filter(e => e.isActive).length} | 
+              Мониторинг: {employees.filter(e => e.canMonitor).length} | 
+              Оценка: {employees.filter(e => e.canAppraise).length}
+            </div>
+          </div>
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
             Добавить сотрудника
           </Button>
@@ -253,17 +300,26 @@ const EmployeesPage: React.FC = () => {
               .flat()
               .filter(emp => emp.isActive).length;
             
+            const monitoringEmployees = Object.values(employeesByRegion[center.code] || {})
+              .flat()
+              .filter(emp => emp.canMonitor).length;
+            const appraisalEmployees = Object.values(employeesByRegion[center.code] || {})
+              .flat()
+              .filter(emp => emp.canAppraise).length;
+            
             return (
               <Panel
                 key={center.code}
                 header={
-                  <Space>
+                  <Space wrap>
                     <Badge count={totalEmployees} showZero>
                       <span style={{ fontWeight: 600 }}>
                         {center.code} - {center.name}
                       </span>
                     </Badge>
                     <Tag color="green">{activeEmployees} активных</Tag>
+                    <Tag color="blue">{monitoringEmployees} мониторинг</Tag>
+                    <Tag color="purple">{appraisalEmployees} оценка</Tag>
                   </Space>
                 }
               >
@@ -325,6 +381,10 @@ const EmployeesPage: React.FC = () => {
           initialValues={{
             isActive: true,
             permissions: [],
+            canMonitor: false,
+            canAppraise: false,
+            monitoringWorkload: 0,
+            appraisalWorkload: 0,
           }}
         >
           <Row gutter={16}>
@@ -425,6 +485,19 @@ const EmployeesPage: React.FC = () => {
             </Col>
             <Col span={12}>
               <Form.Item name="isActive" label="Активен" valuePropName="checked">
+                <Switch />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="canMonitor" label="Может выполнять мониторинг" valuePropName="checked">
+                <Switch />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="canAppraise" label="Может выполнять оценку" valuePropName="checked">
                 <Switch />
               </Form.Item>
             </Col>
