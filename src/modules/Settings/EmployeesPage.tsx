@@ -26,6 +26,7 @@ import {
   TeamOutlined,
   ReloadOutlined,
   SearchOutlined,
+  DatabaseOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import employeeService from '@/services/EmployeeService';
@@ -316,6 +317,30 @@ const EmployeesPage: React.FC = () => {
               </div>
             </div>
             <Space>
+              <Popconfirm
+                title="Регенерировать базу сотрудников?"
+                description="Это создаст 30 сотрудников на каждый региональный центр. Существующие данные будут перезаписаны."
+                onConfirm={() => {
+                  try {
+                    setLoading(true);
+                    const regenerated = employeeService.regenerateEmployees();
+                    setEmployees(regenerated);
+                    syncEmployeesToZadachnik();
+                    message.success(`Создано ${regenerated.length} сотрудников`);
+                    setLoading(false);
+                  } catch (error) {
+                    message.error('Ошибка регенерации сотрудников');
+                    console.error(error);
+                    setLoading(false);
+                  }
+                }}
+                okText="Да"
+                cancelText="Нет"
+              >
+                <Button icon={<DatabaseOutlined />} loading={loading}>
+                  Регенерировать базу
+                </Button>
+              </Popconfirm>
               <Button icon={<ReloadOutlined />} onClick={() => loadEmployees(true)} loading={loading}>
                 Обновить
               </Button>

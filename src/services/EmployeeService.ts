@@ -18,11 +18,28 @@ class EmployeeService {
         // Возвращаем демо-данные при первом запуске
         return this.getDefaultEmployees();
       }
-      return JSON.parse(data);
+      const employees = JSON.parse(data);
+      
+      // Проверяем, что сотрудников достаточно (должно быть ~180 для 6 региональных центров по 30)
+      // Если меньше 100, пересоздаем базу
+      if (!Array.isArray(employees) || employees.length < 100) {
+        console.warn('Обнаружено недостаточное количество сотрудников, пересоздаем базу...');
+        return this.getDefaultEmployees();
+      }
+      
+      return employees;
     } catch (error) {
       console.error('Ошибка загрузки сотрудников:', error);
       return this.getDefaultEmployees();
     }
+  }
+
+  /**
+   * Принудительно пересоздать базу сотрудников
+   */
+  regenerateEmployees(): Employee[] {
+    console.log('Принудительная регенерация базы сотрудников...');
+    return this.getDefaultEmployees();
   }
 
   /**
