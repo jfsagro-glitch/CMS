@@ -24,6 +24,8 @@ import {
   DeleteOutlined,
   UserOutlined,
   TeamOutlined,
+  ReloadOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import employeeService from '@/services/EmployeeService';
@@ -60,22 +62,50 @@ const EmployeesPage: React.FC = () => {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [form] = Form.useForm();
   const [activeRegion, setActiveRegion] = useState<string | string[]>([]);
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     loadEmployees();
   }, []);
 
-  const loadEmployees = () => {
+  const loadEmployees = (showMessage = false) => {
     setLoading(true);
     try {
+      // Принудительно получаем актуальные данные
       const data = employeeService.getEmployees();
       setEmployees(data);
+      // Синхронизируем с zadachnik при загрузке
+      syncEmployeesToZadachnik();
+      if (showMessage) {
+        message.success(`Загружено ${data.length} сотрудников`);
+      }
     } catch (error) {
       message.error('Ошибка загрузки сотрудников');
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Фильтрация сотрудников по поисковому запросу
+  const filteredEmployees = useMemo(() => {
+    if (!searchText.trim()) return employees;
+    
+    const search = searchText.toLowerCase();
+    return employees.filter(emp => {
+      const fullName = `${emp.lastName} ${emp.firstName} ${emp.middleName || ''}`.toLowerCase();
+      const position = (emp.position || '').toLowerCase();
+      const region = (emp.region || '').toLowerCase();
+      const email = (emp.email || '').toLowerCase();
+      const department = (emp.department || '').toLowerCase();
+      
+      return fullName.includes(search) ||
+             position.includes(search) ||
+             region.includes(search) ||
+             email.includes(search) ||
+             department.includes(search);
+    });
+  }, [employees, searchText]);
 
   // Группировка сотрудников по региональным центрам и городам
   const employeesByRegion = useMemo(() => {
@@ -84,12 +114,12 @@ const EmployeesPage: React.FC = () => {
     REGION_CENTERS.forEach(center => {
       grouped[center.code] = {};
       center.cities.forEach(city => {
-        grouped[center.code][city] = employees.filter(emp => emp.region === city);
+        grouped[center.code][city] = filteredEmployees.filter(emp => emp.region === city);
       });
     });
     
     return grouped;
-  }, [employees]);
+  }, [filteredEmployees]);
 
   const handleAdd = () => {
     setEditingEmployee(null);
@@ -271,22 +301,38 @@ const EmployeesPage: React.FC = () => {
   return (
     <div className="employees-page">
       <Card>
-        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <Title level={3} style={{ margin: 0 }}>
-              <TeamOutlined style={{ marginRight: 8 }} />
-              Управление сотрудниками
-            </Title>
-            <div style={{ marginTop: 8, color: '#666' }}>
-              Всего: {employees.length} | 
-              Активных: {employees.filter(e => e.isActive).length} | 
-              Мониторинг: {employees.filter(e => e.canMonitor).length} | 
-              Оценка: {employees.filter(e => e.canAppraise).length}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div>
+              <Title level={3} style={{ margin: 0 }}>
+                <TeamOutlined style={{ marginRight: 8 }} />
+                Управление сотрудниками
+              </Title>
+              <div style={{ marginTop: 8, color: '#666' }}>
+                Всего: <strong>{employees.length}</strong> | 
+                Активных: <strong style={{ color: '#52c41a' }}>{employees.filter(e => e.isActive).length}</strong> | 
+                Мониторинг: <strong style={{ color: '#1890ff' }}>{employees.filter(e => e.canMonitor).length}</strong> | 
+                Оценка: <strong style={{ color: '#722ed1' }}>{employees.filter(e => e.canAppraise).length}</strong>
+              </div>
             </div>
+            <Space>
+              <Button icon={<ReloadOutlined />} onClick={() => loadEmployees(true)} loading={loading}>
+                Обновить
+              </Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                Добавить сотрудника
+              </Button>
+            </Space>
           </div>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            Добавить сотрудника
-          </Button>
+          
+          <Input
+            placeholder="Поиск по ФИО, должности, региону, email..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+            style={{ maxWidth: 500 }}
+          />
         </div>
 
         <Collapse
@@ -355,13 +401,25 @@ const EmployeesPage: React.FC = () => {
           })}
         </Collapse>
 
-        <Card title="Все сотрудники" size="small">
+        <Card 
+          title={
+            <Space>
+              <span>Все сотрудники</span>
+              {searchText && (
+                <Tag color="blue">
+                  Найдено: {filteredEmployees.length} из {employees.length}
+                </Tag>
+              )}
+            </Space>
+          } 
+          size="small"
+        >
           <Table
             columns={columns}
-            dataSource={employees}
+            dataSource={filteredEmployees}
             rowKey="id"
             loading={loading}
-            pagination={{ pageSize: 20 }}
+            pagination={{ pageSize: 20, showSizeChanger: true, showTotal: (total) => `Всего ${total} сотрудников` }}
           />
         </Card>
       </Card>
