@@ -88,23 +88,32 @@ const KPIPage: React.FC = () => {
       const stats: RegionStats[] = regions.map(region => {
         const regionEmployees = employees.filter(emp => emp.region === region && emp.isActive);
         const employeeStats = regionEmployees.map(emp => {
+          // Ищем задачи по employeeId (приоритет) или по assignee (ФИО)
           const employeeTasks = tasksData.filter((task: any) => 
+            task.employeeId === emp.id || 
             task.assignee === emp.id || 
             task.assignee === `${emp.lastName} ${emp.firstName}` ||
-            task.employeeId === emp.id
+            task.assignee === `${emp.lastName} ${emp.firstName} ${emp.middleName || ''}`.trim()
           );
 
           const completed = employeeTasks.filter((t: any) => 
             t.status === 'completed' || t.status === 'Выполнено'
           ).length;
-          const inProgress = employeeTasks.filter((t: any) => 
-            t.status === 'pending' || t.status === 'В работе'
-          ).length;
-          const overdue = employeeTasks.filter((t: any) => {
-            if (!t.dueDate) return false;
-            const dueDate = dayjs(t.dueDate);
-            return dueDate.isBefore(dayjs()) && (t.status !== 'completed' && t.status !== 'Выполнено');
+          
+          // В работе - задачи со статусом pending, у которых срок еще не наступил
+          const inProgress = employeeTasks.filter((t: any) => {
+            if (t.status !== 'pending' && t.status !== 'В работе') return false;
+            if (!t.dueDate) return true;
+            return dayjs(t.dueDate).isAfter(dayjs()) || dayjs(t.dueDate).isSame(dayjs(), 'day');
           }).length;
+          
+          // Просрочено - задачи со статусом pending, у которых срок прошел
+          const overdue = employeeTasks.filter((t: any) => {
+            if (t.status === 'completed' || t.status === 'Выполнено') return false;
+            if (!t.dueDate) return false;
+            return dayjs(t.dueDate).isBefore(dayjs(), 'day');
+          }).length;
+          
           const total = employeeTasks.length;
           const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
@@ -167,11 +176,19 @@ const KPIPage: React.FC = () => {
       ).length;
 
       const completedTasks = tasksData.filter((task: any) => task.status === 'completed' || task.status === 'Выполнено').length;
-      const pendingTasks = tasksData.filter((task: any) => task.status === 'pending' || task.status === 'В работе').length;
+      
+      // В работе - задачи со статусом pending, у которых срок еще не наступил
+      const pendingTasks = tasksData.filter((task: any) => {
+        if (task.status !== 'pending' && task.status !== 'В работе') return false;
+        if (!task.dueDate) return true;
+        return dayjs(task.dueDate).isAfter(dayjs()) || dayjs(task.dueDate).isSame(dayjs(), 'day');
+      }).length;
+      
+      // Просрочено - задачи со статусом pending, у которых срок прошел
       const overdueTasks = tasksData.filter((task: any) => {
+        if (task.status === 'completed' || task.status === 'Выполнено') return false;
         if (!task.dueDate) return false;
-        const dueDate = dayjs(task.dueDate);
-        return dueDate.isBefore(dayjs()) && (task.status !== 'completed' && task.status !== 'Выполнено');
+        return dayjs(task.dueDate).isBefore(dayjs(), 'day');
       }).length;
 
       const totalConclusions = conclusionsData.length;
@@ -228,12 +245,16 @@ const KPIPage: React.FC = () => {
         if (task.status === 'completed' || task.status === 'Выполнено') {
           stats.completed++;
         } else if (task.status === 'pending' || task.status === 'В работе') {
-          stats.pending++;
+          // В работе - только если срок еще не наступил
+          if (!task.dueDate || dayjs(task.dueDate).isAfter(dayjs()) || dayjs(task.dueDate).isSame(dayjs(), 'day')) {
+            stats.pending++;
+          }
         }
         
-        if (task.dueDate) {
+        // Просрочено - задачи со статусом pending, у которых срок прошел
+        if (task.dueDate && task.status !== 'completed' && task.status !== 'Выполнено') {
           const dueDate = dayjs(task.dueDate);
-          if (dueDate.isBefore(dayjs()) && (task.status !== 'completed' && task.status !== 'Выполнено')) {
+          if (dueDate.isBefore(dayjs(), 'day')) {
             stats.overdue++;
           }
         }

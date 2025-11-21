@@ -33,6 +33,7 @@ import employeeService from '@/services/EmployeeService';
 import type { Employee, EmployeePermission, EmployeeStatus } from '@/types/employee';
 import { REGION_CENTERS } from '@/utils/regionCenters';
 import { syncEmployeesToZadachnik } from '@/utils/syncEmployeesToZadachnik';
+import { generateTasksForEmployees } from '@/utils/generateTasksForEmployees';
 import dayjs from 'dayjs';
 import './EmployeesPage.css';
 
@@ -387,6 +388,25 @@ const EmployeesPage: React.FC = () => {
             >
               Обновить
             </Button>
+            <Popconfirm
+              title="Сгенерировать задачи для всех сотрудников?"
+              description="Это создаст 30-50 задач на каждого активного сотрудника. Большая часть будет выполнена, 1% просрочена."
+              onConfirm={() => {
+                try {
+                  generateTasksForEmployees();
+                  message.success('Задачи успешно сгенерированы');
+                } catch (error) {
+                  message.error('Ошибка генерации задач');
+                  console.error(error);
+                }
+              }}
+              okText="Да"
+              cancelText="Нет"
+            >
+              <Button icon={<ReloadOutlined />} size="small">
+                Генерировать задачи
+              </Button>
+            </Popconfirm>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} size="small">
               Добавить
             </Button>

@@ -71,6 +71,14 @@ const AppContent: React.FC = () => {
         try {
           const { syncEmployeesToZadachnik } = await import('./utils/syncEmployeesToZadachnik');
           syncEmployeesToZadachnik();
+          
+          // Проверяем, есть ли задачи, если нет - генерируем
+          const existingTasks = localStorage.getItem('zadachnik_tasks');
+          if (!existingTasks || JSON.parse(existingTasks).length === 0) {
+            const { generateTasksForEmployees } = await import('./utils/generateTasksForEmployees');
+            generateTasksForEmployees();
+            console.log('✅ Задачи для сотрудников сгенерированы автоматически');
+          }
         } catch (error) {
           console.warn('Не удалось синхронизировать сотрудников с zadachnik:', error);
         }
