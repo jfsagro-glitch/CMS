@@ -1,4 +1,46 @@
 .employees-page {
-  padding: 24px;
+  padding: 0;
 }
 
+.employees-page .ant-card {
+  margin-bottom: 8px;
+}
+
+.employees-page .ant-card-body {
+  padding: 12px;
+}
+
+.employees-page .ant-table {
+  font-size: 12px;
+}
+
+.employees-page .ant-table-thead > tr > th {
+  padding: 8px 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.employees-page .ant-table-tbody > tr > td {
+  padding: 6px 4px;
+  font-size: 12px;
+}
+
+.employees-page .ant-collapse {
+  border: none;
+  background: transparent;
+}
+
+.employees-page .ant-collapse-item {
+  border: 1px solid #f0f0f0;
+  margin-bottom: 4px;
+  border-radius: 4px;
+}
+
+.employees-page .ant-collapse-header {
+  padding: 8px 12px !important;
+}
+
+.employees-page .ant-tag {
+  margin: 0;
+  line-height: 18px;
+}

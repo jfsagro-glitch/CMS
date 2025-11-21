@@ -173,126 +173,102 @@ const EmployeesPage: React.FC = () => {
     {
       title: 'ФИО',
       key: 'name',
+      width: 180,
+      fixed: 'left',
       render: (_, record) => (
-        <Space>
-          <UserOutlined />
-          <span>
-            {record.lastName} {record.firstName} {record.middleName || ''}
-          </span>
-        </Space>
+        <span style={{ fontSize: '13px' }}>
+          {record.lastName} {record.firstName} {record.middleName || ''}
+        </span>
       ),
     },
     {
       title: 'Должность',
       dataIndex: 'position',
       key: 'position',
+      width: 180,
+      ellipsis: true,
     },
     {
       title: 'Регион',
       dataIndex: 'region',
       key: 'region',
-    },
-    {
-      title: 'Отдел',
-      dataIndex: 'department',
-      key: 'department',
+      width: 120,
+      ellipsis: true,
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
+      width: 180,
+      ellipsis: true,
     },
     {
-      title: 'Телефон',
-      dataIndex: 'phone',
-      key: 'phone',
+      title: 'Роли / Загрузка',
+      key: 'roles',
+      width: 200,
+      render: (_, record) => (
+        <Space direction="vertical" size={2} style={{ fontSize: '11px' }}>
+          <Space size={4} wrap>
+            {record.canMonitor && (
+              <Tag color="blue" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                М: {record.monitoringWorkload || 0}
+              </Tag>
+            )}
+            {record.canAppraise && (
+              <Tag color="purple" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                О: {record.appraisalWorkload || 0}
+              </Tag>
+            )}
+            {!record.canMonitor && !record.canAppraise && (
+              <Tag color="default" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                Общие
+              </Tag>
+            )}
+          </Space>
+          <Tag color={record.isActive ? 'green' : 'red'} style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+            {record.isActive ? 'Активен' : 'Неактивен'}
+          </Tag>
+        </Space>
+      ),
     },
     {
       title: 'Права',
       key: 'permissions',
+      width: 150,
       render: (_, record) => (
-        <Space wrap>
-          {record.permissions.slice(0, 3).map((perm) => (
-            <Tag key={perm} color="blue">
-              {PERMISSION_LABELS[perm]}
+        <Space wrap size={2}>
+          {record.permissions.slice(0, 2).map((perm) => (
+            <Tag key={perm} color="blue" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+              {PERMISSION_LABELS[perm].substring(0, 15)}
             </Tag>
           ))}
-          {record.permissions.length > 3 && (
-            <Tag>+{record.permissions.length - 3}</Tag>
+          {record.permissions.length > 2 && (
+            <Tag style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>+{record.permissions.length - 2}</Tag>
           )}
         </Space>
-      ),
-    },
-    {
-      title: 'Роли',
-      key: 'roles',
-      render: (_, record) => (
-        <Space wrap>
-          {record.canMonitor && (
-            <Tag color="blue">Мониторинг</Tag>
-          )}
-          {record.canAppraise && (
-            <Tag color="purple">Оценка</Tag>
-          )}
-          {!record.canMonitor && !record.canAppraise && (
-            <Tag color="default">Общие задачи</Tag>
-          )}
-        </Space>
-      ),
-    },
-    {
-      title: 'Загрузка',
-      key: 'workload',
-      render: (_, record) => (
-        <Space direction="vertical" size="small" style={{ fontSize: '12px' }}>
-          {record.canMonitor && (
-            <div>
-              <Tag color="blue" style={{ margin: 0 }}>
-                Мониторинг: {record.monitoringWorkload || 0}
-              </Tag>
-            </div>
-          )}
-          {record.canAppraise && (
-            <div>
-              <Tag color="purple" style={{ margin: 0 }}>
-                Оценка: {record.appraisalWorkload || 0}
-              </Tag>
-            </div>
-          )}
-        </Space>
-      ),
-    },
-    {
-      title: 'Статус',
-      dataIndex: 'isActive',
-      key: 'isActive',
-      render: (isActive) => (
-        <Tag color={isActive ? 'green' : 'red'}>
-          {isActive ? 'Активен' : 'Неактивен'}
-        </Tag>
       ),
     },
     {
       title: 'Действия',
       key: 'actions',
+      width: 100,
+      fixed: 'right',
       render: (_, record) => (
-        <Space>
+        <Space size={4}>
           <Button
             type="link"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
-          >
-            Редактировать
-          </Button>
+            size="small"
+            style={{ padding: '0 4px' }}
+          />
           <Popconfirm
             title="Удалить сотрудника?"
             onConfirm={() => handleDelete(record.id)}
             okText="Да"
             cancelText="Нет"
           >
-            <Button type="link" danger icon={<DeleteOutlined />}>
-              Удалить
-            </Button>
+            <Button type="link" danger icon={<DeleteOutlined />} size="small" style={{ padding: '0 4px' }} />
           </Popconfirm>
         </Space>
       ),
@@ -300,70 +276,81 @@ const EmployeesPage: React.FC = () => {
   ];
 
   return (
-    <div className="employees-page">
-      <Card>
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div>
-              <Title level={3} style={{ margin: 0 }}>
-                <TeamOutlined style={{ marginRight: 8 }} />
-                Управление сотрудниками
-              </Title>
-              <div style={{ marginTop: 8, color: '#666' }}>
-                Всего: <strong>{employees.length}</strong> | 
-                Активных: <strong style={{ color: '#52c41a' }}>{employees.filter(e => e.isActive).length}</strong> | 
-                Мониторинг: <strong style={{ color: '#1890ff' }}>{employees.filter(e => e.canMonitor).length}</strong> | 
-                Оценка: <strong style={{ color: '#722ed1' }}>{employees.filter(e => e.canAppraise).length}</strong>
-              </div>
-            </div>
-            <Space>
-              <Popconfirm
-                title="Регенерировать базу сотрудников?"
-                description="Это создаст 30 сотрудников на каждый региональный центр. Существующие данные будут перезаписаны."
-                onConfirm={() => {
-                  try {
-                    setLoading(true);
-                    const regenerated = employeeService.regenerateEmployees();
-                    setEmployees(regenerated);
-                    syncEmployeesToZadachnik();
-                    message.success(`Создано ${regenerated.length} сотрудников`);
-                    setLoading(false);
-                  } catch (error) {
-                    message.error('Ошибка регенерации сотрудников');
-                    console.error(error);
-                    setLoading(false);
-                  }
-                }}
-                okText="Да"
-                cancelText="Нет"
-              >
-                <Button icon={<DatabaseOutlined />} loading={loading}>
-                  Регенерировать базу
-                </Button>
-              </Popconfirm>
-              <Button icon={<ReloadOutlined />} onClick={() => loadEmployees(true)} loading={loading}>
-                Обновить
-              </Button>
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-                Добавить сотрудника
-              </Button>
+    <div className="employees-page" style={{ padding: '8px' }}>
+      <Card size="small" style={{ marginBottom: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <Title level={4} style={{ margin: 0, fontSize: '16px' }}>
+              <TeamOutlined style={{ marginRight: 4 }} />
+              Сотрудники
+            </Title>
+            <Space size={8} split={<span style={{ color: '#d9d9d9' }}>|</span>}>
+              <span style={{ fontSize: '12px', color: '#666' }}>
+                Всего: <strong>{employees.length}</strong>
+              </span>
+              <span style={{ fontSize: '12px', color: '#52c41a' }}>
+                Активных: <strong>{employees.filter(e => e.isActive).length}</strong>
+              </span>
+              <span style={{ fontSize: '12px', color: '#1890ff' }}>
+                Мониторинг: <strong>{employees.filter(e => e.canMonitor).length}</strong>
+              </span>
+              <span style={{ fontSize: '12px', color: '#722ed1' }}>
+                Оценка: <strong>{employees.filter(e => e.canAppraise).length}</strong>
+              </span>
             </Space>
           </div>
-          
+          <Space size={4}>
+            <Popconfirm
+              title="Регенерировать базу сотрудников?"
+              description="Это создаст 30 сотрудников на каждый региональный центр. Существующие данные будут перезаписаны."
+              onConfirm={() => {
+                try {
+                  setLoading(true);
+                  const regenerated = employeeService.regenerateEmployees();
+                  setEmployees(regenerated);
+                  syncEmployeesToZadachnik();
+                  message.success(`Создано ${regenerated.length} сотрудников`);
+                  setLoading(false);
+                } catch (error) {
+                  message.error('Ошибка регенерации сотрудников');
+                  console.error(error);
+                  setLoading(false);
+                }
+              }}
+              okText="Да"
+              cancelText="Нет"
+            >
+              <Button icon={<DatabaseOutlined />} loading={loading} size="small">
+                Регенерация
+              </Button>
+            </Popconfirm>
+            <Button icon={<ReloadOutlined />} onClick={() => loadEmployees(true)} loading={loading} size="small">
+              Обновить
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} size="small">
+              Добавить
+            </Button>
+          </Space>
+        </div>
+        
+        <div style={{ marginTop: 8 }}>
           <Input
             placeholder="Поиск по ФИО, должности, региону, email..."
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
-            style={{ maxWidth: 500 }}
+            size="small"
+            style={{ maxWidth: 400 }}
           />
         </div>
+      </Card>
 
         <Collapse
           activeKey={activeRegion}
           onChange={setActiveRegion}
-          style={{ marginBottom: 16 }}
+          size="small"
+          style={{ marginBottom: 8 }}
         >
           {REGION_CENTERS.map(center => {
             const totalEmployees = Object.values(employeesByRegion[center.code] || {}).flat().length;
@@ -382,15 +369,21 @@ const EmployeesPage: React.FC = () => {
               <Panel
                 key={center.code}
                 header={
-                  <Space wrap>
-                    <Badge count={totalEmployees} showZero>
-                      <span style={{ fontWeight: 600 }}>
+                  <Space size={4} wrap style={{ fontSize: '12px' }}>
+                    <Badge count={totalEmployees} showZero size="small">
+                      <span style={{ fontWeight: 600, fontSize: '13px' }}>
                         {center.code} - {center.name}
                       </span>
                     </Badge>
-                    <Tag color="green">{activeEmployees} активных</Tag>
-                    <Tag color="blue">{monitoringEmployees} мониторинг</Tag>
-                    <Tag color="purple">{appraisalEmployees} оценка</Tag>
+                    <Tag color="green" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                      {activeEmployees} акт.
+                    </Tag>
+                    <Tag color="blue" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                      {monitoringEmployees} мон.
+                    </Tag>
+                    <Tag color="purple" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                      {appraisalEmployees} оц.
+                    </Tag>
                   </Space>
                 }
               >
@@ -403,20 +396,24 @@ const EmployeesPage: React.FC = () => {
                       key={city}
                       size="small"
                       title={
-                        <Space>
+                        <Space size={4} style={{ fontSize: '12px' }}>
                           <UserOutlined />
                           <span>{city}</span>
-                          <Tag>{cityEmployees.length} сотрудников</Tag>
+                          <Tag style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                            {cityEmployees.length}
+                          </Tag>
                         </Space>
                       }
-                      style={{ marginBottom: 16 }}
+                      style={{ marginBottom: 8 }}
+                      bodyStyle={{ padding: '8px' }}
                     >
                       <Table
                         columns={columns}
                         dataSource={cityEmployees}
                         rowKey="id"
-                        pagination={{ pageSize: 10, size: 'small' }}
+                        pagination={{ pageSize: 10, size: 'small', showSizeChanger: false }}
                         size="small"
+                        scroll={{ x: 'max-content' }}
                       />
                     </Card>
                   );
@@ -428,33 +425,41 @@ const EmployeesPage: React.FC = () => {
 
         <Card 
           title={
-            <Space>
+            <Space size={4} style={{ fontSize: '13px' }}>
               <span>Все сотрудники</span>
               {searchText && (
-                <Tag color="blue">
+                <Tag color="blue" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
                   Найдено: {filteredEmployees.length} из {employees.length}
                 </Tag>
               )}
             </Space>
           } 
           size="small"
+          bodyStyle={{ padding: '8px' }}
         >
           <Table
             columns={columns}
             dataSource={filteredEmployees}
             rowKey="id"
             loading={loading}
-            pagination={{ pageSize: 20, showSizeChanger: true, showTotal: (total) => `Всего ${total} сотрудников` }}
+            pagination={{ 
+              pageSize: 20, 
+              showSizeChanger: true, 
+              showTotal: (total) => `Всего ${total} сотрудников`,
+              size: 'small',
+              showQuickJumper: true,
+            }}
+            size="small"
+            scroll={{ x: 'max-content' }}
           />
         </Card>
-      </Card>
 
       <Modal
         title={editingEmployee ? 'Редактировать сотрудника' : 'Добавить сотрудника'}
         open={modalVisible}
         onOk={handleSave}
         onCancel={() => setModalVisible(false)}
-        width={700}
+        width={600}
         okText="Сохранить"
         cancelText="Отмена"
       >
