@@ -17,6 +17,7 @@ import {
   Col,
   Collapse,
   Badge,
+  DatePicker,
 } from 'antd';
 import {
   PlusOutlined,
@@ -30,15 +31,23 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import employeeService from '@/services/EmployeeService';
-import type { Employee, EmployeePermission } from '@/types/employee';
+import type { Employee, EmployeePermission, EmployeeStatus } from '@/types/employee';
 import { REGION_CENTERS } from '@/utils/regionCenters';
 import { syncEmployeesToZadachnik } from '@/utils/syncEmployeesToZadachnik';
+import dayjs from 'dayjs';
 import './EmployeesPage.css';
 
 const { Title } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 const { Panel } = Collapse;
+
+const STATUS_OPTIONS: { value: EmployeeStatus; label: string; color: string }[] = [
+  { value: 'working', label: 'На работе', color: 'green' },
+  { value: 'sick_leave', label: 'Больничный', color: 'orange' },
+  { value: 'vacation', label: 'Отпуск', color: 'blue' },
+  { value: 'business_trip', label: 'Командировка', color: 'purple' },
+];
 
 const PERMISSION_LABELS: Record<EmployeePermission, string> = {
   registry_view: 'Просмотр реестра',
@@ -91,7 +100,7 @@ const EmployeesPage: React.FC = () => {
   // Фильтрация сотрудников по поисковому запросу
   const filteredEmployees = useMemo(() => {
     if (!searchText.trim()) return employees;
-    
+
     const search = searchText.toLowerCase();
     return employees.filter(emp => {
       const fullName = `${emp.lastName} ${emp.firstName} ${emp.middleName || ''}`.toLowerCase();
@@ -99,26 +108,28 @@ const EmployeesPage: React.FC = () => {
       const region = (emp.region || '').toLowerCase();
       const email = (emp.email || '').toLowerCase();
       const department = (emp.department || '').toLowerCase();
-      
-      return fullName.includes(search) ||
-             position.includes(search) ||
-             region.includes(search) ||
-             email.includes(search) ||
-             department.includes(search);
+
+      return (
+        fullName.includes(search) ||
+        position.includes(search) ||
+        region.includes(search) ||
+        email.includes(search) ||
+        department.includes(search)
+      );
     });
   }, [employees, searchText]);
 
   // Группировка сотрудников по региональным центрам и городам
   const employeesByRegion = useMemo(() => {
     const grouped: Record<string, Record<string, Employee[]>> = {};
-    
+
     REGION_CENTERS.forEach(center => {
       grouped[center.code] = {};
       center.cities.forEach(city => {
         grouped[center.code][city] = filteredEmployees.filter(emp => emp.region === city);
       });
     });
-    
+
     return grouped;
   }, [filteredEmployees]);
 
@@ -133,6 +144,9 @@ const EmployeesPage: React.FC = () => {
     form.setFieldsValue({
       ...employee,
       permissions: employee.permissions || [],
+      birthDate: employee.birthDate ? dayjs(employee.birthDate) : undefined,
+      hireDate: employee.hireDate ? dayjs(employee.hireDate) : undefined,
+      status: employee.status || 'working',
     });
     setModalVisible(true);
   };
@@ -151,17 +165,25 @@ const EmployeesPage: React.FC = () => {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      
+
+      // Преобразуем даты в строки
+      const formattedValues = {
+        ...values,
+        birthDate: values.birthDate ? dayjs(values.birthDate).format('YYYY-MM-DD') : undefined,
+        hireDate: values.hireDate ? dayjs(values.hireDate).format('YYYY-MM-DD') : undefined,
+        status: values.status || 'working',
+      };
+
       if (editingEmployee) {
-        employeeService.updateEmployee(editingEmployee.id, values);
+        employeeService.updateEmployee(editingEmployee.id, formattedValues);
         syncEmployeesToZadachnik(); // Синхронизируем с zadachnik
         message.success('Сотрудник обновлен');
       } else {
-        employeeService.addEmployee(values);
+        employeeService.addEmployee(formattedValues);
         syncEmployeesToZadachnik(); // Синхронизируем с zadachnik
         message.success('Сотрудник добавлен');
       }
-      
+
       setModalVisible(false);
       loadEmployees();
     } catch (error) {
@@ -176,9 +198,14 @@ const EmployeesPage: React.FC = () => {
       width: 180,
       fixed: 'left',
       render: (_, record) => (
-        <span style={{ fontSize: '13px' }}>
-          {record.lastName} {record.firstName} {record.middleName || ''}
-        </span>
+        <div style={{ fontSize: '13px' }}>
+          <div>{record.lastName} {record.firstName} {record.middleName || ''}</div>
+          {record.employeeNumber && (
+            <div style={{ fontSize: '11px', color: '#999', marginTop: 2 }}>
+              № {record.employeeNumber}
+            </div>
+          )}
+        </div>
       ),
     },
     {
@@ -225,7 +252,18 @@ const EmployeesPage: React.FC = () => {
               </Tag>
             )}
           </Space>
-          <Tag color={record.isActive ? 'green' : 'red'} style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+          {record.status && (
+            <Tag
+              color={STATUS_OPTIONS.find(opt => opt.value === record.status)?.color || 'default'}
+              style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}
+            >
+              {STATUS_OPTIONS.find(opt => opt.value === record.status)?.label || record.status}
+            </Tag>
+          )}
+          <Tag
+            color={record.isActive ? 'green' : 'red'}
+            style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}
+          >
             {record.isActive ? 'Активен' : 'Неактивен'}
           </Tag>
         </Space>
@@ -237,13 +275,15 @@ const EmployeesPage: React.FC = () => {
       width: 150,
       render: (_, record) => (
         <Space wrap size={2}>
-          {record.permissions.slice(0, 2).map((perm) => (
+          {record.permissions.slice(0, 2).map(perm => (
             <Tag key={perm} color="blue" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
               {PERMISSION_LABELS[perm].substring(0, 15)}
             </Tag>
           ))}
           {record.permissions.length > 2 && (
-            <Tag style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>+{record.permissions.length - 2}</Tag>
+            <Tag style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+              +{record.permissions.length - 2}
+            </Tag>
           )}
         </Space>
       ),
@@ -268,7 +308,13 @@ const EmployeesPage: React.FC = () => {
             okText="Да"
             cancelText="Нет"
           >
-            <Button type="link" danger icon={<DeleteOutlined />} size="small" style={{ padding: '0 4px' }} />
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+              size="small"
+              style={{ padding: '0 4px' }}
+            />
           </Popconfirm>
         </Space>
       ),
@@ -278,7 +324,15 @@ const EmployeesPage: React.FC = () => {
   return (
     <div className="employees-page" style={{ padding: '8px' }}>
       <Card size="small" style={{ marginBottom: 8 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 8,
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <Title level={4} style={{ margin: 0, fontSize: '16px' }}>
               <TeamOutlined style={{ marginRight: 4 }} />
@@ -324,7 +378,12 @@ const EmployeesPage: React.FC = () => {
                 Регенерация
               </Button>
             </Popconfirm>
-            <Button icon={<ReloadOutlined />} onClick={() => loadEmployees(true)} loading={loading} size="small">
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => loadEmployees(true)}
+              loading={loading}
+              size="small"
+            >
               Обновить
             </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} size="small">
@@ -332,13 +391,13 @@ const EmployeesPage: React.FC = () => {
             </Button>
           </Space>
         </div>
-        
+
         <div style={{ marginTop: 8 }}>
           <Input
             placeholder="Поиск по ФИО, должности, региону, email..."
             prefix={<SearchOutlined />}
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            onChange={e => setSearchText(e.target.value)}
             allowClear
             size="small"
             style={{ maxWidth: 400 }}
@@ -346,113 +405,113 @@ const EmployeesPage: React.FC = () => {
         </div>
       </Card>
 
-        <Collapse
-          activeKey={activeRegion}
-          onChange={setActiveRegion}
-          size="small"
-          style={{ marginBottom: 8 }}
-        >
-          {REGION_CENTERS.map(center => {
-            const totalEmployees = Object.values(employeesByRegion[center.code] || {}).flat().length;
-            const activeEmployees = Object.values(employeesByRegion[center.code] || {})
-              .flat()
-              .filter(emp => emp.isActive).length;
-            
-            const monitoringEmployees = Object.values(employeesByRegion[center.code] || {})
-              .flat()
-              .filter(emp => emp.canMonitor).length;
-            const appraisalEmployees = Object.values(employeesByRegion[center.code] || {})
-              .flat()
-              .filter(emp => emp.canAppraise).length;
-            
-            return (
-              <Panel
-                key={center.code}
-                header={
-                  <Space size={4} wrap style={{ fontSize: '12px' }}>
-                    <Badge count={totalEmployees} showZero size="small">
-                      <span style={{ fontWeight: 600, fontSize: '13px' }}>
-                        {center.code} - {center.name}
-                      </span>
-                    </Badge>
-                    <Tag color="green" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
-                      {activeEmployees} акт.
-                    </Tag>
-                    <Tag color="blue" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
-                      {monitoringEmployees} мон.
-                    </Tag>
-                    <Tag color="purple" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
-                      {appraisalEmployees} оц.
-                    </Tag>
-                  </Space>
-                }
-              >
-                {center.cities.map(city => {
-                  const cityEmployees = employeesByRegion[center.code]?.[city] || [];
-                  if (cityEmployees.length === 0) return null;
-                  
-                  return (
-                    <Card
-                      key={city}
-                      size="small"
-                      title={
-                        <Space size={4} style={{ fontSize: '12px' }}>
-                          <UserOutlined />
-                          <span>{city}</span>
-                          <Tag style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
-                            {cityEmployees.length}
-                          </Tag>
-                        </Space>
-                      }
-                      style={{ marginBottom: 8 }}
-                      bodyStyle={{ padding: '8px' }}
-                    >
-                      <Table
-                        columns={columns}
-                        dataSource={cityEmployees}
-                        rowKey="id"
-                        pagination={{ pageSize: 10, size: 'small', showSizeChanger: false }}
-                        size="small"
-                        scroll={{ x: 'max-content' }}
-                      />
-                    </Card>
-                  );
-                })}
-              </Panel>
-            );
-          })}
-        </Collapse>
+      <Collapse
+        activeKey={activeRegion}
+        onChange={setActiveRegion}
+        size="small"
+        style={{ marginBottom: 8 }}
+      >
+        {REGION_CENTERS.map(center => {
+          const totalEmployees = Object.values(employeesByRegion[center.code] || {}).flat().length;
+          const activeEmployees = Object.values(employeesByRegion[center.code] || {})
+            .flat()
+            .filter(emp => emp.isActive).length;
 
-        <Card 
-          title={
-            <Space size={4} style={{ fontSize: '13px' }}>
-              <span>Все сотрудники</span>
-              {searchText && (
-                <Tag color="blue" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
-                  Найдено: {filteredEmployees.length} из {employees.length}
-                </Tag>
-              )}
-            </Space>
-          } 
+          const monitoringEmployees = Object.values(employeesByRegion[center.code] || {})
+            .flat()
+            .filter(emp => emp.canMonitor).length;
+          const appraisalEmployees = Object.values(employeesByRegion[center.code] || {})
+            .flat()
+            .filter(emp => emp.canAppraise).length;
+
+          return (
+            <Panel
+              key={center.code}
+              header={
+                <Space size={4} wrap style={{ fontSize: '12px' }}>
+                  <Badge count={totalEmployees} showZero size="small">
+                    <span style={{ fontWeight: 600, fontSize: '13px' }}>
+                      {center.code} - {center.name}
+                    </span>
+                  </Badge>
+                  <Tag color="green" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                    {activeEmployees} акт.
+                  </Tag>
+                  <Tag color="blue" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                    {monitoringEmployees} мон.
+                  </Tag>
+                  <Tag color="purple" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                    {appraisalEmployees} оц.
+                  </Tag>
+                </Space>
+              }
+            >
+              {center.cities.map(city => {
+                const cityEmployees = employeesByRegion[center.code]?.[city] || [];
+                if (cityEmployees.length === 0) return null;
+
+                return (
+                  <Card
+                    key={city}
+                    size="small"
+                    title={
+                      <Space size={4} style={{ fontSize: '12px' }}>
+                        <UserOutlined />
+                        <span>{city}</span>
+                        <Tag style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                          {cityEmployees.length}
+                        </Tag>
+                      </Space>
+                    }
+                    style={{ marginBottom: 8 }}
+                    bodyStyle={{ padding: '8px' }}
+                  >
+                    <Table
+                      columns={columns}
+                      dataSource={cityEmployees}
+                      rowKey="id"
+                      pagination={{ pageSize: 10, size: 'small', showSizeChanger: false }}
+                      size="small"
+                      scroll={{ x: 'max-content' }}
+                    />
+                  </Card>
+                );
+              })}
+            </Panel>
+          );
+        })}
+      </Collapse>
+
+      <Card
+        title={
+          <Space size={4} style={{ fontSize: '13px' }}>
+            <span>Все сотрудники</span>
+            {searchText && (
+              <Tag color="blue" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                Найдено: {filteredEmployees.length} из {employees.length}
+              </Tag>
+            )}
+          </Space>
+        }
+        size="small"
+        bodyStyle={{ padding: '8px' }}
+      >
+        <Table
+          columns={columns}
+          dataSource={filteredEmployees}
+          rowKey="id"
+          loading={loading}
+          pagination={{
+            pageSize: 20,
+            showSizeChanger: true,
+            showTotal: total => `Всего ${total} сотрудников`,
+            size: 'small',
+            showQuickJumper: true,
+          }}
           size="small"
-          bodyStyle={{ padding: '8px' }}
-        >
-          <Table
-            columns={columns}
-            dataSource={filteredEmployees}
-            rowKey="id"
-            loading={loading}
-            pagination={{ 
-              pageSize: 20, 
-              showSizeChanger: true, 
-              showTotal: (total) => `Всего ${total} сотрудников`,
-              size: 'small',
-              showQuickJumper: true,
-            }}
-            size="small"
-            scroll={{ x: 'max-content' }}
-          />
-        </Card>
+          scroll={{ x: 'max-content' }}
+        />
+      </Card>
 
       <Modal
         title={editingEmployee ? 'Редактировать сотрудника' : 'Добавить сотрудника'}
@@ -473,6 +532,7 @@ const EmployeesPage: React.FC = () => {
             canAppraise: false,
             monitoringWorkload: 0,
             appraisalWorkload: 0,
+            status: 'working',
           }}
         >
           <Row gutter={16}>
@@ -518,7 +578,7 @@ const EmployeesPage: React.FC = () => {
                 rules={[{ required: true, message: 'Выберите регион' }]}
               >
                 <Select placeholder="Выберите регион" showSearch>
-                  {REGION_CENTERS.flatMap(center => 
+                  {REGION_CENTERS.flatMap(center =>
                     center.cities.map(city => (
                       <Option key={city} value={city}>
                         {center.code} - {city}
@@ -552,11 +612,7 @@ const EmployeesPage: React.FC = () => {
             label="Права доступа"
             rules={[{ required: true, message: 'Выберите права доступа' }]}
           >
-            <Select
-              mode="multiple"
-              placeholder="Выберите права доступа"
-              style={{ width: '100%' }}
-            >
+            <Select mode="multiple" placeholder="Выберите права доступа" style={{ width: '100%' }}>
               {Object.entries(PERMISSION_LABELS).map(([value, label]) => (
                 <Option key={value} value={value}>
                   {label}
@@ -567,10 +623,39 @@ const EmployeesPage: React.FC = () => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="hireDate" label="Дата приема на работу">
-                <Input type="date" />
+              <Form.Item name="birthDate" label="Дата рождения">
+                <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
               </Form.Item>
             </Col>
+            <Col span={12}>
+              <Form.Item name="employeeNumber" label="Табельный номер">
+                <Input placeholder="000001" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="hireDate" label="Дата приема на работу">
+                <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="status" label="Статус" initialValue="working">
+                <Select placeholder="Выберите статус">
+                  {STATUS_OPTIONS.map(option => (
+                    <Option key={option.value} value={option.value}>
+                      <Tag color={option.color} style={{ margin: 0 }}>
+                        {option.label}
+                      </Tag>
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="isActive" label="Активен" valuePropName="checked">
                 <Switch />
@@ -580,7 +665,11 @@ const EmployeesPage: React.FC = () => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="canMonitor" label="Может выполнять мониторинг" valuePropName="checked">
+              <Form.Item
+                name="canMonitor"
+                label="Может выполнять мониторинг"
+                valuePropName="checked"
+              >
                 <Switch />
               </Form.Item>
             </Col>
@@ -601,4 +690,3 @@ const EmployeesPage: React.FC = () => {
 };
 
 export default EmployeesPage;
-

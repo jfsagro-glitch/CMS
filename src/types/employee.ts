@@ -2,6 +2,8 @@
  * Типы для модуля управления сотрудниками
  */
 
+export type EmployeeStatus = 'working' | 'sick_leave' | 'vacation' | 'business_trip';
+
 export interface Employee {
   id: string;
   lastName: string;
@@ -15,6 +17,9 @@ export interface Employee {
   permissions: EmployeePermission[]; // Права доступа
   isActive: boolean; // Активен ли сотрудник
   hireDate?: string; // Дата приема на работу
+  birthDate?: string; // Дата рождения
+  employeeNumber?: string; // Табельный номер
+  status?: EmployeeStatus; // Статус: на работе, больничный, отпуск, командировка
   notes?: string; // Примечания
   // Роли для мониторинга и оценки
   canMonitor?: boolean; // Может заниматься мониторингом

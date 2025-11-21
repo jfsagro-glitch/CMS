@@ -248,6 +248,21 @@ class EmployeeService {
           const phoneCode = 495 + (centerIndex * 10) + cityIndex;
           const phone = `+7 (${phoneCode}) ${String(100 + (globalIndex % 900)).padStart(3, '0')}-${String(10 + (globalIndex % 90)).padStart(2, '0')}-${String(10 + (globalIndex % 90)).padStart(2, '0')}`;
           
+          // Генерируем дату рождения (возраст 25-55 лет)
+          const birthYear = 1970 + (globalIndex % 30);
+          const birthMonth = (globalIndex % 12) + 1;
+          const birthDay = (globalIndex % 28) + 1;
+          const birthDate = `${birthYear}-${String(birthMonth).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}`;
+          
+          // Табельный номер (6 цифр)
+          const employeeNumber = String(100000 + globalIndex).padStart(6, '0');
+          
+          // Статус (большинство на работе)
+          const statusRandom = Math.random();
+          const status = statusRandom < 0.85 ? 'working' : 
+                        statusRandom < 0.90 ? 'sick_leave' :
+                        statusRandom < 0.95 ? 'vacation' : 'business_trip';
+          
           defaultEmployees.push({
             id: `emp-${globalIndex}`,
             lastName,
@@ -259,14 +274,17 @@ class EmployeeService {
             phone,
             department,
             permissions: ['registry_view', 'portfolio_view', 'tasks_view'],
-        isActive: true,
+            isActive: true,
             canMonitor: isMonitoring,
             canAppraise: isAppraisal,
             monitoringWorkload: 0,
             appraisalWorkload: 0,
+            birthDate,
+            employeeNumber,
+            status: status as 'working' | 'sick_leave' | 'vacation' | 'business_trip',
             hireDate: `202${Math.floor(globalIndex / 100)}-${String((globalIndex % 12) + 1).padStart(2, '0')}-${String((globalIndex % 28) + 1).padStart(2, '0')}`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
           });
           
           globalIndex++;
