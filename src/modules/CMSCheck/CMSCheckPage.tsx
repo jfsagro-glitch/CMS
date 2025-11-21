@@ -43,9 +43,12 @@ const CMSCheckPage: React.FC = () => {
     iframe.addEventListener('error', handleError);
 
     // Устанавливаем путь к CMS Check
-    const base = import.meta.env.BASE_URL ?? '/';
+    // В production base может быть '/cms/' или './', в dev - '/'
+    const base = import.meta.env.BASE_URL ?? './';
     // Убираем хеш из пути, так как он может вызывать проблемы при первой загрузке
-    const cmsCheckPath = `${base}cms-check/index.html`;
+    // Если base заканчивается на '/', не добавляем еще один '/'
+    const basePath = base.endsWith('/') ? base : `${base}/`;
+    const cmsCheckPath = `${basePath}cms-check/index.html`;
     
     try {
       iframe.src = cmsCheckPath;
@@ -79,6 +82,7 @@ const CMSCheckPage: React.FC = () => {
       setError('Ошибка при загрузке системы дистанционных осмотров.');
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
