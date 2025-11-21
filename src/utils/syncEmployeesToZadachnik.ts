@@ -13,11 +13,19 @@ import type { RegionCenter } from '@/utils/regionCenters';
 const convertEmployeeToZadachnikFormat = (employee: Employee) => {
   const fullName = `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim();
   
+  // Определяем роль: руководитель -> 'manager', остальные -> 'employee'
+  // В системе могут быть также роли 'business' (Бизнес) и 'superuser' (Суперпользователь)
+  // но они назначаются отдельно, не из EmployeeService
+  let role: 'employee' | 'manager' | 'business' | 'superuser' = 'employee';
+  if (employee.isManager) {
+    role = 'manager';
+  }
+  
   return {
     id: employee.id,
     email: employee.email,
     name: fullName,
-    role: employee.isManager ? 'manager' as const : 'employee' as const,
+    role: role,
     region: employee.region,
     position: employee.position,
     department: employee.department,

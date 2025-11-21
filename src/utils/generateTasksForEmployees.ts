@@ -1,5 +1,5 @@
 /**
- * Генерация задач для сотрудников
+ * Генерация задач для сотрудников в формате Задачника
  */
 
 import employeeService from '@/services/EmployeeService';
@@ -7,73 +7,126 @@ import dayjs from 'dayjs';
 
 interface Task {
   id: string;
+  region: string;
+  type: string;
   title: string;
   description?: string;
-  category: string;
-  status: 'pending' | 'completed' | 'Выполнено' | 'В работе';
-  priority: 'low' | 'medium' | 'high';
-  assignee: string;
-  employeeId?: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
   dueDate: string;
+  status: 'created' | 'pending' | 'in_progress' | 'completed' | 'Выполнено' | 'В работе';
+  businessUser: string;
+  businessUserName: string;
+  assignedTo: string[];
+  currentAssignee: string | null;
+  currentAssigneeName: string | null;
+  employeeId?: string;
+  documents: any[];
+  comments: any[];
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
+  history: Array<{
+    date: string;
+    user: string;
+    userRole: string;
+    action: string;
+    comment?: string;
+    status: string;
+  }>;
 }
 
-const TASK_CATEGORIES = [
-  'Мониторинг залогов',
-  'Оценка объектов',
-  'Проверка документов',
-  'Взаимодействие с клиентами',
-  'Аналитика и отчеты',
-  'Работа с реестром',
-  'Проверка страховок',
-  'Обновление данных',
+// Типы задач из Задачника
+const TASK_TYPES = [
+  'Оценка',
+  'Экспертиза',
+  'Рецензия',
+  'ПРКК',
+  'Прочее',
+  'Отчетность',
+  'Подготовка СЗ',
 ];
 
-const TASK_TITLES = [
-  'Провести мониторинг объекта залога',
-  'Выполнить оценку недвижимости',
-  'Проверить комплектность документов',
-  'Связаться с клиентом по вопросу залога',
-  'Подготовить аналитический отчет',
-  'Обновить данные в реестре',
-  'Проверить срок действия страховки',
-  'Провести осмотр объекта',
-  'Согласовать условия залога',
-  'Проверить соответствие объекта требованиям',
-  'Подготовить заключение по объекту',
-  'Организовать переоценку',
-  'Проверить юридическую чистоту',
-  'Обновить информацию о заемщике',
-  'Провести анализ рисков',
+// Бизнес-пользователи (для генерации задач)
+const BUSINESS_USERS = [
+  { email: 'business1@bank.ru', name: 'Иванов Иван Иванович' },
+  { email: 'business2@bank.ru', name: 'Петрова Мария Сергеевна' },
+  { email: 'business3@bank.ru', name: 'Сидоров Петр Александрович' },
+  { email: 'business4@bank.ru', name: 'Козлова Анна Дмитриевна' },
+  { email: 'business5@bank.ru', name: 'Волков Сергей Николаевич' },
 ];
 
-const TASK_DESCRIPTIONS = [
-  'Необходимо провести полный мониторинг объекта залога согласно установленным процедурам',
-  'Требуется выполнить оценку объекта недвижимости с выездом на место',
-  'Проверить наличие всех необходимых документов и их актуальность',
-  'Связаться с клиентом для уточнения деталей по залоговому обеспечению',
-  'Подготовить аналитический отчет по портфелю залогов',
-  'Обновить актуальную информацию об объекте в реестре',
-  'Проверить срок действия страхового полиса и его соответствие требованиям',
-  'Провести осмотр объекта с составлением акта',
-  'Согласовать условия залога с заемщиком',
-  'Проверить соответствие объекта установленным требованиям',
-  'Подготовить заключение по результатам оценки объекта',
-  'Организовать переоценку объекта в установленные сроки',
-  'Проверить юридическую чистоту объекта и документов',
-  'Обновить информацию о заемщике в базе данных',
-  'Провести анализ рисков по объекту залога',
-];
+// Названия задач по типам
+const TASK_TITLES_BY_TYPE: Record<string, string[]> = {
+  'Оценка': [
+    'Провести оценку объекта недвижимости',
+    'Выполнить оценку движимого имущества',
+    'Организовать переоценку объекта залога',
+    'Подготовить отчет об оценке',
+    'Провести независимую оценку',
+  ],
+  'Экспертиза': [
+    'Провести экспертизу документов',
+    'Выполнить техническую экспертизу объекта',
+    'Проверить юридическую чистоту',
+    'Провести строительно-техническую экспертизу',
+    'Организовать экспертизу оценки',
+  ],
+  'Рецензия': [
+    'Провести рецензию отчета об оценке',
+    'Выполнить рецензирование экспертизы',
+    'Проверить качество оценки',
+    'Подготовить рецензию на заключение',
+  ],
+  'ПРКК': [
+    'Провести проверку рисков',
+    'Выполнить анализ кредитных рисков',
+    'Проверить залоговое обеспечение',
+    'Оценить риски по сделке',
+  ],
+  'Прочее': [
+    'Провести мониторинг объекта залога',
+    'Проверить комплектность документов',
+    'Связаться с клиентом',
+    'Обновить данные в реестре',
+    'Проверить срок действия страховки',
+    'Провести осмотр объекта',
+  ],
+  'Отчетность': [
+    'Подготовить аналитический отчет',
+    'Сформировать отчет по портфелю',
+    'Подготовить отчет для руководства',
+    'Обновить отчетность',
+  ],
+  'Подготовка СЗ': [
+    'Подготовить залоговое заключение',
+    'Оформить документы по залогу',
+    'Подготовить пакет документов',
+    'Согласовать условия залога',
+  ],
+};
+
+// Описания задач
+const getTaskDescription = (type: string, title: string, region: string): string => {
+  const baseDescriptions: Record<string, string> = {
+    'Оценка': `Требуется выполнить оценку объекта в регионе ${region}. ${title}`,
+    'Экспертиза': `Необходимо провести экспертизу в регионе ${region}. ${title}`,
+    'Рецензия': `Требуется рецензирование в регионе ${region}. ${title}`,
+    'ПРКК': `Провести проверку рисков в регионе ${region}. ${title}`,
+    'Прочее': `Задача в регионе ${region}. ${title}`,
+    'Отчетность': `Подготовить отчетность по региону ${region}. ${title}`,
+    'Подготовка СЗ': `Подготовить залоговое заключение в регионе ${region}. ${title}`,
+  };
+  return baseDescriptions[type] || `${title} в регионе ${region}`;
+};
 
 /**
- * Генерация задач для всех сотрудников
+ * Генерация задач для всех сотрудников в формате Задачника
  */
 export const generateTasksForEmployees = (): void => {
   try {
     const employees = employeeService.getEmployees().filter(emp => emp.isActive);
     const tasks: Task[] = [];
+    const now = dayjs();
     
     employees.forEach(employee => {
       // Генерируем 30-50 задач на сотрудника
@@ -84,7 +137,14 @@ export const generateTasksForEmployees = (): void => {
       const overdueCount = Math.max(1, Math.floor(tasksCount * 0.01)); // 1% просрочено (минимум 1)
       const pendingCount = tasksCount - completedCount - overdueCount; // остальные в работе
       
-      const now = dayjs();
+      // Определяем регион сотрудника
+      const employeeRegion = employee.region;
+      
+      // Выбираем случайного бизнес-пользователя
+      const businessUser = BUSINESS_USERS[Math.floor(Math.random() * BUSINESS_USERS.length)];
+      
+      // Полное имя сотрудника
+      const employeeFullName = `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim();
       
       // Генерируем выполненные задачи
       for (let i = 0; i < completedCount; i++) {
@@ -93,22 +153,53 @@ export const generateTasksForEmployees = (): void => {
         const completedAt = createdAt.add(Math.floor(Math.random() * 20), 'day');
         const dueDate = completedAt.add(Math.floor(Math.random() * 10), 'day');
         
-        const categoryIndex = Math.floor(Math.random() * TASK_CATEGORIES.length);
-        const titleIndex = Math.floor(Math.random() * TASK_TITLES.length);
+        const taskType = TASK_TYPES[Math.floor(Math.random() * TASK_TYPES.length)];
+        const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'];
+        const title = titles[Math.floor(Math.random() * titles.length)];
+        const description = getTaskDescription(taskType, title, employeeRegion);
+        
+        const taskId = `T-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const createdAtISO = createdAt.toISOString();
+        const completedAtISO = completedAt.toISOString();
         
         tasks.push({
-          id: `task-${employee.id}-${i}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          title: TASK_TITLES[titleIndex],
-          description: TASK_DESCRIPTIONS[titleIndex],
-          category: TASK_CATEGORIES[categoryIndex],
-          status: 'completed',
+          id: taskId,
+          region: employeeRegion,
+          type: taskType,
+          title,
+          description,
           priority: Math.random() > 0.7 ? 'high' : Math.random() > 0.4 ? 'medium' : 'low',
-          assignee: `${employee.lastName} ${employee.firstName}`,
-          employeeId: employee.id,
           dueDate: dueDate.format('YYYY-MM-DD'),
-          createdAt: createdAt.format('YYYY-MM-DD'),
-          updatedAt: completedAt.format('YYYY-MM-DD'),
-          completedAt: completedAt.format('YYYY-MM-DD'),
+          status: 'completed',
+          businessUser: businessUser.email,
+          businessUserName: businessUser.name,
+          assignedTo: employee.email ? [employee.email] : [],
+          currentAssignee: employee.email || null,
+          currentAssigneeName: employeeFullName,
+          employeeId: employee.id,
+          documents: [],
+          comments: [],
+          createdAt: createdAtISO,
+          updatedAt: completedAtISO,
+          completedAt: completedAtISO,
+          history: [
+            {
+              date: createdAtISO,
+              user: businessUser.name,
+              userRole: 'business',
+              action: 'Создана',
+              comment: `Задача создана для сотрудника ${employeeFullName}`,
+              status: 'created',
+            },
+            {
+              date: completedAtISO,
+              user: employeeFullName,
+              userRole: employee.isManager ? 'manager' : 'employee',
+              action: 'Выполнена',
+              comment: 'Задача выполнена',
+              status: 'completed',
+            },
+          ],
         });
       }
       
@@ -118,21 +209,51 @@ export const generateTasksForEmployees = (): void => {
         const createdAt = now.subtract(60 + daysOverdue, 'day');
         const dueDate = now.subtract(daysOverdue, 'day');
         
-        const categoryIndex = Math.floor(Math.random() * TASK_CATEGORIES.length);
-        const titleIndex = Math.floor(Math.random() * TASK_TITLES.length);
+        const taskType = TASK_TYPES[Math.floor(Math.random() * TASK_TYPES.length)];
+        const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'];
+        const title = titles[Math.floor(Math.random() * titles.length)];
+        const description = getTaskDescription(taskType, title, employeeRegion);
+        
+        const taskId = `T-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const createdAtISO = createdAt.toISOString();
         
         tasks.push({
-          id: `task-${employee.id}-overdue-${i}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          title: TASK_TITLES[titleIndex],
-          description: TASK_DESCRIPTIONS[titleIndex],
-          category: TASK_CATEGORIES[categoryIndex],
-          status: 'pending',
+          id: taskId,
+          region: employeeRegion,
+          type: taskType,
+          title,
+          description,
           priority: Math.random() > 0.5 ? 'high' : 'medium',
-          assignee: `${employee.lastName} ${employee.firstName}`,
-          employeeId: employee.id,
           dueDate: dueDate.format('YYYY-MM-DD'),
-          createdAt: createdAt.format('YYYY-MM-DD'),
-          updatedAt: now.format('YYYY-MM-DD'),
+          status: 'in_progress',
+          businessUser: businessUser.email,
+          businessUserName: businessUser.name,
+          assignedTo: employee.email ? [employee.email] : [],
+          currentAssignee: employee.email || null,
+          currentAssigneeName: employeeFullName,
+          employeeId: employee.id,
+          documents: [],
+          comments: [],
+          createdAt: createdAtISO,
+          updatedAt: now.toISOString(),
+          history: [
+            {
+              date: createdAtISO,
+              user: businessUser.name,
+              userRole: 'business',
+              action: 'Создана',
+              comment: `Задача создана для сотрудника ${employeeFullName}`,
+              status: 'created',
+            },
+            {
+              date: createdAt.toISOString(),
+              user: employeeFullName,
+              userRole: employee.isManager ? 'manager' : 'employee',
+              action: 'Взята в работу',
+              comment: 'Задача взята в работу',
+              status: 'in_progress',
+            },
+          ],
         });
       }
       
@@ -143,21 +264,52 @@ export const generateTasksForEmployees = (): void => {
         const daysUntilDue = Math.floor(Math.random() * 30) + 1; // срок выполнения через 1-30 дней
         const dueDate = now.add(daysUntilDue, 'day');
         
-        const categoryIndex = Math.floor(Math.random() * TASK_CATEGORIES.length);
-        const titleIndex = Math.floor(Math.random() * TASK_TITLES.length);
+        const taskType = TASK_TYPES[Math.floor(Math.random() * TASK_TYPES.length)];
+        const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'];
+        const title = titles[Math.floor(Math.random() * titles.length)];
+        const description = getTaskDescription(taskType, title, employeeRegion);
+        
+        const taskId = `T-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const createdAtISO = createdAt.toISOString();
+        const status = daysAgo < 7 ? 'created' : 'in_progress';
         
         tasks.push({
-          id: `task-${employee.id}-pending-${i}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          title: TASK_TITLES[titleIndex],
-          description: TASK_DESCRIPTIONS[titleIndex],
-          category: TASK_CATEGORIES[categoryIndex],
-          status: 'pending',
+          id: taskId,
+          region: employeeRegion,
+          type: taskType,
+          title,
+          description,
           priority: Math.random() > 0.6 ? 'high' : Math.random() > 0.3 ? 'medium' : 'low',
-          assignee: `${employee.lastName} ${employee.firstName}`,
-          employeeId: employee.id,
           dueDate: dueDate.format('YYYY-MM-DD'),
-          createdAt: createdAt.format('YYYY-MM-DD'),
-          updatedAt: now.format('YYYY-MM-DD'),
+          status,
+          businessUser: businessUser.email,
+          businessUserName: businessUser.name,
+          assignedTo: employee.email ? [employee.email] : [],
+          currentAssignee: employee.email || null,
+          currentAssigneeName: employeeFullName,
+          employeeId: employee.id,
+          documents: [],
+          comments: [],
+          createdAt: createdAtISO,
+          updatedAt: now.toISOString(),
+          history: [
+            {
+              date: createdAtISO,
+              user: businessUser.name,
+              userRole: 'business',
+              action: 'Создана',
+              comment: `Задача создана для сотрудника ${employeeFullName}`,
+              status: 'created',
+            },
+            ...(status === 'in_progress' ? [{
+              date: createdAt.add(1, 'day').toISOString(),
+              user: employeeFullName,
+              userRole: employee.isManager ? 'manager' : 'employee',
+              action: 'Взята в работу',
+              comment: 'Задача взята в работу',
+              status: 'in_progress',
+            }] : []),
+          ],
         });
       }
     });
@@ -167,8 +319,8 @@ export const generateTasksForEmployees = (): void => {
     
     console.log(`✅ Сгенерировано ${tasks.length} задач для ${employees.length} сотрудников`);
     console.log(`   - Выполнено: ${tasks.filter(t => t.status === 'completed').length}`);
-    console.log(`   - В работе: ${tasks.filter(t => t.status === 'pending' && dayjs(t.dueDate).isAfter(dayjs())).length}`);
-    console.log(`   - Просрочено: ${tasks.filter(t => t.status === 'pending' && dayjs(t.dueDate).isBefore(dayjs())).length}`);
+    console.log(`   - В работе: ${tasks.filter(t => t.status === 'in_progress' || t.status === 'created').length}`);
+    console.log(`   - Просрочено: ${tasks.filter(t => dayjs(t.dueDate).isBefore(dayjs(), 'day') && t.status !== 'completed').length}`);
   } catch (error) {
     console.error('Ошибка генерации задач:', error);
     throw error;
