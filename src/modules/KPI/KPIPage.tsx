@@ -14,6 +14,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import dayjs, { Dayjs } from 'dayjs';
 import employeeService from '@/services/EmployeeService';
+import extendedStorageService from '@/services/ExtendedStorageService';
 import type { RegionStats } from '@/types/employee';
 import './KPIPage.css';
 
@@ -154,12 +155,14 @@ const KPIPage: React.FC = () => {
     setLoading(true);
     try {
       // Загружаем данные из различных модулей
-      const [portfolioData, conclusionsData, registryData, insuranceData] = await Promise.all([
+      const [portfolioData, conclusionsData, insuranceData] = await Promise.all([
         fetch('/portfolioData.json').then((res) => res.json()).catch(() => []),
         fetch('/collateralConclusionsData.json').then((res) => res.json()).catch(() => []),
-        fetch('/registryObjectsData.json').then((res) => res.json()).catch(() => []),
         fetch('/insuranceData.json').then((res) => res.json()).catch(() => []),
       ]);
+
+      // Загружаем объекты реестра из IndexedDB
+      const registryData = await extendedStorageService.getExtendedCards();
 
       // Загружаем задачи из localStorage (Zadachnik)
       const tasksData = JSON.parse(localStorage.getItem('zadachnik_tasks') || '[]');
