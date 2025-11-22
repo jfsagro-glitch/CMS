@@ -421,6 +421,13 @@ const InspectionsPage: React.FC = () => {
           rowKey="id"
           loading={loading}
           pagination={{ pageSize: 20 }}
+          onRow={(record) => ({
+            onDoubleClick: () => {
+              console.log('Double click on inspection:', record.id);
+              handleView(record);
+            },
+            style: { cursor: 'pointer' },
+          })}
         />
       </Card>
 
