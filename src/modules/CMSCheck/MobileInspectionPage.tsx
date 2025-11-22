@@ -2,7 +2,7 @@
  * Мобильная версия для клиента - пошаговый процесс осмотра
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Steps,
   Button,
@@ -67,13 +67,7 @@ const MobileInspectionPage: React.FC = () => {
   const [photos, setPhotos] = useState<{ [step: number]: InspectionPhoto[] }>({});
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (token) {
-      loadInspection();
-    }
-  }, [token]);
-
-  const loadInspection = async () => {
+  const loadInspection = useCallback(async () => {
     setLoading(true);
     try {
       const data = await inspectionService.getInspectionByToken(token!);
@@ -111,7 +105,13 @@ const MobileInspectionPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, navigate]);
+
+  useEffect(() => {
+    if (token) {
+      loadInspection();
+    }
+  }, [token, loadInspection]);
 
   const requestGeolocation = () => {
     if (!navigator.geolocation) {

@@ -3,7 +3,7 @@
  * Отображает все данные осмотра, хронологию и фотографии
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Modal,
   Tabs,
@@ -60,17 +60,7 @@ const InspectionCardModal: React.FC<InspectionCardModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [revisionComment, setRevisionComment] = useState('');
 
-  useEffect(() => {
-    console.log('InspectionCardModal useEffect:', { visible, inspectionId });
-    if (visible && inspectionId) {
-      loadInspection();
-    } else {
-      setInspection(null);
-      setRevisionComment('');
-    }
-  }, [visible, inspectionId]);
-
-  const loadInspection = async () => {
+  const loadInspection = useCallback(async () => {
     if (!inspectionId) {
       console.warn('loadInspection called without inspectionId');
       return;
@@ -90,7 +80,17 @@ const InspectionCardModal: React.FC<InspectionCardModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [inspectionId]);
+
+  useEffect(() => {
+    console.log('InspectionCardModal useEffect:', { visible, inspectionId });
+    if (visible && inspectionId) {
+      loadInspection();
+    } else {
+      setInspection(null);
+      setRevisionComment('');
+    }
+  }, [visible, inspectionId, loadInspection]);
 
   const handleApprove = () => {
     if (inspectionId && onApprove) {

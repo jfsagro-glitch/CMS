@@ -2,7 +2,7 @@
  * Модальное окно для поиска и выбора объектов обеспечения для привязки к договору
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Modal,
   Input,
@@ -48,13 +48,7 @@ const PortfolioSearchModal: React.FC<PortfolioSearchModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [filteredObjects, setFilteredObjects] = useState<ExtendedCollateralCard[]>([]);
 
-  useEffect(() => {
-    if (visible) {
-      loadObjects();
-    }
-  }, [visible]);
-
-  useEffect(() => {
+  const filterObjects = useCallback(() => {
     if (searchValue.trim()) {
       const search = searchValue.toLowerCase();
       const filtered = objects.filter(obj => {
@@ -72,7 +66,7 @@ const PortfolioSearchModal: React.FC<PortfolioSearchModalProps> = ({
     }
   }, [searchValue, objects, excludeIds]);
 
-  const loadObjects = async () => {
+  const loadObjects = useCallback(async () => {
     setLoading(true);
     try {
       const allObjects = await extendedStorageService.getExtendedCards();
@@ -83,7 +77,17 @@ const PortfolioSearchModal: React.FC<PortfolioSearchModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [excludeIds]);
+
+  useEffect(() => {
+    if (visible) {
+      loadObjects();
+    }
+  }, [visible, loadObjects]);
+
+  useEffect(() => {
+    filterObjects();
+  }, [filterObjects]);
 
   const columns: ColumnsType<ExtendedCollateralCard> = [
     {

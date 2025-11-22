@@ -202,7 +202,8 @@ const ImportMigrationForm: React.FC<ImportMigrationFormProps> = ({
                       }
                     }
                     // Иначе создаем нового (без id, createdAt, updatedAt)
-                    const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...employeeData } = employee;
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    const { id, createdAt, updatedAt, ...employeeData } = employee;
                     employeeService.addEmployee(employeeData);
                     count++;
                   } catch (error) {

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card, Descriptions, Tag, Row, Col, Divider, Typography, Space, Statistic, Tabs, Button, List, Empty } from 'antd';
 import {
   HomeOutlined,
@@ -32,11 +32,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
   const [inspectionModalVisible, setInspectionModalVisible] = useState(false);
   const [viewingInspectionId, setViewingInspectionId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadInspections();
-  }, [card.id]);
-
-  const loadInspections = async () => {
+  const loadInspections = useCallback(async () => {
     setInspectionsLoading(true);
     try {
       const data = await inspectionService.getInspectionsByCardId(card.id);
@@ -46,7 +42,11 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
     } finally {
       setInspectionsLoading(false);
     }
-  };
+  }, [card.id]);
+
+  useEffect(() => {
+    loadInspections();
+  }, [loadInspections]);
 
   const handleViewInspection = (inspectionId: string) => {
     setViewingInspectionId(inspectionId);

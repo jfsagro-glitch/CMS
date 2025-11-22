@@ -2,7 +2,7 @@
  * Компонент карточки договора с вкладками
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Modal,
   Tabs,
@@ -73,14 +73,7 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
   const [loading, setLoading] = useState(false);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
 
-  // Загрузка привязанных объектов
-  useEffect(() => {
-    if (visible && contract) {
-      loadAttachedObjects();
-    }
-  }, [visible, contract]);
-
-  const loadAttachedObjects = async () => {
+  const loadAttachedObjects = useCallback(async () => {
     setLoading(true);
     try {
       const reference = String(contract.reference ?? contract.contractNumber ?? '');
@@ -97,7 +90,13 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [contract]);
+
+  useEffect(() => {
+    if (visible && contract) {
+      loadAttachedObjects();
+    }
+  }, [visible, contract, loadAttachedObjects]);
 
   // Дисконт для расчета залоговой стоимости (70-80% от рыночной)
   const COLLATERAL_DISCOUNT = 0.75; // 75% от рыночной стоимости
