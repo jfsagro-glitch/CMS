@@ -43,14 +43,34 @@ const CMSCheckPage: React.FC = () => {
     iframe.addEventListener('error', handleError);
 
     // Устанавливаем путь к CMS Check
-    // В production base может быть '/cms/' или './', в dev - '/'
+    // Используем относительный путь от текущего местоположения
+    // В production на GitHub Pages путь будет /cms/cms-check/index.html
+    // В dev будет ./cms-check/index.html
     const base = import.meta.env.BASE_URL ?? './';
-    // Убираем хеш из пути, так как он может вызывать проблемы при первой загрузке
-    // Если base заканчивается на '/', не добавляем еще один '/'
-    const basePath = base.endsWith('/') ? base : `${base}/`;
-    const cmsCheckPath = `${basePath}cms-check/index.html`;
+    let cmsCheckPath: string;
+    
+    // Определяем текущий путь страницы
+    const currentPath = window.location.pathname;
+    
+    if (base === './' || base === '/') {
+      // Для относительных путей используем относительный путь от текущей директории
+      // Если мы на /registry#/cms-check, то путь должен быть ./cms-check/index.html
+      cmsCheckPath = './cms-check/index.html';
+    } else {
+      // Для абсолютных путей (например /cms/) используем абсолютный путь
+      const basePath = base.endsWith('/') ? base : `${base}/`;
+      cmsCheckPath = `${basePath}cms-check/index.html`;
+    }
+    
+    console.log('Loading CMS Check:', {
+      base,
+      currentPath,
+      cmsCheckPath,
+      fullUrl: new URL(cmsCheckPath, window.location.origin).href
+    });
     
     try {
+      // Устанавливаем src напрямую
       iframe.src = cmsCheckPath;
       
       // Таймаут на случай, если iframe не загрузится
@@ -106,7 +126,8 @@ const CMSCheckPage: React.FC = () => {
         className="cms-check-iframe"
         title="CMS Check - Система дистанционных осмотров"
         style={{ display: loading || error ? 'none' : 'block' }}
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+        // Убираем sandbox, так как он может блокировать работу приложения
+        // и вызывать предупреждения о безопасности
       />
     </div>
   );
