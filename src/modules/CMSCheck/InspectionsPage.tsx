@@ -122,8 +122,14 @@ const InspectionsPage: React.FC = () => {
 
   const handleView = (inspection: Inspection) => {
     console.log('Opening inspection modal for:', inspection.id);
+    console.log('Current viewModalVisible before:', viewModalVisible);
     setViewingInspectionId(inspection.id);
     setViewModalVisible(true);
+    console.log('Set viewModalVisible to true, viewingInspectionId:', inspection.id);
+    // Принудительно обновляем состояние
+    setTimeout(() => {
+      console.log('After timeout - viewModalVisible should be true');
+    }, 0);
   };
 
   const handleEdit = (inspection: Inspection) => {
@@ -422,6 +428,7 @@ const InspectionsPage: React.FC = () => {
         visible={viewModalVisible}
         inspectionId={viewingInspectionId}
         onClose={() => {
+          console.log('Closing inspection modal');
           setViewModalVisible(false);
           setViewingInspectionId(null);
         }}

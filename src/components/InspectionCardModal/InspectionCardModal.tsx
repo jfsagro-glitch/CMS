@@ -60,6 +60,11 @@ const InspectionCardModal: React.FC<InspectionCardModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [revisionComment, setRevisionComment] = useState('');
 
+  // Логирование изменений пропсов
+  useEffect(() => {
+    console.log('InspectionCardModal props changed:', { visible, inspectionId });
+  }, [visible, inspectionId]);
+
   const loadInspection = useCallback(async () => {
     if (!inspectionId) {
       console.warn('loadInspection called without inspectionId');
@@ -345,6 +350,8 @@ const InspectionCardModal: React.FC<InspectionCardModalProps> = ({
   const canApprove = inspection?.status === 'submitted_for_review';
   const canRequestRevision = inspection?.status === 'submitted_for_review';
 
+  console.log('InspectionCardModal render:', { visible, inspectionId, hasInspection: !!inspection });
+
   return (
     <Modal
       title={
@@ -359,7 +366,10 @@ const InspectionCardModal: React.FC<InspectionCardModalProps> = ({
         </Space>
       }
       open={visible}
-      onCancel={onClose}
+      onCancel={() => {
+        console.log('Modal onCancel called');
+        onClose();
+      }}
       footer={[
         <Button key="pdf" icon={<DownloadOutlined />} onClick={handleGeneratePDF}>
           Скачать PDF
