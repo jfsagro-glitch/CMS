@@ -19,17 +19,41 @@ export type InspectionType =
   | 'monitoring' // Осмотр при мониторинге
   | 'appraisal'; // Осмотр при оценке
 
-export type InspectionStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+export type InspectionStatus = 
+  | 'scheduled' // Запланирован
+  | 'sent_to_client' // Отправлен клиенту
+  | 'in_progress' // В процессе (клиент выполняет)
+  | 'submitted_for_review' // Отправлен на проверку
+  | 'needs_revision' // Требует доработки
+  | 'approved' // Согласован
+  | 'completed' // Завершен
+  | 'cancelled'; // Отменен
+
+export type InspectorType = 'employee' | 'client'; // Сотрудник банка или клиент
+
+export interface InspectionHistoryItem {
+  id: string;
+  date: Date;
+  action: string; // 'created', 'sent_to_client', 'submitted', 'reviewed', 'approved', 'revision_requested'
+  user: string; // Имя пользователя
+  userRole: 'creator' | 'inspector' | 'reviewer' | 'approver' | 'client';
+  comment?: string;
+  status: InspectionStatus;
+}
 
 export type ConditionRating = 'excellent' | 'good' | 'satisfactory' | 'poor' | 'critical';
 
 export interface InspectionPhoto {
   id: string;
-  url: string;
+  url: string; // Base64 или URL
   thumbnailUrl?: string;
   description?: string;
   takenAt: Date;
   location?: string; // Место съемки (например, "Фасад", "Внутри", "Кухня")
+  step?: string; // Шаг осмотра (например, "Фасад", "Внутри", "Документы")
+  latitude?: number; // Геолокация при съемке
+  longitude?: number;
+  accuracy?: number; // Точность геолокации в метрах
 }
 
 export interface InspectionDefect {
@@ -68,11 +92,19 @@ export interface Inspection {
   address?: string;
   
   // Инспектор
-  inspectorId: string;
+  inspectorType: InspectorType; // 'employee' | 'client'
+  inspectorId?: string; // ID сотрудника или клиента
   inspectorName: string;
   inspectorPosition?: string;
   inspectorPhone?: string;
   inspectorEmail?: string;
+  
+  // Для клиента
+  clientPhone?: string;
+  clientEmail?: string;
+  clientLink?: string; // Ссылка для доступа к осмотру
+  clientLinkExpiresAt?: Date; // Срок действия ссылки
+  geolocationConsent?: boolean; // Согласие на геолокацию
   
   // Результаты осмотра
   condition: ConditionRating;
@@ -112,6 +144,17 @@ export interface Inspection {
   updatedAt: Date;
   createdBy?: string;
   updatedBy?: string;
+  
+  // Workflow
+  history: InspectionHistoryItem[]; // Хронология действий
+  createdByUser?: string; // Кто создал осмотр
+  reviewedBy?: string; // Кто проверил
+  reviewedAt?: Date;
+  approvedBy?: string; // Кто согласовал
+  approvedAt?: Date;
+  revisionRequestedBy?: string; // Кто запросил доработку
+  revisionRequestedAt?: Date;
+  revisionComment?: string; // Комментарий к доработке
   
   // Связанные осмотры
   relatedInspectionIds?: string[];

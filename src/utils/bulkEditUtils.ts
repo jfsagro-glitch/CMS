@@ -336,6 +336,16 @@ export const updateOrCreateRecord = async (
         }
 
         const newInspection: Omit<Inspection, 'id' | 'createdAt' | 'updatedAt'> = {
+          inspectorType: 'employee',
+          history: [{
+            id: `hist-${Date.now()}`,
+            date: new Date(),
+            action: 'created',
+            user: 'Система',
+            userRole: 'creator',
+            comment: 'Осмотр создан через массовое редактирование',
+            status: row.status || 'scheduled',
+          }],
           inspectionType: row.inspectionType || 'primary',
           status: row.status || 'scheduled',
           inspectionDate,

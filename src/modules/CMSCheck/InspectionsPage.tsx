@@ -26,9 +26,14 @@ import {
   EditOutlined,
   DeleteOutlined,
   ReloadOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
-import type { Inspection, InspectionType, InspectionStatus, ConditionRating } from '@/types/inspection';
+import type { Inspection, InspectionType, InspectionStatus, ConditionRating, InspectorType } from '@/types/inspection';
+import type { ExtendedCollateralCard } from '@/types';
 import inspectionService from '@/services/InspectionService';
+import employeeService from '@/services/EmployeeService';
+import extendedStorageService from '@/services/ExtendedStorageService';
+import InspectionCardModal from '@/components/InspectionCardModal/InspectionCardModal';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -64,13 +69,30 @@ const InspectionsPage: React.FC = () => {
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [viewingInspectionId, setViewingInspectionId] = useState<string | null>(null);
   const [editingInspection, setEditingInspection] = useState<Inspection | null>(null);
   const [form] = Form.useForm();
+  const [inspectorType, setInspectorType] = useState<InspectorType>('employee');
+  const [collateralCards, setCollateralCards] = useState<ExtendedCollateralCard[]>([]);
   const [filters, setFilters] = useState<{
     status?: InspectionStatus;
     type?: InspectionType;
     dateRange?: [dayjs.Dayjs, dayjs.Dayjs];
   }>({});
+
+  useEffect(() => {
+    loadCollateralCards();
+  }, []);
+
+  const loadCollateralCards = async () => {
+    try {
+      const cards = await extendedStorageService.getExtendedCards();
+      setCollateralCards(cards);
+    } catch (error) {
+      console.error('Ошибка загрузки карточек:', error);
+    }
+  };
 
   useEffect(() => {
     loadInspections();
@@ -92,8 +114,15 @@ const InspectionsPage: React.FC = () => {
 
   const handleCreate = () => {
     setEditingInspection(null);
+    setInspectorType('employee');
     form.resetFields();
+    form.setFieldsValue({ inspectorType: 'employee' });
     setModalVisible(true);
+  };
+
+  const handleView = (inspection: Inspection) => {
+    setViewingInspectionId(inspection.id);
+    setViewModalVisible(true);
   };
 
   const handleEdit = (inspection: Inspection) => {
@@ -119,25 +148,59 @@ const InspectionsPage: React.FC = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      const inspectionData = {
+      const now = new Date();
+      const currentUser = 'Система'; // TODO: Получить из контекста пользователя
+      
+      const inspectionData: Omit<Inspection, 'id' | 'createdAt' | 'updatedAt'> = {
         ...values,
-        inspectionDate: values.inspectionDate ? values.inspectionDate.toDate() : new Date(),
+        inspectionType: values.inspectionType as InspectionType,
+        status: values.status as InspectionStatus || 'scheduled',
+        inspectionDate: values.inspectionDate ? values.inspectionDate.toDate() : now,
+        inspectorType: values.inspectorType || 'employee',
+        inspectorName: values.inspectorName || '',
+        inspectorId: values.inspectorId || undefined,
+        inspectorPhone: values.inspectorPhone || undefined,
+        inspectorEmail: values.inspectorEmail || undefined,
+        clientPhone: values.clientPhone || undefined,
+        clientEmail: values.clientEmail || undefined,
+        collateralCardId: values.collateralCardId || '',
+        collateralName: values.collateralName || '',
+        address: values.address || undefined,
+        condition: values.condition as ConditionRating,
         photos: [],
         defects: [],
         recommendations: [],
-        condition: values.condition as ConditionRating,
+        history: [{
+          id: `hist-${Date.now()}`,
+          date: now,
+          action: 'created',
+          user: currentUser,
+          userRole: 'creator',
+          comment: 'Осмотр создан',
+          status: values.status as InspectionStatus || 'scheduled',
+        }],
+        createdByUser: currentUser,
       };
 
       if (editingInspection) {
         await inspectionService.updateInspection(editingInspection.id, inspectionData);
         message.success('Осмотр обновлен');
       } else {
-        await inspectionService.createInspection(inspectionData);
-        message.success('Осмотр создан');
+        const inspectionId = await inspectionService.createInspection(inspectionData);
+        
+        // Если клиент - генерируем ссылку и отправляем
+        if (values.inspectorType === 'client' && values.clientEmail) {
+          const link = await inspectionService.generateClientLink(inspectionId);
+          // TODO: Отправить email с ссылкой
+          message.success(`Осмотр создан. Ссылка для клиента: ${link}`);
+        } else {
+          message.success('Осмотр создан');
+        }
       }
 
       setModalVisible(false);
       form.resetFields();
+      setInspectorType('employee');
       loadInspections();
     } catch (error) {
       console.error('Ошибка сохранения осмотра:', error);
@@ -244,6 +307,14 @@ const InspectionsPage: React.FC = () => {
         <Space>
           <Button
             type="link"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+            size="small"
+          >
+            Просмотр
+          </Button>
+          <Button
+            type="link"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
             size="small"
@@ -346,6 +417,25 @@ const InspectionsPage: React.FC = () => {
         />
       </Card>
 
+      <InspectionCardModal
+        visible={viewModalVisible}
+        inspectionId={viewingInspectionId}
+        onClose={() => {
+          setViewModalVisible(false);
+          setViewingInspectionId(null);
+        }}
+        onApprove={async (id) => {
+          await inspectionService.approveInspection(id, 'Система');
+          message.success('Осмотр согласован');
+          loadInspections();
+        }}
+        onRequestRevision={async (id, comment) => {
+          await inspectionService.requestRevision(id, 'Система', comment);
+          message.success('Запрошена доработка');
+          loadInspections();
+        }}
+      />
+
       <Modal
         title={editingInspection ? 'Редактировать осмотр' : 'Создать осмотр'}
         open={modalVisible}
@@ -372,35 +462,38 @@ const InspectionsPage: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            name="inspectionDate"
-            label="Дата осмотра"
-            rules={[{ required: true, message: 'Выберите дату осмотра' }]}
-          >
-            <DatePicker showTime style={{ width: '100%' }} format="DD.MM.YYYY HH:mm" />
-          </Form.Item>
-
-          <Form.Item
-            name="inspectorName"
-            label="Инспектор"
-            rules={[{ required: true, message: 'Введите имя инспектора' }]}
-          >
-            <Input placeholder="ФИО инспектора" />
-          </Form.Item>
-
-          <Form.Item
-            name="inspectorId"
-            label="ID инспектора"
-            rules={[{ required: true, message: 'Введите ID инспектора' }]}
-          >
-            <Input placeholder="ID инспектора" />
-          </Form.Item>
-
-          <Form.Item
             name="collateralCardId"
-            label="ID карточки залога"
-            rules={[{ required: true, message: 'Введите ID карточки залога' }]}
+            label="Объект залога"
+            rules={[{ required: true, message: 'Выберите объект залога' }]}
           >
-            <Input placeholder="ID карточки залога" />
+            <Select
+              placeholder="Выберите объект залога"
+              showSearch
+              filterOption={(input, option) =>
+                String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              onChange={(value) => {
+                const card = collateralCards.find(c => c.id === value);
+                if (card) {
+                  form.setFieldsValue({
+                    collateralName: card.name,
+                    address: card.address ? 
+                      `${card.address.city || ''} ${card.address.street || ''} ${card.address.house || ''}`.trim() :
+                      undefined,
+                  });
+                }
+              }}
+            >
+              {collateralCards.map((card) => (
+                <Select.Option
+                  key={card.id}
+                  value={card.id}
+                  label={card.name}
+                >
+                  {card.name} ({card.number})
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
 
           <Form.Item
@@ -412,28 +505,129 @@ const InspectionsPage: React.FC = () => {
           </Form.Item>
 
           <Form.Item
+            name="address"
+            label="Адрес"
+          >
+            <Input placeholder="Адрес объекта" />
+          </Form.Item>
+
+          <Form.Item
+            name="inspectionDate"
+            label="Дата осмотра"
+            rules={[{ required: true, message: 'Выберите дату осмотра' }]}
+          >
+            <DatePicker showTime style={{ width: '100%' }} format="DD.MM.YYYY HH:mm" />
+          </Form.Item>
+
+          <Form.Item
+            name="inspectorType"
+            label="Исполнитель"
+            rules={[{ required: true, message: 'Выберите тип исполнителя' }]}
+          >
+            <Select 
+              placeholder="Выберите тип исполнителя"
+              onChange={(value) => {
+                setInspectorType(value);
+                form.setFieldsValue({
+                  inspectorId: undefined,
+                  inspectorName: undefined,
+                  inspectorPhone: undefined,
+                  inspectorEmail: undefined,
+                  clientPhone: undefined,
+                  clientEmail: undefined,
+                });
+              }}
+            >
+              <Select.Option value="employee">Сотрудник банка</Select.Option>
+              <Select.Option value="client">Клиент</Select.Option>
+            </Select>
+          </Form.Item>
+
+          {inspectorType === 'employee' ? (
+            <>
+              <Form.Item
+                name="inspectorId"
+                label="Сотрудник"
+                rules={[{ required: true, message: 'Выберите сотрудника' }]}
+              >
+                <Select
+                  placeholder="Выберите сотрудника"
+                  showSearch
+                  filterOption={(input, option) =>
+                    String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  onChange={(value) => {
+                    const employee = employeeService.getEmployeeById(value);
+                    if (employee) {
+                      form.setFieldsValue({
+                        inspectorName: `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim(),
+                        inspectorPhone: employee.phone,
+                        inspectorEmail: employee.email,
+                      });
+                    }
+                  }}
+                >
+                  {employeeService.getEmployees()
+                    .filter(emp => emp.isActive)
+                    .map((emp) => (
+                      <Select.Option
+                        key={emp.id}
+                        value={emp.id}
+                        label={`${emp.lastName} ${emp.firstName} ${emp.middleName || ''}`.trim()}
+                      >
+                        {`${emp.lastName} ${emp.firstName} ${emp.middleName || ''}`.trim()} - {emp.position}
+                      </Select.Option>
+                    ))}
+                </Select>
+              </Form.Item>
+              <Form.Item name="inspectorName" label="ФИО инспектора" hidden>
+                <Input />
+              </Form.Item>
+              <Form.Item name="inspectorPhone" label="Телефон" hidden>
+                <Input />
+              </Form.Item>
+              <Form.Item name="inspectorEmail" label="Email" hidden>
+                <Input />
+              </Form.Item>
+            </>
+          ) : (
+            <>
+              <Form.Item
+                name="inspectorName"
+                label="ФИО клиента"
+                rules={[{ required: true, message: 'Введите ФИО клиента' }]}
+              >
+                <Input placeholder="ФИО клиента" />
+              </Form.Item>
+              <Form.Item
+                name="clientPhone"
+                label="Телефон клиента"
+                rules={[{ required: true, message: 'Введите телефон клиента' }]}
+              >
+                <Input placeholder="+7 (___) ___-__-__" />
+              </Form.Item>
+              <Form.Item
+                name="clientEmail"
+                label="Email клиента"
+                rules={[
+                  { required: true, message: 'Введите email клиента' },
+                  { type: 'email', message: 'Введите корректный email' },
+                ]}
+              >
+                <Input placeholder="email@example.com" />
+              </Form.Item>
+            </>
+          )}
+
+          <Form.Item
             name="status"
             label="Статус"
-            rules={[{ required: true, message: 'Выберите статус' }]}
+            initialValue="scheduled"
           >
             <Select placeholder="Выберите статус">
               {INSPECTION_STATUSES.map((s) => (
                 <Select.Option key={s.value} value={s.value}>
                   {s.label}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="condition"
-            label="Состояние объекта"
-            rules={[{ required: true, message: 'Выберите состояние' }]}
-          >
-            <Select placeholder="Выберите состояние">
-              {CONDITIONS.map((c) => (
-                <Select.Option key={c.value} value={c.value}>
-                  {c.label}
                 </Select.Option>
               ))}
             </Select>

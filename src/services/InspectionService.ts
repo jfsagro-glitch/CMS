@@ -120,12 +120,216 @@ class InspectionService {
         id: `insp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         createdAt: now,
         updatedAt: now,
+        history: inspection.history || [],
       };
       
       await this.db.inspections.add(newInspection);
       return newInspection.id;
     } catch (error) {
       console.error('Failed to create inspection:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Генерировать ссылку для клиента
+   */
+  async generateClientLink(inspectionId: string): Promise<string> {
+    try {
+      const inspection = await this.getInspectionById(inspectionId);
+      if (!inspection) {
+        throw new Error('Inspection not found');
+      }
+
+      const token = `${inspectionId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // Ссылка действительна 7 дней
+
+      const base = import.meta.env.BASE_URL ?? './';
+      const basePath = base.endsWith('/') ? base : `${base}/`;
+      const link = `${window.location.origin}${basePath}#/inspection/${token}`;
+
+      await this.updateInspection(inspectionId, {
+        clientLink: link,
+        clientLinkExpiresAt: expiresAt,
+        status: 'sent_to_client',
+        history: [
+          ...(inspection.history || []),
+          {
+            id: `hist-${Date.now()}`,
+            date: new Date(),
+            action: 'sent_to_client',
+            user: inspection.createdByUser || 'Система',
+            userRole: 'creator',
+            comment: 'Ссылка отправлена клиенту',
+            status: 'sent_to_client',
+          },
+        ],
+      });
+
+      // Сохраняем токен в localStorage для проверки
+      const tokens = JSON.parse(localStorage.getItem('inspection_tokens') || '{}');
+      tokens[token] = { inspectionId, expiresAt: expiresAt.toISOString() };
+      localStorage.setItem('inspection_tokens', JSON.stringify(tokens));
+
+      return link;
+    } catch (error) {
+      console.error('Failed to generate client link:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Получить осмотр по токену клиента
+   */
+  async getInspectionByToken(token: string): Promise<Inspection | null> {
+    try {
+      const tokens = JSON.parse(localStorage.getItem('inspection_tokens') || '{}');
+      const tokenData = tokens[token];
+      
+      if (!tokenData) {
+        return null;
+      }
+
+      const expiresAt = new Date(tokenData.expiresAt);
+      if (expiresAt < new Date()) {
+        return null; // Ссылка истекла
+      }
+
+      return await this.getInspectionById(tokenData.inspectionId) || null;
+    } catch (error) {
+      console.error('Failed to get inspection by token:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Отправить осмотр на проверку
+   */
+  async submitForReview(inspectionId: string, submittedBy: string): Promise<void> {
+    try {
+      const inspection = await this.getInspectionById(inspectionId);
+      if (!inspection) {
+        throw new Error('Inspection not found');
+      }
+
+      await this.updateInspection(inspectionId, {
+        status: 'submitted_for_review',
+        history: [
+          ...(inspection.history || []),
+          {
+            id: `hist-${Date.now()}`,
+            date: new Date(),
+            action: 'submitted',
+            user: submittedBy,
+            userRole: 'inspector',
+            comment: 'Осмотр отправлен на проверку',
+            status: 'submitted_for_review',
+          },
+        ],
+      });
+    } catch (error) {
+      console.error('Failed to submit for review:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Согласовать осмотр
+   */
+  async approveInspection(inspectionId: string, approvedBy: string): Promise<void> {
+    try {
+      const inspection = await this.getInspectionById(inspectionId);
+      if (!inspection) {
+        throw new Error('Inspection not found');
+      }
+
+      await this.updateInspection(inspectionId, {
+        status: 'approved',
+        approvedBy,
+        approvedAt: new Date(),
+        history: [
+          ...(inspection.history || []),
+          {
+            id: `hist-${Date.now()}`,
+            date: new Date(),
+            action: 'approved',
+            user: approvedBy,
+            userRole: 'approver',
+            comment: 'Осмотр согласован',
+            status: 'approved',
+          },
+        ],
+      });
+    } catch (error) {
+      console.error('Failed to approve inspection:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Запросить доработку
+   */
+  async requestRevision(inspectionId: string, requestedBy: string, comment: string): Promise<void> {
+    try {
+      const inspection = await this.getInspectionById(inspectionId);
+      if (!inspection) {
+        throw new Error('Inspection not found');
+      }
+
+      await this.updateInspection(inspectionId, {
+        status: 'needs_revision',
+        revisionRequestedBy: requestedBy,
+        revisionRequestedAt: new Date(),
+        revisionComment: comment,
+        history: [
+          ...(inspection.history || []),
+          {
+            id: `hist-${Date.now()}`,
+            date: new Date(),
+            action: 'revision_requested',
+            user: requestedBy,
+            userRole: 'reviewer',
+            comment: comment || 'Требуется доработка',
+            status: 'needs_revision',
+          },
+        ],
+      });
+    } catch (error) {
+      console.error('Failed to request revision:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Добавить фотографию к осмотру
+   */
+  async addPhoto(inspectionId: string, photo: {
+    url: string;
+    description?: string;
+    location?: string;
+    step?: string;
+    latitude?: number;
+    longitude?: number;
+    accuracy?: number;
+  }): Promise<void> {
+    try {
+      const inspection = await this.getInspectionById(inspectionId);
+      if (!inspection) {
+        throw new Error('Inspection not found');
+      }
+
+      const newPhoto = {
+        id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        ...photo,
+        takenAt: new Date(),
+      };
+
+      await this.updateInspection(inspectionId, {
+        photos: [...(inspection.photos || []), newPhoto],
+      });
+    } catch (error) {
+      console.error('Failed to add photo:', error);
       throw error;
     }
   }

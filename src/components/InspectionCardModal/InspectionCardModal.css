@@ -1,0 +1,9 @@
+.inspection-card-modal .ant-modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.inspection-card-modal .ant-timeline-item-content {
+  margin-top: -4px;
+}
+

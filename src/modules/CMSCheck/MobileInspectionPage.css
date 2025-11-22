@@ -1,0 +1,14 @@
+.mobile-inspection-page {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.mobile-inspection-page .ant-steps-vertical {
+  margin: 24px 0;
+}
+
+.mobile-inspection-page .ant-upload {
+  width: 100%;
+}
+

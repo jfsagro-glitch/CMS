@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Result, Button, Card, Row, Col, message } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { UserOutlined, DatabaseOutlined, FilePdfOutlined } from '@ant-design/icons';
-import { downloadPdfFromMarkdownFile } from '@/utils/pdfGenerator';
+// import { downloadPdfFromMarkdownFile } from '@/utils/pdfGenerator';
 
 interface PlaceholderPageProps {
   title: string;
@@ -20,9 +20,10 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
   const handleDownloadPdf = async () => {
     try {
       setLoading(true);
-      const base = import.meta.env.BASE_URL ?? './';
-      const markdownPath = `${base}INSTRUCTION/CMS_USER_MANUAL.md`;
-      await downloadPdfFromMarkdownFile(markdownPath);
+      // const base = import.meta.env.BASE_URL ?? './';
+      // const markdownPath = `${base}INSTRUCTION/CMS_USER_MANUAL.md`;
+      // await downloadPdfFromMarkdownFile(markdownPath);
+      message.info('Генерация PDF из Markdown временно отключена');
       message.success('PDF инструкция открыта для печати');
     } catch (error: any) {
       console.error('Ошибка генерации PDF:', error);

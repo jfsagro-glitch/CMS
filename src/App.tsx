@@ -20,6 +20,7 @@ import MonitoringPage from './modules/Monitoring/MonitoringPage';
 import ReportsPage from './modules/Reports/ReportsPage';
 import TasksPage from './modules/Tasks/TasksPage';
 import CMSCheckPage from './modules/CMSCheck/CMSCheckPage';
+import MobileInspectionPage from './modules/CMSCheck/MobileInspectionPage';
 import CollateralConclusionsPage from './modules/CollateralConclusions/CollateralConclusionsPage';
 import FNPServicePage from './modules/FNP/FNPServicePage';
 import CreditRiskPage from './modules/CreditRisk/CreditRiskPage';
@@ -164,6 +165,7 @@ const AppContent: React.FC = () => {
                   <Route path="credit-risk" element={<CreditRiskPage />} />
                   <Route path="appraisal" element={<AppraisalPage />} />
                   <Route path="cms-check" element={<CMSCheckPage />} />
+                  <Route path="inspection/:token" element={<MobileInspectionPage />} />
                   <Route path="egrn" element={<EGRNPage />} />
                       <Route path="upload" element={<UploadPage />} />
                   <Route path="monitoring" element={<MonitoringPage />} />

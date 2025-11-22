@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Card, Descriptions, Tag, Row, Col, Divider, Typography, Space, Statistic, Tabs, Button, List } from 'antd';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Card, Descriptions, Tag, Row, Col, Divider, Typography, Space, Statistic, Tabs, Button, List, Empty } from 'antd';
 import {
   HomeOutlined,
   CarOutlined,
@@ -8,10 +8,14 @@ import {
   InfoCircleOutlined,
   LinkOutlined,
   ExclamationCircleOutlined,
+  CameraOutlined,
 } from '@ant-design/icons';
 import type { ExtendedCollateralCard } from '../../types';
 import { getAttributesForPropertyType, distributeAttributesByTabs } from '@/utils/collateralAttributesFromDict';
 import { useNavigate } from 'react-router-dom';
+import inspectionService from '@/services/InspectionService';
+import InspectionCardModal from '@/components/InspectionCardModal/InspectionCardModal';
+import type { Inspection } from '@/types/inspection';
 import dayjs from 'dayjs';
 import './CollateralCardView.css';
 
@@ -23,6 +27,31 @@ interface CollateralCardViewProps {
 
 export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) => {
   const navigate = useNavigate();
+  const [inspections, setInspections] = useState<Inspection[]>([]);
+  const [inspectionsLoading, setInspectionsLoading] = useState(false);
+  const [inspectionModalVisible, setInspectionModalVisible] = useState(false);
+  const [viewingInspectionId, setViewingInspectionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadInspections();
+  }, [card.id]);
+
+  const loadInspections = async () => {
+    setInspectionsLoading(true);
+    try {
+      const data = await inspectionService.getInspectionsByCardId(card.id);
+      setInspections(data);
+    } catch (error) {
+      console.error('Ошибка загрузки осмотров:', error);
+    } finally {
+      setInspectionsLoading(false);
+    }
+  };
+
+  const handleViewInspection = (inspectionId: string) => {
+    setViewingInspectionId(inspectionId);
+    setInspectionModalVisible(true);
+  };
   
   // Функции для определения цвета статуса
   const getStatusColor = (status: string) => {
@@ -372,6 +401,86 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
         </div>
       ),
     },
+    {
+      key: '7',
+      label: (
+        <Space>
+          <CameraOutlined />
+          Осмотры ({inspections.length})
+        </Space>
+      ),
+      children: (
+        <div>
+          {inspectionsLoading ? (
+            <Empty description="Загрузка осмотров..." />
+          ) : inspections.length === 0 ? (
+            <Empty description="Осмотры отсутствуют" />
+          ) : (
+            <List
+              dataSource={inspections}
+              renderItem={(inspection) => (
+                <List.Item
+                  actions={[
+                    <Button
+                      type="link"
+                      onClick={() => handleViewInspection(inspection.id)}
+                    >
+                      Открыть
+                    </Button>,
+                  ]}
+                >
+                  <List.Item.Meta
+                    title={
+                      <Space>
+                        <span>{inspection.inspectionType}</span>
+                        <Tag color={
+                          inspection.status === 'approved' ? 'green' :
+                          inspection.status === 'submitted_for_review' ? 'purple' :
+                          inspection.status === 'in_progress' ? 'orange' :
+                          inspection.status === 'needs_revision' ? 'red' : 'blue'
+                        }>
+                          {inspection.status === 'approved' ? 'Согласован' :
+                           inspection.status === 'submitted_for_review' ? 'На проверке' :
+                           inspection.status === 'in_progress' ? 'В процессе' :
+                           inspection.status === 'needs_revision' ? 'Требует доработки' :
+                           inspection.status === 'scheduled' ? 'Запланирован' : inspection.status}
+                        </Tag>
+                      </Space>
+                    }
+                    description={
+                      <Space direction="vertical" size="small">
+                        <Text type="secondary">
+                          Дата: {dayjs(inspection.inspectionDate).format('DD.MM.YYYY HH:mm')}
+                        </Text>
+                        <Text type="secondary">
+                          Исполнитель: {inspection.inspectorName}
+                          {inspection.inspectorType === 'client' && (
+                            <Tag color="orange" style={{ marginLeft: 8 }}>Клиент</Tag>
+                          )}
+                        </Text>
+                        {inspection.photos && inspection.photos.length > 0 && (
+                          <Text type="secondary">
+                            Фотографий: {inspection.photos.length}
+                          </Text>
+                        )}
+                      </Space>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+          )}
+          <Divider />
+          <Button
+            type="primary"
+            icon={<CameraOutlined />}
+            onClick={() => navigate(`/cms-check?cardId=${card.id}`)}
+          >
+            Создать осмотр
+          </Button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -402,6 +511,24 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
       <Card style={{ marginTop: 16 }}>
         <Tabs items={tabItems} defaultActiveKey="1" />
       </Card>
+
+      <InspectionCardModal
+        visible={inspectionModalVisible}
+        inspectionId={viewingInspectionId}
+        onClose={() => {
+          setInspectionModalVisible(false);
+          setViewingInspectionId(null);
+          loadInspections();
+        }}
+        onApprove={async (id) => {
+          await inspectionService.approveInspection(id, 'Система');
+          loadInspections();
+        }}
+        onRequestRevision={async (id, comment) => {
+          await inspectionService.requestRevision(id, 'Система', comment);
+          loadInspections();
+        }}
+      />
     </div>
   );
 };

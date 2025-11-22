@@ -19,16 +19,43 @@ const generateDefectId = (index: number) => `defect-${Date.now()}-${index}`;
 // Генерация ID для рекомендаций
 const generateRecommendationId = (index: number) => `rec-${Date.now()}-${index}`;
 
+// Хелпер для добавления обязательных полей
+const addRequiredFields = (inspection: any, date: Date): Omit<Inspection, 'id' | 'createdAt' | 'updatedAt'> => {
+  return {
+    ...inspection,
+    inspectorType: inspection.inspectorType || 'employee',
+    history: inspection.history || [{
+      id: `hist-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      date: date,
+      action: 'created',
+      user: 'Система',
+      userRole: 'creator',
+      comment: 'Осмотр создан',
+      status: inspection.status || 'scheduled',
+    }],
+  };
+};
+
 export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' | 'updatedAt'>[] => {
   const now = new Date();
   const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
   const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const inspections: Omit<Inspection, 'id' | 'createdAt' | 'updatedAt'>[] = [
+  const rawInspections: any[] = [
     // 1. Первичный осмотр квартиры
     {
       inspectionType: 'primary',
+      inspectorType: 'employee',
+      history: [{
+        id: 'hist-1',
+        date: new Date('2024-01-15'),
+        action: 'created',
+        user: 'Система',
+        userRole: 'creator',
+        comment: 'Осмотр создан',
+        status: 'completed',
+      }],
       status: 'completed',
       inspectionDate: randomDate(threeMonthsAgo, oneMonthAgo),
       scheduledDate: randomDate(threeMonthsAgo, oneMonthAgo),
@@ -106,6 +133,16 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
     // 2. Периодический осмотр офиса
     {
       inspectionType: 'periodic',
+      inspectorType: 'employee',
+      history: [{
+        id: 'hist-2',
+        date: new Date('2024-01-20'),
+        action: 'created',
+        user: 'Система',
+        userRole: 'creator',
+        comment: 'Осмотр создан',
+        status: 'completed',
+      }],
       status: 'completed',
       inspectionDate: randomDate(oneMonthAgo, oneWeekAgo),
       scheduledDate: randomDate(oneMonthAgo, oneWeekAgo),
@@ -981,7 +1018,11 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
     },
   ];
 
-  return inspections;
+  // Применяем addRequiredFields ко всем осмотрам
+  return rawInspections.map((insp: any) => {
+    const date = insp.inspectionDate || new Date();
+    return addRequiredFields(insp, date);
+  });
 };
 
 /**
