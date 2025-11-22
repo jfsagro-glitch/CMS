@@ -43,34 +43,14 @@ const CMSCheckPage: React.FC = () => {
     iframe.addEventListener('error', handleError);
 
     // Устанавливаем путь к CMS Check
-    // Используем относительный путь от текущего местоположения
-    // В production на GitHub Pages путь будет /cms/cms-check/index.html
-    // В dev будет ./cms-check/index.html
+    // В production base может быть '/cms/' или './', в dev - '/'
     const base = import.meta.env.BASE_URL ?? './';
-    let cmsCheckPath: string;
-    
-    // Определяем текущий путь страницы
-    const currentPath = window.location.pathname;
-    
-    if (base === './' || base === '/') {
-      // Для относительных путей используем относительный путь от текущей директории
-      // Если мы на /registry#/cms-check, то путь должен быть ./cms-check/index.html
-      cmsCheckPath = './cms-check/index.html';
-    } else {
-      // Для абсолютных путей (например /cms/) используем абсолютный путь
-      const basePath = base.endsWith('/') ? base : `${base}/`;
-      cmsCheckPath = `${basePath}cms-check/index.html`;
-    }
-    
-    console.log('Loading CMS Check:', {
-      base,
-      currentPath,
-      cmsCheckPath,
-      fullUrl: new URL(cmsCheckPath, window.location.origin).href
-    });
+    // Убираем хеш из пути, так как он может вызывать проблемы при первой загрузке
+    // Если base заканчивается на '/', не добавляем еще один '/'
+    const basePath = base.endsWith('/') ? base : `${base}/`;
+    const cmsCheckPath = `${basePath}cms-check/index.html`;
     
     try {
-      // Устанавливаем src напрямую
       iframe.src = cmsCheckPath;
       
       // Таймаут на случай, если iframe не загрузится
@@ -121,13 +101,22 @@ const CMSCheckPage: React.FC = () => {
           style={{ margin: '20px' }}
         />
       )}
+      {!error && !loading && (
+        <Alert
+          message="Информация"
+          description="CMS Check загружен. Приложение может показывать ошибки API, так как оно рассчитано на работу с backend сервером. Для полной функциональности требуется настройка backend API."
+          type="info"
+          showIcon
+          closable
+          style={{ margin: '20px' }}
+        />
+      )}
       <iframe
         ref={iframeRef}
         className="cms-check-iframe"
         title="CMS Check - Система дистанционных осмотров"
         style={{ display: loading || error ? 'none' : 'block' }}
-        // Убираем sandbox, так как он может блокировать работу приложения
-        // и вызывать предупреждения о безопасности
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
       />
     </div>
   );
