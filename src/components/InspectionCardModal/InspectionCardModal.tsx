@@ -61,19 +61,29 @@ const InspectionCardModal: React.FC<InspectionCardModalProps> = ({
   const [revisionComment, setRevisionComment] = useState('');
 
   useEffect(() => {
+    console.log('InspectionCardModal useEffect:', { visible, inspectionId });
     if (visible && inspectionId) {
       loadInspection();
     } else {
       setInspection(null);
+      setRevisionComment('');
     }
   }, [visible, inspectionId]);
 
   const loadInspection = async () => {
-    if (!inspectionId) return;
+    if (!inspectionId) {
+      console.warn('loadInspection called without inspectionId');
+      return;
+    }
+    console.log('Loading inspection:', inspectionId);
     setLoading(true);
     try {
       const data = await inspectionService.getInspectionById(inspectionId);
+      console.log('Loaded inspection:', data);
       setInspection(data || null);
+      if (!data) {
+        message.warning('Осмотр не найден');
+      }
     } catch (error) {
       console.error('Ошибка загрузки осмотра:', error);
       message.error('Не удалось загрузить осмотр');
@@ -167,7 +177,9 @@ const InspectionCardModal: React.FC<InspectionCardModalProps> = ({
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Дата осмотра">
-            {dayjs(inspection.inspectionDate).format('DD.MM.YYYY HH:mm')}
+            {inspection.inspectionDate 
+              ? dayjs(inspection.inspectionDate instanceof Date ? inspection.inspectionDate : new Date(inspection.inspectionDate)).format('DD.MM.YYYY HH:mm')
+              : 'Не указана'}
           </Descriptions.Item>
           <Descriptions.Item label="Объект">
             {inspection.collateralName}
@@ -263,7 +275,9 @@ const InspectionCardModal: React.FC<InspectionCardModalProps> = ({
                   description={
                     <Space direction="vertical" size="small">
                       <Text type="secondary" style={{ fontSize: 12 }}>
-                        {dayjs(photo.takenAt).format('DD.MM.YYYY HH:mm')}
+                        {photo.takenAt 
+                          ? dayjs(photo.takenAt instanceof Date ? photo.takenAt : new Date(photo.takenAt)).format('DD.MM.YYYY HH:mm')
+                          : 'Не указана'}
                       </Text>
                       {photo.latitude && photo.longitude && (
                         <Text type="secondary" style={{ fontSize: 12 }}>
@@ -302,7 +316,9 @@ const InspectionCardModal: React.FC<InspectionCardModalProps> = ({
                   </Tag>
                 </Space>
                 <Text type="secondary">
-                  {dayjs(item.date).format('DD.MM.YYYY HH:mm')}
+                  {item.date 
+                    ? dayjs(item.date instanceof Date ? item.date : new Date(item.date as string)).format('DD.MM.YYYY HH:mm')
+                    : 'Не указана'}
                 </Text>
                 <Text>{item.action === 'created' ? 'Создал осмотр' :
                        item.action === 'sent_to_client' ? 'Отправил клиенту' :

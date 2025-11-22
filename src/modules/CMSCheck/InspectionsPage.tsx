@@ -121,6 +121,7 @@ const InspectionsPage: React.FC = () => {
   };
 
   const handleView = (inspection: Inspection) => {
+    console.log('Opening inspection modal for:', inspection.id);
     setViewingInspectionId(inspection.id);
     setViewModalVisible(true);
   };
