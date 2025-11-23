@@ -16,10 +16,14 @@ import {
   Tag,
   Tooltip,
   Typography,
+  Cascader,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { FileTextOutlined, FolderOpenOutlined, SearchOutlined } from '@ant-design/icons';
 import type { CollateralDocument, CollateralFolder, CollateralDossierPayload } from '@/types/collateralDossier';
+import type { CollateralPortfolioEntry } from '@/types/portfolio';
+import { generateDossierDemoData } from '@/utils/generateDossierDemoData';
+import extendedStorageService from '@/services/ExtendedStorageService';
 import './CollateralDossierPage.css';
 
 interface TableRow extends CollateralDocument {
@@ -29,9 +33,11 @@ interface TableRow extends CollateralDocument {
 const CollateralDossierPage: React.FC = () => {
   const [documents, setDocuments] = useState<TableRow[]>([]);
   const [folders, setFolders] = useState<CollateralFolder[]>([]);
+  const [portfolio, setPortfolio] = useState<CollateralPortfolioEntry[]>([]);
   const [searchValue, setSearchValue] = useState('');
   const [clientSearch, setClientSearch] = useState('');
   const [pledgerSearch, setPledgerSearch] = useState('');
+  const [hierarchyFilter, setHierarchyFilter] = useState<string[]>([]);
   const [folderFilter, setFolderFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,19 +50,31 @@ const CollateralDossierPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const base = import.meta.env.BASE_URL ?? '/';
-        const resolvedBase = new URL(base, window.location.origin);
-        const normalizedPath = resolvedBase.pathname.endsWith('/')
-          ? resolvedBase.pathname
-          : `${resolvedBase.pathname}/`;
-        const url = `${resolvedBase.origin}${normalizedPath}collateralDossier.json?v=${Date.now()}`;
-        const response = await fetch(url, { cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error(`Не удалось загрузить досье (${response.status})`);
+        // Загружаем портфель
+        const portfolioUrl = (() => {
+          const base = import.meta.env.BASE_URL ?? '/';
+          const resolvedBase = new URL(base, window.location.origin);
+          const normalizedPath = resolvedBase.pathname.endsWith('/')
+            ? resolvedBase.pathname
+            : `${resolvedBase.pathname}/`;
+          return `${resolvedBase.origin}${normalizedPath}portfolioData.json`;
+        })();
+
+        const portfolioResponse = await fetch(`${portfolioUrl}?v=${Date.now()}`, { cache: 'no-store' });
+        let portfolioData: CollateralPortfolioEntry[] = [];
+        if (portfolioResponse.ok) {
+          portfolioData = (await portfolioResponse.json()) as CollateralPortfolioEntry[];
         }
-        const payload = (await response.json()) as CollateralDossierPayload;
+
+        // Загружаем карточки залога
+        const cards = await extendedStorageService.getExtendedCards();
+
+        // Генерируем демо-данные на основе портфеля
+        const payload = await generateDossierDemoData(portfolioData, cards);
+
         if (!mounted) return;
 
+        setPortfolio(portfolioData);
         setFolders(payload.folders);
         setDocuments(
           payload.documents.map(doc => ({
@@ -64,8 +82,28 @@ const CollateralDossierPage: React.FC = () => {
             key: doc.id,
           })),
         );
+
+        // Сохраняем в localStorage для последующего использования
+        localStorage.setItem('collateralDossierData', JSON.stringify(payload));
       } catch (fetchError) {
-        setError(fetchError instanceof Error ? fetchError.message : 'Неизвестная ошибка');
+        // Пытаемся загрузить из localStorage
+        try {
+          const saved = localStorage.getItem('collateralDossierData');
+          if (saved) {
+            const payload = JSON.parse(saved) as CollateralDossierPayload;
+            setFolders(payload.folders);
+            setDocuments(
+              payload.documents.map(doc => ({
+                ...doc,
+                key: doc.id,
+              })),
+            );
+          } else {
+            throw fetchError;
+          }
+        } catch {
+          setError(fetchError instanceof Error ? fetchError.message : 'Неизвестная ошибка');
+        }
       } finally {
         if (mounted) {
           setLoading(false);
@@ -92,6 +130,41 @@ const CollateralDossierPage: React.FC = () => {
     const statusSet = Array.from(new Set(documents.map(doc => doc.status)));
     return statusSet.map(status => ({ value: status, label: status }));
   }, [documents]);
+
+  // Иерархия для Cascader: Клиент -> Залогодатель -> Договор
+  const hierarchyOptions = useMemo(() => {
+    const clientsMap = new Map<string, Map<string, Set<string>>>();
+    
+    portfolio.forEach(deal => {
+      const borrower = deal.borrower || 'Не указан';
+      const pledger = deal.pledger || 'Не указан';
+      const contract = `Договор ${deal.contractNumber || deal.reference}`;
+      
+      if (!clientsMap.has(borrower)) {
+        clientsMap.set(borrower, new Map());
+      }
+      
+      const pledgersMap = clientsMap.get(borrower)!;
+      if (!pledgersMap.has(pledger)) {
+        pledgersMap.set(pledger, new Set());
+      }
+      
+      pledgersMap.get(pledger)!.add(contract);
+    });
+    
+    return Array.from(clientsMap.entries()).map(([client, pledgersMap]) => ({
+      value: client,
+      label: client,
+      children: Array.from(pledgersMap.entries()).map(([pledger, contracts]) => ({
+        value: pledger,
+        label: pledger,
+        children: Array.from(contracts).map(contract => ({
+          value: contract,
+          label: contract,
+        })),
+      })),
+    }));
+  }, [portfolio]);
 
   const filteredDocuments = useMemo(() => {
     const search = searchValue.trim().toLowerCase();
@@ -121,12 +194,19 @@ const CollateralDossierPage: React.FC = () => {
       const matchesPledger =
         !pledgerTerm || (doc.pledger && String(doc.pledger).toLowerCase().includes(pledgerTerm));
 
+      // Фильтр по иерархии
+      const matchesHierarchy = hierarchyFilter.length === 0 || (
+        hierarchyFilter[0] && doc.borrower === hierarchyFilter[0] &&
+        (hierarchyFilter.length < 2 || doc.pledger === hierarchyFilter[1]) &&
+        (hierarchyFilter.length < 3 || doc.folderPath[2] === hierarchyFilter[2])
+      );
+
       const matchesFolder = !folderFilter || doc.folderId === folderFilter;
       const matchesStatus = !statusFilter || doc.status === statusFilter;
 
-      return matchesSearch && matchesClient && matchesPledger && matchesFolder && matchesStatus;
+      return matchesSearch && matchesClient && matchesPledger && matchesHierarchy && matchesFolder && matchesStatus;
     });
-  }, [documents, searchValue, clientSearch, pledgerSearch, folderFilter, statusFilter]);
+  }, [documents, searchValue, clientSearch, pledgerSearch, hierarchyFilter, folderFilter, statusFilter]);
 
   const stats = useMemo(() => {
     const totalDocs = documents.length;
@@ -273,6 +353,22 @@ const CollateralDossierPage: React.FC = () => {
 
       <Card className="collateral-dossier__filters">
         <Space size="middle" wrap>
+          <Cascader
+            allowClear
+            placeholder="Клиент → Залогодатель → Договор"
+            style={{ minWidth: 300 }}
+            options={hierarchyOptions}
+            value={hierarchyFilter}
+            onChange={(value) => setHierarchyFilter(value as string[])}
+            showSearch={{
+              filter: (inputValue, path) =>
+                path.some(option => {
+                  const label = String(option.label || '');
+                  return label.toLowerCase().includes(inputValue.toLowerCase());
+                }),
+            }}
+            changeOnSelect
+          />
           <Select
             allowClear
             placeholder="Все папки"
