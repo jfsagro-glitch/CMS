@@ -22,6 +22,7 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { CalendarOutlined, ClockCircleOutlined, SearchOutlined, EyeOutlined, DollarOutlined, SettingOutlined } from '@ant-design/icons';
+import { useLocation } from 'react-router-dom';
 import type { MonitoringPlanEntry, MonitoringTimeframe, RevaluationPlanEntry } from '@/types/monitoring';
 import MonitoringCardModal from '@/components/MonitoringCardModal/MonitoringCardModal';
 import MonitoringSettings from './MonitoringSettings';
@@ -43,7 +44,17 @@ const timeframeOptions: { label: string; value: MonitoringTimeframe | 'all' }[] 
 ];
 
 const MonitoringPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('monitoring');
+  const location = useLocation();
+  const initialTab = (location.state as { activeTab?: string })?.activeTab || 'monitoring';
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
+
+  // Обновляем активную вкладку при изменении location.state
+  useEffect(() => {
+    const tabFromState = (location.state as { activeTab?: string })?.activeTab;
+    if (tabFromState && (tabFromState === 'monitoring' || tabFromState === 'revaluation' || tabFromState === 'settings')) {
+      setActiveTab(tabFromState);
+    }
+  }, [location.state]);
   
   // Monitoring plan state
   const [plan, setPlan] = useState<TableRow[]>([]);
