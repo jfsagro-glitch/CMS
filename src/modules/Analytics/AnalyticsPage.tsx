@@ -273,10 +273,20 @@ const AnalyticsPage: React.FC = () => {
   }, [analyticsData, parseNumber]);
 
   // 1.1. Детальная структура по типам залогового имущества
+  // Фильтруем только по категориям: Формальный, Основное, Проблемный
   const collateralTypeStructure = useMemo(() => {
     const typeMap = new Map<string, { count: number; value: number; debt: number; category: string }>();
     
+    // Разрешенные категории обеспечения
+    const allowedCategories = new Set(['Формальный', 'Основное', 'Проблемный']);
+    
     for (const item of analyticsData.portfolioData) {
+      // Проверяем, что категория обеспечения входит в разрешенный список
+      const collateralCategory = item.collateralCategory || '';
+      if (!allowedCategories.has(collateralCategory)) {
+        continue; // Пропускаем записи с другими категориями
+      }
+      
       const type = item.collateralType || 'Не указан';
       const category = getPropertyCategory(item.collateralType);
       const value = parseNumber(item.collateralValue);
