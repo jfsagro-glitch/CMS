@@ -17,6 +17,8 @@ import {
   Col,
   Collapse,
   DatePicker,
+  Upload,
+  Avatar,
 } from 'antd';
 import {
   PlusOutlined,
@@ -27,6 +29,7 @@ import {
   ReloadOutlined,
   SearchOutlined,
   DatabaseOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import employeeService from '@/services/EmployeeService';
@@ -147,8 +150,37 @@ const EmployeesPage: React.FC = () => {
       birthDate: employee.birthDate ? dayjs(employee.birthDate) : undefined,
       hireDate: employee.hireDate ? dayjs(employee.hireDate) : undefined,
       status: employee.status || 'working',
+      photo: employee.photo ? [{ uid: '-1', name: 'photo.png', status: 'done', url: employee.photo }] : [],
     });
     setModalVisible(true);
+  };
+
+  // Преобразование файла в base64
+  const getBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  // Обработчик загрузки фото
+  const handlePhotoChange = async (info: any) => {
+    if (info.file.status === 'uploading') {
+      return;
+    }
+    if (info.file.status === 'done' || info.file.originFileObj) {
+      try {
+        const base64 = await getBase64(info.file.originFileObj || info.file);
+        form.setFieldsValue({
+          photo: [{ ...info.file, thumbUrl: base64, url: base64 }],
+        });
+      } catch (error) {
+        message.error('Ошибка загрузки фото');
+        console.error(error);
+      }
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -166,12 +198,32 @@ const EmployeesPage: React.FC = () => {
     try {
       const values = await form.validateFields();
 
+      // Обработка фото - извлекаем base64 из Upload компонента
+      let photoUrl: string | undefined = undefined;
+      if (values.photo && values.photo.length > 0) {
+        const file = values.photo[0];
+        if (file.response) {
+          // Если файл был загружен на сервер
+          photoUrl = file.response.url;
+        } else if (file.thumbUrl) {
+          // Если это base64 или локальный URL
+          photoUrl = file.thumbUrl;
+        } else if (file.url) {
+          // Если это уже URL
+          photoUrl = file.url;
+        }
+      } else if (editingEmployee?.photo) {
+        // Сохраняем существующее фото, если новое не загружено
+        photoUrl = editingEmployee.photo;
+      }
+
       // Преобразуем даты в строки
       const formattedValues = {
         ...values,
         birthDate: values.birthDate ? dayjs(values.birthDate).format('YYYY-MM-DD') : undefined,
         hireDate: values.hireDate ? dayjs(values.hireDate).format('YYYY-MM-DD') : undefined,
         status: values.status || 'working',
+        photo: photoUrl,
       };
 
       if (editingEmployee) {
@@ -198,15 +250,23 @@ const EmployeesPage: React.FC = () => {
       width: 180,
       fixed: 'left',
       render: (_, record) => (
-        <div style={{ fontSize: '13px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '13px' }}>
+          <Avatar
+            src={record.photo}
+            icon={<UserOutlined />}
+            size={40}
+            style={{ flexShrink: 0 }}
+          />
           <div>
-            {record.lastName} {record.firstName} {record.middleName || ''}
-          </div>
-          {record.employeeNumber && (
-            <div style={{ fontSize: '11px', color: '#999', marginTop: 2 }}>
-              № {record.employeeNumber}
+            <div>
+              {record.lastName} {record.firstName} {record.middleName || ''}
             </div>
-          )}
+            {record.employeeNumber && (
+              <div style={{ fontSize: '11px', color: '#999', marginTop: 2 }}>
+                № {record.employeeNumber}
+              </div>
+            )}
+          </div>
         </div>
       ),
     },
@@ -357,6 +417,20 @@ const EmployeesPage: React.FC = () => {
               </span>
               <span style={{ fontSize: '12px', color: '#722ed1' }}>
                 Оценка: <strong>{employees.filter(e => e.canAppraise).length}</strong>
+              </span>
+            </Space>
+            <Space size={8} split={<span style={{ color: '#d9d9d9' }}>|</span>} style={{ marginTop: 4 }}>
+              <span style={{ fontSize: '12px', color: '#52c41a' }}>
+                На работе: <strong>{employees.filter(e => e.status === 'working' || !e.status).length}</strong>
+              </span>
+              <span style={{ fontSize: '12px', color: '#fa8c16' }}>
+                Больничный: <strong>{employees.filter(e => e.status === 'sick_leave').length}</strong>
+              </span>
+              <span style={{ fontSize: '12px', color: '#1890ff' }}>
+                Отпуск: <strong>{employees.filter(e => e.status === 'vacation').length}</strong>
+              </span>
+              <span style={{ fontSize: '12px', color: '#722ed1' }}>
+                Командировка: <strong>{employees.filter(e => e.status === 'business_trip').length}</strong>
               </span>
             </Space>
           </div>
@@ -629,6 +703,23 @@ const EmployeesPage: React.FC = () => {
 
           <Form.Item name="email" label="Email">
             <Input type="email" placeholder="ivanov@bank.ru" />
+          </Form.Item>
+
+          <Form.Item name="photo" label="Фото сотрудника">
+            <Upload
+              listType="picture-card"
+              maxCount={1}
+              beforeUpload={() => false} // Предотвращаем автоматическую загрузку
+              onChange={handlePhotoChange}
+              accept="image/*"
+            >
+              {form.getFieldValue('photo')?.length >= 1 ? null : (
+                <div>
+                  <UploadOutlined />
+                  <div style={{ marginTop: 8 }}>Загрузить</div>
+                </div>
+              )}
+            </Upload>
           </Form.Item>
 
           <Form.Item

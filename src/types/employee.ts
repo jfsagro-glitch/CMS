@@ -29,6 +29,8 @@ export interface Employee {
   appraisalWorkload?: number; // Текущая загрузка по оценке (количество объектов)
   // Руководство
   isManager?: boolean; // Является ли руководителем региона
+  // Фото сотрудника
+  photo?: string; // Base64 строка или URL фото
   createdAt: string;
   updatedAt: string;
 }
