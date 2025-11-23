@@ -136,12 +136,33 @@ export interface Partner {
   middleName?: string;
   // Для юрлица
   organizationName?: string;
+  shortName?: string; // Сокращенное наименование
   // Общие поля
   inn?: string;
   share?: number; // Доля права (%)
   showInRegistry: boolean; // Показывать в реестре
   createdAt: Date;
   updatedAt: Date;
+  // Поля для отчета 0409310
+  subjectId?: string; // Идентификационный код субъекта
+  countryCode?: string; // Код страны по ОКСМ (643 для РФ)
+  // Для юридических лиц
+  ogrn?: string; // ОГРН
+  kio?: string; // КИО (для нерезидентов)
+  tin?: string; // TIN (Tax Identification Number для нерезидентов)
+  lei?: string; // LEI (Legal Entity Identifier для нерезидентов)
+  registrationNumber?: string; // Регистрационный номер в стране регистрации (NUM)
+  // Для физических лиц
+  personType?: 'individual' | 'entrepreneur' | 'private_practice'; // Тип физического лица
+  ogrnip?: string; // ОГРНИП (для ИП)
+  // Паспортные данные
+  passportType?: string; // Код документа (21 - паспорт РФ, 31 - паспорт иностранца, 00 - иное)
+  passportSeries?: string; // Серия документа
+  passportNumber?: string; // Номер документа
+  // Для кредитных организаций
+  registrationNumberCBR?: string; // Регистрационный номер кредитной организации, присвоенный Банком России
+  bik?: string; // БИК
+  swift?: string; // СВИФТ
 }
 
 // Адрес
@@ -163,6 +184,11 @@ export interface Address {
     lat: number;
     lon: number;
   };
+  // Поля для отчета 0409310
+  countryCode?: string; // Код страны по ОКСМ (643 для РФ)
+  okato?: string; // Код территории по ОКАТО (11 разрядов)
+  letter?: string; // Литера (при наличии)
+  otherInfo?: string; // Иные сведения о местоположении
 }
 
 // Документ
@@ -216,6 +242,21 @@ export interface ExtendedCollateralCard extends CollateralCard {
   evaluationDate?: string; // Дата оценки
   lastEvaluationDate?: string; // Дата последней оценки
   nextEvaluationDate?: string; // Дата следующей оценки
+  // Поля для отчета 0409310 - стоимости
+  fairValue?: number; // Справедливая стоимость
+  fairValueDate?: string; // Дата определения справедливой стоимости
+  marketValueDate?: string; // Дата определения рыночной стоимости
+  cadastralValue?: number; // Кадастровая стоимость (для недвижимости)
+  cadastralValueDate?: string; // Дата определения кадастровой стоимости
+  liquidationValue?: number; // Ликвидационная стоимость
+  liquidationValueDate?: string; // Дата определения ликвидационной стоимости
+  investmentValue?: number; // Инвестиционная стоимость
+  investmentValueDate?: string; // Дата определения инвестиционной стоимости
+  contractValue?: number; // Стоимость, указанная в договоре залога
+  contractValueDate?: string; // Дата определения стоимости по договору
+  reserveAmount?: number; // Сумма обеспечения для резерва на возможные потери по ссуде
+  reserveAmountInterest?: number; // Сумма обеспечения для резерва по процентным доходам
+  reserveAmountContingent?: number; // Сумма обеспечения для резерва по условным обязательствам
   
   // Мониторинг
   monitoringDate?: string; // Дата последнего мониторинга
@@ -240,6 +281,12 @@ export interface ExtendedCollateralCard extends CollateralCard {
   reference?: string | number; // REFERENCE сделки из портфеля
   contractNumber?: string; // Номер договора залога
   contractId?: string; // ID договора для навигации
+  // Поля для отчета 0409310
+  collateralId?: string; // Идентификационный код принятого обеспечения
+  loanContractId?: string; // Идентификационный код договора о предоставлении ссуды
+  pledgeContractId?: string; // Идентификационный код договора залога
+  accountNumber?: string; // Лицевой счет, на котором учитывается принятое обеспечение
+  qualityCategory?: string; // Категория качества обеспечения (1-5)
   
   // Тип имущества из справочника атрибутов залога
   propertyType?: string; // Например: "Будущий урожай", "Аффинированные драгоценные металлы в слитках"

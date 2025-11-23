@@ -37,5 +37,10 @@ export interface CollateralPortfolioEntry {
   nextMonitoringDate: string | null;
   owner: string | null;
   account9131: string | number | null;
+  // Поля для отчета 0409310
+  pledgeContractId?: string; // Идентификационный код договора залога
+  loanContractId?: string; // Идентификационный код договора о предоставлении ссуды
+  actualCloseDate?: string; // Дата фактического закрытия договора залога
+  key?: string; // Для таблиц Ant Design
 }
 
