@@ -20,7 +20,12 @@ import {
   Statistic,
   Row,
   Col,
+  Divider,
 } from 'antd';
+
+const { TextArea } = Input;
+const { RangePicker } = DatePicker;
+
 import {
   PlusOutlined,
   EditOutlined,
@@ -35,9 +40,6 @@ import employeeService from '@/services/EmployeeService';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import InspectionCardModal from '@/components/InspectionCardModal/InspectionCardModal';
 import dayjs from 'dayjs';
-
-const { TextArea } = Input;
-const { RangePicker } = DatePicker;
 
 const INSPECTION_TYPES: { value: InspectionType; label: string }[] = [
   { value: 'primary', label: 'Первичный осмотр' },
@@ -137,6 +139,12 @@ const InspectionsPage: React.FC = () => {
     form.setFieldsValue({
       ...inspection,
       inspectionDate: inspection.inspectionDate ? dayjs(inspection.inspectionDate) : undefined,
+      inspectionMethod: inspection.inspectionMethod || 'Визуальный осмотр',
+      propertyPresence: inspection.propertyPresence || 'Наличие имущества подтверждается',
+      propertyCondition: inspection.propertyCondition || 'Имущество в сохранности, перепланировок/переоборудований не выявлено, эксплуатируется по назначению',
+      storageConditions: inspection.storageConditions || 'Условия хранения/эксплуатации частично соблюдаются (уточнения в Приложении 1)',
+      conclusions: inspection.conclusions || undefined,
+      proposals: inspection.proposals || '-',
     });
     setModalVisible(true);
   };
@@ -174,10 +182,17 @@ const InspectionsPage: React.FC = () => {
         collateralName: values.collateralName || '',
         address: values.address || undefined,
         condition: values.condition as ConditionRating,
-        photos: [],
-        defects: [],
-        recommendations: [],
-        history: [{
+        // Поля акта проверки
+        inspectionMethod: values.inspectionMethod || 'Визуальный осмотр',
+        propertyPresence: values.propertyPresence || 'Наличие имущества подтверждается',
+        propertyCondition: values.propertyCondition || 'Имущество в сохранности, перепланировок/переоборудований не выявлено, эксплуатируется по назначению',
+        storageConditions: values.storageConditions || 'Условия хранения/эксплуатации частично соблюдаются (уточнения в Приложении 1)',
+        conclusions: values.conclusions || undefined,
+        proposals: values.proposals || '-',
+        photos: editingInspection?.photos || [],
+        defects: editingInspection?.defects || [],
+        recommendations: editingInspection?.recommendations || [],
+        history: editingInspection?.history || [{
           id: `hist-${Date.now()}`,
           date: now,
           action: 'created',
@@ -186,7 +201,7 @@ const InspectionsPage: React.FC = () => {
           comment: 'Осмотр создан',
           status: values.status as InspectionStatus || 'scheduled',
         }],
-        createdByUser: currentUser,
+        createdByUser: editingInspection?.createdByUser || currentUser,
       };
 
       if (editingInspection) {
@@ -467,7 +482,13 @@ const InspectionsPage: React.FC = () => {
             label="Тип осмотра"
             rules={[{ required: true, message: 'Выберите тип осмотра' }]}
           >
-            <Select placeholder="Выберите тип осмотра">
+            <Select 
+              placeholder="Выберите тип осмотра"
+              onChange={(value) => {
+                const typeLabel = INSPECTION_TYPES.find(t => t.value === value)?.label || '';
+                form.setFieldsValue({ inspectionTypeLabel: typeLabel });
+              }}
+            >
               {INSPECTION_TYPES.map((t) => (
                 <Select.Option key={t.value} value={t.value}>
                   {t.label}
@@ -490,11 +511,43 @@ const InspectionsPage: React.FC = () => {
               onChange={(value) => {
                 const card = collateralCards.find(c => c.id === value);
                 if (card) {
+                  // Получаем данные о залогодателе и заемщике
+                  const pledgor = card.partners?.find(p => p.role === 'pledgor');
+                  const borrower = card.partners?.find(p => p.role === 'owner');
+                  
+                  const pledgorName = pledgor
+                    ? pledgor.type === 'legal'
+                      ? pledgor.organizationName || ''
+                      : `${pledgor.lastName || ''} ${pledgor.firstName || ''} ${pledgor.middleName || ''}`.trim()
+                    : '';
+                  
+                  const borrowerName = borrower
+                    ? borrower.type === 'legal'
+                      ? borrower.organizationName || ''
+                      : `${borrower.lastName || ''} ${borrower.firstName || ''} ${borrower.middleName || ''}`.trim()
+                    : '';
+
+                  // Получаем данные о договорах
+                  const pledgeContractNumber = card.pledgeContractId || card.characteristics?.pledgeContractNumber || '';
+                  const pledgeContractDate = card.characteristics?.pledgeContractDate 
+                    ? dayjs(card.characteristics.pledgeContractDate).format('DD.MM.YYYY')
+                    : '';
+                  const loanContractNumber = card.loanContractId || card.characteristics?.loanContractNumber || '';
+                  const loanContractDate = card.characteristics?.loanContractDate
+                    ? dayjs(card.characteristics.loanContractDate).format('DD.MM.YYYY')
+                    : '';
+
                   form.setFieldsValue({
                     collateralName: card.name,
                     address: card.address ? 
                       `${card.address.city || ''} ${card.address.street || ''} ${card.address.house || ''}`.trim() :
                       undefined,
+                    pledgorName,
+                    borrowerName,
+                    pledgeContractNumber,
+                    pledgeContractDate,
+                    loanContractNumber,
+                    loanContractDate,
                   });
                 }
               }}
@@ -646,6 +699,177 @@ const InspectionsPage: React.FC = () => {
                 </Select.Option>
               ))}
             </Select>
+          </Form.Item>
+
+          <Divider orientation="left">Данные акта проверки наличия и состояния залога</Divider>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="pledgorName"
+                label="Наименование Залогодателя"
+              >
+                <Input 
+                  placeholder="Автоматически из карточки залога" 
+                  disabled
+                  style={{ backgroundColor: '#f5f5f5' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="borrowerName"
+                label="Наименование Заемщика"
+              >
+                <Input 
+                  placeholder="Автоматически из карточки залога" 
+                  disabled
+                  style={{ backgroundColor: '#f5f5f5' }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="pledgeContractNumber"
+                label="Номер договора залога"
+              >
+                <Input 
+                  placeholder="Автоматически из карточки залога" 
+                  disabled
+                  style={{ backgroundColor: '#f5f5f5' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="pledgeContractDate"
+                label="Дата договора залога"
+              >
+                <Input 
+                  placeholder="Автоматически из карточки залога" 
+                  disabled
+                  style={{ backgroundColor: '#f5f5f5' }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="loanContractNumber"
+                label="Номер кредитного договора"
+              >
+                <Input 
+                  placeholder="Автоматически из карточки залога" 
+                  disabled
+                  style={{ backgroundColor: '#f5f5f5' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="loanContractDate"
+                label="Дата кредитного договора"
+              >
+                <Input 
+                  placeholder="Автоматически из карточки залога" 
+                  disabled
+                  style={{ backgroundColor: '#f5f5f5' }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="inspectionMethod"
+                label="Способ проверки"
+                initialValue="Визуальный осмотр"
+                rules={[{ required: true, message: 'Укажите способ проверки' }]}
+              >
+                <Select placeholder="Выберите способ проверки">
+                  <Select.Option value="Визуальный осмотр">Визуальный осмотр</Select.Option>
+                  <Select.Option value="Инструментальный осмотр">Инструментальный осмотр</Select.Option>
+                  <Select.Option value="Экспертиза">Экспертиза</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="inspectionTypeLabel"
+                label="Тип осмотра"
+              >
+                <Input 
+                  placeholder="Автоматически из типа осмотра" 
+                  disabled
+                  style={{ backgroundColor: '#f5f5f5' }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            name="propertyPresence"
+            label="Наличие заложенного имущества"
+            initialValue="Наличие имущества подтверждается"
+            rules={[{ required: true, message: 'Укажите наличие имущества' }]}
+          >
+            <Select placeholder="Выберите вариант">
+              <Select.Option value="Наличие имущества подтверждается">Наличие имущества подтверждается</Select.Option>
+              <Select.Option value="Наличие имущества не подтверждается">Наличие имущества не подтверждается</Select.Option>
+              <Select.Option value="Имущество частично отсутствует">Имущество частично отсутствует</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="propertyCondition"
+            label="Состояние заложенного имущества"
+            initialValue="Имущество в сохранности, перепланировок/переоборудований не выявлено, эксплуатируется по назначению"
+            rules={[{ required: true, message: 'Опишите состояние имущества' }]}
+          >
+            <TextArea 
+              rows={3} 
+              placeholder="Имущество в сохранности, перепланировок/переоборудований не выявлено, эксплуатируется по назначению" 
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="storageConditions"
+            label="Соответствие условий хранения/эксплуатации заложенного имущества"
+            initialValue="Условия хранения/эксплуатации частично соблюдаются (уточнения в Приложении 1)"
+            rules={[{ required: true, message: 'Опишите условия хранения/эксплуатации' }]}
+          >
+            <TextArea 
+              rows={3} 
+              placeholder="Условия хранения/эксплуатации частично соблюдаются (уточнения в Приложении 1)" 
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="conclusions"
+            label="Выводы"
+            rules={[{ required: true, message: 'Укажите выводы' }]}
+          >
+            <TextArea 
+              rows={3} 
+              placeholder="Имущество соответствует требованиям для принятия в залог" 
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="proposals"
+            label="Предложения"
+            initialValue="-"
+          >
+            <TextArea 
+              rows={2} 
+              placeholder="Предложения по улучшению состояния имущества или условий его хранения" 
+            />
           </Form.Item>
 
           <Form.Item name="notes" label="Примечания">

@@ -38,36 +38,41 @@ export const generateInspectionPDF = (
   const loanContractNumber = collateralCard?.loanContractId || collateralCard?.characteristics?.loanContractNumber || '';
   const loanContractDate = collateralCard?.characteristics?.loanContractDate || '';
 
-  // Определяем способ проверки и тип осмотра
-  const inspectionMethod = 'Визуальный осмотр';
+  // Используем поля из формы акта, если они есть
+  const inspectionMethod = inspection.inspectionMethod || 'Визуальный осмотр';
   const inspectionTypeLabel = inspection.inspectionType === 'primary' ? 'Первичный осмотр'
     : inspection.inspectionType === 'periodic' ? 'Периодический осмотр'
     : inspection.inspectionType === 'monitoring' ? 'Мониторинг'
     : inspection.inspectionType === 'unscheduled' ? 'Внеплановый осмотр'
     : 'Выборочный осмотр';
 
-  // Определяем состояние имущества
-  const conditionText = inspection.condition === 'excellent' ? 'Имущество в отличном состоянии'
-    : inspection.condition === 'good' ? 'Имущество в хорошем состоянии'
-    : inspection.condition === 'satisfactory' ? 'Имущество в удовлетворительном состоянии'
-    : inspection.condition === 'poor' ? 'Имущество в плохом состоянии'
-    : 'Имущество в критическом состоянии';
+  // Используем поля из формы акта
+  const presenceText = inspection.propertyPresence || 
+    (inspection.condition !== 'critical' 
+      ? 'Наличие имущества подтверждается'
+      : 'Наличие имущества не подтверждается');
 
-  const presenceText = inspection.condition !== 'critical' 
-    ? 'Наличие имущества подтверждается'
-    : 'Наличие имущества не подтверждается';
+  const conditionText = inspection.propertyCondition || 
+    (inspection.condition === 'excellent' ? 'Имущество в отличном состоянии'
+      : inspection.condition === 'good' ? 'Имущество в хорошем состоянии'
+      : inspection.condition === 'satisfactory' ? 'Имущество в удовлетворительном состоянии'
+      : inspection.condition === 'poor' ? 'Имущество в плохом состоянии'
+      : 'Имущество в критическом состоянии');
 
-  const storageConditionsText = inspection.overallCondition || 
+  const storageConditionsText = inspection.storageConditions || 
+    inspection.overallCondition || 
     'Условия хранения/эксплуатации частично соблюдаются (уточнения в Приложении 1)';
 
-  const conclusionsText = inspection.notes || 
+  const conclusionsText = inspection.conclusions || 
+    inspection.notes || 
     (inspection.condition === 'critical' 
       ? 'Предлагаемое в залог имущество не возможно рассмотреть в качестве обеспечения'
       : 'Имущество соответствует требованиям для принятия в залог');
 
-  const proposalsText = inspection.recommendations && inspection.recommendations.length > 0
-    ? inspection.recommendations.map(r => r.description).join('; ')
-    : '-';
+  const proposalsText = inspection.proposals || 
+    (inspection.recommendations && inspection.recommendations.length > 0
+      ? inspection.recommendations.map(r => r.description).join('; ')
+      : '-');
 
   const html = `
     <!DOCTYPE html>

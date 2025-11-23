@@ -125,6 +125,14 @@ export interface Inspection {
   temperature?: number; // Температура
   visibility?: 'excellent' | 'good' | 'poor'; // Видимость
   
+  // Поля акта проверки наличия и состояния залога
+  inspectionMethod?: string; // Способ проверки (например, "Визуальный осмотр")
+  propertyPresence?: string; // Наличие заложенного имущества
+  propertyCondition?: string; // Состояние заложенного имущества
+  storageConditions?: string; // Соответствие условий хранения/эксплуатации
+  conclusions?: string; // Выводы
+  proposals?: string; // Предложения
+  
   // Технические характеристики (для недвижимости)
   area?: number; // Площадь
   rooms?: number; // Количество комнат
