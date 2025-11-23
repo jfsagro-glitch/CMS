@@ -33,7 +33,9 @@ import {
   ClockCircleOutlined,
 } from '@ant-design/icons';
 import type { Inspection, InspectionHistoryItem } from '@/types/inspection';
+import type { ExtendedCollateralCard } from '@/types';
 import inspectionService from '@/services/InspectionService';
+import { extendedStorageService } from '@/services/ExtendedStorageService';
 import { generateInspectionPDF } from '@/utils/pdfGenerator';
 import dayjs from 'dayjs';
 import './InspectionCardModal.css';
@@ -57,6 +59,7 @@ const InspectionCardModal: React.FC<InspectionCardModalProps> = ({
   onRequestRevision,
 }) => {
   const [inspection, setInspection] = useState<Inspection | null>(null);
+  const [collateralCard, setCollateralCard] = useState<ExtendedCollateralCard | null>(null);
   const [loading, setLoading] = useState(false);
   const [revisionComment, setRevisionComment] = useState('');
 
@@ -78,6 +81,16 @@ const InspectionCardModal: React.FC<InspectionCardModalProps> = ({
       setInspection(data || null);
       if (!data) {
         message.warning('Осмотр не найден');
+      } else if (data.collateralCardId) {
+        // Загружаем карточку залога для генерации акта
+        try {
+          const card = await extendedStorageService.getExtendedCardById(data.collateralCardId);
+          if (card) {
+            setCollateralCard(card);
+          }
+        } catch (error) {
+          console.error('Failed to load collateral card:', error);
+        }
       }
     } catch (error) {
       console.error('Ошибка загрузки осмотра:', error);
@@ -114,7 +127,7 @@ const InspectionCardModal: React.FC<InspectionCardModalProps> = ({
 
   const handleGeneratePDF = () => {
     if (inspection) {
-      generateInspectionPDF(inspection);
+      generateInspectionPDF(inspection, collateralCard || undefined);
     } else {
       message.error('Осмотр не загружен');
     }

@@ -150,7 +150,9 @@ const EmployeesPage: React.FC = () => {
       birthDate: employee.birthDate ? dayjs(employee.birthDate) : undefined,
       hireDate: employee.hireDate ? dayjs(employee.hireDate) : undefined,
       status: employee.status || 'working',
-      photo: employee.photo ? [{ uid: '-1', name: 'photo.png', status: 'done', url: employee.photo }] : [],
+      photo: employee.photo
+        ? [{ uid: '-1', name: 'photo.png', status: 'done', url: employee.photo }]
+        : [],
     });
     setModalVisible(true);
   };
@@ -251,12 +253,7 @@ const EmployeesPage: React.FC = () => {
       fixed: 'left',
       render: (_, record) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '13px' }}>
-          <Avatar
-            src={record.photo}
-            icon={<UserOutlined />}
-            size={40}
-            style={{ flexShrink: 0 }}
-          />
+          <Avatar src={record.photo} icon={<UserOutlined />} size={40} style={{ flexShrink: 0 }} />
           <div>
             <div>
               {record.lastName} {record.firstName} {record.middleName || ''}
@@ -419,18 +416,25 @@ const EmployeesPage: React.FC = () => {
                 Оценка: <strong>{employees.filter(e => e.canAppraise).length}</strong>
               </span>
             </Space>
-            <Space size={8} split={<span style={{ color: '#d9d9d9' }}>|</span>} style={{ marginTop: 4 }}>
+            <Space
+              size={8}
+              split={<span style={{ color: '#d9d9d9' }}>|</span>}
+              style={{ marginTop: 4 }}
+            >
               <span style={{ fontSize: '12px', color: '#52c41a' }}>
-                На работе: <strong>{employees.filter(e => e.status === 'working' || !e.status).length}</strong>
+                На работе:{' '}
+                <strong>{employees.filter(e => e.status === 'working' || !e.status).length}</strong>
               </span>
               <span style={{ fontSize: '12px', color: '#fa8c16' }}>
-                Больничный: <strong>{employees.filter(e => e.status === 'sick_leave').length}</strong>
+                Больничный:{' '}
+                <strong>{employees.filter(e => e.status === 'sick_leave').length}</strong>
               </span>
               <span style={{ fontSize: '12px', color: '#1890ff' }}>
                 Отпуск: <strong>{employees.filter(e => e.status === 'vacation').length}</strong>
               </span>
               <span style={{ fontSize: '12px', color: '#722ed1' }}>
-                Командировка: <strong>{employees.filter(e => e.status === 'business_trip').length}</strong>
+                Командировка:{' '}
+                <strong>{employees.filter(e => e.status === 'business_trip').length}</strong>
               </span>
             </Space>
           </div>

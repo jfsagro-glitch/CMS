@@ -3,21 +3,78 @@
  */
 
 import type { Inspection } from '@/types/inspection';
+import type { ExtendedCollateralCard } from '@/types';
 import dayjs from 'dayjs';
 
-export const generateInspectionPDF = (inspection: Inspection): void => {
+export const generateInspectionPDF = (
+  inspection: Inspection,
+  collateralCard?: ExtendedCollateralCard
+): void => {
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
     alert('Не удалось открыть окно для печати. Разрешите всплывающие окна.');
     return;
   }
 
+  // Получаем данные о залогодателе и заемщике
+  const pledgor = collateralCard?.partners?.find(p => p.role === 'pledgor');
+  const borrower = collateralCard?.partners?.find(p => p.role === 'owner');
+  
+  const pledgorName = pledgor
+    ? pledgor.type === 'legal'
+      ? pledgor.organizationName || ''
+      : `${pledgor.lastName || ''} ${pledgor.firstName || ''} ${pledgor.middleName || ''}`.trim()
+    : '';
+  
+  const borrowerName = borrower
+    ? borrower.type === 'legal'
+      ? borrower.organizationName || ''
+      : `${borrower.lastName || ''} ${borrower.firstName || ''} ${borrower.middleName || ''}`.trim()
+    : '';
+
+  // Получаем данные о договорах из карточки
+  const pledgeContractNumber = collateralCard?.pledgeContractId || collateralCard?.characteristics?.pledgeContractNumber || '';
+  const pledgeContractDate = collateralCard?.characteristics?.pledgeContractDate || '';
+  const loanContractNumber = collateralCard?.loanContractId || collateralCard?.characteristics?.loanContractNumber || '';
+  const loanContractDate = collateralCard?.characteristics?.loanContractDate || '';
+
+  // Определяем способ проверки и тип осмотра
+  const inspectionMethod = 'Визуальный осмотр';
+  const inspectionTypeLabel = inspection.inspectionType === 'primary' ? 'Первичный осмотр'
+    : inspection.inspectionType === 'periodic' ? 'Периодический осмотр'
+    : inspection.inspectionType === 'monitoring' ? 'Мониторинг'
+    : inspection.inspectionType === 'unscheduled' ? 'Внеплановый осмотр'
+    : 'Выборочный осмотр';
+
+  // Определяем состояние имущества
+  const conditionText = inspection.condition === 'excellent' ? 'Имущество в отличном состоянии'
+    : inspection.condition === 'good' ? 'Имущество в хорошем состоянии'
+    : inspection.condition === 'satisfactory' ? 'Имущество в удовлетворительном состоянии'
+    : inspection.condition === 'poor' ? 'Имущество в плохом состоянии'
+    : 'Имущество в критическом состоянии';
+
+  const presenceText = inspection.condition !== 'critical' 
+    ? 'Наличие имущества подтверждается'
+    : 'Наличие имущества не подтверждается';
+
+  const storageConditionsText = inspection.overallCondition || 
+    'Условия хранения/эксплуатации частично соблюдаются (уточнения в Приложении 1)';
+
+  const conclusionsText = inspection.notes || 
+    (inspection.condition === 'critical' 
+      ? 'Предлагаемое в залог имущество не возможно рассмотреть в качестве обеспечения'
+      : 'Имущество соответствует требованиям для принятия в залог');
+
+  const proposalsText = inspection.recommendations && inspection.recommendations.length > 0
+    ? inspection.recommendations.map(r => r.description).join('; ')
+    : '-';
+
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>Акт осмотра ${inspection.id}</title>
+      <title>Акт проверки наличия и состояния залога ${inspection.id}</title>
       <style>
         @media print {
           @page {
@@ -28,7 +85,7 @@ export const generateInspectionPDF = (inspection: Inspection): void => {
         body {
           font-family: 'Times New Roman', serif;
           font-size: 12pt;
-          line-height: 1.5;
+          line-height: 1.6;
           margin: 0;
           padding: 20px;
         }
@@ -36,10 +93,16 @@ export const generateInspectionPDF = (inspection: Inspection): void => {
           text-align: center;
           margin-bottom: 30px;
         }
-        .header h1 {
-          font-size: 16pt;
-          font-weight: bold;
+        .header .number {
+          text-align: right;
           margin-bottom: 10px;
+          font-size: 12pt;
+        }
+        .header h1 {
+          font-size: 14pt;
+          font-weight: bold;
+          margin-bottom: 5px;
+          text-transform: uppercase;
         }
         .header .subtitle {
           font-size: 12pt;
@@ -48,12 +111,32 @@ export const generateInspectionPDF = (inspection: Inspection): void => {
         .section {
           margin-bottom: 20px;
         }
-        .section-title {
-          font-size: 14pt;
+        .section-row {
+          margin-bottom: 15px;
+          display: flex;
+          align-items: flex-start;
+        }
+        .section-label {
           font-weight: bold;
-          margin-bottom: 10px;
-          border-bottom: 1px solid #000;
-          padding-bottom: 5px;
+          min-width: 300px;
+          margin-right: 10px;
+        }
+        .section-value {
+          flex: 1;
+        }
+        .contract-info {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          margin: 15px 0;
+        }
+        .contract-block {
+          border: 1px solid #000;
+          padding: 10px;
+        }
+        .contract-block .label {
+          font-weight: bold;
+          margin-bottom: 5px;
         }
         .info-table {
           width: 100%;
@@ -61,8 +144,9 @@ export const generateInspectionPDF = (inspection: Inspection): void => {
           margin-bottom: 15px;
         }
         .info-table td {
-          padding: 5px 10px;
+          padding: 8px 10px;
           border: 1px solid #000;
+          vertical-align: top;
         }
         .info-table td:first-child {
           font-weight: bold;
@@ -91,120 +175,115 @@ export const generateInspectionPDF = (inspection: Inspection): void => {
         }
         .signatures {
           margin-top: 40px;
-          display: flex;
-          justify-content: space-between;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 40px;
         }
         .signature-block {
-          width: 45%;
-          text-align: center;
+          text-align: left;
         }
         .signature-line {
           border-top: 1px solid #000;
           margin-top: 50px;
           padding-top: 5px;
+          min-height: 60px;
         }
         .footer {
           margin-top: 30px;
-          font-size: 10pt;
-          text-align: center;
+          font-size: 9pt;
+          text-align: left;
           color: #666;
+          line-height: 1.4;
+        }
+        .underline {
+          border-bottom: 1px solid #000;
+          display: inline-block;
+          min-width: 200px;
+          margin: 0 5px;
         }
       </style>
     </head>
     <body>
       <div class="header">
-        <h1>АКТ ОСМОТРА ОБЕСПЕЧЕНИЯ</h1>
-        <div class="subtitle">№ ${inspection.id}</div>
-        <div class="subtitle">от ${dayjs(inspection.inspectionDate).format('DD.MM.YYYY')}</div>
+        <div class="number">№ <span class="underline">${inspection.id}</span></div>
+        <h1>Акт*</h1>
+        <div class="subtitle">проверки наличия и состояния залога</div>
       </div>
 
       <div class="section">
-        <div class="section-title">1. Общая информация</div>
-        <table class="info-table">
-          <tr>
-            <td>Тип осмотра</td>
-            <td>${inspection.inspectionType}</td>
-          </tr>
-          <tr>
-            <td>Дата осмотра</td>
-            <td>${dayjs(inspection.inspectionDate).format('DD.MM.YYYY HH:mm')}</td>
-          </tr>
-          <tr>
-            <td>Объект осмотра</td>
-            <td>${inspection.collateralName}</td>
-          </tr>
-          ${inspection.address ? `
-          <tr>
-            <td>Адрес</td>
-            <td>${inspection.address}</td>
-          </tr>
-          ` : ''}
-          ${inspection.collateralNumber ? `
-          <tr>
-            <td>Номер объекта</td>
-            <td>${inspection.collateralNumber}</td>
-          </tr>
-          ` : ''}
-        </table>
+        <div class="section-row">
+          <div class="section-label">Наименование Залогодателя</div>
+          <div class="section-value">${pledgorName || '________________'}</div>
+        </div>
+        <div class="section-row">
+          <div class="section-label">Наименование Заемщика</div>
+          <div class="section-value">${borrowerName || '________________'}</div>
+        </div>
       </div>
 
       <div class="section">
-        <div class="section-title">2. Исполнитель</div>
-        <table class="info-table">
-          <tr>
-            <td>ФИО</td>
-            <td>${inspection.inspectorName}</td>
-          </tr>
-          <tr>
-            <td>Тип исполнителя</td>
-            <td>${inspection.inspectorType === 'employee' ? 'Сотрудник банка' : 'Клиент'}</td>
-          </tr>
-          ${inspection.inspectorPosition ? `
-          <tr>
-            <td>Должность</td>
-            <td>${inspection.inspectorPosition}</td>
-          </tr>
-          ` : ''}
-          ${inspection.inspectorPhone ? `
-          <tr>
-            <td>Телефон</td>
-            <td>${inspection.inspectorPhone}</td>
-          </tr>
-          ` : ''}
-          ${inspection.inspectorEmail ? `
-          <tr>
-            <td>Email</td>
-            <td>${inspection.inspectorEmail}</td>
-          </tr>
-          ` : ''}
-        </table>
+        <p>Проведена проверка состояния принятого обеспечения по договору залога: 
+        <span class="underline">${pledgeContractNumber || ''}</span> 
+        оформленного в обеспечение кредитного договора: 
+        <span class="underline">${loanContractNumber || ''}</span></p>
+        
+        <div class="contract-info">
+          <div class="contract-block">
+            <div class="label">Договор залога</div>
+            <div>Номер: ${pledgeContractNumber || '________________'}</div>
+            <div>Дата: ${pledgeContractDate ? dayjs(pledgeContractDate).format('DD.MM.YYYY') : '________________'}</div>
+          </div>
+          <div class="contract-block">
+            <div class="label">Кредитный договор</div>
+            <div>Номер: ${loanContractNumber || '________________'}</div>
+            <div>Дата: ${loanContractDate ? dayjs(loanContractDate).format('DD.MM.YYYY') : '________________'}</div>
+          </div>
+        </div>
       </div>
 
       <div class="section">
-        <div class="section-title">3. Результаты осмотра</div>
+        <div class="section-row">
+          <div class="section-label">Способ проверки:</div>
+          <div class="section-value">${inspectionMethod}</div>
+        </div>
+        <div class="section-row">
+          <div class="section-label">Тип осмотра:</div>
+          <div class="section-value">${inspectionTypeLabel}</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <p><em>К Акту Проверки прикладывается Приложение 1 с описанием осматриваемого имущества</em></p>
+      </div>
+
+      <div class="section">
         <table class="info-table">
           <tr>
-            <td>Состояние объекта</td>
-            <td>${inspection.condition}</td>
+            <td>Наличие заложенного имущества</td>
+            <td>${presenceText}</td>
           </tr>
-          ${inspection.overallCondition ? `
           <tr>
-            <td>Описание состояния</td>
-            <td>${inspection.overallCondition}</td>
+            <td>Состояние заложенного имущества</td>
+            <td>${conditionText}. ${inspection.overallCondition || 'Имущество в сохранности, перепланировок/переоборудований не выявлено, эксплуатируется по назначению'}</td>
           </tr>
-          ` : ''}
-          ${inspection.latitude && inspection.longitude ? `
           <tr>
-            <td>Геолокация</td>
-            <td>${inspection.latitude.toFixed(6)}, ${inspection.longitude.toFixed(6)}</td>
+            <td>Соответствие условий хранения/эксплуатации заложенного имущества</td>
+            <td>${storageConditionsText}</td>
           </tr>
-          ` : ''}
+          <tr>
+            <td>Выводы</td>
+            <td>${conclusionsText}</td>
+          </tr>
+          <tr>
+            <td>Предложения</td>
+            <td>${proposalsText}</td>
+          </tr>
         </table>
       </div>
 
       ${inspection.photos && inspection.photos.length > 0 ? `
       <div class="section">
-        <div class="section-title">4. Фотографии (${inspection.photos.length})</div>
+        <div style="font-weight: bold; margin-bottom: 10px;">Приложение 1. Фотографии осматриваемого имущества (${inspection.photos.length})</div>
         <div class="photos-grid">
           ${inspection.photos.map((photo, index) => `
             <div class="photo-item">
@@ -222,70 +301,45 @@ export const generateInspectionPDF = (inspection: Inspection): void => {
 
       ${inspection.defects && inspection.defects.length > 0 ? `
       <div class="section">
-        <div class="section-title">5. Выявленные дефекты</div>
+        <div style="font-weight: bold; margin-bottom: 10px;">Приложение 2. Выявленные дефекты</div>
         <table class="info-table">
           ${inspection.defects.map((defect, index) => `
             <tr>
               <td>Дефект ${index + 1}</td>
-              <td>${defect.description} (${defect.severity})</td>
+              <td>${defect.description} (${defect.severity})${defect.location ? `, Местоположение: ${defect.location}` : ''}</td>
             </tr>
           `).join('')}
         </table>
       </div>
       ` : ''}
 
-      ${inspection.recommendations && inspection.recommendations.length > 0 ? `
       <div class="section">
-        <div class="section-title">6. Рекомендации</div>
-        <table class="info-table">
-          ${inspection.recommendations.map((rec, index) => `
-            <tr>
-              <td>Рекомендация ${index + 1}</td>
-              <td>${rec.description} (${rec.priority})</td>
-            </tr>
-          `).join('')}
-        </table>
-      </div>
-      ` : ''}
-
-      ${inspection.notes ? `
-      <div class="section">
-        <div class="section-title">7. Примечания</div>
-        <p>${inspection.notes}</p>
-      </div>
-      ` : ''}
-
-      <div class="section">
-        <div class="section-title">8. Хронология</div>
-        <table class="info-table">
-          ${inspection.history && inspection.history.length > 0 ? inspection.history.map((item) => `
-            <tr>
-              <td>${dayjs(item.date).format('DD.MM.YYYY HH:mm')}</td>
-              <td>${item.user}: ${item.action}${item.comment ? ` - ${item.comment}` : ''}</td>
-            </tr>
-          `).join('') : '<tr><td colspan="2">Нет данных</td></tr>'}
-        </table>
+        <div class="section-row">
+          <div class="section-label">Дата проведения проверки</div>
+          <div class="section-value">${dayjs(inspection.inspectionDate).format('DD.MM.YYYY')}</div>
+        </div>
       </div>
 
       <div class="signatures">
         <div class="signature-block">
           <div class="signature-line">
-            Исполнитель: ${inspection.inspectorName}
+            Сотрудник проводивший осмотр<br>
+            ${inspection.inspectorName || '________________'}<br>
+            ${inspection.inspectorPosition ? `${inspection.inspectorPosition}` : ''}
           </div>
         </div>
-        ${inspection.approvedBy ? `
         <div class="signature-block">
           <div class="signature-line">
-            Согласовал: ${inspection.approvedBy}
-            ${inspection.approvedAt ? `<br>${dayjs(inspection.approvedAt).format('DD.MM.YYYY')}` : ''}
+            Руководитель/заместитель руководителя<br>
+            ${inspection.approvedBy || '________________'}<br>
+            ${inspection.approvedAt ? dayjs(inspection.approvedAt).format('DD.MM.YYYY') : ''}
           </div>
         </div>
-        ` : ''}
       </div>
 
       <div class="footer">
-        <p>Документ сгенерирован автоматически ${dayjs().format('DD.MM.YYYY HH:mm')}</p>
-        <p>Статус: ${inspection.status}</p>
+        <p>*Акт осмотра составляется в электронном виде, подписывается ЭЦП работника, осуществившим осмотр и его руководителем подразделения. Актуализация данной формы и приложений к ней может проводиться без внесения изменений в настоящее Положение по согласованию с Директором/заместителем директора департамента управления рисками.</p>
+        <p style="margin-top: 10px;">Документ сгенерирован автоматически ${dayjs().format('DD.MM.YYYY HH:mm')}</p>
       </div>
 
       <script>
