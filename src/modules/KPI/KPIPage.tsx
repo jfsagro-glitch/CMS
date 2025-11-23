@@ -97,18 +97,27 @@ const KPIPage: React.FC = () => {
             task.assignee === `${emp.lastName} ${emp.firstName} ${emp.middleName || ''}`.trim()
           );
 
+          // Выполнено задач
           const completed = employeeTasks.filter((t: any) => 
             t.status === 'completed' || t.status === 'Выполнено'
           ).length;
           
-          // В работе - задачи со статусом pending, у которых срок еще не наступил
+          // Задач в работе - задачи со статусом pending, in_progress или В работе, у которых срок еще не наступил
           const inProgress = employeeTasks.filter((t: any) => {
-            if (t.status !== 'pending' && t.status !== 'В работе') return false;
+            const isInProgress = t.status === 'pending' || 
+                                t.status === 'in_progress' || 
+                                t.status === 'В работе' ||
+                                t.status === 'created';
+            
+            if (!isInProgress) return false;
+            
             if (!t.dueDate) return true;
-            return dayjs(t.dueDate).isAfter(dayjs()) || dayjs(t.dueDate).isSame(dayjs(), 'day');
+            
+            const dueDate = dayjs(t.dueDate);
+            return dueDate.isAfter(dayjs(), 'day') || dueDate.isSame(dayjs(), 'day');
           }).length;
           
-          // Просрочено - задачи со статусом pending, у которых срок прошел
+          // Просрочено - задачи не completed, у которых срок прошел
           const overdue = employeeTasks.filter((t: any) => {
             if (t.status === 'completed' || t.status === 'Выполнено') return false;
             if (!t.dueDate) return false;
@@ -178,19 +187,38 @@ const KPIPage: React.FC = () => {
         (deal: any) => deal.status === 'active' || deal.status === 'Активный'
       ).length;
 
-      const completedTasks = tasksData.filter((task: any) => task.status === 'completed' || task.status === 'Выполнено').length;
+      // Выполнено задач - задачи со статусом completed или Выполнено
+      const completedTasks = tasksData.filter((task: any) => 
+        task.status === 'completed' || task.status === 'Выполнено'
+      ).length;
       
-      // В работе - задачи со статусом pending, у которых срок еще не наступил
+      // Задач в работе - задачи со статусом pending, in_progress или В работе, у которых срок еще не наступил
       const pendingTasks = tasksData.filter((task: any) => {
-        if (task.status !== 'pending' && task.status !== 'В работе') return false;
+        // Проверяем статус
+        const isInProgress = task.status === 'pending' || 
+                            task.status === 'in_progress' || 
+                            task.status === 'В работе' ||
+                            task.status === 'created';
+        
+        if (!isInProgress) return false;
+        
+        // Если нет срока, считаем задачей в работе
         if (!task.dueDate) return true;
-        return dayjs(task.dueDate).isAfter(dayjs()) || dayjs(task.dueDate).isSame(dayjs(), 'day');
+        
+        // Если срок еще не наступил или сегодня - задача в работе
+        const dueDate = dayjs(task.dueDate);
+        return dueDate.isAfter(dayjs(), 'day') || dueDate.isSame(dayjs(), 'day');
       }).length;
       
-      // Просрочено - задачи со статусом pending, у которых срок прошел
+      // Просрочено - задачи не completed, у которых срок прошел
       const overdueTasks = tasksData.filter((task: any) => {
+        // Исключаем выполненные задачи
         if (task.status === 'completed' || task.status === 'Выполнено') return false;
+        
+        // Если нет срока, не считаем просроченной
         if (!task.dueDate) return false;
+        
+        // Если срок прошел - просрочено
         return dayjs(task.dueDate).isBefore(dayjs(), 'day');
       }).length;
 
@@ -245,16 +273,24 @@ const KPIPage: React.FC = () => {
         const stats = categoryMap.get(category)!;
         stats.total++;
         
+        // Выполнено задач
         if (task.status === 'completed' || task.status === 'Выполнено') {
           stats.completed++;
-        } else if (task.status === 'pending' || task.status === 'В работе') {
-          // В работе - только если срок еще не наступил
+        } 
+        
+        // Задач в работе - задачи со статусом pending, in_progress или В работе, у которых срок еще не наступил
+        const isInProgress = task.status === 'pending' || 
+                            task.status === 'in_progress' || 
+                            task.status === 'В работе' ||
+                            task.status === 'created';
+        
+        if (isInProgress) {
           if (!task.dueDate || dayjs(task.dueDate).isAfter(dayjs()) || dayjs(task.dueDate).isSame(dayjs(), 'day')) {
             stats.pending++;
           }
         }
         
-        // Просрочено - задачи со статусом pending, у которых срок прошел
+        // Просрочено - задачи не completed, у которых срок прошел
         if (task.dueDate && task.status !== 'completed' && task.status !== 'Выполнено') {
           const dueDate = dayjs(task.dueDate);
           if (dueDate.isBefore(dayjs(), 'day')) {

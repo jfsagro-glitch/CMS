@@ -99,8 +99,6 @@ const ReportsPage: React.FC = () => {
         [
           r.reportNumber,
           r.guid,
-          r.creditOrg.name,
-          r.creditOrg.code,
           r.reportDate,
         ]
           .filter(Boolean)
@@ -157,17 +155,6 @@ const ReportsPage: React.FC = () => {
             <CalendarOutlined />
             <span>{date}</span>
           </Space>
-        ),
-      },
-      {
-        title: 'Кредитная организация',
-        key: 'creditOrg',
-        width: 300,
-        render: (_, record: ReportRow) => (
-          <div>
-            <Typography.Text strong>{record.creditOrg.name}</Typography.Text>
-            <div className="reports-muted">Код: {record.creditOrg.code}</div>
-          </div>
         ),
       },
       {
@@ -265,7 +252,7 @@ const ReportsPage: React.FC = () => {
           </Typography.Paragraph>
         </div>
         <Space size="middle" direction="vertical">
-          <Tooltip title="Поиск по номеру, GUID, организации">
+          <Tooltip title="Поиск по номеру, GUID, дате">
             <Input
               allowClear
               size="large"
@@ -411,9 +398,6 @@ const ReportsPage: React.FC = () => {
                 <Tag color={statusColor[selectedReport.status] || 'default'}>
                   {statusLabel[selectedReport.status] || selectedReport.status}
                 </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Кредитная организация" span={2}>
-                {selectedReport.creditOrg.name} (Код: {selectedReport.creditOrg.code})
               </Descriptions.Item>
               <Descriptions.Item label="Создан">{new Date(selectedReport.createdAt).toLocaleString('ru-RU')}</Descriptions.Item>
               <Descriptions.Item label="Обновлен">{new Date(selectedReport.updatedAt).toLocaleString('ru-RU')}</Descriptions.Item>
