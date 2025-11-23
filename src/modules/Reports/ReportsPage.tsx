@@ -18,18 +18,16 @@ import {
   Descriptions,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { FileTextOutlined, SearchOutlined, CalendarOutlined, CheckCircleOutlined, DownloadOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
+import { FileTextOutlined, SearchOutlined, CalendarOutlined, CheckCircleOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { Form310Report } from '@/types/reports';
 import { generateForm310XML, downloadXML } from '@/utils/generateForm310XML';
 import type { CollateralPortfolioEntry } from '@/types/portfolio';
 import { message } from 'antd';
-import { useNavigate } from 'react-router-dom';
 import './ReportsPage.css';
 
 type ReportRow = Form310Report & { key: string };
 
 const ReportsPage: React.FC = () => {
-  const navigate = useNavigate();
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,10 +36,6 @@ const ReportsPage: React.FC = () => {
   const [dateFilter, setDateFilter] = useState<string | null>(null);
   const [selectedReport, setSelectedReport] = useState<ReportRow | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-
-  const handleGoToMonitoring = (tab: 'monitoring' | 'revaluation') => {
-    navigate('/monitoring', { state: { activeTab: tab } });
-  };
 
   useEffect(() => {
     let mounted = true;
@@ -257,7 +251,7 @@ const ReportsPage: React.FC = () => {
             Отчетность по залоговому имуществу в соответствии с формой 310 ЦБ РФ
           </Typography.Paragraph>
         </div>
-        <Space size="middle" direction="vertical" style={{ width: '100%' }}>
+        <Space size="middle" direction="vertical">
           <Tooltip title="Поиск по номеру, GUID, дате">
             <Input
               allowClear
@@ -269,42 +263,14 @@ const ReportsPage: React.FC = () => {
               style={{ width: 360 }}
             />
           </Tooltip>
-          <Space size="middle" wrap>
-            <Button
-              type="primary"
-              icon={<DownloadOutlined />}
-              size="large"
-              onClick={handleGenerateXML}
-            >
-              Сформировать XML отчет (Ф310)
-            </Button>
-            <Button
-              type="default"
-              icon={<EyeOutlined />}
-              size="large"
-              onClick={() => handleGoToMonitoring('monitoring')}
-              style={{ 
-                backgroundColor: '#1890ff',
-                borderColor: '#1890ff',
-                color: '#fff'
-              }}
-            >
-              План мониторинга Обеспечения
-            </Button>
-            <Button
-              type="default"
-              icon={<ReloadOutlined />}
-              size="large"
-              onClick={() => handleGoToMonitoring('revaluation')}
-              style={{ 
-                backgroundColor: '#52c41a',
-                borderColor: '#52c41a',
-                color: '#fff'
-              }}
-            >
-              План переоценки Обеспечения
-            </Button>
-          </Space>
+          <Button
+            type="primary"
+            icon={<DownloadOutlined />}
+            size="large"
+            onClick={handleGenerateXML}
+          >
+            Сформировать XML отчет (Ф310)
+          </Button>
         </Space>
       </div>
 

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   Alert,
   Badge,
+  Button,
   Card,
   Col,
   Empty,
@@ -21,7 +22,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { CalendarOutlined, ClockCircleOutlined, SearchOutlined, EyeOutlined, DollarOutlined, SettingOutlined } from '@ant-design/icons';
+import { CalendarOutlined, ClockCircleOutlined, SearchOutlined, EyeOutlined, DollarOutlined, SettingOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useLocation } from 'react-router-dom';
 import type { MonitoringPlanEntry, MonitoringTimeframe, RevaluationPlanEntry } from '@/types/monitoring';
 import MonitoringCardModal from '@/components/MonitoringCardModal/MonitoringCardModal';
@@ -777,6 +778,34 @@ const MonitoringPage: React.FC = () => {
 
   return (
     <div className="monitoring-page">
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <Button
+          type={activeTab === 'monitoring' ? 'primary' : 'default'}
+          icon={<EyeOutlined />}
+          size="large"
+          onClick={() => setActiveTab('monitoring')}
+          style={activeTab === 'monitoring' ? {} : {
+            backgroundColor: '#1890ff',
+            borderColor: '#1890ff',
+            color: '#fff'
+          }}
+        >
+          План мониторинга Обеспечения
+        </Button>
+        <Button
+          type={activeTab === 'revaluation' ? 'primary' : 'default'}
+          icon={<ReloadOutlined />}
+          size="large"
+          onClick={() => setActiveTab('revaluation')}
+          style={activeTab === 'revaluation' ? {} : {
+            backgroundColor: '#52c41a',
+            borderColor: '#52c41a',
+            color: '#fff'
+          }}
+        >
+          План переоценки Обеспечения
+        </Button>
+      </div>
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
