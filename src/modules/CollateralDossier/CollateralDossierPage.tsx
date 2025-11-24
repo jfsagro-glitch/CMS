@@ -33,7 +33,6 @@ const CollateralDossierPage: React.FC = () => {
   const [loanContractFilter, setLoanContractFilter] = useState<string | null>(null);
   const [pledgerFilter, setPledgerFilter] = useState<string | null>(null);
   const [pledgeContractFilter, setPledgeContractFilter] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -194,29 +193,40 @@ const CollateralDossierPage: React.FC = () => {
     };
   }, [portfolio, documents]);
 
+  // Функция для сокращения названия типа документа
+  const shortenDocType = useCallback((docType: string): string => {
+    // Сокращаем длинные названия
+    if (docType.length > 30) {
+      return docType.substring(0, 27) + '...';
+    }
+    return docType;
+  }, []);
+
   // Мемоизируем компоненты документов для оптимизации рендеринга
   const renderDocumentNode = useCallback((doc: CollateralDocument) => ({
     key: doc.id || `${doc.folderId}-${doc.fileName}`,
     title: (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
-        <FileTextOutlined style={{ color: '#1890ff' }} />
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 500 }}>{doc.docType}</div>
-          <div style={{ fontSize: '12px', color: '#8c8c8c' }}>{doc.fileName}</div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-            <Tag color={doc.statusColor || 'default'} style={{ margin: 0 }}>
-              {doc.status}
-            </Tag>
-            <span style={{ fontSize: '12px', color: '#8c8c8c' }}>
-              {doc.size} • {doc.lastUpdated}
-            </span>
+      <Tooltip title={doc.docType}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+          <FileTextOutlined style={{ color: '#1890ff' }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 500 }}>{shortenDocType(doc.docType)}</div>
+            <div style={{ fontSize: '12px', color: '#8c8c8c' }}>{doc.fileName}</div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <Tag color={doc.statusColor || 'default'} style={{ margin: 0 }}>
+                {doc.status}
+              </Tag>
+              <span style={{ fontSize: '12px', color: '#8c8c8c' }}>
+                {doc.size} • {doc.lastUpdated}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </Tooltip>
     ),
     isLeaf: true,
     icon: <FileTextOutlined />,
-  }), []);
+  }), [shortenDocType]);
 
   // Построение дерева: Клиент -> Кредитный договор -> Залогодатель -> Договор залога -> Документы
   const treeData = useMemo(() => {
@@ -240,12 +250,6 @@ const CollateralDossierPage: React.FC = () => {
       if (loanContractFilter && loanContract !== loanContractFilter) continue;
       if (pledgerFilter && pledger !== pledgerFilter) continue;
       if (pledgeContractFilter && pledgeContract !== pledgeContractFilter) continue;
-      
-      // Фильтрация по статусу документов
-      if (statusFilter) {
-        dealDocs = dealDocs.filter(doc => doc.status === statusFilter);
-        if (dealDocs.length === 0) continue;
-      }
 
       // Фильтрация по поиску (только если есть поисковый запрос)
       if (hasSearch) {
@@ -367,7 +371,7 @@ const CollateralDossierPage: React.FC = () => {
     };
 
         return buildTree();
-  }, [portfolio, documentsByReference, searchValue, clientFilter, loanContractFilter, pledgerFilter, pledgeContractFilter, statusFilter, renderDocumentNode]);
+  }, [portfolio, documentsByReference, searchValue, clientFilter, loanContractFilter, pledgerFilter, pledgeContractFilter, renderDocumentNode, shortenDocType]);
 
   // По умолчанию раскрываем только уровень клиентов
   useEffect(() => {
@@ -450,12 +454,14 @@ const CollateralDossierPage: React.FC = () => {
       title: 'Тип документа',
       dataIndex: 'docType',
       key: 'docType',
-      width: 250,
-      render: (text: string) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <FileTextOutlined style={{ color: '#1890ff' }} />
-          <span>{text}</span>
-        </div>
+      width: 200,
+      render: (text: string, record: CollateralDocument) => (
+        <Tooltip title={record.docType}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FileTextOutlined style={{ color: '#1890ff' }} />
+            <span>{shortenDocType(text)}</span>
+          </div>
+        </Tooltip>
       ),
     },
     {
@@ -630,19 +636,6 @@ const CollateralDossierPage: React.FC = () => {
             loading={loading}
           >
             {pledgeContractOptions}
-          </Select>
-          <Select
-            allowClear
-            placeholder="Статус документа"
-            style={{ minWidth: 180 }}
-            value={statusFilter}
-            onChange={setStatusFilter}
-          >
-            {filterOptions.statuses.map(status => (
-              <Select.Option key={status} value={status}>
-                {status}
-              </Select.Option>
-            ))}
           </Select>
         </Space>
       </Card>
