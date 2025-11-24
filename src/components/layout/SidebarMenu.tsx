@@ -18,6 +18,7 @@ import {
   BankOutlined,
   DollarOutlined,
   DashboardOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
@@ -150,6 +151,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       label: 'Мониторинг',
       icon: <MonitorOutlined />,
       path: '/monitoring',
+    },
+    {
+      key: 'reference',
+      label: 'Справочная с ИИ',
+      icon: <RobotOutlined />,
+      path: '/reference',
+      tooltip: 'Консультации по нормативным документам, оценке и рабочим вопросам',
     },
     {
       key: 'settings',
