@@ -295,25 +295,43 @@ const EGRNPage: React.FC = () => {
       if (serviceType === 'encumbrance_removal') {
         return 'Подписание заявлений';
       }
+      if (serviceType === 'extract') {
+        return 'В обработке';
+      }
       return 'Обрабатывается';
     }
     if (status === 'submitted') {
+      if (serviceType === 'extract') {
+        return 'Запрос отправлен';
+      }
       return 'Отправляем в Росреестр';
     }
     if (status === 'completed') {
+      if (serviceType === 'extract') {
+        return 'Выписка получена';
+      }
       return 'Сделка зарегистрирована';
     }
     if (status === 'rejected') {
       return 'Регистрация приостановлена';
     }
+    if (status === 'draft') {
+      return 'Черновик';
+    }
     return '';
   };
 
-  const getStatusSubDescription = (status: EGRNRequest['status']): string => {
+  const getStatusSubDescription = (status: EGRNRequest['status'], serviceType?: EGRNServiceType): string => {
     if (status === 'in_progress') {
+      if (serviceType === 'extract') {
+        return 'Ожидание ответа';
+      }
       return 'Обрабатывается';
     }
     if (status === 'submitted') {
+      if (serviceType === 'extract') {
+        return 'Ожидание обработки';
+      }
       return '';
     }
     if (status === 'rejected') {
@@ -383,7 +401,7 @@ const EGRNPage: React.FC = () => {
             </Space>
             {subDescription && (
               <Text type="secondary" style={{ fontSize: '12px', marginLeft: 16 }}>
-                {subDescription}
+                {getStatusSubDescription(status, record.serviceType)}
               </Text>
             )}
             {status === 'in_progress' && record.serviceType === 'encumbrance_removal' && (
@@ -645,8 +663,14 @@ const EGRNPage: React.FC = () => {
       <Modal
         title={
           <Space>
-            <HomeOutlined />
-            <span>Регистрация ипотеки</span>
+            {selectedRequest?.serviceType === 'extract' ? (
+              <FileSearchOutlined />
+            ) : selectedRequest?.serviceType === 'encumbrance_removal' ? (
+              <UnlockOutlined />
+            ) : (
+              <HomeOutlined />
+            )}
+            <span>{selectedRequest ? getServiceTypeLabel(selectedRequest.serviceType) : 'Детали запроса'}</span>
             {selectedRequest && (
               <Tag color={getStatusColor(selectedRequest.status)}>
                 {getStatusLabel(selectedRequest.status)}
@@ -713,7 +737,7 @@ const EGRNPage: React.FC = () => {
                 {getStatusLabel(selectedRequest.status)}
               </Tag>
             </Descriptions.Item>
-            {activeTab === 'mortgage_registration' && (
+            {selectedRequest.serviceType === 'mortgage_registration' && (
               <>
                 <Descriptions.Item label="Номер договора ипотеки">
                   {selectedRequest.mortgageContractNumber || '—'}
@@ -735,7 +759,7 @@ const EGRNPage: React.FC = () => {
                 </Descriptions.Item>
               </>
             )}
-            {activeTab === 'encumbrance_removal' && (
+            {selectedRequest.serviceType === 'encumbrance_removal' && (
               <>
                 <Descriptions.Item label="Тип обременения">
                   {selectedRequest.encumbranceType || '—'}
@@ -751,7 +775,7 @@ const EGRNPage: React.FC = () => {
                 </Descriptions.Item>
               </>
             )}
-            {activeTab === 'extract' && (
+            {selectedRequest.serviceType === 'extract' && (
               <>
                 <Descriptions.Item label="Тип выписки">
                   {selectedRequest.extractType === 'full'
@@ -764,19 +788,42 @@ const EGRNPage: React.FC = () => {
                           ? 'Выписка о правах'
                           : '—'}
                 </Descriptions.Item>
-                <Descriptions.Item label="Цель получения" span={1}>
+                <Descriptions.Item label="Цель получения">
                   {selectedRequest.extractPurpose || '—'}
                 </Descriptions.Item>
+                {selectedRequest.cost && (
+                  <Descriptions.Item label="Стоимость">
+                    {new Intl.NumberFormat('ru-RU', {
+                      style: 'currency',
+                      currency: 'RUB',
+                      maximumFractionDigits: 0,
+                    }).format(selectedRequest.cost)}
+                  </Descriptions.Item>
+                )}
+                {selectedRequest.completedAt && (
+                  <Descriptions.Item label="Дата получения">
+                    {dayjs(selectedRequest.completedAt).format('DD.MM.YYYY')}
+                  </Descriptions.Item>
+                )}
               </>
             )}
             {selectedRequest.resultNumber && (
-              <Descriptions.Item label="Номер результата">
+              <Descriptions.Item label={selectedRequest.serviceType === 'extract' ? 'Номер выписки' : 'Номер результата'}>
                 {selectedRequest.resultNumber}
               </Descriptions.Item>
             )}
             {selectedRequest.resultDate && (
-              <Descriptions.Item label="Дата результата">
+              <Descriptions.Item label={selectedRequest.serviceType === 'extract' ? 'Дата выписки' : 'Дата результата'}>
                 {dayjs(selectedRequest.resultDate).format('DD.MM.YYYY')}
+              </Descriptions.Item>
+            )}
+            {selectedRequest.resultDocument && (
+              <Descriptions.Item label="Документ" span={2}>
+                <Button type="link" icon={<FileSearchOutlined />} onClick={() => {
+                  message.info('Скачивание документа...');
+                }}>
+                  Скачать документ
+                </Button>
               </Descriptions.Item>
             )}
             {selectedRequest.comments && (

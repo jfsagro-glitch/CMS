@@ -38,6 +38,7 @@ export interface EGRNRequest {
   // Данные для выписки
   extractType?: 'full' | 'short' | 'about_object' | 'about_rights';
   extractPurpose?: string;
+  cost?: number; // Стоимость выписки
   
   // Статус
   status: 'draft' | 'submitted' | 'in_progress' | 'completed' | 'rejected';
