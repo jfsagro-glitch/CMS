@@ -16,6 +16,7 @@ import {
   message,
   Empty,
   Spin,
+  Divider,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -24,10 +25,17 @@ import {
   DeleteOutlined,
   FileTextOutlined,
   HomeOutlined,
+  FolderOutlined,
+  DownloadOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import type { CollateralPortfolioEntry } from '@/types/portfolio';
 import type { ExtendedCollateralCard } from '@/types';
+import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
+import type { Inspection } from '@/types/inspection';
 import extendedStorageService from '@/services/ExtendedStorageService';
+import inspectionService from '@/services/InspectionService';
+import { generateDossierDemoData } from '@/utils/generateDossierDemoData';
 import { useNavigate } from 'react-router-dom';
 import PortfolioSearchModal from './PortfolioSearchModal';
 
@@ -72,6 +80,9 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
   const [attachedObjects, setAttachedObjects] = useState<ExtendedCollateralCard[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
+  const [dossierDocuments, setDossierDocuments] = useState<CollateralDocument[]>([]);
+  const [inspections, setInspections] = useState<Inspection[]>([]);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
 
   const loadAttachedObjects = useCallback(async () => {
     setLoading(true);
@@ -92,11 +103,81 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
     }
   }, [contract]);
 
+  // Загрузка документов для вкладки "Документы"
+  const loadDocuments = useCallback(async () => {
+    if (!contract) return;
+    
+    setDocumentsLoading(true);
+    try {
+      // Загружаем документы из залогового досье
+      const savedDossier = localStorage.getItem('collateralDossierData');
+      let allDossierDocuments: CollateralDocument[] = [];
+      
+      if (savedDossier) {
+        const payload = JSON.parse(savedDossier) as CollateralDossierPayload;
+        allDossierDocuments = payload.documents;
+      } else {
+        // Если нет сохраненных данных, генерируем их
+        const portfolioUrl = (() => {
+          const base = import.meta.env.BASE_URL ?? '/';
+          const resolvedBase = new URL(base, window.location.origin);
+          const normalizedPath = resolvedBase.pathname.endsWith('/')
+            ? resolvedBase.pathname
+            : `${resolvedBase.pathname}/`;
+          return `${resolvedBase.origin}${normalizedPath}portfolioData.json`;
+        })();
+        
+        const portfolioResponse = await fetch(`${portfolioUrl}?v=${Date.now()}`, { cache: 'no-store' });
+        let portfolioData: CollateralPortfolioEntry[] = [];
+        if (portfolioResponse.ok) {
+          portfolioData = (await portfolioResponse.json()) as CollateralPortfolioEntry[];
+        }
+        
+        const cards = await extendedStorageService.getExtendedCards();
+        const payload = await generateDossierDemoData(portfolioData, cards);
+        allDossierDocuments = payload.documents;
+      }
+      
+      // Фильтруем документы по договору залога
+      const pledgeContractNumber = contract.collateralContractNumber;
+      const reference = String(contract.reference || '');
+      
+      const filteredDocs = allDossierDocuments.filter(doc => 
+        doc.reference === reference || 
+        (pledgeContractNumber && doc.folderPath.some(path => path.includes(pledgeContractNumber)))
+      );
+      
+      setDossierDocuments(filteredDocs);
+      
+      // Загружаем акты осмотра по объектам договора
+      const allInspections = await inspectionService.getInspections();
+      const contractInspections = allInspections.filter(inspection => {
+        // Проверяем, относится ли инспекция к объектам этого договора
+        return attachedObjects.some(obj => 
+          inspection.collateralCardId === obj.id || 
+          inspection.collateralNumber === obj.number
+        );
+      });
+      setInspections(contractInspections);
+    } catch (error) {
+      console.error('Ошибка загрузки документов:', error);
+      message.error('Ошибка загрузки документов');
+    } finally {
+      setDocumentsLoading(false);
+    }
+  }, [contract, attachedObjects]);
+
   useEffect(() => {
     if (visible && contract) {
       loadAttachedObjects();
     }
   }, [visible, contract, loadAttachedObjects]);
+
+  useEffect(() => {
+    if (visible && contract && attachedObjects.length > 0 && activeTab === 'documents') {
+      loadDocuments();
+    }
+  }, [visible, contract, attachedObjects, activeTab, loadDocuments]);
 
   // Дисконт для расчета залоговой стоимости (70-80% от рыночной)
   const COLLATERAL_DISCOUNT = 0.75; // 75% от рыночной стоимости
@@ -414,6 +495,166 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
             />
           ) : (
             <Empty description="Объекты по данному договору не найдены" />
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'documents',
+      label: (
+        <span>
+          <FolderOutlined />
+          Документы
+        </span>
+      ),
+      children: (
+        <div>
+          {documentsLoading ? (
+            <Spin tip="Загрузка документов..." />
+          ) : (
+            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+              {/* Документы из залогового досье */}
+              <div>
+                <Typography.Title level={5}>Документы из залогового досье</Typography.Title>
+                {dossierDocuments.length > 0 ? (
+                  <Table
+                    columns={[
+                      {
+                        title: 'Тип документа',
+                        dataIndex: 'docType',
+                        key: 'docType',
+                        render: (text: string) => (
+                          <Space>
+                            <FileTextOutlined style={{ color: '#1890ff' }} />
+                            <span>{text.length > 50 ? text.substring(0, 47) + '...' : text}</span>
+                          </Space>
+                        ),
+                      },
+                      {
+                        title: 'Имя файла',
+                        dataIndex: 'fileName',
+                        key: 'fileName',
+                        ellipsis: true,
+                      },
+                      {
+                        title: 'Статус',
+                        dataIndex: 'status',
+                        key: 'status',
+                        render: (status: string, record: CollateralDocument) => (
+                          <Tag color={record.statusColor || 'default'}>{status}</Tag>
+                        ),
+                      },
+                      {
+                        title: 'Размер',
+                        dataIndex: 'size',
+                        key: 'size',
+                      },
+                      {
+                        title: 'Обновлен',
+                        dataIndex: 'lastUpdated',
+                        key: 'lastUpdated',
+                      },
+                      {
+                        title: 'Действия',
+                        key: 'actions',
+                        render: () => (
+                          <Button type="link" size="small" icon={<DownloadOutlined />}>
+                            Скачать
+                          </Button>
+                        ),
+                      },
+                    ]}
+                    dataSource={dossierDocuments}
+                    rowKey="id"
+                    pagination={{ pageSize: 10 }}
+                    size="small"
+                  />
+                ) : (
+                  <Empty description="Документы из залогового досье не найдены" />
+                )}
+              </div>
+
+              <Divider />
+
+              {/* Залоговое заключение */}
+              <div>
+                <Typography.Title level={5}>Залоговое заключение</Typography.Title>
+                <Empty description="Залоговое заключение не найдено" />
+              </div>
+
+              <Divider />
+
+              {/* Акт осмотра */}
+              <div>
+                <Typography.Title level={5}>Акты осмотра</Typography.Title>
+                {inspections.length > 0 ? (
+                  <Table
+                    columns={[
+                      {
+                        title: 'Дата осмотра',
+                        dataIndex: 'inspectionDate',
+                        key: 'inspectionDate',
+                        render: (date: string) => new Date(date).toLocaleDateString('ru-RU'),
+                      },
+                      {
+                        title: 'Тип осмотра',
+                        dataIndex: 'inspectionTypeLabel',
+                        key: 'inspectionTypeLabel',
+                      },
+                      {
+                        title: 'Инспектор',
+                        dataIndex: 'inspectorName',
+                        key: 'inspectorName',
+                      },
+                      {
+                        title: 'Объект',
+                        dataIndex: 'collateralCardName',
+                        key: 'collateralCardName',
+                        ellipsis: true,
+                      },
+                      {
+                        title: 'Действия',
+                        key: 'actions',
+                        render: (_, record: Inspection) => (
+                          <Space>
+                            <Button
+                              type="link"
+                              size="small"
+                              icon={<EyeOutlined />}
+                              onClick={() => {
+                                navigate(`/cms-check/inspections?inspectionId=${record.id}`);
+                                onClose();
+                              }}
+                            >
+                              Просмотр
+                            </Button>
+                            <Button type="link" size="small" icon={<DownloadOutlined />}>
+                              Скачать PDF
+                            </Button>
+                          </Space>
+                        ),
+                      },
+                    ]}
+                    dataSource={inspections}
+                    rowKey="id"
+                    pagination={{ pageSize: 5 }}
+                    size="small"
+                  />
+                ) : (
+                  <Empty description="Акты осмотра не найдены" />
+                )}
+              </div>
+
+              <Divider />
+
+              {/* Выписки ЕГРН (только для недвижимости) */}
+              {attachedObjects.some(obj => obj.mainCategory === 'real_estate') && (
+                <div>
+                  <Typography.Title level={5}>Выписки ЕГРН</Typography.Title>
+                  <Empty description="Выписки ЕГРН не найдены" />
+                </div>
+              )}
+            </Space>
           )}
         </div>
       ),
