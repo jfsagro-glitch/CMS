@@ -53,6 +53,10 @@ export interface EGRNRequest {
   comments?: string;
   rejectionReason?: string;
   
+  // Сотрудник и участники
+  employeeName?: string; // ФИО сотрудника
+  participants?: string[]; // Участники сделки
+  
   createdAt: string;
   updatedAt: string;
 }

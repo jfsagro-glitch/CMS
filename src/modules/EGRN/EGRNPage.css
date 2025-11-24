@@ -22,3 +22,11 @@
   margin-bottom: 24px;
 }
 
+.egrn-table-row {
+  cursor: pointer;
+}
+
+.egrn-table-row:hover {
+  background-color: #fafafa;
+}
+

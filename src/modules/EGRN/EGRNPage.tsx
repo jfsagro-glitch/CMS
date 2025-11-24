@@ -38,6 +38,7 @@ import {
   FileSearchOutlined,
 } from '@ant-design/icons';
 import type { EGRNRequest, EGRNServiceType } from '@/types/egrn';
+import { loadEGRNDemoData } from '@/utils/egrnDemoData';
 import dayjs from 'dayjs';
 import './EGRNPage.css';
 
@@ -79,6 +80,9 @@ const EGRNPage: React.FC = () => {
   useEffect(() => {
     const loadRequests = () => {
       try {
+        // Загружаем демо-данные, если их нет
+        loadEGRNDemoData();
+        
         const stored = localStorage.getItem('egrnRequests');
         if (stored) {
           const data = JSON.parse(stored) as EGRNRequest[];
@@ -273,9 +277,9 @@ const EGRNPage: React.FC = () => {
   const getServiceTypeLabel = (type: EGRNServiceType) => {
     switch (type) {
       case 'mortgage_registration':
-        return 'Регистрация ипотеки';
+        return 'Регистрация ДДУ';
       case 'encumbrance_removal':
-        return 'Снятие обременений';
+        return 'Прекращение обременения';
       case 'extract':
         return 'Выписки ЕГРН';
       default:
@@ -283,74 +287,164 @@ const EGRNPage: React.FC = () => {
     }
   };
 
+  const getStatusDescription = (status: EGRNRequest['status'], serviceType: EGRNServiceType): string => {
+    if (status === 'in_progress') {
+      if (serviceType === 'mortgage_registration') {
+        return 'В Росреестре';
+      }
+      if (serviceType === 'encumbrance_removal') {
+        return 'Подписание заявлений';
+      }
+      return 'Обрабатывается';
+    }
+    if (status === 'submitted') {
+      return 'Отправляем в Росреестр';
+    }
+    if (status === 'completed') {
+      return 'Сделка зарегистрирована';
+    }
+    if (status === 'rejected') {
+      return 'Регистрация приостановлена';
+    }
+    return '';
+  };
+
+  const getStatusSubDescription = (status: EGRNRequest['status']): string => {
+    if (status === 'in_progress') {
+      return 'Обрабатывается';
+    }
+    if (status === 'submitted') {
+      return '';
+    }
+    if (status === 'rejected') {
+      return 'Регистрация приостановлена';
+    }
+    return '';
+  };
+
+  const [expandedParticipants, setExpandedParticipants] = useState<Record<string, boolean>>({});
+
+  const toggleParticipants = (id: string) => {
+    setExpandedParticipants(prev => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
   const columns: ColumnsType<EGRNRequestRow> = [
     {
-      title: 'Объект',
-      key: 'object',
-      width: 200,
-      render: (_, record) => (
-        <Space direction="vertical" size="small">
-          <Text strong>{record.objectName || '—'}</Text>
-          {record.cadastralNumber && (
-            <Text type="secondary" style={{ fontSize: '12px' }}>
-              Кадастр: {record.cadastralNumber}
-            </Text>
-          )}
-        </Space>
-      ),
-    },
-    {
-      title: 'REFERENCE',
-      dataIndex: 'reference',
-      key: 'reference',
-      width: 120,
-      render: (ref) => ref || '—',
-    },
-    {
-      title: 'Договор',
-      dataIndex: 'contractNumber',
-      key: 'contractNumber',
-      width: 150,
-    },
-    {
-      title: 'Заявитель',
-      dataIndex: 'applicantName',
-      key: 'applicantName',
-      width: 200,
-      ellipsis: true,
-    },
-    {
-      title: 'Статус',
-      dataIndex: 'status',
-      key: 'status',
-      width: 120,
-      render: (status: EGRNRequest['status']) => (
-        <Tag color={getStatusColor(status)} icon={getStatusIcon(status)}>
-          {getStatusLabel(status)}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Дата подачи',
+      title: 'Отправлено',
       dataIndex: 'submittedAt',
       key: 'submittedAt',
       width: 120,
       render: (date: string) => (date ? dayjs(date).format('DD.MM.YYYY') : '—'),
     },
     {
+      title: 'Адрес объекта',
+      key: 'address',
+      width: 300,
+      render: (_, record) => (
+        <Space direction="vertical" size={0}>
+          <Text>{record.address || '—'}</Text>
+          <Text type="secondary" style={{ fontSize: '12px' }}>
+            {getServiceTypeLabel(record.serviceType)}
+          </Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      key: 'status',
+      width: 250,
+      render: (status: EGRNRequest['status'], record) => {
+        const description = getStatusDescription(status, record.serviceType);
+        const subDescription = getStatusSubDescription(status);
+        const color = getStatusColor(status);
+        
+        return (
+          <Space direction="vertical" size={0}>
+            <Space>
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  backgroundColor:
+                    color === 'green' ? '#52c41a' :
+                    color === 'orange' ? '#fa8c16' :
+                    color === 'blue' ? '#1890ff' :
+                    color === 'red' ? '#ff4d4f' :
+                    '#d9d9d9',
+                  display: 'inline-block',
+                }}
+              />
+              <Text>{description || getStatusLabel(status)}</Text>
+            </Space>
+            {subDescription && (
+              <Text type="secondary" style={{ fontSize: '12px', marginLeft: 16 }}>
+                {subDescription}
+              </Text>
+            )}
+            {status === 'in_progress' && record.serviceType === 'encumbrance_removal' && (
+              <Text type="secondary" style={{ fontSize: '12px', marginLeft: 16 }}>
+                Требуется подпись
+              </Text>
+            )}
+          </Space>
+        );
+      },
+    },
+    {
+      title: 'Сотрудник',
+      dataIndex: 'employeeName',
+      key: 'employeeName',
+      width: 180,
+      render: (name: string) => name || '—',
+    },
+    {
+      title: 'Участники',
+      key: 'participants',
+      width: 250,
+      render: (_, record) => {
+        const participants = record.participants || [];
+        const isExpanded = expandedParticipants[record.id];
+        const visibleCount = isExpanded ? participants.length : 2;
+        const visibleParticipants = participants.slice(0, visibleCount);
+        const remainingCount = participants.length - visibleCount;
+
+        if (participants.length === 0) {
+          return <Text type="secondary">—</Text>;
+        }
+
+        return (
+          <Space direction="vertical" size={0}>
+            {visibleParticipants.map((participant, index) => (
+              <Text key={index}>{participant}</Text>
+            ))}
+            {remainingCount > 0 && (
+              <Button
+                type="link"
+                size="small"
+                style={{ padding: 0, height: 'auto', fontSize: '12px' }}
+                onClick={() => toggleParticipants(record.id)}
+              >
+                ещё {remainingCount}
+              </Button>
+            )}
+          </Space>
+        );
+      },
+    },
+    {
       title: 'Действия',
       key: 'actions',
-      width: 120,
+      width: 100,
       fixed: 'right',
       render: (_, record) => (
-        <Space>
-          <Tooltip title="Просмотр">
-            <Button type="link" icon={<EyeOutlined />} onClick={() => handleView(record)} />
-          </Tooltip>
-          <Tooltip title="Редактировать">
-            <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
-          </Tooltip>
-        </Space>
+        <Tooltip title="Просмотр">
+          <Button type="link" icon={<EyeOutlined />} onClick={() => handleView(record)} />
+        </Tooltip>
       ),
     },
   ];
@@ -448,17 +542,12 @@ const EGRNPage: React.FC = () => {
 
   return (
     <div className="egrn-page">
-      <div className="egrn-page__header">
-        <div>
-          <Title level={2} className="egrn-page__title">
-            ЕГРН
-          </Title>
-          <Typography.Paragraph className="egrn-page__subtitle">
-            Регистрация ипотеки, снятие обременений, получение выписок ЕГРН
-          </Typography.Paragraph>
-        </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          Создать запрос
+      <div className="egrn-page__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <Title level={2} style={{ margin: 0 }}>
+          Сделки
+        </Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate} style={{ backgroundColor: '#722ed1', borderColor: '#722ed1' }}>
+          + Создать сделку
         </Button>
       </div>
 
@@ -535,7 +624,7 @@ const EGRNPage: React.FC = () => {
         </Space>
       </Card>
 
-      <Card bodyStyle={{ padding: 0 }}>
+          <Card bodyStyle={{ padding: 0 }}>
         <Table
           columns={columns}
           dataSource={filteredRequests}
@@ -543,39 +632,75 @@ const EGRNPage: React.FC = () => {
           scroll={{ x: 1200 }}
           loading={loading}
           locale={{
-            emptyText: <Empty description="Нет запросов" />,
+            emptyText: <Empty description="Нет регистраций" />,
           }}
+          rowClassName={() => 'egrn-table-row'}
+          onRow={(record) => ({
+            onClick: () => handleView(record),
+          })}
         />
       </Card>
 
       {/* Модалка просмотра */}
       <Modal
-        title={`${getServiceTypeLabel(activeTab)} - Детали запроса`}
+        title={
+          <Space>
+            <HomeOutlined />
+            <span>Регистрация ипотеки</span>
+            {selectedRequest && (
+              <Tag color={getStatusColor(selectedRequest.status)}>
+                {getStatusLabel(selectedRequest.status)}
+              </Tag>
+            )}
+          </Space>
+        }
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={[
+          <Button key="edit" icon={<EditOutlined />} onClick={() => {
+            if (selectedRequest) {
+              handleEdit(selectedRequest);
+              setModalVisible(false);
+            }
+          }}>
+            Редактировать
+          </Button>,
           <Button key="close" onClick={() => setModalVisible(false)}>
             Закрыть
           </Button>,
         ]}
-        width={700}
+        width={800}
       >
         {selectedRequest && (
           <Descriptions bordered column={2} size="small">
+            <Descriptions.Item label="Тип услуги" span={2}>
+              {getServiceTypeLabel(selectedRequest.serviceType)}
+            </Descriptions.Item>
             <Descriptions.Item label="Объект" span={2}>
               {selectedRequest.objectName || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Адрес" span={2}>
+              {selectedRequest.address || '—'}
             </Descriptions.Item>
             <Descriptions.Item label="Кадастровый номер">
               {selectedRequest.cadastralNumber || '—'}
             </Descriptions.Item>
-            <Descriptions.Item label="Адрес">
-              {selectedRequest.address || '—'}
-            </Descriptions.Item>
             <Descriptions.Item label="REFERENCE">
               {selectedRequest.reference || '—'}
             </Descriptions.Item>
-            <Descriptions.Item label="Договор">
+            <Descriptions.Item label="Номер договора залога">
               {selectedRequest.contractNumber || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Дата отправки">
+              {selectedRequest.submittedAt ? dayjs(selectedRequest.submittedAt).format('DD.MM.YYYY') : '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Сотрудник">
+              {selectedRequest.employeeName || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Участники" span={2}>
+              {selectedRequest.participants && selectedRequest.participants.length > 0
+                ? selectedRequest.participants.join(', ')
+                : '—'}
             </Descriptions.Item>
             <Descriptions.Item label="Заявитель" span={2}>
               {selectedRequest.applicantName || '—'}
