@@ -191,17 +191,17 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
     return Math.floor(totalObjectsMarketValue * COLLATERAL_DISCOUNT);
   }, [totalObjectsMarketValue]);
 
-  // Расчет LTV (отношение задолженности к залоговой стоимости)
+  // Расчет LTV (отношение суммы задолженности (основной долг) к рыночной стоимости предметов залога)
   const ltv = useMemo(() => {
     const debt = typeof contract.debtRub === 'number' ? contract.debtRub : parseFloat(String(contract.debtRub || 0));
-    const collateralValue = typeof contract.collateralValue === 'number' 
-      ? contract.collateralValue 
-      : parseFloat(String(contract.collateralValue || 0));
-    if (collateralValue > 0) {
-      return Math.min(debt / collateralValue, 2); // Ограничиваем выбросы (максимум 200%)
+    const marketValue = typeof contract.marketValue === 'number' 
+      ? contract.marketValue 
+      : parseFloat(String(contract.marketValue || 0));
+    if (marketValue > 0) {
+      return Math.min(debt / marketValue, 2); // Ограничиваем выбросы (максимум 200%)
     }
     return null;
-  }, [contract.debtRub, contract.collateralValue]);
+  }, [contract.debtRub, contract.marketValue]);
 
   // Обработка отвязки объекта
   const handleUnlinkObject = async (objectId: string) => {

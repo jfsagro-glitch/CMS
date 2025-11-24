@@ -2,7 +2,7 @@
  * Утилита для обновления существующих данных:
  * - Рыночная стоимость должна быть обязательно заполнена
  * - Залоговая стоимость = рыночная * 0.75
- * - LTV >= 70% (отношение задолженности к залоговой стоимости)
+ * - LTV >= 70% (отношение суммы задолженности к рыночной стоимости предметов залога)
  */
 
 import type { ExtendedCollateralCard } from '@/types';
@@ -52,31 +52,30 @@ export const updatePortfolioContractValues = (contract: CollateralPortfolioEntry
     marketValue = 1000000; // Минимальная рыночная стоимость 1 млн руб.
   }
   
-  // Рассчитываем залоговую стоимость
-  let collateralValue = Math.floor(marketValue * COLLATERAL_DISCOUNT);
-  
-  // Проверяем LTV: debt / collateralValue >= 0.7
+  // Проверяем LTV: debt / marketValue >= 0.7
   // Если LTV < 0.7, увеличиваем рыночную стоимость
-  if (debtRub > 0 && collateralValue > 0) {
-    const currentLTV = debtRub / collateralValue;
+  if (debtRub > 0 && marketValue > 0) {
+    const currentLTV = debtRub / marketValue;
     
     if (currentLTV < MIN_LTV) {
       // Увеличиваем рыночную стоимость так, чтобы LTV был в диапазоне 70-80%
-      // debt / (marketValue * 0.75) >= 0.7
-      // marketValue <= debt / (0.7 * 0.75) = debt / 0.525
-      const minMarketValueForLTV = Math.ceil(debtRub / 0.525); // Для LTV = 70%
-      const maxMarketValueForLTV = Math.ceil(debtRub / 0.4375); // Для LTV = 80%
+      // debt / marketValue >= 0.7 => marketValue <= debt / 0.7
+      // debt / marketValue <= 0.8 => marketValue >= debt / 0.8
+      const minMarketValueForLTV = Math.ceil(debtRub / 0.8); // Для LTV = 80% (максимум)
+      const maxMarketValueForLTV = Math.ceil(debtRub / 0.7); // Для LTV = 70% (минимум)
       
       // Устанавливаем рыночную стоимость в диапазоне 70-80% LTV
-      marketValue = Math.max(marketValue, minMarketValueForLTV);
+      if (marketValue < minMarketValueForLTV) {
+        marketValue = minMarketValueForLTV;
+      }
       if (marketValue > maxMarketValueForLTV) {
         marketValue = maxMarketValueForLTV;
       }
-      
-      // Пересчитываем залоговую стоимость
-      collateralValue = Math.floor(marketValue * COLLATERAL_DISCOUNT);
     }
   }
+  
+  // Рассчитываем залоговую стоимость
+  const collateralValue = Math.floor(marketValue * COLLATERAL_DISCOUNT);
   
   return {
     ...contract,

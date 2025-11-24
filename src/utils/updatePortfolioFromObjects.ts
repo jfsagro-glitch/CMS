@@ -74,18 +74,18 @@ export const updatePortfolioFromObjects = async (
 
 /**
  * Рассчитать LTV для договора
- * LTV = отношение задолженности к залоговой стоимости (норматив 70-80%)
+ * LTV = отношение суммы задолженности (основной долг) к рыночной стоимости предметов залога
  */
 export const calculateLTV = (contract: CollateralPortfolioEntry): number | null => {
   const debt = typeof contract.debtRub === 'number' 
     ? contract.debtRub 
     : parseFloat(String(contract.debtRub || 0));
-  const collateralValue = typeof contract.collateralValue === 'number' 
-    ? contract.collateralValue 
-    : parseFloat(String(contract.collateralValue || 0));
+  const marketValue = typeof contract.marketValue === 'number' 
+    ? contract.marketValue 
+    : parseFloat(String(contract.marketValue || 0));
   
-  if (collateralValue > 0) {
-    return Math.min(debt / collateralValue, 2); // Ограничиваем выбросы (максимум 200%)
+  if (marketValue > 0) {
+    return Math.min(debt / marketValue, 2); // Ограничиваем выбросы (максимум 200%)
   }
   return null;
 };

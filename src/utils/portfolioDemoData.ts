@@ -115,13 +115,11 @@ const generateContractForPropertyType = (
   const limitRub = randomInt(1000000, 50000000);
   const debtRub = Math.floor(limitRub * (0.3 + Math.random() * 0.5));
   
-  // LTV должен быть >= 70%, значит: debt / collateralValue >= 0.7
-  // collateralValue <= debt / 0.7
-  // marketValue * 0.75 <= debt / 0.7
-  // marketValue <= debt / 0.525 ≈ debt * 1.905
+  // LTV должен быть >= 70%, значит: debt / marketValue >= 0.7
+  // marketValue <= debt / 0.7
   // Устанавливаем рыночную стоимость так, чтобы LTV был в диапазоне 70-80%
-  const minMarketValueForLTV = Math.ceil(debtRub / 0.525); // Минимальная для LTV = 70%
-  const maxMarketValueForLTV = Math.ceil(debtRub / 0.4375); // Максимальная для LTV = 80%
+  const minMarketValueForLTV = Math.ceil(debtRub / 0.8); // Минимальная для LTV = 80% (максимум)
+  const maxMarketValueForLTV = Math.ceil(debtRub / 0.7); // Максимальная для LTV = 70% (минимум)
   const marketValue = randomInt(
     Math.max(minMarketValueForLTV, 500000), 
     Math.max(maxMarketValueForLTV, limitRub)

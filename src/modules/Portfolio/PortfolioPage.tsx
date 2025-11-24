@@ -214,10 +214,10 @@ const PortfolioPage: React.FC = () => {
         acc.collateral += collateralValue;
         acc.overdue += overdue;
 
-        // LTV = отношение задолженности к залоговой стоимости
-        if (collateralValue > 0) {
+        // LTV = отношение суммы задолженности (основной долг) к рыночной стоимости предметов залога
+        if (marketValue > 0) {
           acc.ltvSamples += 1;
-          acc.ltvSum += Math.min(debt / collateralValue, 2); // ограничим выбросы (максимум 200%)
+          acc.ltvSum += Math.min(debt / marketValue, 2); // ограничим выбросы (максимум 200%)
         }
 
         return acc;
@@ -282,9 +282,9 @@ const PortfolioPage: React.FC = () => {
         render: (_, record) => {
           const debt = parseNumber(record.debtRub);
           const limit = parseNumber(record.limitRub);
-          const collateralValue = parseNumber(record.collateralValue);
-          // LTV = отношение задолженности к залоговой стоимости (норматив 70-80%)
-          const ltv = debt && collateralValue ? Math.min(debt / collateralValue, 2) : null;
+          // LTV = отношение суммы задолженности (основной долг) к рыночной стоимости предметов залога
+          const market = parseNumber(record.marketValue);
+          const ltv = debt && market ? Math.min(debt / market, 2) : null;
 
           return (
             <div className="portfolio-page__metrics">
@@ -297,7 +297,7 @@ const PortfolioPage: React.FC = () => {
                 <strong>{limit ? currencyFormatter.format(limit) : '—'}</strong>
               </div>
               <div className="portfolio-page__metrics-row">
-                <span>LTV (к залогу)</span>
+                <span>LTV</span>
                 <strong>
                   {ltv !== null ? (
                     <Tag color={ltv > 0.8 ? 'red' : ltv > 0.7 ? 'orange' : 'green'}>
