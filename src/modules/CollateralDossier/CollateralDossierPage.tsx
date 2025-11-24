@@ -335,7 +335,7 @@ const CollateralDossierPage: React.FC = () => {
       const clientKeys = treeData.map(node => node.key);
       setExpandedKeys(clientKeys);
     }
-  }, [treeData.length]); // Зависимость только от количества элементов, чтобы не пересчитывать при каждом изменении
+  }, [treeData, expandedKeys.length]); // Зависимости: treeData и expandedKeys.length
 
   // Обработчик раскрытия узлов (мемоизирован)
   const handleExpand = useCallback((keys: React.Key[]) => {
