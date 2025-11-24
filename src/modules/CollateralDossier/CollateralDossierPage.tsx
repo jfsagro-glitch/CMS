@@ -5,17 +5,20 @@ import {
   Col,
   Empty,
   Input,
+  Modal,
   Row,
   Select,
   Space,
   Statistic,
+  Table,
   Tag,
   Tooltip,
   Typography,
   Tree,
 } from 'antd';
 import type { DataNode } from 'antd/es/tree';
-import { FileTextOutlined, FolderOutlined, SearchOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import { DownloadOutlined, FileTextOutlined, FolderOutlined, SearchOutlined } from '@ant-design/icons';
 import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
 import type { CollateralPortfolioEntry } from '@/types/portfolio';
 import { generateDossierDemoData } from '@/utils/generateDossierDemoData';
@@ -34,6 +37,44 @@ const CollateralDossierPage: React.FC = () => {
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedDocuments, setSelectedDocuments] = useState<CollateralDocument[]>([]);
+  const [modalTitle, setModalTitle] = useState('');
+  
+  // Map для связи ключей узлов договоров залога с документами
+  const pledgeContractDocumentsMap = useMemo(() => {
+    const map = new Map<string, { docs: CollateralDocument[]; title: string }>();
+    
+    // Группируем документы по сделкам
+    const documentsByReference = new Map<string, CollateralDocument[]>();
+    documents.forEach(doc => {
+      const ref = String(doc.reference || '');
+      if (!documentsByReference.has(ref)) {
+        documentsByReference.set(ref, []);
+      }
+      documentsByReference.get(ref)!.push(doc);
+    });
+
+    // Строим карту для быстрого доступа
+    portfolio.forEach(deal => {
+      const borrower = deal.borrower || 'Не указан';
+      const loanContract = deal.contractNumber || `Договор ${deal.reference || 'без номера'}`;
+      const pledger = deal.pledger || 'Не указан';
+      const pledgeContract = deal.collateralContractNumber || `Договор залога ${deal.reference || 'без номера'}`;
+      const ref = String(deal.reference || '');
+      const dealDocs = documentsByReference.get(ref) || [];
+      
+      if (dealDocs.length > 0) {
+        const key = `client-${borrower}-loan-${loanContract}-pledger-${pledger}-pledge-${pledgeContract}`;
+        map.set(key, {
+          docs: dealDocs,
+          title: `Документы по договору залога: ${pledgeContract}`,
+        });
+      }
+    });
+    
+    return map;
+  }, [portfolio, documents]);
 
   useEffect(() => {
     let mounted = true;
@@ -342,6 +383,23 @@ const CollateralDossierPage: React.FC = () => {
     setExpandedKeys(keys);
   }, []);
 
+  // Обработчик выбора узла в дереве
+  const handleSelect = useCallback((selectedKeys: React.Key[]) => {
+    const selectedKey = selectedKeys[0];
+    if (!selectedKey || typeof selectedKey !== 'string') return;
+
+    // Проверяем, что клик был на папке договора залога (ключ содержит "-pledge-" и не содержит "-doc-")
+    if (selectedKey.includes('-pledge-') && !selectedKey.includes('-doc-')) {
+      const contractData = pledgeContractDocumentsMap.get(selectedKey);
+      
+      if (contractData && contractData.docs.length > 0) {
+        setModalTitle(contractData.title);
+        setSelectedDocuments(contractData.docs);
+        setIsModalVisible(true);
+      }
+    }
+  }, [pledgeContractDocumentsMap]);
+
   // Мемоизируем опции для Select компонентов
   const loanContractOptions = useMemo(() => {
     const contracts = new Set<string>();
@@ -385,6 +443,65 @@ const CollateralDossierPage: React.FC = () => {
       </Select.Option>
     ));
   }, [portfolio, clientFilter, loanContractFilter, pledgerFilter]);
+
+  // Колонки таблицы документов в модалке
+  const documentColumns: ColumnsType<CollateralDocument> = useMemo(() => [
+    {
+      title: 'Тип документа',
+      dataIndex: 'docType',
+      key: 'docType',
+      width: 250,
+      render: (text: string) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <FileTextOutlined style={{ color: '#1890ff' }} />
+          <span>{text}</span>
+        </div>
+      ),
+    },
+    {
+      title: 'Имя файла',
+      dataIndex: 'fileName',
+      key: 'fileName',
+      ellipsis: true,
+    },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      key: 'status',
+      width: 150,
+      render: (status: string, record: CollateralDocument) => (
+        <Tag color={record.statusColor || 'default'}>{status}</Tag>
+      ),
+    },
+    {
+      title: 'Размер',
+      dataIndex: 'size',
+      key: 'size',
+      width: 100,
+    },
+    {
+      title: 'Обновлен',
+      dataIndex: 'lastUpdated',
+      key: 'lastUpdated',
+      width: 120,
+    },
+    {
+      title: 'Действия',
+      key: 'actions',
+      width: 100,
+      render: (_, record: CollateralDocument) => (
+        <Tooltip title="Скачать документ">
+          <DownloadOutlined
+            style={{ fontSize: 16, color: '#1890ff', cursor: 'pointer' }}
+            onClick={() => {
+              // Здесь можно добавить логику скачивания
+              console.log('Download:', record);
+            }}
+          />
+        </Tooltip>
+      ),
+    },
+  ], []);
 
   // Оптимизированная статистика (однократный проход)
   const stats = useMemo(() => {
@@ -580,6 +697,7 @@ const CollateralDossierPage: React.FC = () => {
             showIcon
             expandedKeys={expandedKeys}
             onExpand={handleExpand}
+            onSelect={handleSelect}
             treeData={treeData}
             style={{ fontSize: '14px' }}
             virtual={false}
@@ -587,6 +705,27 @@ const CollateralDossierPage: React.FC = () => {
           />
         )}
       </Card>
+
+      <Modal
+        title={modalTitle}
+        open={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={null}
+        width={1000}
+        destroyOnClose
+      >
+        <Table
+          columns={documentColumns}
+          dataSource={selectedDocuments}
+          rowKey={(record) => record.id || `${record.folderId}-${record.fileName}`}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total) => `Всего документов: ${total}`,
+          }}
+          size="middle"
+        />
+      </Modal>
     </div>
   );
 };
