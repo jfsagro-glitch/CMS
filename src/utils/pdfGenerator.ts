@@ -6,6 +6,118 @@ import type { Inspection } from '@/types/inspection';
 import type { ExtendedCollateralCard } from '@/types';
 import dayjs from 'dayjs';
 
+/**
+ * Определяет тип приложения на основе типа имущества
+ */
+function getAttachmentType(card?: ExtendedCollateralCard): string {
+  if (!card) return 'default';
+  
+  const mainCategory = card.mainCategory;
+  const level0 = (card.classification as any)?.level0 || (card.classification as any)?.hierarchy?.level0 || '';
+  const level1 = (card.classification as any)?.level1 || (card.classification as any)?.hierarchy?.level1 || '';
+  const propertyType = (card as any).propertyType || '';
+  
+  // Недвижимость
+  if (mainCategory === 'real_estate') {
+    if (level0?.includes('Жилая') || level0?.includes('жилая')) {
+      return 'residential_real_estate';
+    }
+    if (level0?.includes('Коммерческая') || level0?.includes('коммерческая')) {
+      return 'commercial_real_estate';
+    }
+    return 'real_estate';
+  }
+  
+  // Движимое имущество
+  if (mainCategory === 'movable') {
+    const lowerLevel1 = level1?.toLowerCase() || '';
+    const lowerPropertyType = propertyType?.toLowerCase() || '';
+    
+    if (lowerLevel1.includes('автомобиль') || lowerLevel1.includes('транспорт') || 
+        lowerPropertyType.includes('автомобиль') || lowerPropertyType.includes('транспорт')) {
+      return 'vehicle';
+    }
+    if (lowerLevel1.includes('оборудование') || lowerPropertyType.includes('оборудование')) {
+      return 'equipment';
+    }
+    if (lowerLevel1.includes('судно') || lowerLevel1.includes('морск') || lowerLevel1.includes('речн') ||
+        lowerPropertyType.includes('судно') || lowerPropertyType.includes('морск') || lowerPropertyType.includes('речн')) {
+      return 'vessel';
+    }
+    if (lowerLevel1.includes('воздушн') || lowerLevel1.includes('самолет') || lowerLevel1.includes('вертолет') ||
+        lowerPropertyType.includes('воздушн') || lowerPropertyType.includes('самолет') || lowerPropertyType.includes('вертолет')) {
+      return 'aircraft';
+    }
+    if (lowerLevel1.includes('железнодорожн') || lowerLevel1.includes('вагон') || lowerLevel1.includes('локомотив') ||
+        lowerPropertyType.includes('железнодорожн') || lowerPropertyType.includes('вагон') || lowerPropertyType.includes('локомотив')) {
+      return 'railway';
+    }
+    if (lowerLevel1.includes('самоходн') || lowerLevel1.includes('техника') ||
+        lowerPropertyType.includes('самоходн') || lowerPropertyType.includes('техника')) {
+      return 'self_propelled';
+    }
+    if (lowerLevel1.includes('тмц') || lowerLevel1.includes('товар') || lowerLevel1.includes('материал') ||
+        lowerPropertyType.includes('тмц') || lowerPropertyType.includes('товар') || lowerPropertyType.includes('материал')) {
+      return 'inventory';
+    }
+    return 'equipment';
+  }
+  
+  // Имущественные права
+  if (mainCategory === 'property_rights') {
+    const lowerLevel1 = level1?.toLowerCase() || '';
+    const lowerPropertyType = propertyType?.toLowerCase() || '';
+    
+    if (lowerLevel1.includes('дол') || lowerLevel1.includes('ук') || 
+        lowerPropertyType.includes('дол') || lowerPropertyType.includes('ук')) {
+      return 'shares';
+    }
+    if (lowerLevel1.includes('товарн') || lowerLevel1.includes('знак') || 
+        lowerPropertyType.includes('товарн') || lowerPropertyType.includes('знак')) {
+      return 'trademark';
+    }
+    return 'property_rights';
+  }
+  
+  return 'default';
+}
+
+/**
+ * Генерирует приложение к акту осмотра в зависимости от типа имущества
+ */
+function generateInspectionAttachment(card?: ExtendedCollateralCard, inspection?: Inspection): string {
+  if (!card) return '';
+  
+  const attachmentType = getAttachmentType(card);
+  
+  switch (attachmentType) {
+    case 'residential_real_estate':
+      return generateResidentialRealEstateAttachment(card, inspection);
+    case 'commercial_real_estate':
+      return generateCommercialRealEstateAttachment(card, inspection);
+    case 'vehicle':
+      return generateVehicleAttachment(card, inspection);
+    case 'equipment':
+      return generateEquipmentAttachment(card, inspection);
+    case 'vessel':
+      return generateVesselAttachment(card, inspection);
+    case 'aircraft':
+      return generateAircraftAttachment(card, inspection);
+    case 'railway':
+      return generateRailwayAttachment(card, inspection);
+    case 'self_propelled':
+      return generateSelfPropelledAttachment(card, inspection);
+    case 'inventory':
+      return generateInventoryAttachment(card, inspection);
+    case 'shares':
+      return generateSharesAttachment(card, inspection);
+    case 'trademark':
+      return generateTrademarkAttachment(card, inspection);
+    default:
+      return '';
+  }
+}
+
 export const generateInspectionPDF = (
   inspection: Inspection,
   collateralCard?: ExtendedCollateralCard
@@ -158,6 +270,32 @@ export const generateInspectionPDF = (
           width: 40%;
           background-color: #f0f0f0;
         }
+        .info-table thead td {
+          font-weight: bold;
+          background-color: #e8e8e8;
+          text-align: center;
+          vertical-align: middle;
+        }
+        .info-table tbody td {
+          vertical-align: top;
+        }
+        .attachment-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 15px 0;
+          font-size: 9pt;
+        }
+        .attachment-table td {
+          border: 1px solid #000;
+          padding: 4px 6px;
+          vertical-align: top;
+        }
+        .attachment-table thead td {
+          font-weight: bold;
+          background-color: #e8e8e8;
+          text-align: center;
+          vertical-align: middle;
+        }
         .photos-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
@@ -259,6 +397,9 @@ export const generateInspectionPDF = (
 
       <div class="section">
         <p><em>К Акту Проверки прикладывается Приложение 1 с описанием осматриваемого имущества</em></p>
+        <p style="font-size: 10pt; color: #666; margin-top: 5px;">
+          Приложения к актам осмотра могут дополняться/изменяться и не требуют дополнительного согласования
+        </p>
       </div>
 
       <div class="section">
@@ -303,6 +444,8 @@ export const generateInspectionPDF = (
         </div>
       </div>
       ` : ''}
+
+      ${generateInspectionAttachment(collateralCard, inspection)}
 
       ${inspection.defects && inspection.defects.length > 0 ? `
       <div class="section">
@@ -359,3 +502,657 @@ export const generateInspectionPDF = (
   printWindow.document.write(html);
   printWindow.document.close();
 };
+
+/**
+ * Генерирует приложение для жилой недвижимости
+ */
+function generateResidentialRealEstateAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+  const chars = card.characteristics || {};
+  const address = card.address || {};
+  const cadastralNumber = address.cadastralNumber || chars.cadastralNumber || '';
+  const totalArea = chars.totalAreaSqm || chars.totalArea || '';
+  const buildYear = chars.buildYear || chars.yearOfConstruction || '';
+  const wallMaterial = chars.wallMaterial || '';
+  const floorMaterial = chars.floorMaterial || chars.overlapMaterial || '';
+  const buildingCondition = chars.buildingCondition || chars.condition || '';
+  const finishLevel = chars.finishLevel || chars.finishingLevel || '';
+  const finishCondition = chars.finishCondition || '';
+  const bookValue = chars.bookValue || chars.balanceValue || 0;
+  
+  return `
+    <div class="section" style="page-break-before: always;">
+      <div style="font-weight: bold; margin-bottom: 15px; text-align: center;">
+        Приложение к акту осмотра (Жилая недвижимость)
+      </div>
+      <table class="attachment-table">
+        <thead>
+          <tr>
+            <td style="text-align: center; font-weight: bold;">№ п/п</td>
+            <td style="text-align: center; font-weight: bold;">№ В ЗМ</td>
+            <td style="text-align: center; font-weight: bold;">Наименование объекта</td>
+            <td style="text-align: center; font-weight: bold;">Адрес местоположения</td>
+            <td style="text-align: center; font-weight: bold;">Общая площадь объекта, кв. м.<br><span style="color: red; font-size: 9pt;">Только цифры</span></td>
+            <td style="text-align: center; font-weight: bold;">Кадастровый номер объекта</td>
+            <td style="text-align: center; font-weight: bold;">Балансовая стоимость на последнюю отчетную дату, руб. без учета НДС<br><span style="color: red; font-size: 9pt;">Только цифры</span></td>
+            <td style="text-align: center; font-weight: bold;">Год строительства</td>
+            <td style="text-align: center; font-weight: bold;">Материал стен</td>
+            <td style="text-align: center; font-weight: bold;">Материал перекрытий</td>
+            <td style="text-align: center; font-weight: bold;">Состояние конструктивных элементов здания</td>
+            <td style="text-align: center; font-weight: bold;">Уровень отделки</td>
+            <td style="text-align: center; font-weight: bold;">Состояние отделки</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center;">1</td>
+            <td></td>
+            <td>${card.name || ''}</td>
+            <td>${address.fullAddress || ''}</td>
+            <td style="text-align: right;">${totalArea || ''}</td>
+            <td>${cadastralNumber || ''}</td>
+            <td style="text-align: right;">${bookValue ? bookValue.toLocaleString('ru-RU') : '0.00'}</td>
+            <td style="text-align: center;">${buildYear || ''}</td>
+            <td>${wallMaterial || ''}</td>
+            <td>${floorMaterial || ''}</td>
+            <td>${buildingCondition || ''}</td>
+            <td>${finishLevel || ''}</td>
+            <td>${finishCondition || ''}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Генерирует приложение для коммерческой недвижимости
+ */
+function generateCommercialRealEstateAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+  const chars = card.characteristics || {};
+  const address = card.address || {};
+  const cadastralNumber = address.cadastralNumber || chars.cadastralNumber || '';
+  const totalArea = chars.totalAreaSqm || chars.totalArea || '';
+  const buildYear = chars.buildYear || chars.yearOfConstruction || '';
+  const wallMaterial = chars.wallMaterial || '';
+  const floorMaterial = chars.floorMaterial || chars.overlapMaterial || '';
+  const buildingCondition = chars.buildingCondition || chars.condition || '';
+  const finishLevel = chars.finishLevel || chars.finishingLevel || '';
+  const finishCondition = chars.finishCondition || '';
+  const bookValue = chars.bookValue || chars.balanceValue || 0;
+  const level1 = (card.classification as any)?.level1 || (card.classification as any)?.hierarchy?.level1 || '';
+  const level2 = (card.classification as any)?.level2 || (card.classification as any)?.hierarchy?.level2 || '';
+  
+  const objectName = card.name || `${level1}, назначение: нежилое ${level2?.toLowerCase() || 'здание'}, площадь: ${totalArea || ''} кв.м.`;
+  
+  return `
+    <div class="section" style="page-break-before: always;">
+      <div style="font-weight: bold; margin-bottom: 15px; text-align: center;">
+        Приложение к акту осмотра (Коммерческая недвижимость)
+      </div>
+      <table class="attachment-table">
+        <thead>
+          <tr>
+            <td style="text-align: center; font-weight: bold;">№ п/п</td>
+            <td style="text-align: center; font-weight: bold;">№ В ЗМ</td>
+            <td style="text-align: center; font-weight: bold;">Наименование объекта</td>
+            <td style="text-align: center; font-weight: bold;">Адрес местоположения</td>
+            <td style="text-align: center; font-weight: bold;">Общая площадь объекта, кв. м.<br><span style="color: red; font-size: 9pt;">Только цифры</span></td>
+            <td style="text-align: center; font-weight: bold;">Кадастровый номер объекта</td>
+            <td style="text-align: center; font-weight: bold;">Балансовая стоимость на последнюю отчетную дату, руб. без учета НДС<br><span style="color: red; font-size: 9pt;">Только цифры</span></td>
+            <td style="text-align: center; font-weight: bold;">Год строительства</td>
+            <td style="text-align: center; font-weight: bold;">Материал стен</td>
+            <td style="text-align: center; font-weight: bold;">Материал перекрытий</td>
+            <td style="text-align: center; font-weight: bold;">Состояние конструктивных элементов здания</td>
+            <td style="text-align: center; font-weight: bold;">Уровень отделки</td>
+            <td style="text-align: center; font-weight: bold;">Состояние отделки</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center;">1</td>
+            <td></td>
+            <td>${objectName}</td>
+            <td>${address.fullAddress || ''}</td>
+            <td style="text-align: right;">${totalArea || ''}</td>
+            <td>${cadastralNumber || ''}</td>
+            <td style="text-align: right;">${bookValue ? bookValue.toLocaleString('ru-RU') : '0.00'}</td>
+            <td style="text-align: center;">${buildYear || ''}</td>
+            <td>${wallMaterial || ''}</td>
+            <td>${floorMaterial || ''}</td>
+            <td>${buildingCondition || ''}</td>
+            <td>${finishLevel || ''}</td>
+            <td>${finishCondition || ''}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Генерирует приложение для автотранспорта
+ */
+function generateVehicleAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+  const chars = card.characteristics || {};
+  const address = card.address || {};
+  const make = chars.make || chars.brand || '';
+  const model = chars.model || '';
+  const vin = chars.vin || chars.identificationNumber || '';
+  const chassisNumber = chars.chassisNumber || '';
+  const bodyNumber = chars.bodyNumber || '';
+  const color = chars.color || '';
+  const year = chars.year || chars.yearOfManufacture || '';
+  const inventoryNumber = chars.inventoryNumber || '';
+  const registrationNumber = chars.registrationNumber || chars.licensePlate || '';
+  
+  return `
+    <div class="section" style="page-break-before: always;">
+      <div style="font-weight: bold; margin-bottom: 15px; text-align: center;">
+        Приложение к акту осмотра (автотранспорт)
+      </div>
+      <table class="attachment-table">
+        <thead>
+          <tr>
+            <td style="text-align: center; font-weight: bold;">№п/п</td>
+            <td style="text-align: center; font-weight: bold;">№ В ЗМ</td>
+            <td style="text-align: center; font-weight: bold;">Наименование</td>
+            <td style="text-align: center; font-weight: bold;">Марка</td>
+            <td style="text-align: center; font-weight: bold;">Модель ТС</td>
+            <td style="text-align: center; font-weight: bold;">Идентификационный номер (VIN)</td>
+            <td style="text-align: center; font-weight: bold;">Номер шасси</td>
+            <td style="text-align: center; font-weight: bold;">Номер кузова</td>
+            <td style="text-align: center; font-weight: bold;">Цвет</td>
+            <td style="text-align: center; font-weight: bold;">Год выпуска</td>
+            <td style="text-align: center; font-weight: bold;">инвентарный номер</td>
+            <td style="text-align: center; font-weight: bold;">Регистрационный знак</td>
+            <td style="text-align: center; font-weight: bold;">Адрес местоположения</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center;">1</td>
+            <td></td>
+            <td>${card.name || ''}</td>
+            <td>${make}</td>
+            <td>${model}</td>
+            <td>${vin}</td>
+            <td>${chassisNumber}</td>
+            <td>${bodyNumber}</td>
+            <td>${color}</td>
+            <td style="text-align: center;">${year}</td>
+            <td>${inventoryNumber}</td>
+            <td>${registrationNumber}</td>
+            <td>${address.fullAddress || ''}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Генерирует приложение для оборудования
+ */
+function generateEquipmentAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+  const chars = card.characteristics || {};
+  const address = card.address || {};
+  const make = chars.make || chars.brand || '';
+  const model = chars.model || '';
+  const serialNumber = chars.serialNumber || chars.factoryNumber || '';
+  const year = chars.year || chars.yearOfManufacture || '';
+  const manufacturer = chars.manufacturer || '';
+  const country = chars.country || chars.manufacturerCountry || '';
+  const inventoryNumber = chars.inventoryNumber || '';
+  const bookValue = chars.bookValue || chars.balanceValue || chars.residualValue || 0;
+  const additionalCharacteristics = chars.additionalCharacteristics || '';
+  
+  return `
+    <div class="section" style="page-break-before: always;">
+      <div style="font-weight: bold; margin-bottom: 15px; text-align: center;">
+        Приложение к акту осмотра (оборудование)
+      </div>
+      <table class="attachment-table">
+        <thead>
+          <tr>
+            <td style="text-align: center; font-weight: bold;">№п/п</td>
+            <td style="text-align: center; font-weight: bold;">№ В ЗМ</td>
+            <td style="text-align: center; font-weight: bold;">Наименование</td>
+            <td style="text-align: center; font-weight: bold;">Марка</td>
+            <td style="text-align: center; font-weight: bold;">Модель</td>
+            <td style="text-align: center; font-weight: bold;">Заводской номер</td>
+            <td style="text-align: center; font-weight: bold;">Год выпуска</td>
+            <td style="text-align: center; font-weight: bold;">Страна - изготовитель</td>
+            <td style="text-align: center; font-weight: bold;">Производитель</td>
+            <td style="text-align: center; font-weight: bold;">Инвентарный номер</td>
+            <td style="text-align: center; font-weight: bold;">Адрес местоположения</td>
+            <td style="text-align: center; font-weight: bold;">Остаточная балансовая стоимость, руб.</td>
+            <td style="text-align: center; font-weight: bold;">Дополнительные характеристики</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center;">1</td>
+            <td></td>
+            <td>${card.name || ''}</td>
+            <td>${make}</td>
+            <td>${model}</td>
+            <td>${serialNumber}</td>
+            <td style="text-align: center;">${year}</td>
+            <td>${country}</td>
+            <td>${manufacturer}</td>
+            <td>${inventoryNumber}</td>
+            <td>${address.fullAddress || ''}</td>
+            <td style="text-align: right;">${bookValue ? bookValue.toLocaleString('ru-RU') : '0.00'}</td>
+            <td>${additionalCharacteristics}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Генерирует приложение для морских/речных судов
+ */
+function generateVesselAttachment(card: ExtendedCollateralCard, inspection?: Inspection): string {
+  const chars = card.characteristics || {};
+  const vesselName = chars.vesselName || card.name || '';
+  const imo = chars.imo || '';
+  const vesselType = chars.vesselType || '';
+  const callSign = chars.callSign || '';
+  const portOfRegistration = chars.portOfRegistration || '';
+  const placeOfConstruction = chars.placeOfConstruction || '';
+  const yearOfConstruction = chars.yearOfConstruction || '';
+  const hullMaterial = chars.hullMaterial || '';
+  const enginesCount = chars.enginesCount || '';
+  const enginesPower = chars.enginesPower || '';
+  const length = chars.length || '';
+  const width = chars.width || '';
+  const boardHeight = chars.boardHeight || '';
+  const grossTonnage = chars.grossTonnage || '';
+  const netTonnage = chars.netTonnage || '';
+  const deadweight = chars.deadweight || '';
+  const vesselClass = chars.vesselClass || '';
+  const identificationConfirmed = inspection?.propertyPresence === 'Наличие имущества подтверждается' ? 'Подтверждена' : '';
+  
+  const vesselDescription = `Судно "${vesselName}", ИМО ${imo}. Тип судна: ${vesselType}. Позывной сигнал: ${callSign}. Морской порт регистрации: ${portOfRegistration}. Место и год постройки: ${placeOfConstruction}, ${yearOfConstruction}. Главный материал корпуса: ${hullMaterial}. Число и мощность главных двигателей: ${enginesCount}, ${enginesPower} кВт. Главные размерения: Длина ${length} м. Ширина ${width} м. Высота борта ${boardHeight} м. Вместимость валовая ${grossTonnage}. Вместимость чистая ${netTonnage}. Дедвейт ${deadweight} р.т. Класс судна: ${vesselClass}.`;
+  
+  return `
+    <div class="section" style="page-break-before: always;">
+      <div style="font-weight: bold; margin-bottom: 15px; text-align: center;">
+        Приложение к акту осмотра (морские/речные суда)
+      </div>
+      <table class="attachment-table">
+        <thead>
+          <tr>
+            <td style="text-align: center; font-weight: bold;">№ п/п</td>
+            <td style="text-align: center; font-weight: bold;">№ В ЗМ</td>
+            <td style="text-align: center; font-weight: bold;">Наименование объекта</td>
+            <td style="text-align: center; font-weight: bold;">Состояние имущества</td>
+            <td style="text-align: center; font-weight: bold;">Наличие обременений</td>
+            <td style="text-align: center; font-weight: bold;">Идентификация подтверждена/не подтверждена/выявленные разночтения</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center;">1</td>
+            <td></td>
+            <td>${vesselDescription}</td>
+            <td>${inspection?.propertyCondition || ''}</td>
+            <td></td>
+            <td style="background-color: ${identificationConfirmed ? '#ffff00' : 'transparent'};">${identificationConfirmed || ''}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Генерирует приложение для воздушных судов
+ */
+function generateAircraftAttachment(card: ExtendedCollateralCard, inspection?: Inspection): string {
+  const chars = card.characteristics || {};
+  const address = card.address || {};
+  const aircraftType = chars.aircraftType || card.name || '';
+  const serialNumber = chars.serialNumber || chars.factoryNumber || '';
+  const gliderNumber = chars.gliderNumber || '';
+  const year = chars.year || chars.yearOfManufacture || '';
+  const manufacturer = chars.manufacturer || '';
+  const model = chars.model || '';
+  const operatingHours = chars.operatingHours || chars.flightHours || '';
+  const operabilityConfirmed = inspection?.propertyPresence === 'Наличие имущества подтверждается' ? 'Подтверждена' : '';
+  const damagePresence = inspection?.propertyCondition || '';
+  const identificationConfirmed = operabilityConfirmed;
+  
+  return `
+    <div class="section" style="page-break-before: always;">
+      <div style="font-weight: bold; margin-bottom: 15px; text-align: center;">
+        Приложение к акту осмотра (воздушное судно)
+      </div>
+      <table class="attachment-table">
+        <thead>
+          <tr>
+            <td style="text-align: center; font-weight: bold;">№ п/п</td>
+            <td style="text-align: center; font-weight: bold;">№ В ЗМ</td>
+            <td style="text-align: center; font-weight: bold;">Вид воздушного судна</td>
+            <td style="text-align: center; font-weight: bold;">Серийный (заводской номер)</td>
+            <td style="text-align: center; font-weight: bold;">Номер планера</td>
+            <td style="text-align: center; font-weight: bold;">Год выпуска</td>
+            <td style="text-align: center; font-weight: bold;">Наименование изготовителя</td>
+            <td style="text-align: center; font-weight: bold;">Тип (наименование)</td>
+            <td style="text-align: center; font-weight: bold;">Адрес местоположения</td>
+            <td style="text-align: center; font-weight: bold;">Наработка /налет часов</td>
+            <td style="text-align: center; font-weight: bold;">Работоспособность подтверждена/не подтверждена</td>
+            <td style="text-align: center; font-weight: bold;">Наличие/отсутствие повреждений</td>
+            <td style="text-align: center; font-weight: bold;">Идентификация подтверждена/не подтверждена</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center;">1</td>
+            <td></td>
+            <td>${aircraftType}</td>
+            <td>${serialNumber}</td>
+            <td>${gliderNumber}</td>
+            <td style="text-align: center;">${year}</td>
+            <td>${manufacturer}</td>
+            <td>${model}</td>
+            <td>${address.fullAddress || ''}</td>
+            <td>${operatingHours}</td>
+            <td>${operabilityConfirmed || ''}</td>
+            <td>${damagePresence || ''}</td>
+            <td>${identificationConfirmed || ''}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Генерирует приложение для железнодорожного транспорта
+ */
+function generateRailwayAttachment(card: ExtendedCollateralCard, inspection?: Inspection): string {
+  const chars = card.characteristics || {};
+  const make = chars.make || chars.brand || '';
+  const model = chars.model || '';
+  const serialNumber = chars.serialNumber || chars.factoryNumber || '';
+  const year = chars.year || chars.yearOfConstruction || '';
+  const identificationMarks = chars.identificationMarks || '';
+  const wagonNumber = chars.wagonNumber || '';
+  const depot = chars.depot || '';
+  const inventoryNumber = chars.inventoryNumber || '';
+  const country = chars.country || chars.manufacturerCountry || '';
+  const identificationConfirmed = inspection?.propertyPresence === 'Наличие имущества подтверждается' ? 'Подтверждена' : '';
+  const encumbrances = '';
+  const comments = '';
+  
+  return `
+    <div class="section" style="page-break-before: always;">
+      <div style="font-weight: bold; margin-bottom: 15px; text-align: center;">
+        Приложение к акту осмотра (Железнодорожный транспорт)
+      </div>
+      <table class="attachment-table">
+        <thead>
+          <tr>
+            <td style="text-align: center; font-weight: bold;">№п/п</td>
+            <td style="text-align: center; font-weight: bold;">№ В ЗМ</td>
+            <td style="text-align: center; font-weight: bold;">Наименование</td>
+            <td style="text-align: center; font-weight: bold;">Марка, модель</td>
+            <td style="text-align: center; font-weight: bold;">Заводской номер</td>
+            <td style="text-align: center; font-weight: bold;">Год постройки</td>
+            <td style="text-align: center; font-weight: bold;">Идентификационные признаки</td>
+            <td style="text-align: center; font-weight: bold;">Номер вагона</td>
+            <td style="text-align: center; font-weight: bold;">Депо приписки</td>
+            <td style="text-align: center; font-weight: bold;">Инвентарный номер</td>
+            <td style="text-align: center; font-weight: bold;">Страна - изготовитель</td>
+            <td style="text-align: center; font-weight: bold;">Идентификация подтверждена/не подтверждена /выявленные разночтения</td>
+            <td style="text-align: center; font-weight: bold;">Выявленные обременения</td>
+            <td style="text-align: center; font-weight: bold;">Комментарии</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center;">1</td>
+            <td></td>
+            <td>${card.name || ''}</td>
+            <td>${make} ${model}</td>
+            <td>${serialNumber}</td>
+            <td style="text-align: center;">${year}</td>
+            <td>${identificationMarks}</td>
+            <td>${wagonNumber}</td>
+            <td>${depot}</td>
+            <td>${inventoryNumber}</td>
+            <td>${country}</td>
+            <td style="background-color: ${identificationConfirmed ? '#ffff00' : 'transparent'};">${identificationConfirmed || ''}</td>
+            <td>${encumbrances}</td>
+            <td>${comments}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Генерирует приложение для самоходной техники
+ */
+function generateSelfPropelledAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+  const chars = card.characteristics || {};
+  const address = card.address || {};
+  const make = chars.make || chars.brand || '';
+  const model = chars.model || '';
+  const serialNumber = chars.serialNumber || chars.factoryNumber || '';
+  const color = chars.color || '';
+  const year = chars.year || chars.yearOfManufacture || '';
+  const manufacturer = chars.manufacturer || '';
+  const inventoryNumber = chars.inventoryNumber || '';
+  const registrationNumber = chars.registrationNumber || '';
+  const bookValue = chars.bookValue || chars.balanceValue || chars.residualValue || 0;
+  
+  return `
+    <div class="section" style="page-break-before: always;">
+      <div style="font-weight: bold; margin-bottom: 15px; text-align: center;">
+        Приложение к акту осмотра (Самоходная техника)
+      </div>
+      <table class="attachment-table">
+        <thead>
+          <tr>
+            <td style="text-align: center; font-weight: bold;">№п/п</td>
+            <td style="text-align: center; font-weight: bold;">№ В ЗМ</td>
+            <td style="text-align: center; font-weight: bold;">Наименование</td>
+            <td style="text-align: center; font-weight: bold;">Марка машины</td>
+            <td style="text-align: center; font-weight: bold;">Модель</td>
+            <td style="text-align: center; font-weight: bold;">Заводской номер машины (рамы)</td>
+            <td style="text-align: center; font-weight: bold;">Цвет</td>
+            <td style="text-align: center; font-weight: bold;">Год выпуска</td>
+            <td style="text-align: center; font-weight: bold;">Предприятие - изготовитель</td>
+            <td style="text-align: center; font-weight: bold;">Инвентарный номер</td>
+            <td style="text-align: center; font-weight: bold;">Регистрационный знак</td>
+            <td style="text-align: center; font-weight: bold;">Адрес местоположения</td>
+            <td style="text-align: center; font-weight: bold;">Остаточная балансовая стоимость единицы, руб.</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center;">1</td>
+            <td></td>
+            <td>${card.name || ''}</td>
+            <td>${make}</td>
+            <td>${model}</td>
+            <td>${serialNumber}</td>
+            <td>${color}</td>
+            <td style="text-align: center;">${year}</td>
+            <td>${manufacturer}</td>
+            <td>${inventoryNumber}</td>
+            <td>${registrationNumber}</td>
+            <td>${address.fullAddress || ''}</td>
+            <td style="text-align: right;">${bookValue ? bookValue.toLocaleString('ru-RU') : '0.00'}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Генерирует приложение для ТМЦ
+ */
+function generateInventoryAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+  const chars = card.characteristics || {};
+  const address = card.address || {};
+  const unit = chars.unit || chars.unitOfMeasurement || '';
+  const quantity = chars.quantity || '';
+  const location = address.fullAddress || '';
+  const encumbrances = '';
+  const compliance = '';
+  const storageLocation = chars.storageLocation || '';
+  const storageSystem = chars.storageSystem || '';
+  const securityAlarm = chars.securityAlarm || '';
+  const storageConditions = chars.storageConditions || '';
+  const features = chars.features || '';
+  
+  return `
+    <div class="section" style="page-break-before: always;">
+      <div style="font-weight: bold; margin-bottom: 15px; text-align: center;">
+        Приложение к акту осмотра (ТМЦ)
+      </div>
+      <table class="attachment-table">
+        <thead>
+          <tr>
+            <td style="text-align: center; font-weight: bold;">№ п/п</td>
+            <td style="text-align: center; font-weight: bold;">№ В ЗМ</td>
+            <td style="text-align: center; font-weight: bold;">Наименование имущества/товаров</td>
+            <td style="text-align: center; font-weight: bold;">Единица измерения</td>
+            <td style="text-align: center; font-weight: bold;">Количество</td>
+            <td style="text-align: center; font-weight: bold;">Местонахождение имущества</td>
+            <td style="text-align: center; font-weight: bold;">Выявленные обременения</td>
+            <td style="text-align: center; font-weight: bold;">Соответствие товара количественным характеристикам</td>
+            <td style="text-align: center; font-weight: bold;">Характеристики места хранения</td>
+            <td style="text-align: center; font-weight: bold;">Система хранения</td>
+            <td style="text-align: center; font-weight: bold;">Наличие охранно-пожарной сигнализации</td>
+            <td style="text-align: center; font-weight: bold;">Условия хранения</td>
+            <td style="text-align: center; font-weight: bold;">Особенности</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center;">1</td>
+            <td></td>
+            <td>${card.name || ''}</td>
+            <td>${unit}</td>
+            <td style="text-align: right;">${quantity}</td>
+            <td>${location}</td>
+            <td>${encumbrances}</td>
+            <td>${compliance}</td>
+            <td>${storageLocation}</td>
+            <td>${storageSystem}</td>
+            <td>${securityAlarm}</td>
+            <td>${storageConditions}</td>
+            <td>${features}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Генерирует приложение для долей в УК
+ */
+function generateSharesAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+  const owner = card.partners?.find(p => p.role === 'owner');
+  const ownerName = owner
+    ? owner.type === 'legal'
+      ? owner.organizationName || ''
+      : `${owner.lastName || ''} ${owner.firstName || ''} ${owner.middleName || ''}`.trim()
+    : '';
+  const share = owner?.share || '';
+  const egrylConfirmation = '';
+  const encumbrances = '';
+  
+  return `
+    <div class="section" style="page-break-before: always;">
+      <div style="font-weight: bold; margin-bottom: 15px; text-align: center;">
+        Приложение к акту осмотра (доли в УК)
+      </div>
+      <table class="attachment-table">
+        <thead>
+          <tr>
+            <td style="text-align: center; font-weight: bold;">№ п/п</td>
+            <td style="text-align: center; font-weight: bold;">№ В ЗМ</td>
+            <td style="text-align: center; font-weight: bold;">Наименование собственника</td>
+            <td style="text-align: center; font-weight: bold;">Доля в УК</td>
+            <td style="text-align: center; font-weight: bold;">Подтверждение собственника и доли в УК выписок из ЕГРЮЛ</td>
+            <td style="text-align: center; font-weight: bold;">Выявленные обременения</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center;">1</td>
+            <td></td>
+            <td>${ownerName}</td>
+            <td style="text-align: right;">${share}%</td>
+            <td>${egrylConfirmation}</td>
+            <td>${encumbrances}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Генерирует приложение для товарных знаков
+ */
+function generateTrademarkAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+  const chars = card.characteristics || {};
+  const certificateNumber = chars.certificateNumber || '';
+  const certificateIssuedBy = chars.certificateIssuedBy || '';
+  const trademarkName = card.name || '';
+  const applicationNumber = chars.applicationNumber || '';
+  const priority = chars.priority || '';
+  const registrationDate = chars.registrationDate || '';
+  const registrationPeriod = chars.registrationPeriod || '';
+  const encumbrances = '';
+  const comments = '';
+  
+  return `
+    <div class="section" style="page-break-before: always;">
+      <div style="font-weight: bold; margin-bottom: 15px; text-align: center;">
+        Приложение к акту осмотра на исключительные права на товарные знаки (знаки обслуживания)
+      </div>
+      <table class="attachment-table">
+        <thead>
+          <tr>
+            <td style="text-align: center; font-weight: bold;">№ п/п</td>
+            <td style="text-align: center; font-weight: bold;">№ В ЗМ</td>
+            <td style="text-align: center; font-weight: bold;">Свидетельство на товарный знак (знак обслуживания) (№, кем выдано)</td>
+            <td style="text-align: center; font-weight: bold;">Наименование товарного знака (знака обслуживания)</td>
+            <td style="text-align: center; font-weight: bold;">Номер заявки</td>
+            <td style="text-align: center; font-weight: bold;">Приоритет товарного знака</td>
+            <td style="text-align: center; font-weight: bold;">Дата регистрации</td>
+            <td style="text-align: center; font-weight: bold;">Срок действия регистрации</td>
+            <td style="text-align: center; font-weight: bold;">Выявленные обременения</td>
+            <td style="text-align: center; font-weight: bold;">Комментарии</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center;">1</td>
+            <td></td>
+            <td>${certificateNumber}${certificateIssuedBy ? `, ${certificateIssuedBy}` : ''}</td>
+            <td>${trademarkName}</td>
+            <td>${applicationNumber}</td>
+            <td>${priority}</td>
+            <td>${registrationDate ? dayjs(registrationDate).format('DD.MM.YYYY') : ''}</td>
+            <td>${registrationPeriod}</td>
+            <td>${encumbrances}</td>
+            <td>${comments}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
