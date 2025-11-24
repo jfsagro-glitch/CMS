@@ -29,9 +29,14 @@ async function loadDocumentsFromExcel(): Promise<Map<string, DocumentTemplate[]>
       : `${resolvedBase.pathname}/`;
     const url = `${resolvedBase.origin}${normalizedPath}Documents.xlsx`;
     
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.warn('Не удалось загрузить файл документов, используем базовый набор');
+    const response = await fetch(url, { 
+      cache: 'no-store',
+      // Не показываем ошибку в консоли, если файл не найден
+      signal: AbortSignal.timeout(5000) // Таймаут 5 секунд
+    }).catch(() => null);
+    
+    if (!response || !response.ok) {
+      // Файл не найден или ошибка загрузки - используем базовый набор
       return new Map();
     }
     
@@ -61,7 +66,7 @@ async function loadDocumentsFromExcel(): Promise<Map<string, DocumentTemplate[]>
     
     return documentsMap;
   } catch (error) {
-    console.error('Ошибка загрузки документов из Excel:', error);
+    // Тихая обработка ошибки - используем базовый набор документов
     return new Map();
   }
 }
