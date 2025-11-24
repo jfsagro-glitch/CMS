@@ -1,48 +1,32 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
-  Badge,
   Card,
   Col,
   Empty,
   Input,
-  List,
-  Modal,
   Row,
-  Select,
-  Space,
   Statistic,
-  Table,
   Tag,
   Tooltip,
   Typography,
-  Cascader,
+  Tree,
 } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { FileTextOutlined, FolderOpenOutlined, SearchOutlined } from '@ant-design/icons';
-import type { CollateralDocument, CollateralFolder, CollateralDossierPayload } from '@/types/collateralDossier';
+import type { DataNode } from 'antd/es/tree';
+import { FileTextOutlined, FolderOutlined, SearchOutlined } from '@ant-design/icons';
+import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
 import type { CollateralPortfolioEntry } from '@/types/portfolio';
 import { generateDossierDemoData } from '@/utils/generateDossierDemoData';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import './CollateralDossierPage.css';
 
-interface TableRow extends CollateralDocument {
-  key: string;
-}
-
 const CollateralDossierPage: React.FC = () => {
-  const [documents, setDocuments] = useState<TableRow[]>([]);
-  const [folders, setFolders] = useState<CollateralFolder[]>([]);
+  const [documents, setDocuments] = useState<CollateralDocument[]>([]);
   const [portfolio, setPortfolio] = useState<CollateralPortfolioEntry[]>([]);
   const [searchValue, setSearchValue] = useState('');
-  const [clientSearch, setClientSearch] = useState('');
-  const [pledgerSearch, setPledgerSearch] = useState('');
-  const [hierarchyFilter, setHierarchyFilter] = useState<string[]>([]);
-  const [folderFilter, setFolderFilter] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [foldersVisible, setFoldersVisible] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -75,13 +59,7 @@ const CollateralDossierPage: React.FC = () => {
         if (!mounted) return;
 
         setPortfolio(portfolioData);
-        setFolders(payload.folders);
-        setDocuments(
-          payload.documents.map(doc => ({
-            ...doc,
-            key: doc.id,
-          })),
-        );
+        setDocuments(payload.documents);
 
         // Сохраняем в localStorage для последующего использования
         localStorage.setItem('collateralDossierData', JSON.stringify(payload));
@@ -91,13 +69,7 @@ const CollateralDossierPage: React.FC = () => {
           const saved = localStorage.getItem('collateralDossierData');
           if (saved) {
             const payload = JSON.parse(saved) as CollateralDossierPayload;
-            setFolders(payload.folders);
-            setDocuments(
-              payload.documents.map(doc => ({
-                ...doc,
-                key: doc.id,
-              })),
-            );
+            setDocuments(payload.documents);
           } else {
             throw fetchError;
           }
@@ -117,187 +89,192 @@ const CollateralDossierPage: React.FC = () => {
     };
   }, []);
 
-  const folderOptions = useMemo(
-    () =>
-      folders.map(folder => ({
-        value: folder.id,
-        label: folder.path.join(' / '),
-      })),
-    [folders],
-  );
+  // Построение дерева: Клиент -> Кредитный договор -> Залогодатель -> Договор залога -> Документы
+  const treeData = useMemo(() => {
+    const search = searchValue.trim().toLowerCase();
+    
+    // Группируем документы по сделкам
+    const documentsByReference = new Map<string, CollateralDocument[]>();
+    documents.forEach(doc => {
+      const ref = String(doc.reference || '');
+      if (!documentsByReference.has(ref)) {
+        documentsByReference.set(ref, []);
+      }
+      documentsByReference.get(ref)!.push(doc);
+    });
 
-  const statusOptions = useMemo(() => {
-    const statusSet = Array.from(new Set(documents.map(doc => doc.status)));
-    return statusSet.map(status => ({ value: status, label: status }));
-  }, [documents]);
-
-  // Иерархия для Cascader: Клиент -> Залогодатель -> Договор
-  const hierarchyOptions = useMemo(() => {
-    const clientsMap = new Map<string, Map<string, Set<string>>>();
+    // Группируем сделки по клиентам
+    const clientsMap = new Map<string, Map<string, Map<string, Map<string, CollateralDocument[]>>>>();
     
     portfolio.forEach(deal => {
       const borrower = deal.borrower || 'Не указан';
+      const loanContract = deal.contractNumber || `Договор ${deal.reference || 'без номера'}`;
       const pledger = deal.pledger || 'Не указан';
-      const contract = `Договор ${deal.contractNumber || deal.reference}`;
-      
+      const pledgeContract = deal.collateralContractNumber || `Договор залога ${deal.reference || 'без номера'}`;
+      const ref = String(deal.reference || '');
+      const dealDocs = documentsByReference.get(ref) || [];
+
+      // Фильтрация по поиску
+      if (search) {
+        const matchesSearch = 
+          borrower.toLowerCase().includes(search) ||
+          loanContract.toLowerCase().includes(search) ||
+          pledger.toLowerCase().includes(search) ||
+          pledgeContract.toLowerCase().includes(search) ||
+          dealDocs.some(doc => 
+            doc.docType.toLowerCase().includes(search) ||
+            doc.fileName.toLowerCase().includes(search)
+          );
+        if (!matchesSearch) return;
+      }
+
       if (!clientsMap.has(borrower)) {
         clientsMap.set(borrower, new Map());
       }
+      const loanContractsMap = clientsMap.get(borrower)!;
       
-      const pledgersMap = clientsMap.get(borrower)!;
-      if (!pledgersMap.has(pledger)) {
-        pledgersMap.set(pledger, new Set());
+      if (!loanContractsMap.has(loanContract)) {
+        loanContractsMap.set(loanContract, new Map());
       }
+      const pledgersMap = loanContractsMap.get(loanContract)!;
       
-      pledgersMap.get(pledger)!.add(contract);
+      if (!pledgersMap.has(pledger)) {
+        pledgersMap.set(pledger, new Map());
+      }
+      const pledgeContractsMap = pledgersMap.get(pledger)!;
+      
+      if (!pledgeContractsMap.has(pledgeContract)) {
+        pledgeContractsMap.set(pledgeContract, dealDocs);
+      } else {
+        // Объединяем документы, если договор залога уже есть
+        const existing = pledgeContractsMap.get(pledgeContract)!;
+        pledgeContractsMap.set(pledgeContract, [...existing, ...dealDocs]);
+      }
     });
-    
-    return Array.from(clientsMap.entries()).map(([client, pledgersMap]) => ({
-      value: client,
-      label: client,
-      children: Array.from(pledgersMap.entries()).map(([pledger, contracts]) => ({
-        value: pledger,
-        label: pledger,
-        children: Array.from(contracts).map(contract => ({
-          value: contract,
-          label: contract,
-        })),
-      })),
-    }));
-  }, [portfolio]);
 
-  const filteredDocuments = useMemo(() => {
-    const search = searchValue.trim().toLowerCase();
-    const clientTerm = clientSearch.trim().toLowerCase();
-    const pledgerTerm = pledgerSearch.trim().toLowerCase();
+    // Строим дерево
+    const buildTree = (): DataNode[] => {
+      return Array.from(clientsMap.entries()).map(([client, loanContractsMap]) => {
+        const clientKey = `client-${client}`;
+        
+        const loanContractNodes: DataNode[] = Array.from(loanContractsMap.entries()).map(([loanContract, pledgersMap]) => {
+          const loanContractKey = `${clientKey}-loan-${loanContract}`;
+          
+          const pledgerNodes: DataNode[] = Array.from(pledgersMap.entries()).map(([pledger, pledgeContractsMap]) => {
+            const pledgerKey = `${loanContractKey}-pledger-${pledger}`;
+            
+            const pledgeContractNodes: DataNode[] = Array.from(pledgeContractsMap.entries()).map(([pledgeContract, docs]) => {
+              const pledgeContractKey = `${pledgerKey}-pledge-${pledgeContract}`;
+              
+              const documentNodes: DataNode[] = docs.map((doc, index) => ({
+                key: `${pledgeContractKey}-doc-${index}`,
+                title: (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+                    <FileTextOutlined style={{ color: '#1890ff' }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 500 }}>{doc.docType}</div>
+                      <div style={{ fontSize: '12px', color: '#8c8c8c' }}>{doc.fileName}</div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                        <Tag color={doc.statusColor || 'default'} style={{ margin: 0 }}>
+                          {doc.status}
+                        </Tag>
+                        <span style={{ fontSize: '12px', color: '#8c8c8c' }}>
+                          {doc.size} • {doc.lastUpdated}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ),
+                isLeaf: true,
+                icon: <FileTextOutlined />,
+              }));
 
-    return documents.filter(doc => {
-      const matchesSearch =
-        !search ||
-        [
-          doc.reference,
-          doc.borrower,
-          doc.pledger,
-          doc.inn,
-          doc.docType,
-          doc.fileName,
-          doc.responsible,
-        ]
-          .filter(Boolean)
-          .some(value => String(value).toLowerCase().includes(search));
+              return {
+                key: pledgeContractKey,
+                title: (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <FolderOutlined style={{ color: '#faad14' }} />
+                    <span style={{ fontWeight: 500 }}>Договор залога: {pledgeContract}</span>
+                    <Tag color="blue" style={{ margin: 0 }}>{docs.length} документов</Tag>
+                  </div>
+                ),
+                children: documentNodes.length > 0 ? documentNodes : undefined,
+                icon: <FolderOutlined />,
+              };
+            });
 
-      const matchesClient =
-        !clientTerm ||
-        (doc.borrower && String(doc.borrower).toLowerCase().includes(clientTerm)) ||
-        (doc.pledger && String(doc.pledger).toLowerCase().includes(clientTerm));
+            return {
+              key: pledgerKey,
+              title: (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <FolderOutlined style={{ color: '#52c41a' }} />
+                  <span style={{ fontWeight: 500 }}>Залогодатель: {pledger}</span>
+                </div>
+              ),
+              children: pledgeContractNodes,
+              icon: <FolderOutlined />,
+            };
+          });
 
-      const matchesPledger =
-        !pledgerTerm || (doc.pledger && String(doc.pledger).toLowerCase().includes(pledgerTerm));
+          return {
+            key: loanContractKey,
+            title: (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FolderOutlined style={{ color: '#722ed1' }} />
+                <span style={{ fontWeight: 500 }}>Кредитный договор: {loanContract}</span>
+              </div>
+            ),
+            children: pledgerNodes,
+            icon: <FolderOutlined />,
+          };
+        });
 
-      // Фильтр по иерархии
-      const matchesHierarchy = hierarchyFilter.length === 0 || (
-        hierarchyFilter[0] && doc.borrower === hierarchyFilter[0] &&
-        (hierarchyFilter.length < 2 || doc.pledger === hierarchyFilter[1]) &&
-        (hierarchyFilter.length < 3 || doc.folderPath[2] === hierarchyFilter[2])
-      );
+        return {
+          key: clientKey,
+          title: (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <FolderOutlined style={{ color: '#eb2f96' }} />
+              <span style={{ fontWeight: 600, fontSize: '15px' }}>Клиент: {client}</span>
+            </div>
+          ),
+          children: loanContractNodes,
+          icon: <FolderOutlined />,
+        };
+      });
+    };
 
-      const matchesFolder = !folderFilter || doc.folderId === folderFilter;
-      const matchesStatus = !statusFilter || doc.status === statusFilter;
+    return buildTree();
+  }, [portfolio, documents, searchValue]);
 
-      return matchesSearch && matchesClient && matchesPledger && matchesHierarchy && matchesFolder && matchesStatus;
-    });
-  }, [documents, searchValue, clientSearch, pledgerSearch, hierarchyFilter, folderFilter, statusFilter]);
+  // Автоматически раскрываем все узлы при загрузке
+  useEffect(() => {
+    if (treeData.length > 0 && expandedKeys.length === 0) {
+      const getAllKeys = (nodes: DataNode[]): React.Key[] => {
+        const keys: React.Key[] = [];
+        nodes.forEach(node => {
+          keys.push(node.key);
+          if (node.children) {
+            keys.push(...getAllKeys(node.children));
+          }
+        });
+        return keys;
+      };
+      setExpandedKeys(getAllKeys(treeData));
+    }
+  }, [treeData, expandedKeys.length]);
 
   const stats = useMemo(() => {
     const totalDocs = documents.length;
     const completed = documents.filter(doc => doc.status === 'Загружен').length;
     const pending = documents.filter(doc => doc.status === 'На согласовании').length;
-    const outdated = documents.filter(doc => doc.status === 'Требует обновления').length;
 
     return {
       totalDocs,
       completed,
       pending,
-      outdated,
       completionRate: totalDocs ? Math.round((completed / totalDocs) * 100) : 0,
     };
   }, [documents]);
-
-  const columns: ColumnsType<TableRow> = [
-    {
-      title: 'Документ',
-      dataIndex: 'docType',
-      key: 'docType',
-      width: 220,
-      render: (_, record) => (
-        <div className="dossier-doc-cell">
-          <FileTextOutlined className="dossier-doc-icon" />
-          <div>
-            <Typography.Text strong>{record.docType}</Typography.Text>
-            <div className="dossier-muted">{record.fileName}</div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: 'Сделка',
-      dataIndex: 'reference',
-      key: 'reference',
-      width: 220,
-      render: (_, record) => (
-        <div>
-          <Typography.Text>{record.reference}</Typography.Text>
-          <div className="dossier-muted">{record.borrower ?? record.pledger ?? 'Не указан'}</div>
-          {record.inn && (
-            <div className="dossier-muted">
-              ИНН: <Typography.Text code>{record.inn}</Typography.Text>
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      title: 'Папка',
-      dataIndex: 'folderPath',
-      key: 'folderPath',
-      width: 260,
-      render: (_, record) => (
-        <div>
-          <FolderOpenOutlined style={{ marginRight: 6, color: '#8c8c8c' }} />
-          {record.folderPath.join(' / ')}
-          {record.description && <div className="dossier-muted">{record.description}</div>}
-        </div>
-      ),
-    },
-    {
-      title: 'Статус',
-      dataIndex: 'status',
-      key: 'status',
-      width: 160,
-      render: (_, record) => (
-        <Tag color={record.statusColor || 'default'}>{record.status}</Tag>
-      ),
-    },
-    {
-      title: 'Ответственный',
-      dataIndex: 'responsible',
-      key: 'responsible',
-      width: 160,
-      render: (_, record) => (
-        <div>
-          <Typography.Text>{record.responsible}</Typography.Text>
-          <div className="dossier-muted">Обновлен: {record.lastUpdated}</div>
-        </div>
-      ),
-    },
-    {
-      title: 'Размер',
-      dataIndex: 'size',
-      key: 'size',
-      width: 120,
-      render: value => <span>{value}</span>,
-    },
-  ];
 
   return (
     <div className="collateral-dossier">
@@ -311,11 +288,11 @@ const CollateralDossierPage: React.FC = () => {
             фотофиксация и регистраторы.
           </Typography.Paragraph>
         </div>
-        <Tooltip title="Поиск по номеру сделки, ИНН или типу документа">
+        <Tooltip title="Поиск по клиенту, договору, залогодателю или документу">
           <Input
             allowClear
             size="large"
-            placeholder="Поиск по сделке или документу"
+            placeholder="Поиск..."
             prefix={<SearchOutlined />}
             value={searchValue}
             onChange={event => setSearchValue(event.target.value)}
@@ -324,7 +301,7 @@ const CollateralDossierPage: React.FC = () => {
         </Tooltip>
       </div>
 
-      <Row gutter={[16, 16]}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic title="Всего документов" value={stats.totalDocs} />
@@ -351,123 +328,37 @@ const CollateralDossierPage: React.FC = () => {
         </Col>
       </Row>
 
-      <Card className="collateral-dossier__filters">
-        <Space size="middle" wrap>
-          <Cascader
-            allowClear
-            placeholder="Клиент → Залогодатель → Договор"
-            style={{ minWidth: 300 }}
-            options={hierarchyOptions}
-            value={hierarchyFilter}
-            onChange={(value) => setHierarchyFilter(value as string[])}
-            showSearch={{
-              filter: (inputValue, path) =>
-                path.some(option => {
-                  const label = String(option.label || '');
-                  return label.toLowerCase().includes(inputValue.toLowerCase());
-                }),
-            }}
-            changeOnSelect
+      <Card>
+        {error ? (
+          <Alert
+            type="error"
+            showIcon
+            message="Не удалось загрузить досье"
+            description={error}
+            action={
+              <a onClick={() => window.location.reload()} style={{ fontWeight: 600 }}>
+                Повторить
+              </a>
+            }
           />
-          <Select
-            allowClear
-            placeholder="Все папки"
-            style={{ minWidth: 220 }}
-            options={folderOptions}
-            value={folderFilter ?? undefined}
-            onChange={value => setFolderFilter(value ?? null)}
+        ) : loading ? (
+          <Empty description="Загрузка..." />
+        ) : treeData.length === 0 ? (
+          <Empty description="Нет документов" />
+        ) : (
+          <Tree
+            showLine={{ showLeafIcon: false }}
+            showIcon
+            defaultExpandAll
+            expandedKeys={expandedKeys}
+            onExpand={setExpandedKeys}
+            treeData={treeData}
+            style={{ fontSize: '14px' }}
           />
-          <Select
-            allowClear
-            placeholder="Статус"
-            style={{ minWidth: 180 }}
-            options={statusOptions}
-            value={statusFilter ?? undefined}
-            onChange={value => setStatusFilter(value ?? null)}
-          />
-          <Input
-            allowClear
-            placeholder="Поиск по клиенту"
-            prefix={<SearchOutlined />}
-            value={clientSearch}
-            onChange={event => setClientSearch(event.target.value)}
-            style={{ minWidth: 220 }}
-          />
-          <Input
-            allowClear
-            placeholder="Поиск по залогодателю"
-            prefix={<SearchOutlined />}
-            value={pledgerSearch}
-            onChange={event => setPledgerSearch(event.target.value)}
-            style={{ minWidth: 220 }}
-          />
-        </Space>
+        )}
       </Card>
-
-      <Card bodyStyle={{ padding: 0 }} className="collateral-dossier__table-card">
-        <div className="collateral-dossier__table-actions">
-          <Space>
-            <Tooltip title="Открыть иерархию хранения документов">
-              <a onClick={() => setFoldersVisible(true)}>Структура папок</a>
-            </Tooltip>
-          </Space>
-        </div>
-        <Table
-          columns={columns}
-          dataSource={filteredDocuments}
-          pagination={{ pageSize: 15, showSizeChanger: false }}
-          scroll={{ x: 1200 }}
-          loading={loading}
-          locale={{
-            emptyText: loading ? <Empty description="Загрузка..." /> : <Empty description="Нет документов" />,
-          }}
-        />
-      </Card>
-
-      {error && (
-        <Alert
-          type="error"
-          showIcon
-          message="Не удалось загрузить досье"
-          description={error}
-          action={
-            <a onClick={() => window.location.reload()} style={{ fontWeight: 600 }}>
-              Повторить
-            </a>
-          }
-        />
-      )}
-
-      <Modal
-        title="Структура папок залогового досье"
-        open={foldersVisible}
-        onCancel={() => setFoldersVisible(false)}
-        onOk={() => setFoldersVisible(false)}
-        okText="Закрыть"
-        cancelButtonProps={{ style: { display: 'none' } }}
-        width={720}
-      >
-        <List
-          dataSource={folders}
-          renderItem={item => (
-            <List.Item
-              className={item.id === folderFilter ? 'collateral-dossier__folder--active' : ''}
-              onClick={() => setFolderFilter(prev => (prev === item.id ? null : item.id))}
-              style={{ cursor: 'pointer' }}
-            >
-              <List.Item.Meta
-                avatar={<Badge status="processing" />}
-                title={<span>{item.path.join(' / ')}</span>}
-                description={item.description ? <span className="dossier-muted">{item.description}</span> : null}
-              />
-            </List.Item>
-          )}
-          locale={{ emptyText: 'Структура папок не найдена' }}
-        />
-      </Modal>
     </div>
   );
 };
 
 export default CollateralDossierPage;
-
