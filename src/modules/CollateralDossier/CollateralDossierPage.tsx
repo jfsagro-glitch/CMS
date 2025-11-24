@@ -243,7 +243,7 @@ const CollateralDossierPage: React.FC = () => {
       const pledger = deal.pledger || 'Не указан';
       const pledgeContract = deal.collateralContractNumber || `Договор залога ${deal.reference || 'без номера'}`;
       const ref = String(deal.reference || '');
-      let dealDocs = documentsByReference.get(ref) || [];
+      const dealDocs = documentsByReference.get(ref) || [];
 
       // Быстрая фильтрация по выпадающим спискам (ранний выход)
       if (clientFilter && borrower !== clientFilter) continue;
@@ -371,7 +371,7 @@ const CollateralDossierPage: React.FC = () => {
     };
 
         return buildTree();
-  }, [portfolio, documentsByReference, searchValue, clientFilter, loanContractFilter, pledgerFilter, pledgeContractFilter, renderDocumentNode, shortenDocType]);
+  }, [portfolio, documentsByReference, searchValue, clientFilter, loanContractFilter, pledgerFilter, pledgeContractFilter, renderDocumentNode]);
 
   // По умолчанию раскрываем только уровень клиентов
   useEffect(() => {
@@ -507,7 +507,7 @@ const CollateralDossierPage: React.FC = () => {
         </Tooltip>
       ),
     },
-  ], []);
+  ], [shortenDocType]);
 
   // Оптимизированная статистика (однократный проход)
   const stats = useMemo(() => {

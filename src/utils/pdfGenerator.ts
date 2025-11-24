@@ -92,13 +92,13 @@ function generateInspectionAttachment(card?: ExtendedCollateralCard, inspection?
   
   switch (attachmentType) {
     case 'residential_real_estate':
-      return generateResidentialRealEstateAttachment(card, inspection);
+      return generateResidentialRealEstateAttachment(card);
     case 'commercial_real_estate':
-      return generateCommercialRealEstateAttachment(card, inspection);
+      return generateCommercialRealEstateAttachment(card);
     case 'vehicle':
-      return generateVehicleAttachment(card, inspection);
+      return generateVehicleAttachment(card);
     case 'equipment':
-      return generateEquipmentAttachment(card, inspection);
+      return generateEquipmentAttachment(card);
     case 'vessel':
       return generateVesselAttachment(card, inspection);
     case 'aircraft':
@@ -106,13 +106,13 @@ function generateInspectionAttachment(card?: ExtendedCollateralCard, inspection?
     case 'railway':
       return generateRailwayAttachment(card, inspection);
     case 'self_propelled':
-      return generateSelfPropelledAttachment(card, inspection);
+      return generateSelfPropelledAttachment(card);
     case 'inventory':
-      return generateInventoryAttachment(card, inspection);
+      return generateInventoryAttachment(card);
     case 'shares':
-      return generateSharesAttachment(card, inspection);
+      return generateSharesAttachment(card);
     case 'trademark':
-      return generateTrademarkAttachment(card, inspection);
+      return generateTrademarkAttachment(card);
     default:
       return '';
   }
@@ -506,7 +506,7 @@ export const generateInspectionPDF = (
 /**
  * Генерирует приложение для жилой недвижимости
  */
-function generateResidentialRealEstateAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+function generateResidentialRealEstateAttachment(card: ExtendedCollateralCard): string {
   const chars = card.characteristics || {};
   const address = card.address || {};
   const cadastralNumber = address.cadastralNumber || chars.cadastralNumber || '';
@@ -567,7 +567,7 @@ function generateResidentialRealEstateAttachment(card: ExtendedCollateralCard, _
 /**
  * Генерирует приложение для коммерческой недвижимости
  */
-function generateCommercialRealEstateAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+function generateCommercialRealEstateAttachment(card: ExtendedCollateralCard): string {
   const chars = card.characteristics || {};
   const address = card.address || {};
   const cadastralNumber = address.cadastralNumber || chars.cadastralNumber || '';
@@ -632,7 +632,7 @@ function generateCommercialRealEstateAttachment(card: ExtendedCollateralCard, _i
 /**
  * Генерирует приложение для автотранспорта
  */
-function generateVehicleAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+function generateVehicleAttachment(card: ExtendedCollateralCard): string {
   const chars = card.characteristics || {};
   const address = card.address || {};
   const make = chars.make || chars.brand || '';
@@ -693,7 +693,7 @@ function generateVehicleAttachment(card: ExtendedCollateralCard, _inspection?: I
 /**
  * Генерирует приложение для оборудования
  */
-function generateEquipmentAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+function generateEquipmentAttachment(card: ExtendedCollateralCard): string {
   const chars = card.characteristics || {};
   const address = card.address || {};
   const make = chars.make || chars.brand || '';
@@ -938,7 +938,7 @@ function generateRailwayAttachment(card: ExtendedCollateralCard, inspection?: In
 /**
  * Генерирует приложение для самоходной техники
  */
-function generateSelfPropelledAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+function generateSelfPropelledAttachment(card: ExtendedCollateralCard): string {
   const chars = card.characteristics || {};
   const address = card.address || {};
   const make = chars.make || chars.brand || '';
@@ -999,7 +999,7 @@ function generateSelfPropelledAttachment(card: ExtendedCollateralCard, _inspecti
 /**
  * Генерирует приложение для ТМЦ
  */
-function generateInventoryAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+function generateInventoryAttachment(card: ExtendedCollateralCard): string {
   const chars = card.characteristics || {};
   const address = card.address || {};
   const unit = chars.unit || chars.unitOfMeasurement || '';
@@ -1061,7 +1061,7 @@ function generateInventoryAttachment(card: ExtendedCollateralCard, _inspection?:
 /**
  * Генерирует приложение для долей в УК
  */
-function generateSharesAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+function generateSharesAttachment(card: ExtendedCollateralCard): string {
   const owner = card.partners?.find(p => p.role === 'owner');
   const ownerName = owner
     ? owner.type === 'legal'
@@ -1106,7 +1106,7 @@ function generateSharesAttachment(card: ExtendedCollateralCard, _inspection?: In
 /**
  * Генерирует приложение для товарных знаков
  */
-function generateTrademarkAttachment(card: ExtendedCollateralCard, _inspection?: Inspection): string {
+function generateTrademarkAttachment(card: ExtendedCollateralCard): string {
   const chars = card.characteristics || {};
   const certificateNumber = chars.certificateNumber || '';
   const certificateIssuedBy = chars.certificateIssuedBy || '';
