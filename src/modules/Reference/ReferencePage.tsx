@@ -81,7 +81,17 @@ const ReferencePage: React.FC = () => {
         
         // Загружаем категории из базы знаний
         const loadedCategories = knowledgeBase.getCategories();
+        console.log('Загружено категорий:', loadedCategories.length);
         setCategories(loadedCategories);
+        
+        // Если категории пустые, но есть документы, перестраиваем базу знаний
+        if (loadedCategories.length === 0 && documents.length > 0) {
+          console.log('Категории пустые, перестраиваю базу знаний...');
+          await knowledgeBase.buildFromDocuments();
+          const rebuiltCategories = knowledgeBase.getCategories();
+          console.log('Перестроено категорий:', rebuiltCategories.length);
+          setCategories(rebuiltCategories);
+        }
         
         if (documents.length > 0) {
           message.success(`Загружено документов: ${documents.length}. База знаний готова к использованию.`);
@@ -285,9 +295,19 @@ const ReferencePage: React.FC = () => {
       const index = await loadDocumentManually(file);
       setIndexedDocuments(prev => [...prev, index]);
       
-      // Обновляем категории
+      // Обновляем категории после индексации
       const updatedCategories = knowledgeBase.getCategories();
+      console.log('Обновлено категорий после индексации:', updatedCategories.length);
       setCategories(updatedCategories);
+      
+      // Если категории все еще пустые, перестраиваем базу знаний
+      if (updatedCategories.length === 0) {
+        console.log('Категории пустые после индексации, перестраиваю базу знаний...');
+        await knowledgeBase.buildFromDocuments();
+        const rebuiltCategories = knowledgeBase.getCategories();
+        console.log('Перестроено категорий:', rebuiltCategories.length);
+        setCategories(rebuiltCategories);
+      }
       
       message.success(`Документ "${file.name}" успешно проиндексирован. База знаний обновлена.`);
     } catch (error) {
@@ -319,10 +339,36 @@ const ReferencePage: React.FC = () => {
     : [];
 
   const quickQuestions = [
-    { icon: <FileTextOutlined />, text: 'Что такое залог?', query: 'Что такое залог и залоговое имущество?' },
-    { icon: <CalculatorOutlined />, text: 'Расчет LTV', query: 'Как рассчитывается LTV залогового имущества?' },
-    { icon: <BulbOutlined />, text: 'Вопросы оценки', query: 'Как проводится оценка залогового имущества?' },
-    { icon: <QuestionCircleOutlined />, text: 'Договор залога', query: 'Что такое договор залога и его особенности?' },
+    { 
+      icon: <CalculatorOutlined />, 
+      text: 'Расчет LTV и залоговая стоимость', 
+      query: 'Как правильно рассчитать LTV (loan-to-value) для залогового имущества? Какие факторы влияют на залоговую стоимость?' 
+    },
+    { 
+      icon: <FileTextOutlined />, 
+      text: 'Оценка залогового имущества', 
+      query: 'Какие требования к независимой оценке залогового имущества? Как выбрать оценщика и проверить отчет об оценке?' 
+    },
+    { 
+      icon: <BulbOutlined />, 
+      text: 'Анализ рисков залога', 
+      query: 'Какие основные риски при принятии имущества в залог? Как оценить и минимизировать риски по залоговому обеспечению?' 
+    },
+    { 
+      icon: <QuestionCircleOutlined />, 
+      text: 'Регистрация обременения в Росреестре', 
+      query: 'Как зарегистрировать обременение в Росреестре? Какие документы необходимы для регистрации залога недвижимости?' 
+    },
+    { 
+      icon: <FileTextOutlined />, 
+      text: 'Визуальный осмотр залогового имущества', 
+      query: 'Как провести визуальный осмотр залогового имущества? На что обратить внимание при проверке наличия и состояния залога?' 
+    },
+    { 
+      icon: <BulbOutlined />, 
+      text: 'Обращение взыскания на залог', 
+      query: 'В каких случаях можно обратить взыскание на залоговое имущество? Каков порядок реализации залога?' 
+    },
   ];
 
   const handleQuickQuestion = (query: string) => {
