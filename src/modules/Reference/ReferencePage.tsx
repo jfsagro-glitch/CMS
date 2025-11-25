@@ -29,11 +29,14 @@ import {
   BookOutlined,
   SearchOutlined,
   FolderOutlined,
+  LikeOutlined,
+  DislikeOutlined,
 } from '@ant-design/icons';
 import { documentIndexer } from '@/utils/documentIndexer';
 import { loadVNDDocuments, loadDocumentManually } from '@/utils/documentLoader';
 import { knowledgeBase, type KnowledgeTopic, type KnowledgeCategory } from '@/utils/knowledgeBase';
 import { deepSeekService } from '@/services/DeepSeekService';
+import { feedbackStorage } from '@/utils/feedbackStorage';
 import type { DocumentIndex } from '@/utils/documentIndexer';
 import './ReferencePage.css';
 
@@ -47,6 +50,8 @@ interface Message {
   content: string;
   timestamp: Date;
   sources?: KnowledgeTopic[];
+  rating?: 'like' | 'dislike';
+  context?: string; // Контекст из базы знаний для сохранения обратной связи
 }
 
 const ReferencePage: React.FC = () => {
@@ -111,7 +116,7 @@ const ReferencePage: React.FC = () => {
   }, [searchQuery]);
 
   // Генерация ответа с использованием DeepSeek AI
-  const generateAIResponse = async (userMessage: string): Promise<{ content: string; sources: KnowledgeTopic[] }> => {
+  const generateAIResponse = async (userMessage: string): Promise<{ content: string; sources: KnowledgeTopic[]; context: string }> => {
     const lowerMessage = userMessage.toLowerCase();
 
     // Поиск по базе знаний для контекста
@@ -145,11 +150,11 @@ const ReferencePage: React.FC = () => {
               content: 'Поприветствуй пользователя и расскажи, что ты эксперт по банковским залогам и можешь помочь с вопросами об ипотеке, оценке, LTV, договорах залога и других аспектах залогового кредитования. База знаний основана на справочной литературе "Залоговik. Все о банковских залогах".' 
             }
           ]);
+          knowledgeContext = 'Приветствие';
         } else {
-          response = await deepSeekService.generateResponse(
-            userMessage,
-            `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categories.map(c => c.name).join(', ')}.`
-          );
+          const fallbackContext = `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categories.map(c => c.name).join(', ')}.`;
+          response = await deepSeekService.generateResponse(userMessage, fallbackContext);
+          knowledgeContext = fallbackContext;
         }
       }
     } catch (error) {
@@ -175,12 +180,14 @@ const ReferencePage: React.FC = () => {
             response += `*${topic.title}*\n\n${topic.content.slice(0, 300)}...\n\n`;
           }
         }
+        knowledgeContext = knowledgeContext || 'Локальная генерация';
       } else {
         response = `Извините, произошла ошибка при обращении к ИИ. Попробуйте переформулировать вопрос или использовать поиск по категориям слева.`;
+        knowledgeContext = 'Ошибка';
       }
     }
 
-    return { content: response, sources };
+    return { content: response, sources, context: knowledgeContext };
   };
 
   const handleSend = async () => {
@@ -200,7 +207,7 @@ const ReferencePage: React.FC = () => {
 
     // Генерация ответа с использованием DeepSeek AI
     try {
-      const { content, sources } = await generateAIResponse(question);
+      const { content, sources, context } = await generateAIResponse(question);
       
       const aiResponse: Message = {
         id: `ai-${Date.now()}`,
@@ -208,6 +215,7 @@ const ReferencePage: React.FC = () => {
         content,
         timestamp: new Date(),
         sources: sources.length > 0 ? sources : undefined,
+        context, // Сохраняем контекст для обратной связи
       };
 
       setMessages(prev => [...prev, aiResponse]);
@@ -229,6 +237,40 @@ const ReferencePage: React.FC = () => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  // Обработка оценки ответа
+  const handleRating = (messageId: string, rating: 'like' | 'dislike') => {
+    const msg = messages.find(m => m.id === messageId);
+    if (!msg || msg.role !== 'assistant') return;
+
+    // Находим вопрос пользователя, на который был дан этот ответ
+    const messageIndex = messages.findIndex(m => m.id === messageId);
+    const userMessage = messageIndex > 0 ? messages[messageIndex - 1] : null;
+    const question = userMessage?.content || '';
+
+    // Сохраняем обратную связь
+    feedbackStorage.saveFeedback({
+      messageId,
+      question,
+      answer: msg.content,
+      rating,
+      timestamp: new Date(),
+      context: msg.context,
+    });
+
+    // Обновляем оценку в сообщении
+    setMessages(prev =>
+      prev.map(m =>
+        m.id === messageId ? { ...m, rating } : m
+      )
+    );
+
+    if (rating === 'like') {
+      message.success('Спасибо за оценку!');
+    } else {
+      message.success('Спасибо за обратную связь. Ответ будет улучшен.');
     }
   };
 
@@ -527,6 +569,34 @@ const ReferencePage: React.FC = () => {
                                     </Tag>
                                   ))}
                                 </div>
+                              </div>
+                            )}
+                            {message.role === 'assistant' && (
+                              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f0f0f0' }}>
+                                <Space>
+                                  <Button
+                                    type="text"
+                                    size="small"
+                                    icon={<LikeOutlined />}
+                                    onClick={() => handleRating(message.id, 'like')}
+                                    style={{
+                                      color: message.rating === 'like' ? '#52c41a' : undefined,
+                                    }}
+                                  >
+                                    Полезно
+                                  </Button>
+                                  <Button
+                                    type="text"
+                                    size="small"
+                                    icon={<DislikeOutlined />}
+                                    onClick={() => handleRating(message.id, 'dislike')}
+                                    style={{
+                                      color: message.rating === 'dislike' ? '#ff4d4f' : undefined,
+                                    }}
+                                  >
+                                    Не полезно
+                                  </Button>
+                                </Space>
                               </div>
                             )}
                           </div>
