@@ -78,12 +78,17 @@ class KnowledgeBase {
       // Определяем категорию на основе ключевых слов
       const category = this.detectCategory(chunk);
       
-      // Объединяем связанные чанки в одну тему
+      // Объединяем связанные чанки в одну тему (увеличиваем радиус поиска)
       const relatedChunks = this.findRelatedChunks(chunk, chunks, processedChunks);
-      const combinedText = relatedChunks.map(c => c.text).join(' ');
+      const combinedText = relatedChunks.map(c => c.text).join(' ').trim();
+      
+      // Пропускаем слишком короткие темы
+      if (combinedText.length < 100) {
+        continue;
+      }
       
       // Извлекаем заголовок темы
-      const title = this.extractTitle(chunk.text, combinedText);
+      const title = this.extractTitle(combinedText);
       
       // Извлекаем ключевые слова
       const keywords = this.extractKeywords(combinedText, chunk.keywords);
@@ -167,8 +172,8 @@ class KnowledgeBase {
     for (const otherChunk of allChunks) {
       if (processed.has(otherChunk.id) || otherChunk.id === chunk.id) continue;
       
-      // Если на той же странице или соседней
-      if (Math.abs(otherChunk.page - chunk.page) <= 1) {
+      // Если на той же странице или соседних (увеличиваем радиус до 2 страниц)
+      if (Math.abs(otherChunk.page - chunk.page) <= 2) {
         const otherKeywords = new Set(otherChunk.keywords.map(k => k.toLowerCase()));
         
         // Если есть пересечение ключевых слов
@@ -185,7 +190,7 @@ class KnowledgeBase {
   /**
    * Извлекает заголовок из текста
    */
-  private extractTitle(text: string, _fullText: string): string {
+  private extractTitle(text: string): string {
     // Ищем строки, которые выглядят как заголовки (короткие, с заглавными буквами)
     const lines = text.split('\n').filter(line => line.trim().length > 0);
     

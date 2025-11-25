@@ -15,22 +15,32 @@ export async function loadVNDDocuments(): Promise<DocumentIndex[]> {
 
     // Пытаемся загрузить PDF из папки VND
     // Пробуем разные пути для разных окружений
+    const pdfFileName = '[Volhin_N.A.]_Zalogovik._Vse_o_bankovskih_zalogah_(b-ok.org).pdf';
     const basePath = import.meta.env.BASE_URL || './';
-    const pdfPath = `${basePath}VND/[Volhin_N.A.]_Zalogovik._Vse_o_bankovskih_zalogah_(b-ok.org).pdf`;
     
-    let response = await fetch(pdfPath);
+    // Список путей для попытки загрузки
+    const pathsToTry = [
+      `${basePath}VND/${pdfFileName}`,
+      `./VND/${pdfFileName}`,
+      `/VND/${pdfFileName}`,
+      `VND/${pdfFileName}`,
+    ];
     
-    // Если не получилось, пробуем без base path
-    if (!response.ok) {
-      response = await fetch('/VND/[Volhin_N.A.]_Zalogovik._Vse_o_bankovskih_zalogah_(b-ok.org).pdf');
+    let response: Response | null = null;
+    for (const pdfPath of pathsToTry) {
+      try {
+        const testResponse = await fetch(pdfPath);
+        if (testResponse.ok) {
+          response = testResponse;
+          break;
+        }
+      } catch (e) {
+        // Продолжаем попытки
+        continue;
+      }
     }
     
-    // Если все еще не получилось, пробуем относительный путь
-    if (!response.ok) {
-      response = await fetch('./VND/[Volhin_N.A.]_Zalogovik._Vse_o_bankovskih_zalogah_(b-ok.org).pdf');
-    }
-    
-    if (response.ok) {
+    if (response && response.ok) {
       const blob = await response.blob();
       const file = new File(
         [blob],
@@ -59,7 +69,7 @@ export async function loadVNDDocuments(): Promise<DocumentIndex[]> {
         knowledgeBase.loadFromStorage();
       }
     } else {
-      console.warn('Не удалось загрузить документ из VND:', response.statusText);
+      console.warn('Не удалось загрузить документ из VND:', response?.statusText || 'файл не найден');
       console.info('Вы можете загрузить PDF документ вручную через кнопку "Загрузить документ"');
     }
   } catch (error) {

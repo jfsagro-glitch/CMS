@@ -49,6 +49,29 @@ if (fs.existsSync(instructionSourceDir)) {
   console.warn('⚠️  INSTRUCTION folder not found, skipping copy');
 }
 
+// 4. Копируем папку public/VND в dist/VND
+const vndSourceDir = path.join(__dirname, '../public/VND');
+const vndDestDir = path.join(distDir, 'VND');
+if (fs.existsSync(vndSourceDir)) {
+  // Создаем папку назначения, если её нет
+  if (!fs.existsSync(vndDestDir)) {
+    fs.mkdirSync(vndDestDir, { recursive: true });
+  }
+  
+  // Копируем все файлы из public/VND
+  const files = fs.readdirSync(vndSourceDir);
+  files.forEach(file => {
+    const sourcePath = path.join(vndSourceDir, file);
+    const destPath = path.join(vndDestDir, file);
+    if (fs.statSync(sourcePath).isFile()) {
+      fs.copyFileSync(sourcePath, destPath);
+    }
+  });
+  console.log('✅ Copied VND folder to dist');
+} else {
+  console.warn('⚠️  public/VND folder not found, skipping copy');
+}
+
 // 3. Создаем CNAME файл (если нужен custom domain)
 // const cnameContent = 'your-custom-domain.com';
 // fs.writeFileSync(path.join(distDir, 'CNAME'), cnameContent);

@@ -33,6 +33,7 @@ import {
 import { documentIndexer } from '@/utils/documentIndexer';
 import { loadVNDDocuments, loadDocumentManually } from '@/utils/documentLoader';
 import { knowledgeBase, type KnowledgeTopic, type KnowledgeCategory } from '@/utils/knowledgeBase';
+import { deepSeekService } from '@/services/DeepSeekService';
 import type { DocumentIndex } from '@/utils/documentIndexer';
 import './ReferencePage.css';
 
@@ -109,73 +110,73 @@ const ReferencePage: React.FC = () => {
     }
   }, [searchQuery]);
 
-  // Генерация ответа на основе базы знаний
-  const generateAIResponse = (userMessage: string): { content: string; sources: KnowledgeTopic[] } => {
+  // Генерация ответа с использованием DeepSeek AI
+  const generateAIResponse = async (userMessage: string): Promise<{ content: string; sources: KnowledgeTopic[] }> => {
     const lowerMessage = userMessage.toLowerCase();
 
-    // Поиск по базе знаний
+    // Поиск по базе знаний для контекста
     const topics = knowledgeBase.search(userMessage, 5);
     
     let response = '';
     let sources: KnowledgeTopic[] = [];
 
+    // Формируем контекст из найденных тем
+    let knowledgeContext = '';
     if (topics.length > 0) {
-      // Формируем структурированный ответ на основе найденных тем
-      response = `На основе справочной литературы по банковским залогам:\n\n`;
-      
-      // Группируем по категориям
-      const byCategory = new Map<string, KnowledgeTopic[]>();
+      const contextParts: string[] = [];
       for (const topic of topics) {
-        if (!byCategory.has(topic.category)) {
-          byCategory.set(topic.category, []);
-        }
-        byCategory.get(topic.category)!.push(topic);
+        contextParts.push(`Тема: ${topic.title}\nСодержание: ${topic.content}\nСтраница: ${topic.page}`);
       }
-
-      // Формируем ответ
-      for (const [categoryId, categoryTopics] of byCategory.entries()) {
-        const categoryName = categories.find(c => c.id === categoryId)?.name || categoryId;
-        response += `**${categoryName}**\n\n`;
-        
-        for (const topic of categoryTopics.slice(0, 2)) {
-          response += `*${topic.title}*\n\n`;
-          
-          // Берем первые 300 символов содержимого
-          const content = topic.content.length > 300 
-            ? topic.content.slice(0, 300) + '...'
-            : topic.content;
-          response += `${content}\n\n`;
-        }
-      }
-
+      knowledgeContext = contextParts.join('\n\n---\n\n');
       sources = topics;
-    } else {
-      // Если ничего не найдено
-      if (lowerMessage.includes('привет') || lowerMessage.includes('здравствуй')) {
-        response = `Здравствуйте! Я ваш помощник по вопросам работы с залоговым имуществом.
+    }
 
-Моя база знаний основана на справочной литературе "Залоговik. Все о банковских залогах".
-
-Я могу помочь вам с:
-📋 Ипотекой и залоговым кредитованием
-💰 Оценкой залогового имущества
-📊 Расчетом LTV и анализом рисков
-📝 Договорами залога
-⚖️ Нормативными требованиями
-📑 Регистрацией залогов
-
-Задайте вопрос, и я найду нужную информацию в базе знаний!`;
+    try {
+      // Используем DeepSeek AI для генерации ответа
+      if (knowledgeContext) {
+        // Если есть контекст из базы знаний, используем его
+        response = await deepSeekService.generateResponse(userMessage, knowledgeContext);
       } else {
-        response = `К сожалению, я не нашел точной информации по вашему запросу в базе знаний.
+        // Если контекста нет, используем общий запрос
+        if (lowerMessage.includes('привет') || lowerMessage.includes('здравствуй')) {
+          response = await deepSeekService.chat([
+            { 
+              role: 'user', 
+              content: 'Поприветствуй пользователя и расскажи, что ты эксперт по банковским залогам и можешь помочь с вопросами об ипотеке, оценке, LTV, договорах залога и других аспектах залогового кредитования. База знаний основана на справочной литературе "Залоговik. Все о банковских залогах".' 
+            }
+          ]);
+        } else {
+          response = await deepSeekService.generateResponse(
+            userMessage,
+            `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categories.map(c => c.name).join(', ')}.`
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка запроса к DeepSeek API:', error);
+      
+      // Fallback на локальную генерацию ответа
+      if (topics.length > 0) {
+        response = `На основе справочной литературы по банковским залогам:\n\n`;
+        
+        const byCategory = new Map<string, KnowledgeTopic[]>();
+        for (const topic of topics) {
+          if (!byCategory.has(topic.category)) {
+            byCategory.set(topic.category, []);
+          }
+          byCategory.get(topic.category)!.push(topic);
+        }
 
-Попробуйте:
-- Использовать ключевые слова: залог, ипотека, оценка, LTV, договор
-- Задать более конкретный вопрос
-- Выбрать категорию из списка слева
-- Использовать поиск по темам
-
-Доступные категории:
-${categories.map(c => `- ${c.name}`).join('\n')}`;
+        for (const [categoryId, categoryTopics] of byCategory.entries()) {
+          const categoryName = categories.find(c => c.id === categoryId)?.name || categoryId;
+          response += `**${categoryName}**\n\n`;
+          
+          for (const topic of categoryTopics.slice(0, 2)) {
+            response += `*${topic.title}*\n\n${topic.content.slice(0, 300)}...\n\n`;
+          }
+        }
+      } else {
+        response = `Извините, произошла ошибка при обращении к ИИ. Попробуйте переформулировать вопрос или использовать поиск по категориям слева.`;
       }
     }
 
@@ -197,9 +198,9 @@ ${categories.map(c => `- ${c.name}`).join('\n')}`;
     setInputValue('');
     setLoading(true);
 
-    // Генерация ответа с задержкой
-    setTimeout(() => {
-      const { content, sources } = generateAIResponse(question);
+    // Генерация ответа с использованием DeepSeek AI
+    try {
+      const { content, sources } = await generateAIResponse(question);
       
       const aiResponse: Message = {
         id: `ai-${Date.now()}`,
@@ -210,8 +211,18 @@ ${categories.map(c => `- ${c.name}`).join('\n')}`;
       };
 
       setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('Ошибка генерации ответа:', error);
+      const errorResponse: Message = {
+        id: `ai-error-${Date.now()}`,
+        role: 'assistant',
+        content: 'Извините, произошла ошибка при генерации ответа. Попробуйте еще раз или переформулируйте вопрос.',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setLoading(false);
-    }, 800 + Math.random() * 800);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
