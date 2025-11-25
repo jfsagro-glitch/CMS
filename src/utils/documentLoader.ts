@@ -3,6 +3,7 @@
  */
 
 import { documentIndexer, type DocumentIndex } from './documentIndexer';
+import { knowledgeBase } from './knowledgeBase';
 
 /**
  * Загружает и индексирует документы из папки VND
@@ -47,8 +48,15 @@ export async function loadVNDDocuments(): Promise<DocumentIndex[]> {
         console.log('Индексирую документ:', file.name);
         await documentIndexer.indexPDF(file);
         console.log('✅ Документ проиндексирован');
+        
+        // Строим базу знаний из индексированного документа
+        console.log('Строю базу знаний...');
+        await knowledgeBase.buildFromDocuments();
+        console.log('✅ База знаний построена');
       } else {
         console.log('Документ уже проиндексирован:', file.name);
+        // Загружаем базу знаний из хранилища
+        knowledgeBase.loadFromStorage();
       }
     } else {
       console.warn('Не удалось загрузить документ из VND:', response.statusText);
@@ -66,6 +74,11 @@ export async function loadVNDDocuments(): Promise<DocumentIndex[]> {
  * Загружает документ вручную через файловый input
  */
 export async function loadDocumentManually(file: File): Promise<DocumentIndex> {
-  return await documentIndexer.indexPDF(file);
+  const index = await documentIndexer.indexPDF(file);
+  
+  // Строим базу знаний из индексированного документа
+  await knowledgeBase.buildFromDocuments();
+  
+  return index;
 }
 
