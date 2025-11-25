@@ -59,53 +59,63 @@ if (!fs.existsSync(vndDestDir)) {
   fs.mkdirSync(vndDestDir, { recursive: true });
 }
 
-let copied = false;
+let copiedCount = 0;
 const supportedExtensions = ['.pdf', '.docx', '.xlsx', '.xls'];
+
+// Функция для фильтрации файлов
+function filterDocumentFiles(files, sourceDir) {
+  return files.filter(file => {
+    // Игнорируем временные файлы
+    if (file.startsWith('~$')) return false;
+    const ext = path.extname(file).toLowerCase();
+    const filePath = path.join(sourceDir, file);
+    return supportedExtensions.includes(ext) && fs.statSync(filePath).isFile();
+  });
+}
 
 // Сначала пробуем скопировать из public/VND
 if (fs.existsSync(vndSourceDir)) {
   const files = fs.readdirSync(vndSourceDir);
-  const documentFiles = files.filter(file => {
-    const ext = path.extname(file).toLowerCase();
-    return supportedExtensions.includes(ext) && fs.statSync(path.join(vndSourceDir, file)).isFile();
-  });
+  const documentFiles = filterDocumentFiles(files, vndSourceDir);
   
   if (documentFiles.length > 0) {
     documentFiles.forEach(file => {
       const sourcePath = path.join(vndSourceDir, file);
       const destPath = path.join(vndDestDir, file);
       fs.copyFileSync(sourcePath, destPath);
-      copied = true;
+      copiedCount++;
     });
-    if (copied) {
-      console.log(`✅ Copied ${documentFiles.length} document(s) from public/VND to dist (PDF/DOCX/XLSX)`);
-    }
+    console.log(`✅ Copied ${copiedCount} document(s) from public/VND to dist (PDF/DOCX/XLSX)`);
   }
 }
 
-// Если public/VND пустая, пробуем скопировать из корня VND
-if (!copied && fs.existsSync(vndRootDir)) {
+// Если public/VND пустая или не все файлы скопированы, пробуем скопировать из корня VND
+if (fs.existsSync(vndRootDir)) {
   const files = fs.readdirSync(vndRootDir);
-  const documentFiles = files.filter(file => {
-    const ext = path.extname(file).toLowerCase();
-    return supportedExtensions.includes(ext) && fs.statSync(path.join(vndRootDir, file)).isFile();
-  });
+  const documentFiles = filterDocumentFiles(files, vndRootDir);
   
   if (documentFiles.length > 0) {
+    let rootCopiedCount = 0;
     documentFiles.forEach(file => {
       const sourcePath = path.join(vndRootDir, file);
       const destPath = path.join(vndDestDir, file);
-      fs.copyFileSync(sourcePath, destPath);
-      copied = true;
+      // Копируем только если файл еще не скопирован
+      if (!fs.existsSync(destPath)) {
+        fs.copyFileSync(sourcePath, destPath);
+        rootCopiedCount++;
+        copiedCount++;
+      }
     });
-    if (copied) {
-      console.log(`✅ Copied ${documentFiles.length} document(s) from root VND to dist (PDF/DOCX/XLSX)`);
+    if (rootCopiedCount > 0) {
+      console.log(`✅ Copied ${rootCopiedCount} additional document(s) from root VND to dist (PDF/DOCX/XLSX)`);
     }
   }
 }
 
-if (!copied) {
+if (copiedCount === 0) {
   console.warn('⚠️  VND folder not found or empty, skipping copy');
+} else {
+  console.log(`📚 Total: ${copiedCount} document(s) copied to dist/VND`);
 }
 
 // 3. Создаем CNAME файл (если нужен custom domain)

@@ -18,11 +18,40 @@ const KNOWN_DOCUMENT_FILES = [
   'Документы для мониторинга залога.xlsx',
   'Нетиповые риски.docx',
   'Примеры заданий.docx',
-  // Документы по оценке
+  
+  // Документы по оценке (DOCX)
   'Оценка АЗС.docx',
+  'Оценка АЗС — копия.docx',
   'Оценка торговых центров.docx',
   'BusinesStat АЗС.docx',
-  // FSO документы (Федеральные стандарты оценки)
+  'Анализ наилучшего и наиболее эффективного использования.docx',
+  'Величина физического износа объектов капитального строительства.docx',
+  'Вопросы переоценки основных средств.docx',
+  'Исследование методов оценки акций коммерческого банка.docx',
+  'Корректировка на удаленность земельных участков Московской области.docx',
+  'Коэффициент перехода на вторичный рынок.docx',
+  'Лямбда сестра омеги.docx',
+  'Метод АВС при оценке автотранспортных средств.docx',
+  'Метод дисконтирования денежных потоков.docx',
+  'Метод рыночной экстракции.docx',
+  'МЕТОДИЧЕСКОЕ РУКОВОДСТВО ПО ОПРЕДЕЛЕНИЮ СТОИМОСТИ.docx',
+  'Норма дисконта.docx',
+  'Обзор и сравнение современных отечественных и зарубежных методов оценки технического состояния зданий и сооружений.docx',
+  'ОБОСНОВАНИЕ И РАСЧЕТ ПОПРАВКИ НА ПЛОЩАДЬ.docx',
+  'Определение прибыли предпринимателя.docx',
+  'Особенности оценки имущества в деле о банкротстве.docx',
+  'Переоценка основных средств.docx',
+  'Практические аспекты расчёта ставки дисконта.docx',
+  'Применение модели Ольсона в оценке стоимости компании.docx',
+  'Расчет коэффициента капитализации.docx',
+  'Расчет ставки дисконтирования кумулятивным методом.docx',
+  'Справедливая.docx',
+  'Средняя скидка на торг при покупке жилого дома в Московской области.docx',
+  'Средняя скидка на торг при покупке земельных участков в Московской области.docx',
+  'Статистическое исследование зависимости накопленного износа автомобиля от его эффективного возраста.docx',
+  'Техника группы инвестиций.docx',
+  
+  // FSO документы (Федеральные стандарты оценки) - PDF
   'FSO1.pdf',
   'FSO2.pdf',
   'FSO3.pdf',
@@ -34,10 +63,26 @@ const KNOWN_DOCUMENT_FILES = [
   'FSO9.pdf',
   'FSO10.pdf',
   'FSO11.pdf',
+  
   // Документы по оценке (PDF)
   'ocenka_biznesa_voprosy_s_otvetami.pdf',
   'ocenka_nedvizhimosti_predpriyatiya_voprosy_s_otvetami.pdf',
   'ocenka_nedvizhimosti_voprosy_s_otvetami.pdf',
+  'ekon_ocenka_investiciy_voprosy_s_otvetami.pdf',
+  'korrektirovki-zemelnyh-udalennosti-morya-sochi.pdf',
+  'Land_heritage_Yaskevich.pdf',
+  'Method-recommendations-determining-cadastrial-value.pdf',
+  'O-merah-korrektirovke-kadastrovoy-otsenki-zemel-poseleniy.pdf',
+  'otsenka-rynochnoy-stoimosti-uchastkov-azs-servisa.pdf',
+  'otsenka-rynochnoy-stoimosti-zemelnogo-uchastka-aeroporta.pdf',
+  'report-colliers-spb.pdf',
+  'Report-Imuschestvo-ip.pdf',
+  'Report-Market-Value-Assessment-Report-for-the-Store.pdf',
+  'Report-stoimosti-magazina-remonta-bytovoy-tehniki.pdf',
+  'Report-valuation-market-value-shares-enterprise-OJSC-BYT.pdf',
+  'stavki-diskontirovaniya-RF-pri-sankciyah.pdf',
+  'Valuation-minority-stake-in-company-OJSC-MOROZ.pdf',
+  'Valuation-report-stake-in-CJSC-Reserve.pdf',
 ];
 
 /**
@@ -45,6 +90,12 @@ const KNOWN_DOCUMENT_FILES = [
  */
 function getFileType(fileName: string): 'pdf' | 'docx' | 'xlsx' | 'unknown' {
   const lowerName = fileName.toLowerCase();
+  // Игнорируем временные файлы
+  if (fileName.startsWith('~$')) return 'unknown';
+  // Игнорируем неподдерживаемые форматы
+  if (lowerName.endsWith('.doc') || lowerName.endsWith('.pptx') || lowerName.endsWith('.rtf')) {
+    return 'unknown';
+  }
   if (lowerName.endsWith('.pdf')) return 'pdf';
   if (lowerName.endsWith('.docx')) return 'docx';
   if (lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls')) return 'xlsx';
