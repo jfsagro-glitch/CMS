@@ -7,9 +7,20 @@ import { feedbackStorage } from '@/utils/feedbackStorage';
 // Зашифрованный API ключ (base64 + простой шифр)
 const ENCRYPTED_API_KEY = 'c2stMWIyN2JhYmVlNzQ2NGVlODk2Nzc5ZmRlNDI5MDg0ZWQ='; // base64(sk-1b27babee7464ee896779fde429084ed)
 
+interface FeedbackAnalysis {
+  goodExamples: string[];
+  badExamples: string[];
+  suggestions: string[];
+}
+
 class DeepSeekService {
   private readonly API_URL = 'https://api.deepseek.com/v1/chat/completions';
   private readonly MODEL = 'deepseek-chat';
+  private feedbackCache: {
+    data: FeedbackAnalysis;
+    timestamp: number;
+  } | null = null;
+  private readonly CACHE_TTL = 60000; // 1 минута
   
   /**
    * Расшифровывает API ключ
@@ -64,8 +75,18 @@ class DeepSeekService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`DeepSeek API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+        let errorMessage = `DeepSeek API error: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMessage += ` - ${JSON.stringify(errorData)}`;
+        } catch {
+          // Если не удалось распарсить JSON, используем текст ответа
+          const text = await response.text().catch(() => '');
+          if (text) {
+            errorMessage += ` - ${text}`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -92,28 +113,55 @@ class DeepSeekService {
   }
 
   /**
-   * Анализирует обратную связь для улучшения ответов
+   * Анализирует обратную связь для улучшения ответов (с кэшированием)
    */
-  private getFeedbackAnalysis(): {
-    goodExamples: string[];
-    badExamples: string[];
-    suggestions: string[];
-  } {
-    const goodExamples = feedbackStorage.getGoodExamples(3);
-    const badExamples = feedbackStorage.getBadExamples(3);
-    const analysis = feedbackStorage.analyzeDislikes();
+  private getFeedbackAnalysis(): FeedbackAnalysis {
+    // Проверяем кэш
+    const now = Date.now();
+    if (this.feedbackCache && (now - this.feedbackCache.timestamp) < this.CACHE_TTL) {
+      return this.feedbackCache.data;
+    }
 
-    return {
-      goodExamples: goodExamples.map(f => `Вопрос: ${f.question}\nОтвет: ${f.answer.slice(0, 200)}...`),
-      badExamples: badExamples.map(f => `Вопрос: ${f.question}\nОтвет: ${f.answer.slice(0, 200)}...`),
-      suggestions: analysis.suggestions,
-    };
+    try {
+      const goodExamples = feedbackStorage.getGoodExamples(3);
+      const badExamples = feedbackStorage.getBadExamples(3);
+      const analysis = feedbackStorage.analyzeDislikes();
+
+      const result = {
+        goodExamples: goodExamples.map(f => `Вопрос: ${f.question}\nОтвет: ${f.answer.slice(0, 200)}...`),
+        badExamples: badExamples.map(f => `Вопрос: ${f.question}\nОтвет: ${f.answer.slice(0, 200)}...`),
+        suggestions: analysis.suggestions,
+      };
+
+      // Сохраняем в кэш
+      this.feedbackCache = {
+        data: result,
+        timestamp: now,
+      };
+
+      return result;
+    } catch (error) {
+      console.error('Ошибка анализа обратной связи:', error);
+      // Возвращаем пустой результат при ошибке
+      return {
+        goodExamples: [],
+        badExamples: [],
+        suggestions: [],
+      };
+    }
+  }
+
+  /**
+   * Сбрасывает кэш обратной связи (вызывается после сохранения новой обратной связи)
+   */
+  invalidateFeedbackCache(): void {
+    this.feedbackCache = null;
   }
 
   /**
    * Строит системный промпт с контекстом
    */
-  private buildSystemPromptWithContext(context: string, feedback: ReturnType<typeof this.getFeedbackAnalysis>): string {
+  private buildSystemPromptWithContext(context: string, feedback: FeedbackAnalysis): string {
     let prompt = `Ты - профессиональный сотрудник Банка, специализирующийся на работе с залоговым имуществом. Твоя основная деятельность:
 
 1. Оценка залогового имущества - определение рыночной и залоговой стоимости
@@ -151,7 +199,7 @@ ${context}
   /**
    * Строит базовый системный промпт
    */
-  private buildSystemPrompt(feedback: ReturnType<typeof this.getFeedbackAnalysis>): string {
+  private buildSystemPrompt(feedback: FeedbackAnalysis): string {
     let prompt = `Ты - профессиональный сотрудник Банка, специализирующийся на работе с залоговым имуществом. Твоя основная деятельность:
 
 1. Оценка залогового имущества - определение рыночной и залоговой стоимости

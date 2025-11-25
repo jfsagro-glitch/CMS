@@ -73,10 +73,25 @@ export async function loadVNDDocuments(): Promise<DocumentIndex[]> {
     } else {
       console.warn('Не удалось загрузить документ из VND:', response?.statusText || 'файл не найден');
       console.info('Вы можете загрузить PDF документ вручную через кнопку "Загрузить документ"');
+      
+      // Пытаемся загрузить из localStorage, если документ был проиндексирован ранее
+      const existingIndexes = documentIndexer.getIndexedDocuments();
+      if (existingIndexes.length > 0) {
+        console.log('Найдены ранее проиндексированные документы в localStorage');
+      }
     }
   } catch (error) {
     console.error('Ошибка загрузки документов VND:', error);
     // Не показываем ошибку пользователю, так как документ можно загрузить вручную
+    // Пытаемся загрузить из localStorage
+    try {
+      const existingIndexes = documentIndexer.getIndexedDocuments();
+      if (existingIndexes.length > 0) {
+        console.log('Загружены ранее проиндексированные документы из localStorage');
+      }
+    } catch (storageError) {
+      console.error('Ошибка загрузки из localStorage:', storageError);
+    }
   }
 
   return documentIndexer.getIndexedDocuments();

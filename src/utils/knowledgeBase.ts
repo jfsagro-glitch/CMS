@@ -435,43 +435,77 @@ class KnowledgeBase {
   }
 
   /**
-   * Поиск по базе знаний
+   * Поиск по базе знаний (оптимизированная версия)
    */
   search(query: string, maxResults: number = 5): KnowledgeTopic[] {
-    const lowerQuery = query.toLowerCase();
+    if (!query || query.trim().length === 0) {
+      return [];
+    }
+
+    const lowerQuery = query.toLowerCase().trim();
     const queryWords = lowerQuery.split(/\s+/).filter(w => w.length > 2);
     
-    const scoredTopics = new Map<string, number>();
+    if (queryWords.length === 0 && lowerQuery.length < 3) {
+      return [];
+    }
 
-    // Поиск по ключевым словам
+    const scoredTopics = new Map<string, number>();
+    const queryRegex = new RegExp(lowerQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+
+    // Поиск по ключевым словам (оптимизировано)
     for (const word of queryWords) {
-      const topicIds = this.searchIndex.get(word) || [];
-      for (const topicId of topicIds) {
-        const currentScore = scoredTopics.get(topicId) || 0;
-        scoredTopics.set(topicId, currentScore + 10);
+      const topicIds = this.searchIndex.get(word);
+      if (topicIds) {
+        for (const topicId of topicIds) {
+          const currentScore = scoredTopics.get(topicId) || 0;
+          scoredTopics.set(topicId, currentScore + 10);
+        }
       }
     }
 
-    // Поиск по содержимому
-    for (const [topicId, topic] of this.topics.entries()) {
+    // Поиск по содержимому (оптимизировано - только по темам с начальным счетом или если запрос короткий)
+    const topicsToCheck = queryWords.length === 0 || scoredTopics.size < maxResults * 2
+      ? Array.from(this.topics.entries())
+      : Array.from(scoredTopics.keys()).map(id => [id, this.topics.get(id)] as [string, KnowledgeTopic | undefined]).filter(([, t]) => t) as [string, KnowledgeTopic][];
+
+    for (const [topicId, topic] of topicsToCheck) {
+      if (!topic) continue;
+
       const lowerContent = topic.content.toLowerCase();
       const lowerTitle = topic.title.toLowerCase();
 
       let score = scoredTopics.get(topicId) || 0;
 
-      // Точное совпадение в заголовке
+      // Точное совпадение в заголовке (высокий приоритет)
       if (lowerTitle.includes(lowerQuery)) {
         score += 30;
       }
 
       // Совпадение в содержимом
-      const contentMatches = (lowerContent.match(new RegExp(lowerQuery, 'g')) || []).length;
-      score += contentMatches * 2;
+      try {
+        const contentMatches = (lowerContent.match(queryRegex) || []).length;
+        score += contentMatches * 2;
+      } catch {
+        // Если regex невалидный, используем простой поиск
+        if (lowerContent.includes(lowerQuery)) {
+          score += 2;
+        }
+      }
 
-      // Совпадение отдельных слов
-      for (const word of queryWords) {
-        const wordMatches = (lowerContent.match(new RegExp(word, 'g')) || []).length;
-        score += wordMatches;
+      // Совпадение отдельных слов (только если есть слова для поиска)
+      if (queryWords.length > 0) {
+        for (const word of queryWords) {
+          try {
+            const wordRegex = new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            const wordMatches = (lowerContent.match(wordRegex) || []).length;
+            score += wordMatches;
+          } catch {
+            // Если regex невалидный, используем простой поиск
+            if (lowerContent.includes(word)) {
+              score += 1;
+            }
+          }
+        }
       }
 
       if (score > 0) {
@@ -480,11 +514,13 @@ class KnowledgeBase {
     }
 
     // Сортируем и возвращаем топ результатов
-    return Array.from(scoredTopics.entries())
+    const sorted = Array.from(scoredTopics.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, maxResults)
-      .map(([topicId]) => this.topics.get(topicId)!)
-      .filter(Boolean);
+      .slice(0, maxResults);
+
+    return sorted
+      .map(([topicId]) => this.topics.get(topicId))
+      .filter((topic): topic is KnowledgeTopic => topic !== undefined);
   }
 
   /**

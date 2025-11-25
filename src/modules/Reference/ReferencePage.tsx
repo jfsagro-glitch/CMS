@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   Card,
   Input,
@@ -115,18 +115,28 @@ const ReferencePage: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Поиск по базе знаний
+  // Поиск по базе знаний с debounce
   useEffect(() => {
-    if (searchQuery.trim().length > 2) {
-      const results = knowledgeBase.search(searchQuery, 10);
-      setSearchResults(results);
-    } else {
+    if (searchQuery.trim().length <= 2) {
       setSearchResults([]);
+      return;
     }
+
+    const timeoutId = setTimeout(() => {
+      try {
+        const results = knowledgeBase.search(searchQuery, 10);
+        setSearchResults(results);
+      } catch (error) {
+        console.error('Ошибка поиска:', error);
+        setSearchResults([]);
+      }
+    }, 300); // Debounce 300ms
+
+    return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  // Генерация ответа с использованием DeepSeek AI
-  const generateAIResponse = async (userMessage: string): Promise<{ content: string; sources: KnowledgeTopic[]; context: string }> => {
+  // Генерация ответа с использованием DeepSeek AI (мемоизировано)
+  const generateAIResponse = useCallback(async (userMessage: string): Promise<{ content: string; sources: KnowledgeTopic[]; context: string }> => {
     const lowerMessage = userMessage.toLowerCase();
 
     // Поиск по базе знаний для контекста
@@ -198,9 +208,9 @@ const ReferencePage: React.FC = () => {
     }
 
     return { content: response, sources, context: knowledgeContext };
-  };
+  }, [categories]);
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     if (!inputValue.trim() || loading) return;
 
     const userMessage: Message = {
@@ -241,7 +251,7 @@ const ReferencePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [inputValue, loading, generateAIResponse]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -250,50 +260,67 @@ const ReferencePage: React.FC = () => {
     }
   };
 
-  // Обработка оценки ответа
-  const handleRating = (messageId: string, rating: 'like' | 'dislike') => {
-    const msg = messages.find(m => m.id === messageId);
+  // Обработка оценки ответа (оптимизировано - один проход по массиву)
+  const handleRating = useCallback((messageId: string, rating: 'like' | 'dislike') => {
+    const messageIndex = messages.findIndex(m => m.id === messageId);
+    if (messageIndex === -1) return;
+
+    const msg = messages[messageIndex];
     if (!msg || msg.role !== 'assistant') return;
 
     // Находим вопрос пользователя, на который был дан этот ответ
-    const messageIndex = messages.findIndex(m => m.id === messageId);
     const userMessage = messageIndex > 0 ? messages[messageIndex - 1] : null;
     const question = userMessage?.content || '';
 
-    // Сохраняем обратную связь
-    feedbackStorage.saveFeedback({
-      messageId,
-      question,
-      answer: msg.content,
-      rating,
-      timestamp: new Date(),
-      context: msg.context,
-    });
+    try {
+      // Сохраняем обратную связь
+      feedbackStorage.saveFeedback({
+        messageId,
+        question,
+        answer: msg.content,
+        rating,
+        timestamp: new Date(),
+        context: msg.context,
+      });
 
-    // Обновляем оценку в сообщении
-    setMessages(prev =>
-      prev.map(m =>
-        m.id === messageId ? { ...m, rating } : m
-      )
-    );
+      // Обновляем оценку в сообщении
+      setMessages(prev =>
+        prev.map(m =>
+          m.id === messageId ? { ...m, rating } : m
+        )
+      );
 
-    if (rating === 'like') {
-      message.success('Спасибо за оценку!');
-    } else {
-      message.success('Спасибо за обратную связь. Ответ будет улучшен.');
+      if (rating === 'like') {
+        message.success('Спасибо за оценку!');
+      } else {
+        message.success('Спасибо за обратную связь. Ответ будет улучшен.');
+      }
+    } catch (error) {
+      console.error('Ошибка сохранения обратной связи:', error);
+      message.error('Не удалось сохранить оценку');
     }
-  };
+  }, [messages]);
 
-  const handleFileUpload = async (file: File) => {
+  const handleFileUpload = useCallback(async (file: File) => {
     if (!file.name.endsWith('.pdf')) {
       message.error('Поддерживаются только PDF файлы');
+      return false;
+    }
+
+    // Проверяем размер файла (максимум 50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      message.error('Размер файла не должен превышать 50MB');
       return false;
     }
 
     setIndexing(true);
     try {
       const index = await loadDocumentManually(file);
-      setIndexedDocuments(prev => [...prev, index]);
+      setIndexedDocuments(prev => {
+        // Проверяем, не был ли документ уже проиндексирован
+        const exists = prev.some(doc => doc.documentName === index.documentName);
+        return exists ? prev : [...prev, index];
+      });
       
       // Обновляем категории после индексации
       const updatedCategories = knowledgeBase.getCategories();
@@ -312,31 +339,84 @@ const ReferencePage: React.FC = () => {
       message.success(`Документ "${file.name}" успешно проиндексирован. База знаний обновлена.`);
     } catch (error) {
       console.error('Ошибка индексации:', error);
-      message.error('Не удалось проиндексировать документ');
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      message.error(`Не удалось проиндексировать документ: ${errorMessage}`);
     } finally {
       setIndexing(false);
     }
 
     return false;
-  };
+  }, []);
 
-  const handleTopicClick = (topic: KnowledgeTopic) => {
+  const handleTopicClick = useCallback((topic: KnowledgeTopic) => {
     setInputValue(topic.title);
-    setTimeout(() => {
-      handleSend();
-    }, 100);
-  };
+    // Используем requestAnimationFrame для более плавного обновления
+    requestAnimationFrame(() => {
+      // Небольшая задержка для обновления состояния inputValue
+      setTimeout(() => {
+        const question = topic.title;
+        if (!question.trim() || loading) return;
 
-  const handleCategorySelect = (categoryId: string | null) => {
+        const userMessage: Message = {
+          id: `user-${Date.now()}`,
+          role: 'user',
+          content: question.trim(),
+          timestamp: new Date(),
+        };
+
+        setMessages(prev => [...prev, userMessage]);
+        setInputValue('');
+        setLoading(true);
+
+        generateAIResponse(question.trim())
+          .then(({ content, sources, context }) => {
+            const aiResponse: Message = {
+              id: `ai-${Date.now()}`,
+              role: 'assistant',
+              content,
+              timestamp: new Date(),
+              sources: sources.length > 0 ? sources : undefined,
+              context,
+            };
+            setMessages(prev => [...prev, aiResponse]);
+          })
+          .catch((error) => {
+            console.error('Ошибка генерации ответа:', error);
+            const errorResponse: Message = {
+              id: `ai-error-${Date.now()}`,
+              role: 'assistant',
+              content: 'Извините, произошла ошибка при генерации ответа. Попробуйте еще раз или переформулируйте вопрос.',
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, errorResponse]);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      }, 50);
+    });
+  }, [loading]);
+
+  const handleCategorySelect = useCallback((categoryId: string | null) => {
     setSelectedCategory(categoryId);
     setSearchQuery('');
-  };
+  }, []);
 
-  const displayedTopics = selectedCategory
-    ? knowledgeBase.getTopicsByCategory(selectedCategory)
-    : searchResults.length > 0
-    ? searchResults
-    : [];
+  // Мемоизируем отображаемые темы для оптимизации
+  const displayedTopics = useMemo(() => {
+    try {
+      if (selectedCategory) {
+        return knowledgeBase.getTopicsByCategory(selectedCategory);
+      }
+      if (searchResults.length > 0) {
+        return searchResults;
+      }
+      return [];
+    } catch (error) {
+      console.error('Ошибка получения тем:', error);
+      return [];
+    }
+  }, [selectedCategory, searchResults]);
 
   const quickQuestions = [
     { 
@@ -371,12 +451,46 @@ const ReferencePage: React.FC = () => {
     },
   ];
 
-  const handleQuickQuestion = (query: string) => {
-    setInputValue(query);
-    setTimeout(() => {
-      handleSend();
-    }, 100);
-  };
+  const handleQuickQuestion = useCallback((query: string) => {
+    if (!query.trim() || loading) return;
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: query.trim(),
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setLoading(true);
+
+    generateAIResponse(query.trim())
+      .then(({ content, sources, context }) => {
+        const aiResponse: Message = {
+          id: `ai-${Date.now()}`,
+          role: 'assistant',
+          content,
+          timestamp: new Date(),
+          sources: sources.length > 0 ? sources : undefined,
+          context,
+        };
+        setMessages(prev => [...prev, aiResponse]);
+      })
+      .catch((error) => {
+        console.error('Ошибка генерации ответа:', error);
+        const errorResponse: Message = {
+          id: `ai-error-${Date.now()}`,
+          role: 'assistant',
+          content: 'Извините, произошла ошибка при генерации ответа. Попробуйте еще раз или переформулируйте вопрос.',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errorResponse]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [loading]);
 
   return (
     <div className="reference-page">
