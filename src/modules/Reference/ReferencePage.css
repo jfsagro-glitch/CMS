@@ -7,6 +7,13 @@
 
 .reference-page__header {
   margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.reference-page__header .ant-space {
+  flex: 1;
 }
 
 .reference-page__card {

@@ -31,6 +31,7 @@ import {
   LikeOutlined,
   DislikeOutlined,
   ReloadOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import { documentIndexer } from '@/utils/documentIndexer';
 import { loadVNDDocuments, loadDocumentManually, reindexAllDocuments } from '@/utils/documentLoader';
@@ -65,8 +66,48 @@ const ReferencePage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<KnowledgeTopic[]>([]);
+  const [learningIndex, setLearningIndex] = useState<number>(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<any>(null);
+
+  // Иконка мозга (кастомная SVG)
+  const BrainIcon = () => (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ display: 'inline-block', verticalAlign: 'middle' }}
+    >
+      <path
+        d="M12 2C8.13 2 5 5.13 5 9c0 1.74.69 3.32 1.81 4.48C5.5 14.5 4 16.64 4 19c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4 0-2.36-1.5-4.5-2.81-5.52C18.31 12.32 19 10.74 19 9c0-3.87-3.13-7-7-7z"
+        fill="#1890ff"
+        stroke="#1890ff"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 9c0-1.66 1.34-3 3-3s3 1.34 3 3"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 13c.5.5 1.5 1 4 1s3.5-.5 4-1"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="10" cy="9" r="0.5" fill="#fff" />
+      <circle cx="14" cy="9" r="0.5" fill="#fff" />
+    </svg>
+  );
 
   // Загрузка документов и построение базы знаний при монтировании
   useEffect(() => {
@@ -109,11 +150,23 @@ const ReferencePage: React.FC = () => {
         learningService.analyzeFeedback();
         console.log('✅ Анализ обратной связи завершен');
         
-        // Показываем статистику обучения
+        // Показываем статистику обучения и обновляем индекс
         const stats = learningService.getLearningStats();
         if (stats.patternsCount > 0) {
           console.log(`📊 Статистика самообучения: ${stats.patternsCount} паттернов, средняя успешность ${(stats.averageSuccessRate * 100).toFixed(1)}%`);
         }
+        
+        // Вычисляем индекс самообучаемости (0-100)
+        const calculateLearningIndex = () => {
+          const patternsWeight = Math.min(stats.patternsCount * 5, 40); // Максимум 40 баллов за паттерны
+          const successWeight = stats.averageSuccessRate * 30; // Максимум 30 баллов за успешность
+          const usageWeight = Math.min(stats.totalUsage / 10, 20); // Максимум 20 баллов за использование
+          const insightsWeight = Math.min(stats.insightsCount * 2, 10); // Максимум 10 баллов за инсайты
+          
+          return Math.round(patternsWeight + successWeight + usageWeight + insightsWeight);
+        };
+        
+        setLearningIndex(calculateLearningIndex());
         
         if (documents.length > 0) {
           message.success(`Загружено документов: ${documents.length}. База знаний готова к использованию.`);
@@ -317,6 +370,17 @@ const ReferencePage: React.FC = () => {
       
       // Сбрасываем кэш обратной связи в DeepSeekService
       deepSeekService.invalidateFeedbackCache();
+
+      // Обновляем индекс самообучаемости
+      const stats = learningService.getLearningStats();
+      const calculateLearningIndex = () => {
+        const patternsWeight = Math.min(stats.patternsCount * 5, 40);
+        const successWeight = stats.averageSuccessRate * 30;
+        const usageWeight = Math.min(stats.totalUsage / 10, 20);
+        const insightsWeight = Math.min(stats.insightsCount * 2, 10);
+        return Math.round(patternsWeight + successWeight + usageWeight + insightsWeight);
+      };
+      setLearningIndex(calculateLearningIndex());
 
       if (rating === 'like') {
         message.success('Спасибо за оценку! Модель обучилась на вашем примере.');
@@ -535,11 +599,25 @@ const ReferencePage: React.FC = () => {
     <div className="reference-page">
       <div className="reference-page__header">
         <Space>
-          <RobotOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+          <BrainIcon />
           <div>
-            <Title level={2} style={{ margin: 0 }}>
-              Справочная с ИИ
-            </Title>
+            <Space align="center" style={{ marginBottom: 4 }}>
+              <Title level={2} style={{ margin: 0 }}>
+                Справочная с ИИ
+              </Title>
+              <Tag
+                color={learningIndex >= 70 ? 'success' : learningIndex >= 40 ? 'processing' : 'default'}
+                icon={<ThunderboltOutlined />}
+                style={{
+                  fontSize: '12px',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                }}
+              >
+                Индекс самообучаемости: {learningIndex}%
+              </Tag>
+            </Space>
             <Text type="secondary">
               База знаний на основе справочной литературы по банковским залогам
             </Text>
