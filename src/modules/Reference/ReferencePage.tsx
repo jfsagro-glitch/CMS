@@ -12,9 +12,9 @@ import {
   Tag,
   Upload,
   message,
-  Layout,
   List,
   Badge,
+  Modal,
 } from 'antd';
 import {
   SendOutlined,
@@ -32,6 +32,7 @@ import {
   DislikeOutlined,
   ReloadOutlined,
   ThunderboltOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { documentIndexer } from '@/utils/documentIndexer';
 import { loadVNDDocuments, loadDocumentManually, reindexAllDocuments } from '@/utils/documentLoader';
@@ -46,7 +47,6 @@ import './ReferencePage.css';
 
 const { TextArea } = Input;
 const { Title, Text, Paragraph } = Typography;
-const { Sider, Content } = Layout;
 
 interface Message {
   id: string;
@@ -71,6 +71,7 @@ const ReferencePage: React.FC = () => {
   const [learningIndex, setLearningIndex] = useState<number>(0);
   const [evolutionLevel, setEvolutionLevel] = useState<number>(1);
   const [evolutionProgress, setEvolutionProgress] = useState<{ current: number; required: number; percentage: number } | null>(null);
+  const [settingsVisible, setSettingsVisible] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<any>(null);
 
@@ -831,12 +832,13 @@ const ReferencePage: React.FC = () => {
               Документов: {indexedDocuments.length}
             </Tag>
           )}
-          {categories.length > 0 && (
-            <Tag icon={<FolderOutlined />} color="green">
-              Тем: {categories.reduce((sum, c) => sum + c.topics.length, 0)}
-            </Tag>
-          )}
           <Space>
+            <Button 
+              icon={<SettingOutlined />} 
+              onClick={() => setSettingsVisible(true)}
+            >
+              Настройки
+            </Button>
             <Upload
               accept=".pdf,.docx,.xlsx,.xls"
               beforeUpload={handleFileUpload}
@@ -869,110 +871,7 @@ const ReferencePage: React.FC = () => {
         />
       )}
 
-      <Layout style={{ background: 'transparent', minHeight: 'calc(100vh - 200px)' }}>
-        <Sider
-          width={300}
-          style={{
-            background: '#fff',
-            marginRight: 16,
-            borderRadius: 8,
-            padding: 16,
-            overflow: 'auto',
-            maxHeight: 'calc(100vh - 200px)',
-          }}
-        >
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
-            <div>
-              <Text strong>Поиск по темам</Text>
-              <Input
-                placeholder="Поиск..."
-                prefix={<SearchOutlined />}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ marginTop: 8 }}
-                allowClear
-              />
-            </div>
-
-            <Divider style={{ margin: '8px 0' }} />
-
-            <div>
-              <Space style={{ marginBottom: 8 }}>
-                <Text strong>Категории</Text>
-                {selectedCategory && (
-                  <Button
-                    type="link"
-                    size="small"
-                    onClick={() => handleCategorySelect(null)}
-                  >
-                    Сбросить
-                  </Button>
-                )}
-              </Space>
-              
-              <List
-                size="small"
-                dataSource={categories}
-                renderItem={(category) => (
-                  <List.Item
-                    style={{
-                      cursor: 'pointer',
-                      backgroundColor: selectedCategory === category.id ? '#e6f7ff' : 'transparent',
-                      borderRadius: 4,
-                      padding: '8px 12px',
-                    }}
-                    onClick={() => handleCategorySelect(category.id)}
-                  >
-                    <Space>
-                      <FolderOutlined />
-                      <Text>{category.name}</Text>
-                      <Badge count={category.topics.length} showZero style={{ backgroundColor: '#52c41a' }} />
-                    </Space>
-                  </List.Item>
-                )}
-              />
-            </div>
-
-            {searchResults.length > 0 && !selectedCategory && (
-              <>
-                <Divider style={{ margin: '8px 0' }} />
-                <div>
-                  <Text strong>
-                    Результаты поиска ({searchResults.length})
-                  </Text>
-                  <List
-                    size="small"
-                    dataSource={searchResults.slice(0, 10)}
-                    style={{ marginTop: 8, maxHeight: 300, overflow: 'auto' }}
-                    renderItem={(topic) => (
-                      <List.Item
-                        style={{
-                          cursor: 'pointer',
-                          padding: '8px 12px',
-                          borderRadius: 4,
-                        }}
-                        onClick={() => handleTopicClick(topic)}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f5f5f5';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
-                      >
-                        <Text ellipsis style={{ fontSize: 12 }}>
-                          {topic.title}
-                        </Text>
-                      </List.Item>
-                    )}
-                  />
-                </div>
-              </>
-            )}
-          </Space>
-        </Sider>
-
-        <Content>
-          <Card className="reference-page__card">
+      <Card className="reference-page__card">
             <div className="reference-page__chat">
               {/* Поле ввода - основное, всегда видимое и по центру */}
               <div className="reference-page__input-container">
@@ -1167,8 +1066,116 @@ const ReferencePage: React.FC = () => {
               </div>
             </div>
           </Card>
-        </Content>
-      </Layout>
+
+        {/* Модальное окно настроек */}
+        <Modal
+          title={
+            <Space>
+              <SettingOutlined />
+              <span>Настройки</span>
+            </Space>
+          }
+          open={settingsVisible}
+          onCancel={() => setSettingsVisible(false)}
+          footer={null}
+          width={600}
+          style={{ top: 20 }}
+        >
+          <Space direction="vertical" style={{ width: '100%' }} size="large">
+            <div>
+              <Text strong>Поиск по темам</Text>
+              <Input
+                placeholder="Поиск..."
+                prefix={<SearchOutlined />}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ marginTop: 8 }}
+                allowClear
+              />
+            </div>
+
+            <Divider style={{ margin: '8px 0' }} />
+
+            <div>
+              <Space style={{ marginBottom: 8 }}>
+                <Text strong>Категории</Text>
+                {selectedCategory && (
+                  <Button
+                    type="link"
+                    size="small"
+                    onClick={() => handleCategorySelect(null)}
+                  >
+                    Сбросить
+                  </Button>
+                )}
+              </Space>
+              
+              <List
+                size="small"
+                dataSource={categories}
+                style={{ maxHeight: 400, overflow: 'auto' }}
+                renderItem={(category) => (
+                  <List.Item
+                    style={{
+                      cursor: 'pointer',
+                      backgroundColor: selectedCategory === category.id ? '#e6f7ff' : 'transparent',
+                      borderRadius: 4,
+                      padding: '8px 12px',
+                    }}
+                    onClick={() => handleCategorySelect(category.id)}
+                  >
+                    <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                      <Space>
+                        <FolderOutlined />
+                        <Text>{category.name}</Text>
+                      </Space>
+                      <Badge count={category.topics.length} showZero style={{ backgroundColor: '#52c41a' }} />
+                    </Space>
+                  </List.Item>
+                )}
+              />
+            </div>
+
+            {searchResults.length > 0 && !selectedCategory && (
+              <>
+                <Divider style={{ margin: '8px 0' }} />
+                <div>
+                  <Text strong>
+                    Результаты поиска ({searchResults.length})
+                  </Text>
+                  <List
+                    size="small"
+                    dataSource={searchResults.slice(0, 10)}
+                    style={{ marginTop: 8, maxHeight: 300, overflow: 'auto' }}
+                    renderItem={(topic) => (
+                      <List.Item
+                        style={{
+                          cursor: 'pointer',
+                          padding: '8px 12px',
+                          borderRadius: 4,
+                        }}
+                        onClick={() => {
+                          handleTopicClick(topic);
+                          setSettingsVisible(false);
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f5f5f5';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <Text ellipsis style={{ fontSize: 12 }}>
+                          {topic.title}
+                        </Text>
+                      </List.Item>
+                    )}
+                  />
+                </div>
+              </>
+            )}
+          </Space>
+        </Modal>
     </div>
   );
 };
