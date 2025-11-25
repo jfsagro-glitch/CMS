@@ -17,17 +17,18 @@
     "generate-portfolio": "node scripts/generate_portfolio_demo.js"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
-    "@reduxjs/toolkit": "^2.0.1",
-    "react-redux": "^9.0.4",
-    "antd": "^5.12.0",
     "@ant-design/icons": "^5.2.6",
+    "@reduxjs/toolkit": "^2.0.1",
+    "antd": "^5.12.0",
+    "dayjs": "^1.11.10",
     "dexie": "^3.2.4",
     "dexie-react-hooks": "^1.1.7",
-    "xlsx": "^0.18.5",
-    "dayjs": "^1.11.10"
+    "pdfjs-dist": "^5.4.394",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-redux": "^9.0.4",
+    "react-router-dom": "^6.20.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
@@ -43,4 +44,3 @@
     "vite": "^5.0.8"
   }
 }
-
