@@ -49,27 +49,57 @@ if (fs.existsSync(instructionSourceDir)) {
   console.warn('⚠️  INSTRUCTION folder not found, skipping copy');
 }
 
-// 4. Копируем папку public/VND в dist/VND
+// 4. Копируем папку public/VND в dist/VND (или из корня VND, если public/VND пустая)
 const vndSourceDir = path.join(__dirname, '../public/VND');
+const vndRootDir = path.join(__dirname, '../VND');
 const vndDestDir = path.join(distDir, 'VND');
+
+// Создаем папку назначения, если её нет
+if (!fs.existsSync(vndDestDir)) {
+  fs.mkdirSync(vndDestDir, { recursive: true });
+}
+
+let copied = false;
+
+// Сначала пробуем скопировать из public/VND
 if (fs.existsSync(vndSourceDir)) {
-  // Создаем папку назначения, если её нет
-  if (!fs.existsSync(vndDestDir)) {
-    fs.mkdirSync(vndDestDir, { recursive: true });
-  }
-  
-  // Копируем все файлы из public/VND
   const files = fs.readdirSync(vndSourceDir);
-  files.forEach(file => {
-    const sourcePath = path.join(vndSourceDir, file);
-    const destPath = path.join(vndDestDir, file);
-    if (fs.statSync(sourcePath).isFile()) {
-      fs.copyFileSync(sourcePath, destPath);
+  if (files.length > 0) {
+    files.forEach(file => {
+      const sourcePath = path.join(vndSourceDir, file);
+      const destPath = path.join(vndDestDir, file);
+      if (fs.statSync(sourcePath).isFile()) {
+        fs.copyFileSync(sourcePath, destPath);
+        copied = true;
+      }
+    });
+    if (copied) {
+      console.log('✅ Copied VND folder from public/VND to dist');
     }
-  });
-  console.log('✅ Copied VND folder to dist');
-} else {
-  console.warn('⚠️  public/VND folder not found, skipping copy');
+  }
+}
+
+// Если public/VND пустая, пробуем скопировать из корня VND
+if (!copied && fs.existsSync(vndRootDir)) {
+  const files = fs.readdirSync(vndRootDir);
+  const pdfFiles = files.filter(file => file.endsWith('.pdf'));
+  if (pdfFiles.length > 0) {
+    pdfFiles.forEach(file => {
+      const sourcePath = path.join(vndRootDir, file);
+      const destPath = path.join(vndDestDir, file);
+      if (fs.statSync(sourcePath).isFile()) {
+        fs.copyFileSync(sourcePath, destPath);
+        copied = true;
+      }
+    });
+    if (copied) {
+      console.log('✅ Copied VND folder from root VND to dist');
+    }
+  }
+}
+
+if (!copied) {
+  console.warn('⚠️  VND folder not found or empty, skipping copy');
 }
 
 // 3. Создаем CNAME файл (если нужен custom domain)

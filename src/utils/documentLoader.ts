@@ -18,12 +18,14 @@ export async function loadVNDDocuments(): Promise<DocumentIndex[]> {
     const pdfFileName = '[Volhin_N.A.]_Zalogovik._Vse_o_bankovskih_zalogah_(b-ok.org).pdf';
     const basePath = import.meta.env.BASE_URL || './';
     
-    // Список путей для попытки загрузки
+    // Список путей для попытки загрузки (для GitHub Pages и локальной разработки)
     const pathsToTry = [
-      `${basePath}VND/${pdfFileName}`,
-      `./VND/${pdfFileName}`,
-      `/VND/${pdfFileName}`,
-      `VND/${pdfFileName}`,
+      `${basePath}VND/${pdfFileName}`, // Для GitHub Pages с base path
+      `./VND/${pdfFileName}`, // Относительный путь
+      `/VND/${pdfFileName}`, // Абсолютный путь
+      `VND/${pdfFileName}`, // Без слешей
+      `${window.location.origin}${basePath}VND/${pdfFileName}`, // Полный URL
+      `${window.location.origin}/VND/${pdfFileName}`, // Полный URL без base path
     ];
     
     let response: Response | null = null;
