@@ -101,42 +101,140 @@ class LearningService {
   }
 
   /**
-   * Анализирует документы для извлечения инсайтов
+   * Анализирует документы для извлечения инсайтов и обучения модели
    */
   analyzeDocuments(): void {
     const documents = documentIndexer.getIndexedDocuments();
     
+    console.log(`📚 Анализирую ${documents.length} документов для обучения модели...`);
+    
     documents.forEach(doc => {
       // Извлекаем важные темы из документа
-      const topics = knowledgeBase.getCategories()
-        .flatMap(cat => cat.topics)
-        .filter(topic => topic.content.toLowerCase().includes(doc.documentName.toLowerCase()));
+      const allTopics = knowledgeBase.getCategories()
+        .flatMap(cat => cat.topics);
+      
+      // Ищем темы, связанные с этим документом
+      const docNameLower = doc.documentName.toLowerCase();
+      const topics = allTopics.filter(topic => {
+        const contentLower = topic.content.toLowerCase();
+        return contentLower.includes(docNameLower) || 
+               doc.chunks.some(chunk => chunk.text.toLowerCase().includes(topic.title.toLowerCase()));
+      });
 
       const importantTopics = topics
         .map(t => t.title)
-        .slice(0, 10);
+        .slice(0, 15); // Увеличено до 15 тем
 
       // Извлекаем ключевые слова из документа
       const allKeywords = new Set<string>();
       doc.chunks.forEach(chunk => {
         chunk.keywords.forEach(kw => allKeywords.add(kw));
+        // Также извлекаем важные термины из текста
+        const text = chunk.text.toLowerCase();
+        const importantTerms = [
+          'оценка', 'стоимость', 'рыночная', 'залоговая', 'ltv', 'риск', 'риски',
+          'регистрация', 'ипотека', 'обременение', 'росреестр', 'егрн', 'кадастр',
+          'недвижимость', 'движимое имущество', 'бизнес', 'активы', 'залог',
+          'договор', 'соглашение', 'норматив', 'требование', 'процедура',
+          'метод', 'подход', 'анализ', 'мониторинг', 'осмотр', 'проверка',
+        ];
+        importantTerms.forEach(term => {
+          if (text.includes(term)) {
+            allKeywords.add(term);
+          }
+        });
       });
 
-      // Генерируем частые вопросы на основе тем
+      // Генерируем частые вопросы на основе тем и содержимого документа
       const commonQuestions = this.generateCommonQuestions(topics);
+      
+      // Дополнительно генерируем вопросы на основе ключевых слов
+      if (commonQuestions.length < 5) {
+        const keywordQuestions = this.generateQuestionsFromKeywords(Array.from(allKeywords));
+        commonQuestions.push(...keywordQuestions.slice(0, 5 - commonQuestions.length));
+      }
+
+      // Извлекаем паттерны из документа для обучения
+      this.extractPatternsFromDocument(doc);
 
       const insight: DocumentInsight = {
         documentName: doc.documentName,
         importantTopics,
-        commonQuestions,
-        keywords: Array.from(allKeywords).slice(0, 20),
+        commonQuestions: commonQuestions.slice(0, 10), // До 10 вопросов
+        keywords: Array.from(allKeywords).slice(0, 30), // Увеличено до 30 ключевых слов
         lastAnalyzed: new Date(),
       };
 
       this.documentInsights.set(doc.documentName, insight);
+      
+      console.log(`✅ Проанализирован документ: ${doc.documentName} (${importantTopics.length} тем, ${allKeywords.size} ключевых слов)`);
     });
 
     this.saveDocumentInsights();
+    console.log(`🎓 Анализ документов завершен. Извлечено инсайтов: ${this.documentInsights.size}`);
+  }
+
+  /**
+   * Генерирует вопросы на основе ключевых слов
+   */
+  private generateQuestionsFromKeywords(keywords: string[]): string[] {
+    const questions: string[] = [];
+    const questionTemplates = [
+      'Как {keyword}?',
+      'Что такое {keyword}?',
+      'Какие требования к {keyword}?',
+      'Как правильно {keyword}?',
+      'Какие особенности {keyword}?',
+    ];
+
+    keywords.slice(0, 10).forEach(keyword => {
+      questionTemplates.forEach(template => {
+        if (template.includes('{keyword}')) {
+          questions.push(template.replace('{keyword}', keyword));
+        }
+      });
+    });
+
+    return questions.slice(0, 10);
+  }
+
+  /**
+   * Извлекает паттерны из документа для обучения
+   */
+  private extractPatternsFromDocument(doc: any): void {
+    // Анализируем содержимое документа для извлечения паттернов
+    doc.chunks.forEach((chunk: any) => {
+      const text = chunk.text.toLowerCase();
+      
+      // Ищем паттерны вопросов и ответов
+      if (text.includes('?') || text.includes('вопрос') || text.includes('ответ')) {
+        // Извлекаем потенциальные вопросы
+        const sentences = chunk.text.split(/[.!?]+/);
+        sentences.forEach((sentence: string) => {
+          if (sentence.includes('?') || sentence.toLowerCase().includes('как') || sentence.toLowerCase().includes('что')) {
+            const keywords = this.extractKeywords(sentence);
+            if (keywords.length >= 2) {
+              const category = this.detectCategory(sentence);
+              const pattern = this.extractQuestionPattern(sentence);
+              
+              // Создаем паттерн обучения из документа
+              if (!this.patterns.has(pattern)) {
+                const learningPattern: LearningPattern = {
+                  questionPattern: pattern,
+                  successfulAnswerTemplate: sentence.slice(0, 200), // Первые 200 символов как шаблон
+                  keywords,
+                  category,
+                  successRate: 0.7, // Начальная успешность для паттернов из документов
+                  usageCount: 0,
+                  lastUpdated: new Date(),
+                };
+                this.patterns.set(pattern, learningPattern);
+              }
+            }
+          }
+        });
+      }
+    });
   }
 
   /**

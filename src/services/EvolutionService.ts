@@ -203,22 +203,71 @@ class EvolutionService {
     const documents = documentIndexer.getIndexedDocuments();
     const categories = knowledgeBase.getCategories();
     
-    // Опыт за каждый документ
-    const docExperience = 5;
+    // Опыт за каждый документ (увеличено для более активного обучения)
+    const docExperience = 10; // Увеличено с 5 до 10
     this.evolution.experiencePoints.documentAnalysis += documents.length * docExperience;
     this.evolution.totalExperience += documents.length * docExperience;
 
     // Опыт за категории знаний
-    const categoryExperience = 2;
+    const categoryExperience = 3; // Увеличено с 2 до 3
     this.evolution.experiencePoints.consultation += categories.length * categoryExperience;
     this.evolution.totalExperience += categories.length * categoryExperience;
 
+    // Бонусный опыт за темы в категориях
+    let totalTopics = 0;
+    categories.forEach(cat => {
+      totalTopics += cat.topics.length;
+    });
+    const topicExperience = 0.5;
+    this.evolution.experiencePoints.consultation += totalTopics * topicExperience;
+    this.evolution.totalExperience += totalTopics * topicExperience;
+
     // Извлекаем концепции из документов
+    let conceptsExtracted = 0;
     documents.forEach(doc => {
       doc.chunks.forEach(chunk => {
+        const beforeCount = this.evolution!.learnedConcepts.length;
         this.extractConceptsFromText(chunk.text);
+        if (this.evolution!.learnedConcepts.length > beforeCount) {
+          conceptsExtracted++;
+        }
       });
     });
+
+    // Бонус за извлеченные концепции
+    if (conceptsExtracted > 0) {
+      const conceptBonus = conceptsExtracted * 2;
+      this.evolution.experiencePoints.documentAnalysis += conceptBonus;
+      this.evolution.totalExperience += conceptBonus;
+      console.log(`📚 Извлечено новых концепций из документов: ${conceptsExtracted}`);
+    }
+
+    // Специализированный опыт на основе типов документов
+    if (this.evolution) {
+      documents.forEach(doc => {
+        const docName = doc.documentName.toLowerCase();
+        
+        // Опыт за документы по оценке
+        if (docName.includes('оценк') || docName.includes('fso') || docName.includes('стоимость')) {
+          this.evolution!.experiencePoints.assetValuation += 5;
+          this.evolution!.totalExperience += 5;
+        }
+        
+        // Опыт за документы по рискам
+        if (docName.includes('риск') || docName.includes('мониторинг')) {
+          this.evolution!.experiencePoints.riskAnalysis += 5;
+          this.evolution!.totalExperience += 5;
+        }
+        
+        // Опыт за документы по регистрации
+        if (docName.includes('регистрац') || docName.includes('ипотек') || docName.includes('залог')) {
+          this.evolution!.experiencePoints.registration += 5;
+          this.evolution!.totalExperience += 5;
+        }
+      });
+    }
+
+    console.log(`🎓 Модель получила опыт из документов: +${documents.length * docExperience} за документы, +${categories.length * categoryExperience} за категории, +${totalTopics * topicExperience} за темы`);
 
     this.checkEvolution();
     this.saveEvolution();
