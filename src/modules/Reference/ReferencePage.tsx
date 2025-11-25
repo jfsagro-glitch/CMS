@@ -30,9 +30,10 @@ import {
   FolderOutlined,
   LikeOutlined,
   DislikeOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import { documentIndexer } from '@/utils/documentIndexer';
-import { loadVNDDocuments, loadDocumentManually } from '@/utils/documentLoader';
+import { loadVNDDocuments, loadDocumentManually, reindexAllDocuments } from '@/utils/documentLoader';
 import { knowledgeBase, type KnowledgeTopic, type KnowledgeCategory } from '@/utils/knowledgeBase';
 import { deepSeekService } from '@/services/DeepSeekService';
 import { feedbackStorage } from '@/utils/feedbackStorage';
@@ -347,6 +348,28 @@ const ReferencePage: React.FC = () => {
     return false;
   }, []);
 
+  // Обработчик принудительной переиндексации всех документов
+  const handleReindexAll = useCallback(async () => {
+    setIndexing(true);
+    try {
+      message.info('Начинаю переиндексацию всех документов...');
+      const documents = await reindexAllDocuments();
+      setIndexedDocuments(documents);
+      
+      // Обновляем категории
+      const updatedCategories = knowledgeBase.getCategories();
+      setCategories(updatedCategories);
+      
+      message.success(`Переиндексация завершена. Обработано документов: ${documents.length}. Категорий: ${updatedCategories.length}.`);
+    } catch (error) {
+      console.error('Ошибка переиндексации:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      message.error(`Ошибка переиндексации: ${errorMessage}`);
+    } finally {
+      setIndexing(false);
+    }
+  }, []);
+
   const handleTopicClick = useCallback((topic: KnowledgeTopic) => {
     setInputValue(topic.title);
     // Используем requestAnimationFrame для более плавного обновления
@@ -501,16 +524,26 @@ const ReferencePage: React.FC = () => {
               Тем: {categories.reduce((sum, c) => sum + c.topics.length, 0)}
             </Tag>
           )}
-          <Upload
-            accept=".pdf"
-            beforeUpload={handleFileUpload}
-            showUploadList={false}
-            disabled={indexing}
-          >
-            <Button icon={<UploadOutlined />} loading={indexing}>
-              Загрузить документ
+          <Space>
+            <Upload
+              accept=".pdf"
+              beforeUpload={handleFileUpload}
+              showUploadList={false}
+              disabled={indexing}
+            >
+              <Button icon={<UploadOutlined />} loading={indexing}>
+                Загрузить документ
+              </Button>
+            </Upload>
+            <Button 
+              icon={<ReloadOutlined />} 
+              onClick={handleReindexAll}
+              loading={indexing}
+              title="Переиндексировать все документы из папки VND"
+            >
+              Обновить базу
             </Button>
-          </Upload>
+          </Space>
         </Space>
       </div>
 
