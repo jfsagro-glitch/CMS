@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Card,
   Input,
@@ -7,7 +7,6 @@ import {
   Typography,
   Avatar,
   Spin,
-  Empty,
   Divider,
   Alert,
   Tag,
@@ -402,21 +401,6 @@ const ReferencePage: React.FC = () => {
     setSearchQuery('');
   }, []);
 
-  // Мемоизируем отображаемые темы для оптимизации
-  const displayedTopics = useMemo(() => {
-    try {
-      if (selectedCategory) {
-        return knowledgeBase.getTopicsByCategory(selectedCategory);
-      }
-      if (searchResults.length > 0) {
-        return searchResults;
-      }
-      return [];
-    } catch (error) {
-      console.error('Ошибка получения тем:', error);
-      return [];
-    }
-  }, [selectedCategory, searchResults]);
 
   const quickQuestions = [
     { 
@@ -604,17 +588,17 @@ const ReferencePage: React.FC = () => {
               />
             </div>
 
-            {displayedTopics.length > 0 && (
+            {searchResults.length > 0 && !selectedCategory && (
               <>
                 <Divider style={{ margin: '8px 0' }} />
                 <div>
                   <Text strong>
-                    {selectedCategory ? 'Темы в категории' : 'Результаты поиска'} ({displayedTopics.length})
+                    Результаты поиска ({searchResults.length})
                   </Text>
                   <List
                     size="small"
-                    dataSource={displayedTopics.slice(0, 20)}
-                    style={{ marginTop: 8, maxHeight: 400, overflow: 'auto' }}
+                    dataSource={searchResults.slice(0, 10)}
+                    style={{ marginTop: 8, maxHeight: 300, overflow: 'auto' }}
                     renderItem={(topic) => (
                       <List.Item
                         style={{
@@ -645,37 +629,92 @@ const ReferencePage: React.FC = () => {
         <Content>
           <Card className="reference-page__card">
             <div className="reference-page__chat">
+              {/* Поле ввода - основное, всегда видимое и по центру */}
+              <div className="reference-page__input-container">
+                <div className="reference-page__input-wrapper">
+                  <TextArea
+                    ref={textAreaRef}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Задайте вопрос о залогах, ипотеке, оценке..."
+                    autoSize={{ minRows: 3, maxRows: 6 }}
+                    disabled={loading || indexing}
+                    className="reference-page__main-input"
+                    style={{
+                      fontSize: '16px',
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: '2px solid #d9d9d9',
+                      transition: 'all 0.3s',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#1890ff';
+                      e.target.style.boxShadow = '0 0 0 2px rgba(24, 144, 255, 0.2)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#d9d9d9';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                  <Button
+                    type="primary"
+                    icon={<SendOutlined />}
+                    onClick={handleSend}
+                    loading={loading}
+                    disabled={!inputValue.trim() || indexing}
+                    size="large"
+                    className="reference-page__send-button"
+                    style={{
+                      height: 'auto',
+                      padding: '12px 24px',
+                      fontSize: '16px',
+                      marginTop: '12px',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    Отправить вопрос
+                  </Button>
+                </div>
+              </div>
+
               <div className="reference-page__messages">
                 {messages.length === 0 ? (
                   <div className="reference-page__empty">
-                    <Empty
-                      description={
-                        <div>
-                          <Text type="secondary" style={{ fontSize: 16 }}>
-                            Задайте вопрос, и я найду ответ в базе знаний
-                          </Text>
-                          <Divider />
-                          <div className="reference-page__quick-questions">
-                            <Text strong style={{ marginBottom: 12, display: 'block' }}>
-                              Популярные вопросы:
-                            </Text>
-                            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                              {quickQuestions.map((q, index) => (
-                                <Button
-                                  key={index}
-                                  type="default"
-                                  icon={q.icon}
-                                  onClick={() => handleQuickQuestion(q.query)}
-                                  style={{ width: '100%', textAlign: 'left', height: 'auto', padding: '8px 16px' }}
-                                >
-                                  {q.text}
-                                </Button>
-                              ))}
-                            </Space>
-                          </div>
-                        </div>
-                      }
-                    />
+                    <div className="reference-page__welcome">
+                      <RobotOutlined style={{ fontSize: 64, color: '#1890ff', marginBottom: 16 }} />
+                      <Title level={3} style={{ marginBottom: 8 }}>
+                        Справочная с ИИ
+                      </Title>
+                      <Text type="secondary" style={{ fontSize: 16, marginBottom: 24, display: 'block' }}>
+                        Задайте вопрос выше, и я найду ответ в базе знаний
+                      </Text>
+                      <Divider style={{ margin: '16px 0' }} />
+                      <div className="reference-page__quick-questions">
+                        <Text strong style={{ marginBottom: 12, display: 'block', fontSize: 14 }}>
+                          Популярные вопросы:
+                        </Text>
+                        <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                          {quickQuestions.map((q, index) => (
+                            <Button
+                              key={index}
+                              type="default"
+                              icon={q.icon}
+                              onClick={() => handleQuickQuestion(q.query)}
+                              style={{ 
+                                width: '100%', 
+                                textAlign: 'left', 
+                                height: 'auto', 
+                                padding: '10px 16px',
+                                fontSize: '14px',
+                              }}
+                            >
+                              {q.text}
+                            </Button>
+                          ))}
+                        </Space>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -780,31 +819,6 @@ const ReferencePage: React.FC = () => {
                     <div ref={messagesEndRef} />
                   </>
                 )}
-              </div>
-
-              <div className="reference-page__input">
-                <Space.Compact style={{ width: '100%' }}>
-                  <TextArea
-                    ref={textAreaRef}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Задайте вопрос о залогах, ипотеке, оценке..."
-                    autoSize={{ minRows: 1, maxRows: 4 }}
-                    disabled={loading || indexing}
-                    style={{ resize: 'none' }}
-                  />
-                  <Button
-                    type="primary"
-                    icon={<SendOutlined />}
-                    onClick={handleSend}
-                    loading={loading}
-                    disabled={!inputValue.trim() || indexing}
-                    style={{ height: 'auto' }}
-                  >
-                    Отправить
-                  </Button>
-                </Space.Compact>
               </div>
             </div>
           </Card>
