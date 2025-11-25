@@ -421,7 +421,7 @@ const ReferencePage: React.FC = () => {
           });
       }, 50);
     });
-  }, [loading]);
+  }, [loading, generateAIResponse]);
 
   const handleCategorySelect = useCallback((categoryId: string | null) => {
     setSelectedCategory(categoryId);
@@ -501,7 +501,7 @@ const ReferencePage: React.FC = () => {
       .finally(() => {
         setLoading(false);
       });
-  }, [loading]);
+  }, [loading, generateAIResponse]);
 
   return (
     <div className="reference-page">
