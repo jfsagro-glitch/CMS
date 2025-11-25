@@ -52,9 +52,11 @@ export async function loadVNDDocuments(): Promise<DocumentIndex[]> {
       }
     } else {
       console.warn('Не удалось загрузить документ из VND:', response.statusText);
+      console.info('Вы можете загрузить PDF документ вручную через кнопку "Загрузить документ"');
     }
   } catch (error) {
     console.error('Ошибка загрузки документов VND:', error);
+    // Не показываем ошибку пользователю, так как документ можно загрузить вручную
   }
 
   return documentIndexer.getIndexedDocuments();
