@@ -33,26 +33,31 @@ class DocumentIndexer {
     try {
       const pdfjsLib = await import('pdfjs-dist');
       
-      // Пробуем использовать worker из node_modules (для dev) или CDN (для prod)
-      try {
-        // Для разработки используем worker из node_modules
-        if (import.meta.env.DEV) {
-          pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-            'pdfjs-dist/build/pdf.worker.min.mjs',
-            import.meta.url
-          ).toString();
-        } else {
-          // Для продакшена используем CDN
-          pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-        }
-        this.workerInitialized = true;
-      } catch (e) {
-        // Fallback на CDN
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-        this.workerInitialized = true;
+      // Для разработки используем worker из node_modules
+      if (import.meta.env.DEV) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+          'pdfjs-dist/build/pdf.worker.min.mjs',
+          import.meta.url
+        ).toString();
+      } else {
+        // Для продакшена используем unpkg.com (более надежный чем cdnjs)
+        // Используем .mjs версию для лучшей совместимости
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
       }
+      
+      this.workerInitialized = true;
+      console.log('PDF.js worker инициализирован:', pdfjsLib.GlobalWorkerOptions.workerSrc);
     } catch (error) {
       console.error('Ошибка инициализации PDF.js worker:', error);
+      // Fallback на jsdelivr
+      try {
+        const pdfjsLib = await import('pdfjs-dist');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+        this.workerInitialized = true;
+        console.log('PDF.js worker инициализирован (fallback):', pdfjsLib.GlobalWorkerOptions.workerSrc);
+      } catch (finalError) {
+        console.error('Критическая ошибка инициализации PDF.js worker:', finalError);
+      }
     }
   }
 
