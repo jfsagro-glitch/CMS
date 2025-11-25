@@ -10,11 +10,29 @@ import { knowledgeBase } from './knowledgeBase';
  * Поддерживаются: PDF, DOCX, XLSX
  */
 const KNOWN_DOCUMENT_FILES = [
+  // Основные документы
   '[Volhin_N.A.]_Zalogovik._Vse_o_bankovskih_zalogah_(b-ok.org).pdf',
   'Виды залогового имущества.docx',
   'Отнесение фондированного обеспечения к категориям качества обеспечения.docx',
   'Документы для мониторинга залога.xlsx',
-  // Добавьте сюда другие документы по мере их добавления в папку VND
+  'Нетиповые риски.docx',
+  'Примеры заданий.docx',
+  // FSO документы
+  'FSO1.pdf',
+  'FSO2.pdf',
+  'FSO3.pdf',
+  'FSO4.pdf',
+  'FSO5.pdf',
+  'FSO6.pdf',
+  'FSO7.pdf',
+  'FSO8.pdf',
+  'FSO9.pdf',
+  'FSO10.pdf',
+  'FSO11.pdf',
+  // Документы по оценке
+  'ocenka_biznesa_voprosy_s_otvetami.pdf',
+  'ocenka_nedvizhimosti_predpriyatiya_voprosy_s_otvetami.pdf',
+  'ocenka_nedvizhimosti_voprosy_s_otvetami.pdf',
 ];
 
 /**

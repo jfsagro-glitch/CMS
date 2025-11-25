@@ -456,7 +456,22 @@ const ReferencePage: React.FC = () => {
       const updatedCategories = knowledgeBase.getCategories();
       setCategories(updatedCategories);
       
-      message.success(`Переиндексация завершена. Обработано документов: ${documents.length}. Категорий: ${updatedCategories.length}.`);
+      // Обновляем данные для самообучения
+      console.log('Обновляю данные для самообучения...');
+      learningService.forceUpdate();
+      
+      // Обновляем индекс самообучаемости
+      const stats = learningService.getLearningStats();
+      const calculateLearningIndex = () => {
+        const patternsWeight = Math.min(stats.patternsCount * 5, 40);
+        const successWeight = stats.averageSuccessRate * 30;
+        const usageWeight = Math.min(stats.totalUsage / 10, 20);
+        const insightsWeight = Math.min(stats.insightsCount * 2, 10);
+        return Math.round(patternsWeight + successWeight + usageWeight + insightsWeight);
+      };
+      setLearningIndex(calculateLearningIndex());
+      
+      message.success(`Переиндексация завершена. Обработано документов: ${documents.length}. Категорий: ${updatedCategories.length}. Данные для самообучения обновлены.`);
     } catch (error) {
       console.error('Ошибка переиндексации:', error);
       const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
