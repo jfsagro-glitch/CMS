@@ -8,6 +8,7 @@ import { knowledgeBase } from './knowledgeBase';
 /**
  * Список известных документов в папке VND
  * Поддерживаются: PDF, DOCX, XLSX
+ * Временные файлы (начинающиеся с ~$) игнорируются автоматически
  */
 const KNOWN_DOCUMENT_FILES = [
   // Основные документы
@@ -17,7 +18,11 @@ const KNOWN_DOCUMENT_FILES = [
   'Документы для мониторинга залога.xlsx',
   'Нетиповые риски.docx',
   'Примеры заданий.docx',
-  // FSO документы
+  // Документы по оценке
+  'Оценка АЗС.docx',
+  'Оценка торговых центров.docx',
+  'BusinesStat АЗС.docx',
+  // FSO документы (Федеральные стандарты оценки)
   'FSO1.pdf',
   'FSO2.pdf',
   'FSO3.pdf',
@@ -29,7 +34,7 @@ const KNOWN_DOCUMENT_FILES = [
   'FSO9.pdf',
   'FSO10.pdf',
   'FSO11.pdf',
-  // Документы по оценке
+  // Документы по оценке (PDF)
   'ocenka_biznesa_voprosy_s_otvetami.pdf',
   'ocenka_nedvizhimosti_predpriyatiya_voprosy_s_otvetami.pdf',
   'ocenka_nedvizhimosti_voprosy_s_otvetami.pdf',
@@ -60,6 +65,11 @@ export async function loadVNDDocuments(forceReindex: boolean = false): Promise<D
 
     // Пытаемся загрузить все известные документы
     for (const fileName of KNOWN_DOCUMENT_FILES) {
+      // Игнорируем временные файлы (начинающиеся с ~$)
+      if (fileName.startsWith('~$')) {
+        continue;
+      }
+      
       const fileType = getFileType(fileName);
       if (fileType === 'unknown') {
         console.warn(`Пропущен файл с неизвестным типом: ${fileName}`);
@@ -132,12 +142,15 @@ export async function loadVNDDocuments(forceReindex: boolean = false): Promise<D
 
     // Если были проиндексированы новые документы или принудительная переиндексация, перестраиваем базу знаний
     if (needsRebuild || forceReindex) {
-      console.log('Строю базу знаний из всех документов...');
+      console.log('🔨 Строю базу знаний из всех документов...');
       await knowledgeBase.buildFromDocuments();
-      console.log('✅ База знаний построена');
+      const categories = knowledgeBase.getCategories();
+      console.log(`✅ База знаний построена: ${categories.length} категорий, ${indexedDocuments.length} документов`);
     } else {
       // Загружаем базу знаний из хранилища
       knowledgeBase.loadFromStorage();
+      const categories = knowledgeBase.getCategories();
+      console.log(`📚 База знаний загружена из хранилища: ${categories.length} категорий, ${indexedDocuments.length} документов`);
     }
 
     // Если не удалось загрузить ни одного документа, но есть сохраненные индексы

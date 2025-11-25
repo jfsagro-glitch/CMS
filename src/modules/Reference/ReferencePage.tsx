@@ -37,8 +37,10 @@ import { documentIndexer } from '@/utils/documentIndexer';
 import { loadVNDDocuments, loadDocumentManually, reindexAllDocuments } from '@/utils/documentLoader';
 import { knowledgeBase, type KnowledgeTopic, type KnowledgeCategory } from '@/utils/knowledgeBase';
 import { learningService } from '@/services/LearningService';
+import { evolutionService } from '@/services/EvolutionService';
 import { deepSeekService } from '@/services/DeepSeekService';
 import { feedbackStorage } from '@/utils/feedbackStorage';
+import { Progress } from 'antd';
 import type { DocumentIndex } from '@/utils/documentIndexer';
 import './ReferencePage.css';
 
@@ -67,6 +69,8 @@ const ReferencePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<KnowledgeTopic[]>([]);
   const [learningIndex, setLearningIndex] = useState<number>(0);
+  const [evolutionLevel, setEvolutionLevel] = useState<number>(1);
+  const [evolutionProgress, setEvolutionProgress] = useState<{ current: number; required: number; percentage: number } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<any>(null);
 
@@ -114,15 +118,22 @@ const ReferencePage: React.FC = () => {
     const loadDocuments = async () => {
       setIndexing(true);
       try {
-        // Инициализируем систему самообучения
+        // Инициализируем систему самообучения и эволюции
         learningService.initialize();
+        evolutionService.initialize();
+        
+        // Обновляем опыт на основе текущих данных
+        evolutionService.updateExperienceFromCurrentData();
         
         // Загружаем индексы
         documentIndexer.loadFromStorage();
         knowledgeBase.loadFromStorage();
         
-        const documents = await loadVNDDocuments();
+        // Загружаем документы из VND (с автоматическим обновлением при наличии новых)
+        console.log('🔄 Загружаю документы из VND...');
+        const documents = await loadVNDDocuments(false); // false = не принудительно, только новые
         setIndexedDocuments(documents);
+        console.log(`✅ Загружено документов: ${documents.length}`);
         
         // Загружаем категории из базы знаний
         const loadedCategories = knowledgeBase.getCategories();
@@ -156,14 +167,27 @@ const ReferencePage: React.FC = () => {
           console.log(`📊 Статистика самообучения: ${stats.patternsCount} паттернов, средняя успешность ${(stats.averageSuccessRate * 100).toFixed(1)}%`);
         }
         
-        // Вычисляем индекс самообучаемости (0-100)
+        // Получаем данные эволюции
+        const evolutionStats = evolutionService.getEvolutionStats();
+        const progress = evolutionService.getProgressToNextLevel();
+        
+        if (evolutionStats) {
+          setEvolutionLevel(evolutionStats.level);
+          setEvolutionProgress(progress);
+          console.log(`🎯 Уровень эволюции: ${evolutionService.getCurrentLevel()?.name} (${evolutionStats.level}), опыт: ${evolutionStats.totalExperience}`);
+        }
+        
+        // Вычисляем индекс самообучаемости (0-100) с учетом эволюции
         const calculateLearningIndex = () => {
-          const patternsWeight = Math.min(stats.patternsCount * 5, 40); // Максимум 40 баллов за паттерны
-          const successWeight = stats.averageSuccessRate * 30; // Максимум 30 баллов за успешность
-          const usageWeight = Math.min(stats.totalUsage / 10, 20); // Максимум 20 баллов за использование
-          const insightsWeight = Math.min(stats.insightsCount * 2, 10); // Максимум 10 баллов за инсайты
+          const patternsWeight = Math.min(stats.patternsCount * 5, 30);
+          const successWeight = stats.averageSuccessRate * 25;
+          const usageWeight = Math.min(stats.totalUsage / 10, 15);
+          const insightsWeight = Math.min(stats.insightsCount * 2, 10);
           
-          return Math.round(patternsWeight + successWeight + usageWeight + insightsWeight);
+          // Добавляем бонус за уровень эволюции
+          const evolutionBonus = evolutionStats ? Math.min(evolutionStats.level * 2, 20) : 0;
+          
+          return Math.round(patternsWeight + successWeight + usageWeight + insightsWeight + evolutionBonus);
         };
         
         setLearningIndex(calculateLearningIndex());
@@ -236,6 +260,9 @@ const ReferencePage: React.FC = () => {
       if (knowledgeContext) {
         // Если есть контекст из базы знаний, используем его
         response = await deepSeekService.generateResponse(userMessage, knowledgeContext);
+        
+        // Добавляем пассивный опыт за использование модели
+        evolutionService.addPassiveExperience(userMessage, response.length);
       } else {
         // Если контекста нет, используем общий запрос
         if (lowerMessage.includes('привет') || lowerMessage.includes('здравствуй')) {
@@ -368,19 +395,43 @@ const ReferencePage: React.FC = () => {
       // Анализируем обратную связь для самообучения
       learningService.analyzeFeedback();
       
+      // Добавляем опыт в систему эволюции
+      const category = msg.context?.toLowerCase().includes('ltv') ? 'ltv_calculation' :
+                      msg.context?.toLowerCase().includes('оценк') ? 'appraisal' :
+                      msg.context?.toLowerCase().includes('риск') ? 'risks' : 'general';
+      evolutionService.addExperienceFromFeedback(rating, category, question);
+      
       // Сбрасываем кэш обратной связи в DeepSeekService
       deepSeekService.invalidateFeedbackCache();
 
-      // Обновляем индекс самообучаемости
+      // Обновляем индекс самообучаемости и эволюцию
       const stats = learningService.getLearningStats();
+      const evolutionStats = evolutionService.getEvolutionStats();
+      const currentLevel = evolutionService.getCurrentLevel();
+      const progress = evolutionService.getProgressToNextLevel();
+      
+      if (evolutionStats) {
+        setEvolutionLevel(evolutionStats.level);
+        setEvolutionProgress(progress);
+      }
+      
       const calculateLearningIndex = () => {
-        const patternsWeight = Math.min(stats.patternsCount * 5, 40);
-        const successWeight = stats.averageSuccessRate * 30;
-        const usageWeight = Math.min(stats.totalUsage / 10, 20);
+        const patternsWeight = Math.min(stats.patternsCount * 5, 30);
+        const successWeight = stats.averageSuccessRate * 25;
+        const usageWeight = Math.min(stats.totalUsage / 10, 15);
         const insightsWeight = Math.min(stats.insightsCount * 2, 10);
-        return Math.round(patternsWeight + successWeight + usageWeight + insightsWeight);
+        const evolutionBonus = evolutionStats ? Math.min(evolutionStats.level * 2, 20) : 0;
+        return Math.round(patternsWeight + successWeight + usageWeight + insightsWeight + evolutionBonus);
       };
       setLearningIndex(calculateLearningIndex());
+      
+      // Проверяем, произошла ли эволюция
+      if (currentLevel && evolutionStats && evolutionStats.level > 1) {
+        const levelData = evolutionService.getCurrentLevel();
+        if (levelData) {
+          message.success(`🎉 Модель достигла уровня: ${levelData.name}! Опыт: ${evolutionStats.totalExperience}`);
+        }
+      }
 
       if (rating === 'like') {
         message.success('Спасибо за оценку! Модель обучилась на вашем примере.');
@@ -460,14 +511,26 @@ const ReferencePage: React.FC = () => {
       console.log('Обновляю данные для самообучения...');
       learningService.forceUpdate();
       
-      // Обновляем индекс самообучаемости
+      // Обновляем опыт на основе документов
+      evolutionService.addExperienceFromDocuments();
+      
+      // Обновляем индекс самообучаемости и эволюцию
       const stats = learningService.getLearningStats();
+      const evolutionStats = evolutionService.getEvolutionStats();
+      const progress = evolutionService.getProgressToNextLevel();
+      
+      if (evolutionStats) {
+        setEvolutionLevel(evolutionStats.level);
+        setEvolutionProgress(progress);
+      }
+      
       const calculateLearningIndex = () => {
-        const patternsWeight = Math.min(stats.patternsCount * 5, 40);
-        const successWeight = stats.averageSuccessRate * 30;
-        const usageWeight = Math.min(stats.totalUsage / 10, 20);
+        const patternsWeight = Math.min(stats.patternsCount * 5, 30);
+        const successWeight = stats.averageSuccessRate * 25;
+        const usageWeight = Math.min(stats.totalUsage / 10, 15);
         const insightsWeight = Math.min(stats.insightsCount * 2, 10);
-        return Math.round(patternsWeight + successWeight + usageWeight + insightsWeight);
+        const evolutionBonus = evolutionStats ? Math.min(evolutionStats.level * 2, 20) : 0;
+        return Math.round(patternsWeight + successWeight + usageWeight + insightsWeight + evolutionBonus);
       };
       setLearningIndex(calculateLearningIndex());
       
@@ -616,22 +679,48 @@ const ReferencePage: React.FC = () => {
         <Space>
           <BrainIcon />
           <div>
-            <Space align="center" style={{ marginBottom: 4 }}>
-              <Title level={2} style={{ margin: 0 }}>
-                Справочная с ИИ
-              </Title>
-              <Tag
-                color={learningIndex >= 70 ? 'success' : learningIndex >= 40 ? 'processing' : 'default'}
-                icon={<ThunderboltOutlined />}
-                style={{
-                  fontSize: '12px',
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  fontWeight: 600,
-                }}
-              >
-                Индекс самообучаемости: {learningIndex}%
-              </Tag>
+            <Space align="center" style={{ marginBottom: 4 }} direction="vertical" size="small">
+              <Space align="center">
+                <Title level={2} style={{ margin: 0 }}>
+                  Справочная с ИИ
+                </Title>
+                <Tag
+                  color={learningIndex >= 70 ? 'success' : learningIndex >= 40 ? 'processing' : 'default'}
+                  icon={<ThunderboltOutlined />}
+                  style={{
+                    fontSize: '12px',
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    fontWeight: 600,
+                  }}
+                >
+                  Индекс самообучаемости: {learningIndex}%
+                </Tag>
+              </Space>
+              {evolutionProgress && (
+                <div style={{ width: '100%', maxWidth: 400 }}>
+                  <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                    <Space>
+                      <Text strong style={{ fontSize: '13px' }}>
+                        Уровень: {evolutionService.getCurrentLevel()?.name || 'Новичок'} ({evolutionLevel})
+                      </Text>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>
+                        Опыт: {evolutionService.getEvolutionStats()?.totalExperience || 0}
+                      </Text>
+                    </Space>
+                    <Progress
+                      percent={evolutionProgress.percentage}
+                      status={evolutionProgress.percentage >= 90 ? 'active' : 'normal'}
+                      strokeColor={{
+                        '0%': '#108ee9',
+                        '100%': '#87d068',
+                      }}
+                      format={() => `${evolutionProgress.current}/${evolutionProgress.required} опыта`}
+                      size="small"
+                    />
+                  </Space>
+                </div>
+              )}
             </Space>
             <Text type="secondary">
               База знаний на основе справочной литературы по банковским залогам
