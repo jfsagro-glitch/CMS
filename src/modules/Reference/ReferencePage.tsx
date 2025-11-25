@@ -74,8 +74,8 @@ const ReferencePage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<any>(null);
 
-  // Логотип мозга (детальный SVG с извилинами)
-  const BrainIcon = () => (
+  // Логотип робота (AI Assistant)
+  const RobotIcon = () => (
     <svg
       width="32"
       height="32"
@@ -84,93 +84,130 @@ const ReferencePage: React.FC = () => {
       xmlns="http://www.w3.org/2000/svg"
       style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '8px' }}
     >
-      {/* Основная форма мозга */}
-      <path
-        d="M256 32C180 32 120 92 120 168c0 40 20 76 52 100-20 20-32 48-32 80 0 60 50 110 110 110h92c60 0 110-50 110-110 0-32-12-60-32-80 32-24 52-60 52-100 0-76-60-136-136-136z"
+      {/* Голова робота */}
+      <rect
+        x="156"
+        y="120"
+        width="200"
+        height="180"
+        rx="20"
         fill="#1890ff"
         stroke="#0050b3"
         strokeWidth="8"
+      />
+      {/* Экран/лицо */}
+      <rect
+        x="176"
+        y="160"
+        width="160"
+        height="100"
+        rx="10"
+        fill="#e6f7ff"
+        stroke="#40a9ff"
+        strokeWidth="4"
+      />
+      {/* Глаза */}
+      <circle cx="216" cy="200" r="12" fill="#1890ff" />
+      <circle cx="296" cy="200" r="12" fill="#1890ff" />
+      <circle cx="216" cy="200" r="6" fill="#fff" />
+      <circle cx="296" cy="200" r="6" fill="#fff" />
+      {/* Рот/индикатор */}
+      <rect
+        x="236"
+        y="240"
+        width="40"
+        height="8"
+        rx="4"
+        fill="#1890ff"
+      />
+      {/* Антенна */}
+      <circle cx="256" cy="100" r="8" fill="#ff4d4f" />
+      <line
+        x1="256"
+        y1="100"
+        x2="256"
+        y2="120"
+        stroke="#1890ff"
+        strokeWidth="6"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
-      {/* Извилины мозга - левая часть */}
-      <path
-        d="M180 180c-8 0-16 4-20 12-4 8-4 16 0 24 4 8 12 12 20 12s16-4 20-12c4-8 4-16 0-24-4-8-12-12-20-12z"
-        fill="#40a9ff"
-        opacity="0.7"
-      />
-      <path
-        d="M160 220c-6 0-12 3-15 9-3 6-3 12 0 18 3 6 9 9 15 9s12-3 15-9c3-6 3-12 0-18-3-6-9-9-15-9z"
-        fill="#40a9ff"
-        opacity="0.6"
-      />
-      <path
-        d="M200 240c-6 0-12 3-15 9-3 6-3 12 0 18 3 6 9 9 15 9s12-3 15-9c3-6 3-12 0-18-3-6-9-9-15-9z"
-        fill="#40a9ff"
-        opacity="0.6"
-      />
-      {/* Извилины мозга - правая часть */}
-      <path
-        d="M332 180c-8 0-16 4-20 12-4 8-4 16 0 24 4 8 12 12 20 12s16-4 20-12c4-8 4-16 0-24-4-8-12-12-20-12z"
-        fill="#40a9ff"
-        opacity="0.7"
-      />
-      <path
-        d="M312 220c-6 0-12 3-15 9-3 6-3 12 0 18 3 6 9 9 15 9s12-3 15-9c3-6 3-12 0-18-3-6-9-9-15-9z"
-        fill="#40a9ff"
-        opacity="0.6"
-      />
-      <path
-        d="M352 240c-6 0-12 3-15 9-3 6-3 12 0 18 3 6 9 9 15 9s12-3 15-9c3-6 3-12 0-18-3-6-9-9-15-9z"
-        fill="#40a9ff"
-        opacity="0.6"
-      />
-      {/* Центральные извилины */}
-      <path
-        d="M240 160c-4 0-8 2-10 6-2 4-2 8 0 12 2 4 6 6 10 6s8-2 10-6c2-4 2-8 0-12-2-4-6-6-10-6z"
-        fill="#69c0ff"
-        opacity="0.8"
-      />
-      <path
-        d="M256 200c-4 0-8 2-10 6-2 4-2 8 0 12 2 4 6 6 10 6s8-2 10-6c2-4 2-8 0-12-2-4-6-6-10-6z"
-        fill="#69c0ff"
-        opacity="0.7"
-      />
-      {/* Верхние извилины */}
-      <path
-        d="M220 120c-3 0-6 1.5-7.5 4.5-1.5 3-1.5 6 0 9 1.5 3 4.5 4.5 7.5 4.5s6-1.5 7.5-4.5c1.5-3 1.5-6 0-9-1.5-3-4.5-4.5-7.5-4.5z"
-        fill="#91d5ff"
-        opacity="0.6"
-      />
-      <path
-        d="M292 120c-3 0-6 1.5-7.5 4.5-1.5 3-1.5 6 0 9 1.5 3 4.5 4.5 7.5 4.5s6-1.5 7.5-4.5c1.5-3 1.5-6 0-9-1.5-3-4.5-4.5-7.5-4.5z"
-        fill="#91d5ff"
-        opacity="0.6"
-      />
-      {/* Нижние извилины */}
-      <path
-        d="M200 280c-4 0-8 2-10 6-2 4-2 8 0 12 2 4 6 6 10 6s8-2 10-6c2-4 2-8 0-12-2-4-6-6-10-6z"
-        fill="#40a9ff"
-        opacity="0.5"
-      />
-      <path
-        d="M312 280c-4 0-8 2-10 6-2 4-2 8 0 12 2 4 6 6 10 6s8-2 10-6c2-4 2-8 0-12-2-4-6-6-10-6z"
-        fill="#40a9ff"
-        opacity="0.5"
-      />
-      {/* Центральная линия (межполушарная борозда) */}
-      <path
-        d="M256 140L256 300"
+      {/* Тело робота */}
+      <rect
+        x="176"
+        y="300"
+        width="160"
+        height="120"
+        rx="15"
+        fill="#1890ff"
         stroke="#0050b3"
-        strokeWidth="3"
-        strokeLinecap="round"
-        opacity="0.4"
+        strokeWidth="8"
       />
-      {/* Дополнительные детали */}
-      <circle cx="220" cy="180" r="3" fill="#69c0ff" opacity="0.8" />
-      <circle cx="292" cy="180" r="3" fill="#69c0ff" opacity="0.8" />
-      <circle cx="240" cy="240" r="2.5" fill="#40a9ff" opacity="0.7" />
-      <circle cx="272" cy="240" r="2.5" fill="#40a9ff" opacity="0.7" />
+      {/* Панель управления */}
+      <rect
+        x="196"
+        y="320"
+        width="120"
+        height="60"
+        rx="8"
+        fill="#e6f7ff"
+        stroke="#40a9ff"
+        strokeWidth="3"
+      />
+      {/* Кнопки */}
+      <circle cx="226" cy="350" r="6" fill="#52c41a" />
+      <circle cx="256" cy="350" r="6" fill="#faad14" />
+      <circle cx="286" cy="350" r="6" fill="#ff4d4f" />
+      {/* Руки */}
+      <rect
+        x="116"
+        y="320"
+        width="40"
+        height="80"
+        rx="20"
+        fill="#1890ff"
+        stroke="#0050b3"
+        strokeWidth="6"
+      />
+      <rect
+        x="356"
+        y="320"
+        width="40"
+        height="80"
+        rx="20"
+        fill="#1890ff"
+        stroke="#0050b3"
+        strokeWidth="6"
+      />
+      {/* Кисти */}
+      <circle cx="136" cy="420" r="12" fill="#1890ff" stroke="#0050b3" strokeWidth="4" />
+      <circle cx="376" cy="420" r="12" fill="#1890ff" stroke="#0050b3" strokeWidth="4" />
+      {/* Ноги */}
+      <rect
+        x="196"
+        y="420"
+        width="50"
+        height="60"
+        rx="10"
+        fill="#1890ff"
+        stroke="#0050b3"
+        strokeWidth="6"
+      />
+      <rect
+        x="266"
+        y="420"
+        width="50"
+        height="60"
+        rx="10"
+        fill="#1890ff"
+        stroke="#0050b3"
+        strokeWidth="6"
+      />
+      {/* Ступни */}
+      <ellipse cx="221" cy="490" rx="20" ry="8" fill="#0050b3" />
+      <ellipse cx="291" cy="490" rx="20" ry="8" fill="#0050b3" />
+      {/* Декоративные элементы - линии на теле */}
+      <line x1="196" y1="340" x2="316" y2="340" stroke="#40a9ff" strokeWidth="2" opacity="0.5" />
+      <line x1="196" y1="360" x2="316" y2="360" stroke="#40a9ff" strokeWidth="2" opacity="0.5" />
     </svg>
   );
 
@@ -738,7 +775,7 @@ const ReferencePage: React.FC = () => {
     <div className="reference-page">
       <div className="reference-page__header">
         <Space>
-          <BrainIcon />
+          <RobotIcon />
           <div>
             <Space align="center" style={{ marginBottom: 4 }} direction="vertical" size="small">
               <Space align="center">
