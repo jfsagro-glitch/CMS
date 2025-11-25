@@ -35,6 +35,7 @@ import {
 import { documentIndexer } from '@/utils/documentIndexer';
 import { loadVNDDocuments, loadDocumentManually, reindexAllDocuments } from '@/utils/documentLoader';
 import { knowledgeBase, type KnowledgeTopic, type KnowledgeCategory } from '@/utils/knowledgeBase';
+import { learningService } from '@/services/LearningService';
 import { deepSeekService } from '@/services/DeepSeekService';
 import { feedbackStorage } from '@/utils/feedbackStorage';
 import type { DocumentIndex } from '@/utils/documentIndexer';
@@ -72,6 +73,9 @@ const ReferencePage: React.FC = () => {
     const loadDocuments = async () => {
       setIndexing(true);
       try {
+        // Инициализируем систему самообучения
+        learningService.initialize();
+        
         // Загружаем индексы
         documentIndexer.loadFromStorage();
         knowledgeBase.loadFromStorage();
@@ -91,6 +95,24 @@ const ReferencePage: React.FC = () => {
           const rebuiltCategories = knowledgeBase.getCategories();
           console.log('Перестроено категорий:', rebuiltCategories.length);
           setCategories(rebuiltCategories);
+        }
+        
+        // Анализируем документы для самообучения
+        if (documents.length > 0) {
+          console.log('Анализирую документы для самообучения...');
+          learningService.analyzeDocuments();
+          console.log('✅ Анализ документов завершен');
+        }
+        
+        // Анализируем обратную связь для самообучения
+        console.log('Анализирую обратную связь для самообучения...');
+        learningService.analyzeFeedback();
+        console.log('✅ Анализ обратной связи завершен');
+        
+        // Показываем статистику обучения
+        const stats = learningService.getLearningStats();
+        if (stats.patternsCount > 0) {
+          console.log(`📊 Статистика самообучения: ${stats.patternsCount} паттернов, средняя успешность ${(stats.averageSuccessRate * 100).toFixed(1)}%`);
         }
         
         if (documents.length > 0) {
@@ -290,10 +312,16 @@ const ReferencePage: React.FC = () => {
         )
       );
 
+      // Анализируем обратную связь для самообучения
+      learningService.analyzeFeedback();
+      
+      // Сбрасываем кэш обратной связи в DeepSeekService
+      deepSeekService.invalidateFeedbackCache();
+
       if (rating === 'like') {
-        message.success('Спасибо за оценку!');
+        message.success('Спасибо за оценку! Модель обучилась на вашем примере.');
       } else {
-        message.success('Спасибо за обратную связь. Ответ будет улучшен.');
+        message.success('Спасибо за обратную связь. Модель проанализирует и улучшит ответы.');
       }
     } catch (error) {
       console.error('Ошибка сохранения обратной связи:', error);

@@ -3,6 +3,7 @@
  */
 
 import { feedbackStorage } from '@/utils/feedbackStorage';
+import { learningService } from './LearningService';
 
 // Зашифрованный API ключ (base64 + простой шифр)
 const ENCRYPTED_API_KEY = 'c2stMWIyN2JhYmVlNzQ2NGVlODk2Nzc5ZmRlNDI5MDg0ZWQ='; // base64(sk-1b27babee7464ee896779fde429084ed)
@@ -103,12 +104,36 @@ class DeepSeekService {
   }
 
   /**
-   * Генерирует ответ на вопрос пользователя с учетом контекста из базы знаний
+   * Генерирует ответ на вопрос пользователя с учетом контекста из базы знаний и самообучения
    */
   async generateResponse(userQuestion: string, knowledgeContext: string): Promise<string> {
+    // Получаем рекомендации от системы самообучения
+    const recommendations = learningService.getRecommendations(userQuestion);
+    
+    // Улучшаем контекст на основе рекомендаций
+    let enhancedContext = knowledgeContext;
+    
+    if (recommendations.suggestedTemplate) {
+      enhancedContext += `\n\nШаблон успешного ответа для подобных вопросов:\n${recommendations.suggestedTemplate}`;
+    }
+    
+    if (recommendations.documentInsights && recommendations.documentInsights.length > 0) {
+      enhancedContext += `\n\nВажные темы из релевантных документов:\n`;
+      recommendations.documentInsights.forEach(insight => {
+        enhancedContext += `\nДокумент "${insight.documentName}":\n`;
+        insight.importantTopics.slice(0, 3).forEach(topic => {
+          enhancedContext += `- ${topic}\n`;
+        });
+      });
+    }
+    
+    if (recommendations.importantKeywords.length > 0) {
+      enhancedContext += `\n\nВажные ключевые слова для этого вопроса: ${recommendations.importantKeywords.join(', ')}`;
+    }
+
     return await this.chat(
       [{ role: 'user', content: userQuestion }],
-      knowledgeContext
+      enhancedContext
     );
   }
 
