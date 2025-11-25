@@ -13,7 +13,21 @@ export async function loadVNDDocuments(): Promise<DocumentIndex[]> {
     documentIndexer.loadFromStorage();
 
     // Пытаемся загрузить PDF из папки VND
-    const response = await fetch('/VND/[Volhin_N.A.]_Zalogovik._Vse_o_bankovskih_zalogah_(b-ok.org).pdf');
+    // Пробуем разные пути для разных окружений
+    const basePath = import.meta.env.BASE_URL || './';
+    const pdfPath = `${basePath}VND/[Volhin_N.A.]_Zalogovik._Vse_o_bankovskih_zalogah_(b-ok.org).pdf`;
+    
+    let response = await fetch(pdfPath);
+    
+    // Если не получилось, пробуем без base path
+    if (!response.ok) {
+      response = await fetch('/VND/[Volhin_N.A.]_Zalogovik._Vse_o_bankovskih_zalogah_(b-ok.org).pdf');
+    }
+    
+    // Если все еще не получилось, пробуем относительный путь
+    if (!response.ok) {
+      response = await fetch('./VND/[Volhin_N.A.]_Zalogovik._Vse_o_bankovskih_zalogah_(b-ok.org).pdf');
+    }
     
     if (response.ok) {
       const blob = await response.blob();

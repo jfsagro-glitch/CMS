@@ -20,17 +20,52 @@ export interface DocumentIndex {
 class DocumentIndexer {
   private indexes: Map<string, DocumentIndex> = new Map();
   private chunks: DocumentChunk[] = [];
+  private workerInitialized = false;
+
+  /**
+   * Инициализирует PDF.js worker (вызывается один раз)
+   */
+  private async initializeWorker(): Promise<void> {
+    if (this.workerInitialized || typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      const pdfjsLib = await import('pdfjs-dist');
+      
+      // Пробуем использовать worker из node_modules (для dev) или CDN (для prod)
+      try {
+        // Для разработки используем worker из node_modules
+        if (import.meta.env.DEV) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+            'pdfjs-dist/build/pdf.worker.min.mjs',
+            import.meta.url
+          ).toString();
+        } else {
+          // Для продакшена используем CDN
+          pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+        }
+        this.workerInitialized = true;
+      } catch (e) {
+        // Fallback на CDN
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+        this.workerInitialized = true;
+      }
+    } catch (error) {
+      console.error('Ошибка инициализации PDF.js worker:', error);
+    }
+  }
 
   /**
    * Индексирует PDF документ
    */
   async indexPDF(file: File): Promise<DocumentIndex> {
     try {
+      // Инициализируем worker перед использованием
+      await this.initializeWorker();
+      
       const arrayBuffer = await file.arrayBuffer();
       const pdfjsLib = await import('pdfjs-dist');
-      
-      // Настройка worker для pdf.js
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
       const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
       const pdf = await loadingTask.promise;
