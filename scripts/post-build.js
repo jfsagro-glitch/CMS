@@ -60,21 +60,25 @@ if (!fs.existsSync(vndDestDir)) {
 }
 
 let copied = false;
+const supportedExtensions = ['.pdf', '.docx', '.xlsx', '.xls'];
 
 // Сначала пробуем скопировать из public/VND
 if (fs.existsSync(vndSourceDir)) {
   const files = fs.readdirSync(vndSourceDir);
-  if (files.length > 0) {
-    files.forEach(file => {
+  const documentFiles = files.filter(file => {
+    const ext = path.extname(file).toLowerCase();
+    return supportedExtensions.includes(ext) && fs.statSync(path.join(vndSourceDir, file)).isFile();
+  });
+  
+  if (documentFiles.length > 0) {
+    documentFiles.forEach(file => {
       const sourcePath = path.join(vndSourceDir, file);
       const destPath = path.join(vndDestDir, file);
-      if (fs.statSync(sourcePath).isFile()) {
-        fs.copyFileSync(sourcePath, destPath);
-        copied = true;
-      }
+      fs.copyFileSync(sourcePath, destPath);
+      copied = true;
     });
     if (copied) {
-      console.log('✅ Copied VND folder from public/VND to dist');
+      console.log(`✅ Copied ${documentFiles.length} document(s) from public/VND to dist (PDF/DOCX/XLSX)`);
     }
   }
 }
@@ -82,18 +86,20 @@ if (fs.existsSync(vndSourceDir)) {
 // Если public/VND пустая, пробуем скопировать из корня VND
 if (!copied && fs.existsSync(vndRootDir)) {
   const files = fs.readdirSync(vndRootDir);
-  const pdfFiles = files.filter(file => file.endsWith('.pdf'));
-  if (pdfFiles.length > 0) {
-    pdfFiles.forEach(file => {
+  const documentFiles = files.filter(file => {
+    const ext = path.extname(file).toLowerCase();
+    return supportedExtensions.includes(ext) && fs.statSync(path.join(vndRootDir, file)).isFile();
+  });
+  
+  if (documentFiles.length > 0) {
+    documentFiles.forEach(file => {
       const sourcePath = path.join(vndRootDir, file);
       const destPath = path.join(vndDestDir, file);
-      if (fs.statSync(sourcePath).isFile()) {
-        fs.copyFileSync(sourcePath, destPath);
-        copied = true;
-      }
+      fs.copyFileSync(sourcePath, destPath);
+      copied = true;
     });
     if (copied) {
-      console.log('✅ Copied VND folder from root VND to dist');
+      console.log(`✅ Copied ${documentFiles.length} document(s) from root VND to dist (PDF/DOCX/XLSX)`);
     }
   }
 }

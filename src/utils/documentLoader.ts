@@ -6,16 +6,30 @@ import { documentIndexer, type DocumentIndex } from './documentIndexer';
 import { knowledgeBase } from './knowledgeBase';
 
 /**
- * Список известных PDF документов в папке VND
- * Можно расширить, добавив другие документы
+ * Список известных документов в папке VND
+ * Поддерживаются: PDF, DOCX, XLSX
  */
-const KNOWN_PDF_FILES = [
+const KNOWN_DOCUMENT_FILES = [
   '[Volhin_N.A.]_Zalogovik._Vse_o_bankovskih_zalogah_(b-ok.org).pdf',
-  // Добавьте сюда другие PDF файлы по мере их добавления в папку VND
+  'Виды залогового имущества.docx',
+  'Отнесение фондированного обеспечения к категориям качества обеспечения.docx',
+  'Документы для мониторинга залога.xlsx',
+  // Добавьте сюда другие документы по мере их добавления в папку VND
 ];
 
 /**
- * Загружает и индексирует все PDF документы из папки VND
+ * Определяет тип файла по расширению
+ */
+function getFileType(fileName: string): 'pdf' | 'docx' | 'xlsx' | 'unknown' {
+  const lowerName = fileName.toLowerCase();
+  if (lowerName.endsWith('.pdf')) return 'pdf';
+  if (lowerName.endsWith('.docx')) return 'docx';
+  if (lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls')) return 'xlsx';
+  return 'unknown';
+}
+
+/**
+ * Загружает и индексирует все документы из папки VND
  */
 export async function loadVNDDocuments(forceReindex: boolean = false): Promise<DocumentIndex[]> {
   try {
@@ -26,16 +40,21 @@ export async function loadVNDDocuments(forceReindex: boolean = false): Promise<D
     const indexedDocuments: DocumentIndex[] = [];
     let needsRebuild = false;
 
-    // Пытаемся загрузить все известные PDF файлы
-    for (const pdfFileName of KNOWN_PDF_FILES) {
+    // Пытаемся загрузить все известные документы
+    for (const fileName of KNOWN_DOCUMENT_FILES) {
+      const fileType = getFileType(fileName);
+      if (fileType === 'unknown') {
+        console.warn(`Пропущен файл с неизвестным типом: ${fileName}`);
+        continue;
+      }
       // Список путей для попытки загрузки (для GitHub Pages и локальной разработки)
       const pathsToTry = [
-        `${basePath}VND/${pdfFileName}`, // Для GitHub Pages с base path
-        `./VND/${pdfFileName}`, // Относительный путь
-        `/VND/${pdfFileName}`, // Абсолютный путь
-        `VND/${pdfFileName}`, // Без слешей
-        `${window.location.origin}${basePath}VND/${pdfFileName}`, // Полный URL
-        `${window.location.origin}/VND/${pdfFileName}`, // Полный URL без base path
+        `${basePath}VND/${fileName}`, // Для GitHub Pages с base path
+        `./VND/${fileName}`, // Относительный путь
+        `/VND/${fileName}`, // Абсолютный путь
+        `VND/${fileName}`, // Без слешей
+        `${window.location.origin}${basePath}VND/${fileName}`, // Полный URL
+        `${window.location.origin}/VND/${fileName}`, // Полный URL без base path
       ];
       
       let response: Response | null = null;
@@ -55,10 +74,17 @@ export async function loadVNDDocuments(forceReindex: boolean = false): Promise<D
       if (response && response.ok) {
         try {
           const blob = await response.blob();
+          
+          // Определяем MIME тип по расширению
+          let mimeType = 'application/octet-stream';
+          if (fileType === 'pdf') mimeType = 'application/pdf';
+          else if (fileType === 'docx') mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          else if (fileType === 'xlsx') mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          
           const file = new File(
             [blob],
-            pdfFileName,
-            { type: 'application/pdf' }
+            fileName,
+            { type: mimeType }
           );
 
           // Проверяем, не индексирован ли уже этот документ
@@ -69,20 +95,20 @@ export async function loadVNDDocuments(forceReindex: boolean = false): Promise<D
 
           // Если принудительная переиндексация или документ не индексирован
           if (forceReindex || !existingIndex) {
-            console.log(`Индексирую документ: ${file.name}`);
-            const index = await documentIndexer.indexPDF(file);
+            console.log(`Индексирую документ: ${file.name} (тип: ${fileType})`);
+            const index = await documentIndexer.indexDocument(file);
             indexedDocuments.push(index);
-            console.log(`✅ Документ проиндексирован: ${file.name} (${index.totalPages} страниц, ${index.chunks.length} чанков)`);
+            console.log(`✅ Документ проиндексирован: ${file.name} (${index.totalPages} страниц/листов, ${index.chunks.length} чанков)`);
             needsRebuild = true;
           } else {
-            console.log(`Документ уже проиндексирован: ${file.name} (${existingIndex.totalPages} страниц)`);
+            console.log(`Документ уже проиндексирован: ${file.name} (${existingIndex.totalPages} страниц/листов)`);
             indexedDocuments.push(existingIndex);
           }
         } catch (error) {
-          console.error(`Ошибка индексации документа ${pdfFileName}:`, error);
+          console.error(`Ошибка индексации документа ${fileName}:`, error);
         }
       } else {
-        console.warn(`Не удалось загрузить документ из VND: ${pdfFileName}`);
+        console.warn(`Не удалось загрузить документ из VND: ${fileName}`);
       }
     }
 
@@ -129,7 +155,12 @@ export async function loadVNDDocuments(forceReindex: boolean = false): Promise<D
  * Загружает документ вручную через файловый input
  */
 export async function loadDocumentManually(file: File): Promise<DocumentIndex> {
-  const index = await documentIndexer.indexPDF(file);
+  const fileType = getFileType(file.name);
+  if (fileType === 'unknown') {
+    throw new Error(`Неподдерживаемый формат файла: ${file.name}. Поддерживаются: PDF, DOCX, XLSX`);
+  }
+  
+  const index = await documentIndexer.indexDocument(file);
   
   // Строим базу знаний из всех индексированных документов
   await knowledgeBase.buildFromDocuments();

@@ -302,8 +302,12 @@ const ReferencePage: React.FC = () => {
   }, [messages]);
 
   const handleFileUpload = useCallback(async (file: File) => {
-    if (!file.name.endsWith('.pdf')) {
-      message.error('Поддерживаются только PDF файлы');
+    const fileName = file.name.toLowerCase();
+    const supportedFormats = ['.pdf', '.docx', '.xlsx', '.xls'];
+    const isSupported = supportedFormats.some(format => fileName.endsWith(format));
+    
+    if (!isSupported) {
+      message.error('Поддерживаются только файлы: PDF, DOCX, XLSX');
       return false;
     }
 
@@ -526,13 +530,13 @@ const ReferencePage: React.FC = () => {
           )}
           <Space>
             <Upload
-              accept=".pdf"
+              accept=".pdf,.docx,.xlsx,.xls"
               beforeUpload={handleFileUpload}
               showUploadList={false}
               disabled={indexing}
             >
               <Button icon={<UploadOutlined />} loading={indexing}>
-                Загрузить документ
+                Загрузить документ (PDF/DOCX/XLSX)
               </Button>
             </Upload>
             <Button 
