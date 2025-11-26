@@ -258,8 +258,10 @@ const ReferencePage: React.FC = () => {
         learningService.initialize();
         evolutionService.initialize();
         
-        // Загружаем индексы из localStorage (быстро)
-        documentIndexer.loadFromStorage();
+        // Загружаем индексы из IndexedDB (асинхронно)
+        documentIndexer.loadFromStorage().catch(err => {
+          console.error('Ошибка загрузки индексов:', err);
+        });
         knowledgeBase.loadFromStorage();
         
         // Загружаем категории из базы знаний (быстро)

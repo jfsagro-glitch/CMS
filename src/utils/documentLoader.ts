@@ -107,8 +107,8 @@ function getFileType(fileName: string): 'pdf' | 'docx' | 'xlsx' | 'unknown' {
  */
 export async function loadVNDDocuments(forceReindex: boolean = false): Promise<DocumentIndex[]> {
   try {
-    // Загружаем существующие индексы
-    documentIndexer.loadFromStorage();
+    // Загружаем существующие индексы из IndexedDB
+    await documentIndexer.loadFromStorage();
     
     const basePath = import.meta.env.BASE_URL || './';
     const indexedDocuments: DocumentIndex[] = [];
@@ -199,6 +199,7 @@ export async function loadVNDDocuments(forceReindex: boolean = false): Promise<D
       console.log(`✅ База знаний построена: ${categories.length} категорий, ${indexedDocuments.length} документов`);
     } else {
       // Загружаем базу знаний из хранилища
+      // Загружаем базу знаний (синхронно, она использует localStorage)
       knowledgeBase.loadFromStorage();
       const categories = knowledgeBase.getCategories();
       console.log(`📚 База знаний загружена из хранилища: ${categories.length} категорий, ${indexedDocuments.length} документов`);

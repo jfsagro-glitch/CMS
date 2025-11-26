@@ -2,6 +2,8 @@
  * Утилита для индексации и поиска по документам из папки VND
  */
 
+import { extendedDb, type DocumentIndexDB, type DocumentChunkDB } from '@/services/ExtendedStorageService';
+
 export interface DocumentChunk {
   id: string;
   documentName: string;
@@ -161,8 +163,8 @@ class DocumentIndexer {
       this.indexes.set(file.name, index);
       this.chunks.push(...chunks);
 
-      // Сохраняем в localStorage
-      this.saveToStorage();
+      // Сохраняем в IndexedDB (асинхронно, не блокируя)
+      this.saveToStorage().catch(err => console.error('Ошибка сохранения индекса PDF:', err));
 
       return index;
     } catch (error) {
@@ -209,8 +211,8 @@ class DocumentIndexer {
       this.indexes.set(file.name, index);
       this.chunks.push(...chunks);
 
-      // Сохраняем в localStorage
-      this.saveToStorage();
+      // Сохраняем в IndexedDB (асинхронно, не блокируя) - только этот документ
+      this.saveToStorage(file.name).catch(err => console.error('Ошибка сохранения индекса DOCX:', err));
 
       return index;
     } catch (error) {
@@ -273,8 +275,8 @@ class DocumentIndexer {
       this.indexes.set(file.name, index);
       this.chunks.push(...chunks);
 
-      // Сохраняем в localStorage
-      this.saveToStorage();
+      // Сохраняем в IndexedDB (асинхронно, не блокируя) - только этот документ
+      this.saveToStorage(file.name).catch(err => console.error('Ошибка сохранения индекса XLSX:', err));
 
       return index;
     } catch (error) {
@@ -321,8 +323,8 @@ class DocumentIndexer {
       this.indexes.set(file.name, index);
       this.chunks.push(chunk);
 
-      // Сохраняем в localStorage
-      this.saveToStorage();
+      // Сохраняем в IndexedDB (асинхронно, не блокируя) - только этот документ
+      this.saveToStorage(file.name).catch(err => console.error('Ошибка сохранения индекса изображения:', err));
 
       return index;
     } catch (error) {
@@ -468,56 +470,219 @@ class DocumentIndexer {
   }
 
   /**
-   * Сохранить индексы в localStorage
+   * Сохранить индексы в IndexedDB (оптимизированная версия - сохраняет только новые/обновленные)
    */
-  private saveToStorage(): void {
+  private async saveToStorage(documentName?: string): Promise<void> {
     try {
-      const data = {
-        indexes: Array.from(this.indexes.values()).map((index) => ({
-          ...index,
-          indexedAt: index.indexedAt.toISOString(),
-        })),
-        chunks: this.chunks,
-      };
-      localStorage.setItem('documentIndexes', JSON.stringify(data));
+      // Если указан конкретный документ, сохраняем только его
+      if (documentName) {
+        const index = this.indexes.get(documentName);
+        if (!index) return;
+
+        const indexToSave: DocumentIndexDB = {
+          documentName: index.documentName,
+          totalPages: index.totalPages,
+          indexedAt: index.indexedAt,
+        };
+
+        // Удаляем старые данные для этого документа
+        await Promise.all([
+          extendedDb.documentChunks.where('documentName').equals(documentName).delete(),
+          extendedDb.documentIndexes.where('documentName').equals(documentName).delete()
+        ]);
+
+        // Сохраняем новый индекс
+        await extendedDb.documentIndexes.put(indexToSave);
+
+        // Сохраняем чанки для этого документа (батчами)
+        const chunksToSave: DocumentChunkDB[] = index.chunks.map(chunk => ({
+          id: chunk.id,
+          documentName: chunk.documentName,
+          page: chunk.page,
+          text: chunk.text,
+          keywords: chunk.keywords,
+          imageData: chunk.imageData,
+          isImage: chunk.isImage,
+        }));
+
+        const batchSize = 1000;
+        for (let i = 0; i < chunksToSave.length; i += batchSize) {
+          const batch = chunksToSave.slice(i, i + batchSize);
+          await extendedDb.documentChunks.bulkPut(batch);
+        }
+      } else {
+        // Сохраняем все индексы (для миграции или полного обновления)
+        const indexesToSave: DocumentIndexDB[] = Array.from(this.indexes.values()).map((index) => ({
+          documentName: index.documentName,
+          totalPages: index.totalPages,
+          indexedAt: index.indexedAt,
+        }));
+
+        if (indexesToSave.length === 0) return;
+
+        // Удаляем старые индексы и чанки для обновляемых документов
+        const documentNames = indexesToSave.map(idx => idx.documentName);
+        await Promise.all([
+          extendedDb.documentChunks.where('documentName').anyOf(documentNames).delete(),
+          extendedDb.documentIndexes.where('documentName').anyOf(documentNames).delete()
+        ]);
+
+        // Сохраняем новые индексы
+        await extendedDb.documentIndexes.bulkPut(indexesToSave);
+
+        // Сохраняем чанки (батчами по 1000 для оптимизации)
+        const chunksToSave: DocumentChunkDB[] = this.chunks.map(chunk => ({
+          id: chunk.id,
+          documentName: chunk.documentName,
+          page: chunk.page,
+          text: chunk.text,
+          keywords: chunk.keywords,
+          imageData: chunk.imageData,
+          isImage: chunk.isImage,
+        }));
+
+        const batchSize = 1000;
+        for (let i = 0; i < chunksToSave.length; i += batchSize) {
+          const batch = chunksToSave.slice(i, i + batchSize);
+          await extendedDb.documentChunks.bulkPut(batch);
+        }
+      }
     } catch (error) {
-      console.error('Ошибка сохранения индексов:', error);
+      console.error('Ошибка сохранения индексов в IndexedDB:', error);
+      // Fallback на localStorage для небольших данных (только метаданные)
+      try {
+        const data = {
+          indexes: Array.from(this.indexes.values()).map((index) => ({
+            documentName: index.documentName,
+            totalPages: index.totalPages,
+            indexedAt: index.indexedAt.toISOString(),
+          })),
+          // Не сохраняем чанки в localStorage - только метаданные
+        };
+        localStorage.setItem('documentIndexes_fallback', JSON.stringify(data));
+      } catch (fallbackError) {
+        console.error('Ошибка сохранения в localStorage (fallback):', fallbackError);
+      }
     }
   }
 
   /**
-   * Загрузить индексы из localStorage
+   * Загрузить индексы из IndexedDB
    */
-  loadFromStorage(): void {
+  async loadFromStorage(): Promise<void> {
     try {
-      const stored = localStorage.getItem('documentIndexes');
-      if (stored) {
-        const data = JSON.parse(stored);
-        
-        this.indexes.clear();
-        this.chunks = [];
+      // Загружаем индексы из IndexedDB
+      const indexesFromDB = await extendedDb.documentIndexes.toArray();
+      const chunksFromDB = await extendedDb.documentChunks.toArray();
 
-        for (const indexData of data.indexes || []) {
-          const index: DocumentIndex = {
-            ...indexData,
-            indexedAt: new Date(indexData.indexedAt),
-          };
-          this.indexes.set(index.documentName, index);
-          this.chunks.push(...index.chunks);
+      this.indexes.clear();
+      this.chunks = [];
+
+      // Группируем чанки по документам
+      const chunksByDocument = new Map<string, DocumentChunk[]>();
+      for (const chunkDB of chunksFromDB) {
+        if (!chunksByDocument.has(chunkDB.documentName)) {
+          chunksByDocument.set(chunkDB.documentName, []);
+        }
+        chunksByDocument.get(chunkDB.documentName)!.push({
+          id: chunkDB.id,
+          documentName: chunkDB.documentName,
+          page: chunkDB.page,
+          text: chunkDB.text,
+          keywords: chunkDB.keywords,
+          imageData: chunkDB.imageData,
+          isImage: chunkDB.isImage,
+        });
+      }
+
+      // Восстанавливаем индексы
+      for (const indexDB of indexesFromDB) {
+        const chunks = chunksByDocument.get(indexDB.documentName) || [];
+        const index: DocumentIndex = {
+          documentName: indexDB.documentName,
+          chunks,
+          totalPages: indexDB.totalPages,
+          indexedAt: indexDB.indexedAt instanceof Date ? indexDB.indexedAt : new Date(indexDB.indexedAt),
+        };
+        this.indexes.set(index.documentName, index);
+        this.chunks.push(...chunks);
+      }
+
+      // Если в IndexedDB ничего нет, пробуем загрузить из localStorage (миграция)
+      if (indexesFromDB.length === 0) {
+        const stored = localStorage.getItem('documentIndexes');
+        if (stored) {
+          try {
+            const data = JSON.parse(stored);
+            this.indexes.clear();
+            this.chunks = [];
+
+            for (const indexData of data.indexes || []) {
+              const index: DocumentIndex = {
+                ...indexData,
+                indexedAt: new Date(indexData.indexedAt),
+              };
+              this.indexes.set(index.documentName, index);
+              this.chunks.push(...index.chunks);
+            }
+
+            // Мигрируем в IndexedDB
+            await this.saveToStorage();
+            // Удаляем из localStorage после успешной миграции
+            localStorage.removeItem('documentIndexes');
+          } catch (migrationError) {
+            console.error('Ошибка миграции из localStorage:', migrationError);
+          }
         }
       }
     } catch (error) {
-      console.error('Ошибка загрузки индексов:', error);
+      console.error('Ошибка загрузки индексов из IndexedDB:', error);
+      // Fallback на localStorage
+      try {
+        const stored = localStorage.getItem('documentIndexes_fallback');
+        if (stored) {
+          const data = JSON.parse(stored);
+          this.indexes.clear();
+          this.chunks = [];
+
+          for (const indexData of data.indexes || []) {
+            const index: DocumentIndex = {
+              documentName: indexData.documentName,
+              chunks: (data.chunks || []).filter((c: any) => c.documentName === indexData.documentName).map((c: any) => ({
+                id: c.id,
+                documentName: c.documentName,
+                page: c.page,
+                text: c.text,
+                keywords: c.keywords,
+                isImage: c.isImage,
+              })),
+              totalPages: indexData.totalPages,
+              indexedAt: new Date(indexData.indexedAt),
+            };
+            this.indexes.set(index.documentName, index);
+            this.chunks.push(...index.chunks);
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Ошибка загрузки из localStorage (fallback):', fallbackError);
+      }
     }
   }
 
   /**
    * Очистить все индексы
    */
-  clearIndexes(): void {
+  async clearIndexes(): Promise<void> {
     this.indexes.clear();
     this.chunks = [];
-    localStorage.removeItem('documentIndexes');
+    try {
+      await extendedDb.documentIndexes.clear();
+      await extendedDb.documentChunks.clear();
+      localStorage.removeItem('documentIndexes');
+      localStorage.removeItem('documentIndexes_fallback');
+    } catch (error) {
+      console.error('Ошибка очистки индексов:', error);
+    }
   }
 
   /**
@@ -530,7 +695,8 @@ class DocumentIndexer {
     const oldChunks = this.chunks.filter(c => c.documentName !== index.documentName);
     this.chunks = [...oldChunks, ...index.chunks];
     
-    this.saveToStorage();
+    // Сохраняем в IndexedDB (асинхронно) - только этот документ
+    this.saveToStorage(index.documentName).catch(err => console.error('Ошибка обновления индекса:', err));
   }
 
   /**

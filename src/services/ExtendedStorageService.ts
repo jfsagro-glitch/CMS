@@ -10,6 +10,23 @@ import type {
 } from '@/types';
 import type { Inspection } from '@/types/inspection';
 
+// Интерфейсы для индексов документов
+export interface DocumentIndexDB {
+  documentName: string;
+  totalPages: number;
+  indexedAt: Date;
+}
+
+export interface DocumentChunkDB {
+  id: string;
+  documentName: string;
+  page: number;
+  text: string;
+  keywords: string[];
+  imageData?: string;
+  isImage?: boolean;
+}
+
 // Расширенная схема базы данных
 class ExtendedCMSDatabase extends Dexie {
   collateralCards!: Table<ExtendedCollateralCard, string>;
@@ -17,6 +34,8 @@ class ExtendedCMSDatabase extends Dexie {
   documents!: Table<Document, string>;
   settings!: Table<AppSettings & { id: string }, string>;
   inspections!: Table<Inspection, string>;
+  documentIndexes!: Table<DocumentIndexDB, string>;
+  documentChunks!: Table<DocumentChunkDB, string>;
 
   constructor() {
     super('CMSDatabase');
@@ -42,6 +61,20 @@ class ExtendedCMSDatabase extends Dexie {
     }).upgrade(async () => {
       // Миграция данных из версии 2
       console.log('Upgrading database to version 3...');
+    });
+
+    // Версия 4 с таблицами для индексов документов
+    this.version(4).stores({
+      collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
+      partners: 'id, type, role, inn, lastName, organizationName',
+      documents: 'id, name, type, category, uploadDate',
+      settings: 'id',
+      inspections: 'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
+      documentIndexes: 'documentName',
+      documentChunks: 'id, documentName, page'
+    }).upgrade(async () => {
+      // Миграция данных из версии 3
+      console.log('Upgrading database to version 4...');
     });
   }
 }
