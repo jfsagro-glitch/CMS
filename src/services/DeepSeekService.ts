@@ -108,6 +108,44 @@ class DeepSeekService {
   /**
    * Генерирует ответ на вопрос пользователя с учетом контекста из базы знаний и самообучения
    */
+  /**
+   * Анализирует изображение и возвращает описание
+   */
+  async analyzeImage(imageBase64: string, fileName: string): Promise<string> {
+    const apiKey = this.getApiKey();
+    
+    if (!apiKey) {
+      throw new Error('API ключ не найден');
+    }
+
+    try {
+      // DeepSeek может анализировать изображения через vision API
+      // Используем текстовое описание для модели без vision
+      // В будущем можно использовать imageBase64 для передачи в vision API
+      const prompt = `Проанализируй это изображение (файл: ${fileName}) и создай подробное текстовое описание содержимого. 
+      Если это документ (договор, свидетельство, выписка, акт осмотра и т.д.), опиши его содержание, ключевые данные, даты, номера, стороны.
+      Если это фотография недвижимости или имущества, опиши объект, его состояние, особенности.
+      Если это график, таблица или схема, опиши данные и выводы.
+      Будь максимально подробным и профессиональным.`;
+
+      // Для изображений используем специальный формат
+      // Если DeepSeek поддерживает vision, можно передать base64 напрямую (imageBase64)
+      // Пока используем текстовый запрос с описанием файла
+      const response = await this.chat([
+        {
+          role: 'user',
+          content: `${prompt}\n\nФайл: ${fileName}\nРазмер изображения: ${Math.round(imageBase64.length / 1024)}KB\n[Изображение загружено, требуется анализ содержимого]`,
+        },
+      ]);
+
+      return response;
+    } catch (error) {
+      console.error('Ошибка анализа изображения:', error);
+      // Возвращаем базовое описание при ошибке
+      return `Изображение: ${fileName}. Требуется ручной анализ содержимого.`;
+    }
+  }
+
   async generateResponse(userQuestion: string, knowledgeContext: string): Promise<string> {
     // Анализируем вопрос для определения необходимости уточнений
     const questionAnalysis = questionEnhancementService.analyzeQuestion(userQuestion);

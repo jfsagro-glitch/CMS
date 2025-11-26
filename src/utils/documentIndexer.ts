@@ -8,6 +8,8 @@ export interface DocumentChunk {
   page: number;
   text: string;
   keywords: string[];
+  imageData?: string; // Base64 для изображений
+  isImage?: boolean; // Флаг, что это изображение
 }
 
 export interface DocumentIndex {
@@ -282,6 +284,77 @@ class DocumentIndexer {
   }
 
   /**
+   * Индексирует изображение (сохраняет и создает описание)
+   */
+  async indexImage(file: File): Promise<DocumentIndex> {
+    try {
+      // Читаем изображение как Base64
+      const imageData = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // Создаем чанк с изображением
+      // Текст будет заполнен после анализа через AI
+      const chunk: DocumentChunk = {
+        id: `${file.name}-image-1`,
+        documentName: file.name,
+        page: 1,
+        text: `[Изображение: ${file.name}]`, // Временный текст, будет заменен после анализа
+        keywords: this.extractKeywordsFromImageName(file.name),
+        imageData,
+        isImage: true,
+      };
+
+      const index: DocumentIndex = {
+        documentName: file.name,
+        chunks: [chunk],
+        totalPages: 1,
+        indexedAt: new Date(),
+      };
+
+      this.indexes.set(file.name, index);
+      this.chunks.push(chunk);
+
+      // Сохраняем в localStorage
+      this.saveToStorage();
+
+      return index;
+    } catch (error) {
+      console.error('Ошибка индексации изображения:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Извлекает ключевые слова из имени изображения
+   */
+  private extractKeywordsFromImageName(fileName: string): string[] {
+    const keywords: string[] = [];
+    const lowerName = fileName.toLowerCase();
+    
+    // Проверяем наличие ключевых слов в имени файла
+    const imageKeywords = [
+      'залог', 'ипотека', 'недвижимость', 'квартира', 'дом', 'офис', 'склад',
+      'автомобиль', 'транспорт', 'документ', 'договор', 'свидетельство',
+      'выписка', 'егрн', 'кадастр', 'оценка', 'отчет', 'акт', 'осмотр',
+    ];
+
+    for (const keyword of imageKeywords) {
+      if (lowerName.includes(keyword)) {
+        keywords.push(keyword);
+      }
+    }
+
+    return keywords;
+  }
+
+  /**
    * Универсальный метод индексации документа (определяет тип автоматически)
    */
   async indexDocument(file: File): Promise<DocumentIndex> {
@@ -293,9 +366,19 @@ class DocumentIndexer {
       return await this.indexDOCX(file);
     } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
       return await this.indexXLSX(file);
+    } else if (this.isImageFile(fileName)) {
+      return await this.indexImage(file);
     } else {
-      throw new Error(`Неподдерживаемый формат файла: ${file.name}. Поддерживаются: PDF, DOCX, XLSX`);
+      throw new Error(`Неподдерживаемый формат файла: ${file.name}. Поддерживаются: PDF, DOCX, XLSX, XLS, JPG, JPEG, PNG, GIF, BMP, WEBP`);
     }
+  }
+
+  /**
+   * Проверяет, является ли файл изображением
+   */
+  private isImageFile(fileName: string): boolean {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+    return imageExtensions.some(ext => fileName.endsWith(ext));
   }
 
   /**
@@ -435,6 +518,26 @@ class DocumentIndexer {
     this.indexes.clear();
     this.chunks = [];
     localStorage.removeItem('documentIndexes');
+  }
+
+  /**
+   * Обновить индекс документа (публичный метод)
+   */
+  updateDocumentIndex(index: DocumentIndex): void {
+    this.indexes.set(index.documentName, index);
+    
+    // Обновляем chunks
+    const oldChunks = this.chunks.filter(c => c.documentName !== index.documentName);
+    this.chunks = [...oldChunks, ...index.chunks];
+    
+    this.saveToStorage();
+  }
+
+  /**
+   * Извлечь ключевые слова из текста (публичный метод)
+   */
+  extractKeywordsPublic(text: string): string[] {
+    return this.extractKeywords(text);
   }
 }
 

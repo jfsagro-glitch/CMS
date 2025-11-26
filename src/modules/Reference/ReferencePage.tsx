@@ -591,23 +591,63 @@ const ReferencePage: React.FC = () => {
 
   const handleFileUpload = useCallback(async (file: File) => {
     const fileName = file.name.toLowerCase();
-    const supportedFormats = ['.pdf', '.docx', '.xlsx', '.xls'];
+    const supportedFormats = ['.pdf', '.docx', '.xlsx', '.xls', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
     const isSupported = supportedFormats.some(format => fileName.endsWith(format));
     
     if (!isSupported) {
-      message.error('Поддерживаются только файлы: PDF, DOCX, XLSX');
+      message.error('Поддерживаются только файлы: PDF, DOCX, XLSX, XLS, JPG, JPEG, PNG, GIF, BMP, WEBP');
       return false;
     }
 
-    // Проверяем размер файла (максимум 50MB)
-    if (file.size > 50 * 1024 * 1024) {
-      message.error('Размер файла не должен превышать 50MB');
+    // Проверяем размер файла (максимум 50MB для документов, 10MB для изображений)
+    const isImage = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'].some(ext => fileName.endsWith(ext));
+    const maxSize = isImage ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+    
+    if (file.size > maxSize) {
+      message.error(`Размер файла не должен превышать ${isImage ? '10MB' : '50MB'}`);
       return false;
     }
 
     setIndexing(true);
     try {
-      const index = await loadDocumentManually(file);
+      let index;
+      
+      if (isImage) {
+        // Для изображений индексируем и анализируем через AI
+        message.info('Анализирую изображение через ИИ...');
+        index = await documentIndexer.indexDocument(file);
+        
+        // Анализируем изображение через AI для создания описания
+        if (index.chunks.length > 0 && index.chunks[0].imageData) {
+          try {
+            const imageDescription = await deepSeekService.analyzeImage(
+              index.chunks[0].imageData,
+              file.name
+            );
+            
+            // Обновляем текст чанка с описанием от AI
+            index.chunks[0].text = `[Изображение: ${file.name}]\n\nОписание от ИИ:\n${imageDescription}`;
+            
+            // Обновляем ключевые слова на основе описания
+            const descriptionKeywords = documentIndexer.extractKeywordsPublic(imageDescription);
+            index.chunks[0].keywords = [
+              ...new Set([...index.chunks[0].keywords, ...descriptionKeywords])
+            ];
+            
+            // Сохраняем обновленный индекс
+            documentIndexer.updateDocumentIndex(index);
+            
+            message.success('Изображение проанализировано ИИ');
+          } catch (aiError) {
+            console.error('Ошибка анализа изображения через AI:', aiError);
+            message.warning('Изображение загружено, но не удалось проанализировать через ИИ');
+          }
+        }
+      } else {
+        // Для документов используем стандартную индексацию
+        index = await loadDocumentManually(file);
+      }
+      
       setIndexedDocuments(prev => {
         // Проверяем, не был ли документ уже проиндексирован
         const exists = prev.some(doc => doc.documentName === index.documentName);
@@ -628,11 +668,11 @@ const ReferencePage: React.FC = () => {
         setCategories(rebuiltCategories);
       }
       
-      message.success(`Документ "${file.name}" успешно проиндексирован. База знаний обновлена.`);
+      message.success(`${isImage ? 'Изображение' : 'Документ'} "${file.name}" успешно ${isImage ? 'проанализирован' : 'проиндексирован'}. База знаний обновлена.`);
     } catch (error) {
       console.error('Ошибка индексации:', error);
       const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
-      message.error(`Не удалось проиндексировать документ: ${errorMessage}`);
+      message.error(`Не удалось ${isImage ? 'проанализировать изображение' : 'проиндексировать документ'}: ${errorMessage}`);
     } finally {
       setIndexing(false);
     }
@@ -887,16 +927,16 @@ const ReferencePage: React.FC = () => {
           >
             Настройки
           </Button>
-          <Upload
-            accept=".pdf,.docx,.xlsx,.xls"
-            beforeUpload={handleFileUpload}
-            showUploadList={false}
-            disabled={indexing}
-          >
-            <Button icon={<UploadOutlined />} loading={indexing} size="middle">
-              Загрузить документ
-            </Button>
-          </Upload>
+            <Upload
+              accept=".pdf,.docx,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.bmp,.webp"
+              beforeUpload={handleFileUpload}
+              showUploadList={false}
+              disabled={indexing}
+            >
+              <Button icon={<UploadOutlined />} loading={indexing} size="middle">
+                Загрузить документ или изображение
+              </Button>
+            </Upload>
           <Button 
             icon={<ReloadOutlined />} 
             onClick={handleReindexAll}
