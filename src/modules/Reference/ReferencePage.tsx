@@ -87,9 +87,18 @@ const ReferencePage: React.FC = () => {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
-  const [chatsVisible, setChatsVisible] = useState(true); // По умолчанию видима
+  // Загружаем состояние сворачивания из localStorage
+  const [chatsVisible, setChatsVisible] = useState(() => {
+    const saved = localStorage.getItem('reference_chats_visible');
+    return saved !== null ? saved === 'true' : true;
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<any>(null);
+
+  // Сохраняем состояние сворачивания в localStorage
+  useEffect(() => {
+    localStorage.setItem('reference_chats_visible', String(chatsVisible));
+  }, [chatsVisible]);
 
   // Логотип робота (AI Assistant) - размер зависит от уровня опыта
   // Базовый размер: 32px, максимальный: 80px
@@ -981,6 +990,20 @@ const ReferencePage: React.FC = () => {
     return groups;
   }, [chats]);
 
+  // Обработчик создания нового чата (мемоизировано)
+  const handleCreateNewChat = useCallback(() => {
+    const newChat = createChat();
+    setCurrentChatId(newChat.id);
+    setChats(getAllChats());
+    setMessages([]);
+    message.success('Создан новый чат');
+  }, []);
+
+  // Обработчик выбора чата (мемоизировано)
+  const handleChatSelect = useCallback((chatId: string) => {
+    setCurrentChatId(chatId);
+  }, []);
+
   return (
     <div className="reference-page">
       {/* Боковая панель чатов */}
@@ -992,9 +1015,10 @@ const ReferencePage: React.FC = () => {
           </Space>
           <Button
             type="text"
-            icon={chatsVisible ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            icon={chatsVisible ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
             onClick={() => setChatsVisible(!chatsVisible)}
             style={{ color: '#fff' }}
+            title={chatsVisible ? 'Свернуть панель чатов' : 'Развернуть панель чатов'}
           />
         </div>
 
@@ -1004,13 +1028,7 @@ const ReferencePage: React.FC = () => {
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
-                onClick={() => {
-                  const newChat = createChat();
-                  setCurrentChatId(newChat.id);
-                  setChats(getAllChats());
-                  setMessages([]);
-                  message.success('Создан новый чат');
-                }}
+                onClick={handleCreateNewChat}
                 block
                 style={{ marginBottom: 16 }}
               >
@@ -1027,9 +1045,7 @@ const ReferencePage: React.FC = () => {
                       <div
                         key={chat.id}
                         className={`reference-page__chat-item ${currentChatId === chat.id ? 'reference-page__chat-item--active' : ''}`}
-                        onClick={() => {
-                          setCurrentChatId(chat.id);
-                        }}
+                        onClick={() => handleChatSelect(chat.id)}
                       >
                         <Text ellipsis style={{ flex: 1, color: '#fff' }}>
                           {chat.title}
@@ -1058,9 +1074,7 @@ const ReferencePage: React.FC = () => {
                       <div
                         key={chat.id}
                         className={`reference-page__chat-item ${currentChatId === chat.id ? 'reference-page__chat-item--active' : ''}`}
-                        onClick={() => {
-                          setCurrentChatId(chat.id);
-                        }}
+                        onClick={() => handleChatSelect(chat.id)}
                       >
                         <Text ellipsis style={{ flex: 1, color: '#fff' }}>
                           {chat.title}
@@ -1085,9 +1099,7 @@ const ReferencePage: React.FC = () => {
                       <div
                         key={chat.id}
                         className={`reference-page__chat-item ${currentChatId === chat.id ? 'reference-page__chat-item--active' : ''}`}
-                        onClick={() => {
-                          setCurrentChatId(chat.id);
-                        }}
+                        onClick={() => handleChatSelect(chat.id)}
                       >
                         <Text ellipsis style={{ flex: 1, color: '#fff' }}>
                           {chat.title}
@@ -1112,9 +1124,7 @@ const ReferencePage: React.FC = () => {
                       <div
                         key={chat.id}
                         className={`reference-page__chat-item ${currentChatId === chat.id ? 'reference-page__chat-item--active' : ''}`}
-                        onClick={() => {
-                          setCurrentChatId(chat.id);
-                        }}
+                        onClick={() => handleChatSelect(chat.id)}
                       >
                         <Text ellipsis style={{ flex: 1, color: '#fff' }}>
                           {chat.title}

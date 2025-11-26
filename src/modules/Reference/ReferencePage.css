@@ -21,13 +21,14 @@
   display: flex;
   flex-direction: column;
   border-left: 1px solid #2d2d2d;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: fixed;
   right: 0;
   top: 0;
   bottom: 0;
   z-index: 100;
   transform: translateX(100%);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
 }
 
 .reference-page__sidebar--visible {
@@ -103,8 +104,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  transition: margin-right 0.3s ease;
+  transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-right: 0;
+  min-width: 0; /* Предотвращаем переполнение */
 }
 
 .reference-page__main-content--with-sidebar {
