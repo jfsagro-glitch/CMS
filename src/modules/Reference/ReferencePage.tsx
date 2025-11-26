@@ -927,15 +927,6 @@ const ReferencePage: React.FC = () => {
           >
             Настройки
           </Button>
-          <Button 
-            icon={<ReloadOutlined />} 
-            onClick={handleReindexAll}
-            loading={indexing}
-            title="Переиндексировать все документы из папки VND"
-            size="middle"
-          >
-            Обновить базу
-          </Button>
         </div>
       </div>
 
@@ -1287,6 +1278,27 @@ const ReferencePage: React.FC = () => {
                 </div>
               </>
             )}
+
+            <Divider style={{ margin: '8px 0' }} />
+
+            <div>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                Управление базой знаний
+              </Text>
+              <Button 
+                icon={<ReloadOutlined />} 
+                onClick={handleReindexAll}
+                loading={indexing}
+                title="Переиндексировать все документы из папки VND"
+                block
+                style={{ marginTop: 8 }}
+              >
+                Обновить базу знаний
+              </Button>
+              <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
+                Переиндексирует все документы из папки VND и обновит базу знаний
+              </Text>
+            </div>
           </Space>
         </Modal>
     </div>
