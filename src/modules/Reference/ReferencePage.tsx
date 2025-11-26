@@ -75,15 +75,25 @@ const ReferencePage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<any>(null);
 
-  // Логотип робота (AI Assistant)
-  const RobotIcon = () => (
+  // Логотип робота (AI Assistant) - размер зависит от уровня опыта
+  // Базовый размер: 32px, максимальный: 80px
+  // Размер увеличивается с каждым уровнем: 32 + (уровень - 1) * 6
+  const robotSize = Math.min(32 + (evolutionLevel - 1) * 6, 80);
+  
+  const RobotIcon = ({ size = robotSize }: { size?: number }) => (
     <svg
-      width="32"
-      height="32"
+      width={size}
+      height={size}
       viewBox="0 0 512 512"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '8px' }}
+      style={{ 
+        display: 'inline-block', 
+        verticalAlign: 'middle', 
+        marginRight: '8px',
+        transition: 'width 0.5s ease-in-out, height 0.5s ease-in-out',
+      }}
+      className="robot-icon"
     >
       {/* Голова робота */}
       <rect
@@ -813,7 +823,7 @@ const ReferencePage: React.FC = () => {
     <div className="reference-page">
       <div className="reference-page__header">
         <div className="reference-page__header-left">
-          <RobotIcon />
+          <RobotIcon size={robotSize} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <Space align="center" style={{ marginBottom: 8 }} size="middle">
               <Title level={2} style={{ margin: 0, fontSize: '28px' }}>
