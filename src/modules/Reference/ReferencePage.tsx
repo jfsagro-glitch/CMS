@@ -531,9 +531,11 @@ const ReferencePage: React.FC = () => {
     if (!inputValue.trim() || loading) return;
 
     // Создаем новый чат, если его нет
-    if (!currentChatId) {
+    let chatId = currentChatId;
+    if (!chatId) {
       const newChat = createChat();
-      setCurrentChatId(newChat.id);
+      chatId = newChat.id;
+      setCurrentChatId(chatId);
       setChats(getAllChats());
     }
 
@@ -545,8 +547,8 @@ const ReferencePage: React.FC = () => {
     };
 
     // Добавляем сообщение в чат
-    if (currentChatId) {
-      addMessageToChat(currentChatId, userMessage as ChatMessage);
+    if (chatId) {
+      addMessageToChat(chatId, userMessage as ChatMessage);
     }
 
     setMessages(prev => [...prev, userMessage]);
@@ -568,12 +570,12 @@ const ReferencePage: React.FC = () => {
       };
 
       // Добавляем ответ в чат
-      if (currentChatId) {
-        addMessageToChat(currentChatId, aiResponse as ChatMessage);
+      if (chatId) {
+        addMessageToChat(chatId, aiResponse as ChatMessage);
+        setChats(getAllChats()); // Обновляем список чатов
       }
 
       setMessages(prev => [...prev, aiResponse]);
-      setChats(getAllChats()); // Обновляем список чатов
     } catch (error) {
       console.error('Ошибка генерации ответа:', error);
       const errorResponse: Message = {
@@ -586,7 +588,7 @@ const ReferencePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [inputValue, loading, generateAIResponse, currentChatId, messages]);
+  }, [inputValue, loading, generateAIResponse, currentChatId]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
