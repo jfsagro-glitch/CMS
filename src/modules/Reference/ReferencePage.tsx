@@ -71,6 +71,106 @@ interface Message {
   context?: string; // Контекст из базы знаний для сохранения обратной связи
 }
 
+// Мемоизированный компонент сообщения для оптимизации рендеринга
+interface MessageItemProps {
+  message: Message;
+  onRating: (messageId: string, rating: 'like' | 'dislike') => void;
+  onTopicClick: (topic: KnowledgeTopic) => void;
+}
+
+const MessageItem: React.FC<MessageItemProps> = React.memo(({ message, onRating, onTopicClick }) => {
+  // Мемоизируем форматирование времени
+  const timeString = useMemo(() => {
+    return message.timestamp.toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }, [message.timestamp]);
+
+  return (
+    <div
+      className={`reference-page__message reference-page__message--${message.role}`}
+    >
+      <div className="reference-page__message-content">
+        <Avatar
+          icon={message.role === 'user' ? <UserOutlined /> : <RobotOutlined />}
+          style={{
+            backgroundColor: message.role === 'user' ? '#1890ff' : '#52c41a',
+            marginRight: 12,
+          }}
+        />
+        <div className="reference-page__message-text">
+          <div className="reference-page__message-header">
+            <Text strong>
+              {message.role === 'user' ? 'Вы' : 'ИИ Помощник'}
+            </Text>
+            <Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
+              {timeString}
+            </Text>
+          </div>
+          <Paragraph
+            style={{
+              margin: 0,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+            }}
+          >
+            {message.content}
+          </Paragraph>
+          {message.sources && message.sources.length > 0 && (
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f0f0f0' }}>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                Источники:
+              </Text>
+              <div style={{ marginTop: 4 }}>
+                {message.sources.map((topic) => (
+                  <Tag
+                    key={`${topic.id || topic.title}-${topic.page}`}
+                    style={{ marginTop: 4, cursor: 'pointer' }}
+                    onClick={() => onTopicClick(topic)}
+                  >
+                    {topic.title} (стр. {topic.page})
+                  </Tag>
+                ))}
+              </div>
+            </div>
+          )}
+          {message.role === 'assistant' && (
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f0f0f0' }}>
+              <Space>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<LikeOutlined />}
+                  onClick={() => onRating(message.id, 'like')}
+                  style={{
+                    color: message.rating === 'like' ? '#52c41a' : undefined,
+                  }}
+                >
+                  Полезно
+                </Button>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<DislikeOutlined />}
+                  onClick={() => onRating(message.id, 'dislike')}
+                  style={{
+                    color: message.rating === 'dislike' ? '#ff4d4f' : undefined,
+                  }}
+                >
+                  Не полезно
+                </Button>
+              </Space>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+MessageItem.displayName = 'MessageItem';
+
 const ReferencePage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -325,7 +425,9 @@ const ReferencePage: React.FC = () => {
             }
           } catch (error) {
             if (isMounted) {
-              console.error('Ошибка загрузки документов:', error);
+              if (import.meta.env.MODE === 'development') {
+                console.error('Ошибка загрузки документов:', error);
+              }
               message.warning('Не удалось загрузить документы из VND. Вы можете загрузить их вручную.');
             }
           } finally {
@@ -347,7 +449,9 @@ const ReferencePage: React.FC = () => {
         
       } catch (error) {
         if (isMounted) {
-          console.error('Ошибка инициализации:', error);
+          if (import.meta.env.MODE === 'development') {
+            console.error('Ошибка инициализации:', error);
+          }
           setIndexing(false);
         }
       }
@@ -442,7 +546,9 @@ const ReferencePage: React.FC = () => {
         const results = knowledgeBase.search(trimmedQuery, 10);
         setSearchResults(results);
       } catch (error) {
-        console.error('Ошибка поиска:', error);
+        if (import.meta.env.MODE === 'development') {
+          console.error('Ошибка поиска:', error);
+        }
         setSearchResults([]);
       }
     }, 400); // Debounce 400ms для лучшей производительности
@@ -514,7 +620,9 @@ const ReferencePage: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Ошибка запроса к DeepSeek API:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Ошибка запроса к DeepSeek API:', error);
+      }
       
       // Fallback на локальную генерацию ответа
       if (topics.length > 0) {
@@ -693,7 +801,9 @@ const ReferencePage: React.FC = () => {
         message.success('Спасибо за обратную связь. Модель проанализирует и улучшит ответы.');
       }
     } catch (error) {
-      console.error('Ошибка сохранения обратной связи:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Ошибка сохранения обратной связи:', error);
+      }
       message.error('Не удалось сохранить оценку');
     }
   }, [messages]);
@@ -748,7 +858,9 @@ const ReferencePage: React.FC = () => {
             
             message.success('Изображение проанализировано ИИ');
           } catch (aiError) {
-            console.error('Ошибка анализа изображения через AI:', aiError);
+            if (import.meta.env.MODE === 'development') {
+              console.error('Ошибка анализа изображения через AI:', aiError);
+            }
             message.warning('Изображение загружено, но не удалось проанализировать через ИИ');
           }
         }
@@ -765,21 +877,21 @@ const ReferencePage: React.FC = () => {
       
       // Обновляем категории после индексации
       const updatedCategories = knowledgeBase.getCategories();
-      console.log('Обновлено категорий после индексации:', updatedCategories.length);
+      // Категории обновлены
       setCategories(updatedCategories);
       
       // Если категории все еще пустые, перестраиваем базу знаний
       if (updatedCategories.length === 0) {
-        console.log('Категории пустые после индексации, перестраиваю базу знаний...');
         await knowledgeBase.buildFromDocuments();
         const rebuiltCategories = knowledgeBase.getCategories();
-        console.log('Перестроено категорий:', rebuiltCategories.length);
         setCategories(rebuiltCategories);
       }
       
       message.success(`${isImage ? 'Изображение' : 'Документ'} "${file.name}" успешно ${isImage ? 'проанализирован' : 'проиндексирован'}. База знаний обновлена.`);
     } catch (error) {
-      console.error('Ошибка индексации:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Ошибка индексации:', error);
+      }
       const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
       message.error(`Не удалось ${isImage ? 'проанализировать изображение' : 'проиндексировать документ'}: ${errorMessage}`);
     } finally {
@@ -802,7 +914,7 @@ const ReferencePage: React.FC = () => {
       setCategories(updatedCategories);
       
       // Обновляем данные для самообучения
-      console.log('Обновляю данные для самообучения...');
+      // Обновляем данные для самообучения
       learningService.forceUpdate();
       
       // Обновляем опыт на основе документов
@@ -830,7 +942,9 @@ const ReferencePage: React.FC = () => {
       
       message.success(`Переиндексация завершена. Обработано документов: ${documents.length}. Категорий: ${updatedCategories.length}. Данные для самообучения обновлены.`);
     } catch (error) {
-      console.error('Ошибка переиндексации:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Ошибка переиндексации:', error);
+      }
       const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
       message.error(`Ошибка переиндексации: ${errorMessage}`);
     } finally {
@@ -871,7 +985,9 @@ const ReferencePage: React.FC = () => {
             setMessages(prev => [...prev, aiResponse]);
           })
           .catch((error) => {
-            console.error('Ошибка генерации ответа:', error);
+            if (import.meta.env.MODE === 'development') {
+          console.error('Ошибка генерации ответа:', error);
+        }
             const errorResponse: Message = {
               id: `ai-error-${Date.now()}`,
               role: 'assistant',
@@ -954,7 +1070,9 @@ const ReferencePage: React.FC = () => {
         setMessages(prev => [...prev, aiResponse]);
       })
       .catch((error) => {
-        console.error('Ошибка генерации ответа:', error);
+        if (import.meta.env.MODE === 'development') {
+          console.error('Ошибка генерации ответа:', error);
+        }
         const errorResponse: Message = {
           id: `ai-error-${Date.now()}`,
           role: 'assistant',
@@ -1369,95 +1487,14 @@ const ReferencePage: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    {messages.map((message) => {
-                      // Мемоизируем форматирование времени
-                      const timeString = message.timestamp.toLocaleTimeString('ru-RU', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      });
-                      
-                      return (
-                      <div
+                    {messages.map((message) => (
+                      <MessageItem
                         key={message.id}
-                        className={`reference-page__message reference-page__message--${message.role}`}
-                      >
-                        <div className="reference-page__message-content">
-                          <Avatar
-                            icon={message.role === 'user' ? <UserOutlined /> : <RobotOutlined />}
-                            style={{
-                              backgroundColor: message.role === 'user' ? '#1890ff' : '#52c41a',
-                              marginRight: 12,
-                            }}
-                          />
-                          <div className="reference-page__message-text">
-                            <div className="reference-page__message-header">
-                              <Text strong>
-                                {message.role === 'user' ? 'Вы' : 'ИИ Помощник'}
-                              </Text>
-                              <Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
-                                {timeString}
-                              </Text>
-                            </div>
-                            <Paragraph
-                              style={{
-                                margin: 0,
-                                whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-word',
-                              }}
-                            >
-                              {message.content}
-                            </Paragraph>
-                            {message.sources && message.sources.length > 0 && (
-                              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f0f0f0' }}>
-                                <Text type="secondary" style={{ fontSize: 12 }}>
-                                  Источники:
-                                </Text>
-                                <div style={{ marginTop: 4 }}>
-                                  {message.sources.map((topic) => (
-                                    <Tag
-                                      key={`${topic.id || topic.title}-${topic.page}`}
-                                      style={{ marginTop: 4, cursor: 'pointer' }}
-                                      onClick={() => handleTopicClick(topic)}
-                                    >
-                                      {topic.title} (стр. {topic.page})
-                                    </Tag>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            {message.role === 'assistant' && (
-                              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f0f0f0' }}>
-                                <Space>
-                                  <Button
-                                    type="text"
-                                    size="small"
-                                    icon={<LikeOutlined />}
-                                    onClick={() => handleRating(message.id, 'like')}
-                                    style={{
-                                      color: message.rating === 'like' ? '#52c41a' : undefined,
-                                    }}
-                                  >
-                                    Полезно
-                                  </Button>
-                                  <Button
-                                    type="text"
-                                    size="small"
-                                    icon={<DislikeOutlined />}
-                                    onClick={() => handleRating(message.id, 'dislike')}
-                                    style={{
-                                      color: message.rating === 'dislike' ? '#ff4d4f' : undefined,
-                                    }}
-                                  >
-                                    Не полезно
-                                  </Button>
-                                </Space>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      );
-                    })}
+                        message={message}
+                        onRating={handleRating}
+                        onTopicClick={handleTopicClick}
+                      />
+                    ))}
                     {loading && (
                       <div className="reference-page__message reference-page__message--assistant">
                         <div className="reference-page__message-content">

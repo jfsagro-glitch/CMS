@@ -74,16 +74,16 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(1),
-          url: '/photos/inspection-1-1.jpg',
-          thumbnailUrl: '/photos/inspection-1-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-1-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-1-1-thumb.jpg`,
           description: 'Фасад здания',
           takenAt: randomDate(threeMonthsAgo, oneMonthAgo),
           location: 'Фасад',
         },
         {
           id: generatePhotoId(2),
-          url: '/photos/inspection-1-2.jpg',
-          thumbnailUrl: '/photos/inspection-1-2-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-1-2.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-1-2-thumb.jpg`,
           description: 'Гостиная',
           takenAt: randomDate(threeMonthsAgo, oneMonthAgo),
           location: 'Внутри',
@@ -161,8 +161,8 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(3),
-          url: '/photos/inspection-2-1.jpg',
-          thumbnailUrl: '/photos/inspection-2-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-2-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-2-1-thumb.jpg`,
           description: 'Вход в офис',
           takenAt: randomDate(oneMonthAgo, oneWeekAgo),
           location: 'Вход',
@@ -212,16 +212,16 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(4),
-          url: '/photos/inspection-3-1.jpg',
-          thumbnailUrl: '/photos/inspection-3-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-3-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-3-1-thumb.jpg`,
           description: 'Внешний вид склада',
           takenAt: randomDate(oneWeekAgo, now),
           location: 'Фасад',
         },
         {
           id: generatePhotoId(5),
-          url: '/photos/inspection-3-2.jpg',
-          thumbnailUrl: '/photos/inspection-3-2-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-3-2.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-3-2-thumb.jpg`,
           description: 'Внутреннее помещение',
           takenAt: randomDate(oneWeekAgo, now),
           location: 'Внутри',
@@ -291,16 +291,16 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(6),
-          url: '/photos/inspection-4-1.jpg',
-          thumbnailUrl: '/photos/inspection-4-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-4-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-4-1-thumb.jpg`,
           description: 'Кухня после ремонта',
           takenAt: randomDate(oneWeekAgo, now),
           location: 'Кухня',
         },
         {
           id: generatePhotoId(7),
-          url: '/photos/inspection-4-2.jpg',
-          thumbnailUrl: '/photos/inspection-4-2-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-4-2.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-4-2-thumb.jpg`,
           description: 'Гостиная после ремонта',
           takenAt: randomDate(oneWeekAgo, now),
           location: 'Гостиная',
@@ -346,24 +346,24 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(8),
-          url: '/photos/inspection-5-1.jpg',
-          thumbnailUrl: '/photos/inspection-5-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-5-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-5-1-thumb.jpg`,
           description: 'Внешний вид автомобиля',
           takenAt: randomDate(oneMonthAgo, oneWeekAgo),
           location: 'Фасад',
         },
         {
           id: generatePhotoId(9),
-          url: '/photos/inspection-5-2.jpg',
-          thumbnailUrl: '/photos/inspection-5-2-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-5-2.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-5-2-thumb.jpg`,
           description: 'Салон',
           takenAt: randomDate(oneMonthAgo, oneWeekAgo),
           location: 'Внутри',
         },
         {
           id: generatePhotoId(10),
-          url: '/photos/inspection-5-3.jpg',
-          thumbnailUrl: '/photos/inspection-5-3-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-5-3.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-5-3-thumb.jpg`,
           description: 'Двигатель',
           takenAt: randomDate(oneMonthAgo, oneWeekAgo),
           location: 'Двигатель',
@@ -407,8 +407,8 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(11),
-          url: '/photos/inspection-6-1.jpg',
-          thumbnailUrl: '/photos/inspection-6-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-6-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-6-1-thumb.jpg`,
           description: 'Витрина',
           takenAt: randomDate(oneMonthAgo, oneWeekAgo),
           location: 'Витрина',
@@ -466,16 +466,16 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(12),
-          url: '/photos/inspection-7-1.jpg',
-          thumbnailUrl: '/photos/inspection-7-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-7-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-7-1-thumb.jpg`,
           description: 'Фасад дома',
           takenAt: randomDate(oneWeekAgo, now),
           location: 'Фасад',
         },
         {
           id: generatePhotoId(13),
-          url: '/photos/inspection-7-2.jpg',
-          thumbnailUrl: '/photos/inspection-7-2-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-7-2.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-7-2-thumb.jpg`,
           description: 'Внутренние помещения',
           takenAt: randomDate(oneWeekAgo, now),
           location: 'Внутри',
@@ -542,8 +542,8 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(14),
-          url: '/photos/inspection-8-1.jpg',
-          thumbnailUrl: '/photos/inspection-8-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-8-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-8-1-thumb.jpg`,
           description: 'Общий вид оборудования',
           takenAt: randomDate(oneWeekAgo, now),
           location: 'Общий вид',
@@ -605,16 +605,16 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(15),
-          url: '/photos/inspection-9-1.jpg',
-          thumbnailUrl: '/photos/inspection-9-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-9-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-9-1-thumb.jpg`,
           description: 'Гостиная',
           takenAt: randomDate(oneWeekAgo, now),
           location: 'Гостиная',
         },
         {
           id: generatePhotoId(16),
-          url: '/photos/inspection-9-2.jpg',
-          thumbnailUrl: '/photos/inspection-9-2-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-9-2.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-9-2-thumb.jpg`,
           description: 'Кухня',
           takenAt: randomDate(oneWeekAgo, now),
           location: 'Кухня',
@@ -666,16 +666,16 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(17),
-          url: '/photos/inspection-10-1.jpg',
-          thumbnailUrl: '/photos/inspection-10-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-10-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-10-1-thumb.jpg`,
           description: 'Поврежденный бампер',
           takenAt: randomDate(oneWeekAgo, now),
           location: 'Передняя часть',
         },
         {
           id: generatePhotoId(18),
-          url: '/photos/inspection-10-2.jpg',
-          thumbnailUrl: '/photos/inspection-10-2-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-10-2.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-10-2-thumb.jpg`,
           description: 'Поврежденная дверь',
           takenAt: randomDate(oneWeekAgo, now),
           location: 'Боковая часть',
@@ -740,8 +740,8 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(19),
-          url: '/photos/inspection-11-1.jpg',
-          thumbnailUrl: '/photos/inspection-11-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-11-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-11-1-thumb.jpg`,
           description: 'Радиатор отопления',
           takenAt: randomDate(oneWeekAgo, now),
           location: 'Отопление',
@@ -801,8 +801,8 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(20),
-          url: '/photos/inspection-12-1.jpg',
-          thumbnailUrl: '/photos/inspection-12-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-12-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-12-1-thumb.jpg`,
           description: 'Общий вид склада',
           takenAt: randomDate(oneMonthAgo, oneWeekAgo),
           location: 'Общий вид',
@@ -844,16 +844,16 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(21),
-          url: '/photos/inspection-13-1.jpg',
-          thumbnailUrl: '/photos/inspection-13-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-13-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-13-1-thumb.jpg`,
           description: 'Фасад гостиницы',
           takenAt: randomDate(oneMonthAgo, oneWeekAgo),
           location: 'Фасад',
         },
         {
           id: generatePhotoId(22),
-          url: '/photos/inspection-13-2.jpg',
-          thumbnailUrl: '/photos/inspection-13-2-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-13-2.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-13-2-thumb.jpg`,
           description: 'Номер',
           takenAt: randomDate(oneMonthAgo, oneWeekAgo),
           location: 'Номер',
@@ -912,16 +912,16 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(23),
-          url: '/photos/inspection-14-1.jpg',
-          thumbnailUrl: '/photos/inspection-14-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-14-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-14-1-thumb.jpg`,
           description: 'Общий вид участка',
           takenAt: randomDate(oneMonthAgo, oneWeekAgo),
           location: 'Общий вид',
         },
         {
           id: generatePhotoId(24),
-          url: '/photos/inspection-14-2.jpg',
-          thumbnailUrl: '/photos/inspection-14-2-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-14-2.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-14-2-thumb.jpg`,
           description: 'Границы участка',
           takenAt: randomDate(oneMonthAgo, oneWeekAgo),
           location: 'Границы',
@@ -963,16 +963,16 @@ export const generateDemoInspections = (): Omit<Inspection, 'id' | 'createdAt' |
       photos: [
         {
           id: generatePhotoId(25),
-          url: '/photos/inspection-15-1.jpg',
-          thumbnailUrl: '/photos/inspection-15-1-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-15-1.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-15-1-thumb.jpg`,
           description: 'Фасад здания',
           takenAt: randomDate(oneMonthAgo, oneWeekAgo),
           location: 'Фасад',
         },
         {
           id: generatePhotoId(26),
-          url: '/photos/inspection-15-2.jpg',
-          thumbnailUrl: '/photos/inspection-15-2-thumb.jpg',
+          url: `${import.meta.env.BASE_URL || './'}photos/inspection-15-2.jpg`,
+          thumbnailUrl: `${import.meta.env.BASE_URL || './'}photos/inspection-15-2-thumb.jpg`,
           description: 'Внутренние помещения',
           takenAt: randomDate(oneMonthAgo, oneWeekAgo),
           location: 'Внутри',
