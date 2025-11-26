@@ -397,12 +397,26 @@ const ReferencePage: React.FC = () => {
   // Оптимизированный скролл (только при добавлении новых сообщений)
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
-      // Используем scrollIntoView с опциями для лучшей совместимости
-      messagesEndRef.current.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'end',
-        inline: 'nearest'
-      });
+      // Находим контейнер сообщений
+      const messagesContainer = messagesEndRef.current.closest('.reference-page__messages') as HTMLElement;
+      if (messagesContainer) {
+        // Используем scrollTo для более надежного скроллинга
+        requestAnimationFrame(() => {
+          messagesContainer.scrollTo({
+            top: messagesContainer.scrollHeight,
+            behavior: 'smooth'
+          });
+        });
+      } else {
+        // Fallback на scrollIntoView
+        requestAnimationFrame(() => {
+          messagesEndRef.current?.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'end',
+            inline: 'nearest'
+          });
+        });
+      }
     }
   }, []);
 
