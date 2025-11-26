@@ -70,6 +70,7 @@
   height: 100%;
   min-height: 0;
   overflow: hidden; /* Предотвращаем переполнение */
+  position: relative;
 }
 
 /* Input container - фиксированная высота, не растягивается */
@@ -108,7 +109,7 @@
 
 /* Messages занимают всю оставшуюся высоту и скроллятся */
 .reference-page__messages {
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
   overflow-x: hidden;
   padding: calc(32px * var(--golden-ratio)) calc(40px * var(--golden-ratio));
@@ -117,7 +118,9 @@
   gap: calc(20px * var(--golden-ratio));
   background-color: #ffffff;
   min-height: 0; /* Важно для правильной работы flex и скролла */
+  max-height: 100%; /* Ограничиваем максимальную высоту */
   position: relative; /* Для правильного позиционирования скролла */
+  -webkit-overflow-scrolling: touch; /* Плавный скролл на мобильных */
 }
 
 /* Централизация контента сообщений по золотому сечению */
@@ -127,6 +130,7 @@
   margin-right: auto;
   width: 100%;
   flex-shrink: 0; /* Сообщения не сжимаются */
+  min-height: fit-content; /* Сообщения занимают необходимое пространство */
 }
 
 .reference-page__empty {
@@ -153,6 +157,9 @@
 .reference-page__message {
   display: flex;
   width: 100%;
+  min-height: fit-content; /* Сообщения занимают необходимое пространство */
+  word-wrap: break-word; /* Перенос длинных слов */
+  overflow-wrap: break-word; /* Перенос длинных слов */
 }
 
 .reference-page__message--user {
@@ -167,6 +174,8 @@
   display: flex;
   max-width: calc(100% * var(--golden-ratio-large)); /* 61.8% ширины контейнера */
   align-items: flex-start;
+  width: 100%;
+  min-height: fit-content; /* Контент занимает необходимое пространство */
 }
 
 .reference-page__message--user .reference-page__message-content {
@@ -179,6 +188,10 @@
   border-radius: 12px 12px 0 12px;
   padding: 12px 16px;
   margin-right: 12px;
+  min-height: fit-content;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .reference-page__message--assistant .reference-page__message-text {
@@ -187,6 +200,10 @@
   border-radius: 12px 12px 12px 0;
   padding: 12px 16px;
   margin-left: 12px;
+  min-height: fit-content;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .reference-page__message-header {

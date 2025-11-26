@@ -33,6 +33,10 @@ import {
   ThunderboltOutlined,
   SettingOutlined,
   PaperClipOutlined,
+  HistoryOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
 import { documentIndexer } from '@/utils/documentIndexer';
 import { loadVNDDocuments, loadDocumentManually, reindexAllDocuments } from '@/utils/documentLoader';
@@ -43,6 +47,17 @@ import { deepSeekService } from '@/services/DeepSeekService';
 import { feedbackStorage } from '@/utils/feedbackStorage';
 import { Progress } from 'antd';
 import type { DocumentIndex } from '@/utils/documentIndexer';
+import { 
+  createChat, 
+  getAllChats, 
+  getChatById, 
+  updateChat, 
+  addMessageToChat, 
+  deleteChat, 
+  renameChat,
+  type Chat,
+  type ChatMessage 
+} from '@/utils/chatStorage';
 import './ReferencePage.css';
 
 const { TextArea } = Input;
@@ -72,6 +87,11 @@ const ReferencePage: React.FC = () => {
   const [evolutionLevel, setEvolutionLevel] = useState<number>(1);
   const [evolutionProgress, setEvolutionProgress] = useState<{ current: number; required: number; percentage: number } | null>(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [chatsVisible, setChatsVisible] = useState(false);
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<any>(null);
 
@@ -335,10 +355,49 @@ const ReferencePage: React.FC = () => {
     };
   }, []);
 
+  // Загрузка чатов при монтировании
+  useEffect(() => {
+    const loadedChats = getAllChats();
+    setChats(loadedChats);
+  }, []);
+
+  // Загрузка сообщений чата при смене текущего чата
+  useEffect(() => {
+    if (currentChatId) {
+      const chat = getChatById(currentChatId);
+      if (chat) {
+        setMessages(chat.messages.map(msg => ({
+          ...msg,
+          timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp),
+        })));
+      }
+    } else {
+      setMessages([]);
+    }
+  }, [currentChatId]);
+
+  // Сохранение сообщений в чат
+  useEffect(() => {
+    if (currentChatId && messages.length > 0) {
+      const chat = getChatById(currentChatId);
+      if (chat) {
+        // Обновляем чат с текущими сообщениями
+        updateChat(currentChatId, { messages: messages as ChatMessage[] });
+        // Обновляем список чатов
+        setChats(getAllChats());
+      }
+    }
+  }, [messages, currentChatId]);
+
   // Оптимизированный скролл (только при добавлении новых сообщений)
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // Используем scrollIntoView с опциями для лучшей совместимости
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end',
+        inline: 'nearest'
+      });
     }
   }, []);
 
@@ -378,7 +437,8 @@ const ReferencePage: React.FC = () => {
   }, [categories]);
 
   // Генерация ответа с использованием DeepSeek AI (мемоизировано)
-  const generateAIResponse = useCallback(async (userMessage: string): Promise<{ content: string; sources: KnowledgeTopic[]; context: string }> => {
+  // chatHistory - история сообщений для контекста
+  const generateAIResponse = useCallback(async (userMessage: string, chatHistory: Message[] = []): Promise<{ content: string; sources: KnowledgeTopic[]; context: string }> => {
     const lowerMessage = userMessage.toLowerCase();
 
     // Поиск по базе знаний для контекста
@@ -399,10 +459,20 @@ const ReferencePage: React.FC = () => {
     }
 
     try {
+      // Формируем контекст истории чата, если есть
+      let chatHistoryContext = '';
+      if (chatHistory.length > 0) {
+        const historyParts = chatHistory.slice(-6).map(msg => 
+          `${msg.role === 'user' ? 'Пользователь' : 'Помощник'}: ${msg.content}`
+        );
+        chatHistoryContext = `\n\nКонтекст предыдущих сообщений в этом чате:\n${historyParts.join('\n\n')}\n\nУчитывай контекст предыдущих сообщений при ответе.`;
+      }
+
       // Используем DeepSeek AI для генерации ответа
       if (knowledgeContext) {
         // Если есть контекст из базы знаний, используем его
-        response = await deepSeekService.generateResponse(userMessage, knowledgeContext);
+        const fullContext = knowledgeContext + chatHistoryContext;
+        response = await deepSeekService.generateResponse(userMessage, fullContext);
         
         // Добавляем пассивный опыт за использование модели (асинхронно, не блокируя)
         setTimeout(() => {
@@ -419,7 +489,7 @@ const ReferencePage: React.FC = () => {
           ]);
           knowledgeContext = 'Приветствие';
         } else {
-          const fallbackContext = `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categoryNames}.`;
+          const fallbackContext = `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categoryNames}.${chatHistoryContext}`;
           response = await deepSeekService.generateResponse(userMessage, fallbackContext);
           knowledgeContext = fallbackContext;
         }
@@ -460,6 +530,13 @@ const ReferencePage: React.FC = () => {
   const handleSend = useCallback(async () => {
     if (!inputValue.trim() || loading) return;
 
+    // Создаем новый чат, если его нет
+    if (!currentChatId) {
+      const newChat = createChat();
+      setCurrentChatId(newChat.id);
+      setChats(getAllChats());
+    }
+
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -467,14 +544,19 @@ const ReferencePage: React.FC = () => {
       timestamp: new Date(),
     };
 
+    // Добавляем сообщение в чат
+    if (currentChatId) {
+      addMessageToChat(currentChatId, userMessage as ChatMessage);
+    }
+
     setMessages(prev => [...prev, userMessage]);
     const question = inputValue.trim();
     setInputValue('');
     setLoading(true);
 
-    // Генерация ответа с использованием DeepSeek AI
+    // Генерация ответа с использованием DeepSeek AI (передаем историю чата)
     try {
-      const { content, sources, context } = await generateAIResponse(question);
+      const { content, sources, context } = await generateAIResponse(question, messages);
       
       const aiResponse: Message = {
         id: `ai-${Date.now()}`,
@@ -485,7 +567,13 @@ const ReferencePage: React.FC = () => {
         context, // Сохраняем контекст для обратной связи
       };
 
+      // Добавляем ответ в чат
+      if (currentChatId) {
+        addMessageToChat(currentChatId, aiResponse as ChatMessage);
+      }
+
       setMessages(prev => [...prev, aiResponse]);
+      setChats(getAllChats()); // Обновляем список чатов
     } catch (error) {
       console.error('Ошибка генерации ответа:', error);
       const errorResponse: Message = {
@@ -498,7 +586,7 @@ const ReferencePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [inputValue, loading, generateAIResponse]);
+  }, [inputValue, loading, generateAIResponse, currentChatId, messages]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -921,6 +1009,14 @@ const ReferencePage: React.FC = () => {
             </Tag>
           )}
           <Button 
+            icon={<HistoryOutlined />} 
+            onClick={() => setChatsVisible(true)}
+            size="middle"
+            title="История чатов"
+          >
+            Чаты
+          </Button>
+          <Button 
             icon={<SettingOutlined />} 
             onClick={() => setSettingsVisible(true)}
             size="middle"
@@ -1299,6 +1395,145 @@ const ReferencePage: React.FC = () => {
                 Переиндексирует все документы из папки VND и обновит базу знаний
               </Text>
             </div>
+          </Space>
+        </Modal>
+
+        {/* Модальное окно управления чатами */}
+        <Modal
+          title={
+            <Space>
+              <HistoryOutlined />
+              <span>История чатов</span>
+            </Space>
+          }
+          open={chatsVisible}
+          onCancel={() => {
+            setChatsVisible(false);
+            setEditingChatId(null);
+            setEditingTitle('');
+          }}
+          footer={null}
+          width={600}
+          style={{ top: 20 }}
+        >
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                const newChat = createChat();
+                setCurrentChatId(newChat.id);
+                setChats(getAllChats());
+                setChatsVisible(false);
+                setMessages([]);
+                message.success('Создан новый чат');
+              }}
+              block
+            >
+              Создать новый чат
+            </Button>
+
+            <Divider style={{ margin: '8px 0' }} />
+
+            <List
+              dataSource={chats}
+              style={{ maxHeight: 500, overflow: 'auto' }}
+              renderItem={(chat) => (
+                <List.Item
+                  style={{
+                    cursor: 'pointer',
+                    backgroundColor: currentChatId === chat.id ? '#e6f7ff' : 'transparent',
+                    borderRadius: 4,
+                    padding: '12px',
+                    border: currentChatId === chat.id ? '1px solid #1890ff' : '1px solid transparent',
+                  }}
+                  actions={[
+                    <Button
+                      key="edit"
+                      type="text"
+                      icon={<EditOutlined />}
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingChatId(chat.id);
+                        setEditingTitle(chat.title);
+                      }}
+                    />,
+                    <Button
+                      key="delete"
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Удалить чат "${chat.title}"?`)) {
+                          deleteChat(chat.id);
+                          if (currentChatId === chat.id) {
+                            setCurrentChatId(null);
+                            setMessages([]);
+                          }
+                          setChats(getAllChats());
+                          message.success('Чат удален');
+                        }
+                      }}
+                    />,
+                  ]}
+                  onClick={() => {
+                    setCurrentChatId(chat.id);
+                    setChatsVisible(false);
+                  }}
+                >
+                  <List.Item.Meta
+                    title={
+                      editingChatId === chat.id ? (
+                        <Input
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onPressEnter={() => {
+                            if (editingTitle.trim()) {
+                              renameChat(chat.id, editingTitle.trim());
+                              setChats(getAllChats());
+                              setEditingChatId(null);
+                              setEditingTitle('');
+                              message.success('Название чата обновлено');
+                            }
+                          }}
+                          onBlur={() => {
+                            if (editingTitle.trim()) {
+                              renameChat(chat.id, editingTitle.trim());
+                              setChats(getAllChats());
+                            }
+                            setEditingChatId(null);
+                            setEditingTitle('');
+                          }}
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <Text strong>{chat.title}</Text>
+                      )
+                    }
+                    description={
+                      <Space direction="vertical" size={0}>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {chat.messages.length} сообщений
+                        </Text>
+                        <Text type="secondary" style={{ fontSize: 11 }}>
+                          Обновлен: {chat.updatedAt.toLocaleString('ru-RU', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </Text>
+                      </Space>
+                    }
+                  />
+                </List.Item>
+              )}
+              locale={{ emptyText: 'Нет сохраненных чатов' }}
+            />
           </Space>
         </Modal>
     </div>
