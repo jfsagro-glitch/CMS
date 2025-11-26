@@ -51,7 +51,7 @@
   justify-content: flex-end;
 }
 
-/* Card занимает ~61.8% от общей высоты (золотое сечение) */
+/* Card занимает всю оставшуюся высоту после header */
 .reference-page__card {
   flex: 1;
   display: flex;
@@ -61,7 +61,7 @@
   border-radius: 0;
   box-shadow: none;
   background: transparent;
-  min-height: calc(100vh * var(--golden-ratio-large)); /* 61.8% высоты */
+  min-height: 0; /* Важно для правильной работы flex */
 }
 
 .reference-page__chat {
@@ -69,9 +69,10 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  overflow: hidden; /* Предотвращаем переполнение */
 }
 
-/* Input container занимает ~38.2% от высоты chat (золотое сечение) */
+/* Input container - фиксированная высота, не растягивается */
 .reference-page__input-container {
   padding: calc(32px * var(--golden-ratio)) calc(40px * var(--golden-ratio));
   background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
@@ -79,9 +80,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-shrink: 0;
-  flex: 0 0 calc(100% * var(--golden-ratio-small)); /* 38.2% высоты chat */
-  min-height: calc(100% * var(--golden-ratio-small));
+  flex-shrink: 0; /* Не сжимается */
+  flex-grow: 0; /* Не растягивается */
 }
 
 /* Input wrapper использует золотое сечение для ширины */
@@ -106,16 +106,18 @@
   align-self: flex-end;
 }
 
-/* Messages занимают ~61.8% от высоты chat (золотое сечение) */
+/* Messages занимают всю оставшуюся высоту и скроллятся */
 .reference-page__messages {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: calc(32px * var(--golden-ratio)) calc(40px * var(--golden-ratio));
   display: flex;
   flex-direction: column;
   gap: calc(20px * var(--golden-ratio));
   background-color: #ffffff;
-  min-height: calc(100% * var(--golden-ratio-large)); /* 61.8% высоты chat */
+  min-height: 0; /* Важно для правильной работы flex и скролла */
+  position: relative; /* Для правильного позиционирования скролла */
 }
 
 /* Централизация контента сообщений по золотому сечению */
@@ -124,15 +126,16 @@
   margin-left: auto;
   margin-right: auto;
   width: 100%;
+  flex-shrink: 0; /* Сообщения не сжимаются */
 }
 
 .reference-page__empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  min-height: calc(300px * var(--golden-ratio));
+  min-height: 100%;
   padding: calc(24px * var(--golden-ratio));
+  flex-shrink: 0;
 }
 
 .reference-page__welcome {
