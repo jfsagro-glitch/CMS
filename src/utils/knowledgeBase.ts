@@ -3,6 +3,8 @@
  */
 
 import { documentIndexer, type DocumentChunk } from './documentIndexer';
+import { extendedDb } from '@/services/ExtendedStorageService';
+import type { KnowledgeTopicDB, KnowledgeCategoryDB, KnowledgeSearchIndexDB } from '@/services/ExtendedStorageService';
 
 export interface KnowledgeTopic {
   id: string;
@@ -62,8 +64,8 @@ class KnowledgeBase {
       }
     }
 
-    // Сохраняем в localStorage
-    this.saveToStorage();
+    // Сохраняем в IndexedDB (асинхронно)
+    this.saveToStorage().catch(err => console.error('Ошибка сохранения базы знаний:', err));
     
     // Очищаем кэш поиска при обновлении базы знаний
     this.searchCache = null;
@@ -555,67 +557,196 @@ class KnowledgeBase {
   }
 
   /**
-   * Сохранить в localStorage
+   * Сохранить в IndexedDB
    */
-  private saveToStorage(): void {
+  private async saveToStorage(): Promise<void> {
     try {
-      const data = {
-        topics: Array.from(this.topics.values()),
-        categories: Array.from(this.categories.values()),
-        version: '1.0',
-        updatedAt: new Date().toISOString(),
-      };
-      localStorage.setItem('knowledgeBase', JSON.stringify(data));
+      // Очищаем старые данные
+      await Promise.all([
+        extendedDb.knowledgeTopics.clear(),
+        extendedDb.knowledgeCategories.clear(),
+        extendedDb.knowledgeSearchIndex.clear()
+      ]);
+
+      // Сохраняем темы (батчами по 1000)
+      const topicsToSave: KnowledgeTopicDB[] = Array.from(this.topics.values()).map(topic => ({
+        id: topic.id,
+        title: topic.title,
+        category: topic.category,
+        keywords: topic.keywords,
+        content: topic.content,
+        page: topic.page,
+        relatedTopics: topic.relatedTopics,
+      }));
+
+      const topicBatchSize = 1000;
+      for (let i = 0; i < topicsToSave.length; i += topicBatchSize) {
+        const batch = topicsToSave.slice(i, i + topicBatchSize);
+        await extendedDb.knowledgeTopics.bulkPut(batch);
+      }
+
+      // Сохраняем категории (со ссылками на темы)
+      const categoriesToSave: KnowledgeCategoryDB[] = Array.from(this.categories.values()).map(category => ({
+        id: category.id,
+        name: category.name,
+        description: category.description,
+        topicIds: category.topics.map(t => t.id),
+      }));
+
+      if (categoriesToSave.length > 0) {
+        await extendedDb.knowledgeCategories.bulkPut(categoriesToSave);
+      }
+
+      // Сохраняем поисковый индекс (батчами)
+      const searchIndexToSave: KnowledgeSearchIndexDB[] = Array.from(this.searchIndex.entries()).map(([keyword, topicIds]) => ({
+        keyword,
+        topicIds,
+      }));
+
+      const indexBatchSize = 1000;
+      for (let i = 0; i < searchIndexToSave.length; i += indexBatchSize) {
+        const batch = searchIndexToSave.slice(i, i + indexBatchSize);
+        await extendedDb.knowledgeSearchIndex.bulkPut(batch);
+      }
     } catch (error) {
-      console.error('Ошибка сохранения базы знаний:', error);
+      console.error('Ошибка сохранения базы знаний в IndexedDB:', error);
+      // Fallback на localStorage для метаданных (без полного контента)
+      try {
+        const data = {
+          categories: Array.from(this.categories.values()).map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            description: cat.description,
+            topicCount: cat.topics.length,
+          })),
+          topicCount: this.topics.size,
+          version: '1.0',
+          updatedAt: new Date().toISOString(),
+        };
+        localStorage.setItem('knowledgeBase_fallback', JSON.stringify(data));
+      } catch (fallbackError) {
+        console.error('Ошибка сохранения в localStorage (fallback):', fallbackError);
+      }
     }
   }
 
   /**
-   * Загрузить из localStorage
+   * Загрузить из IndexedDB
    */
-  loadFromStorage(): void {
+  async loadFromStorage(): Promise<void> {
     try {
-      const stored = localStorage.getItem('knowledgeBase');
-      if (stored) {
-        const data = JSON.parse(stored);
-        
-        this.topics.clear();
-        this.categories.clear();
-        this.searchIndex.clear();
+      // Загружаем темы
+      const topicsFromDB = await extendedDb.knowledgeTopics.toArray();
+      this.topics.clear();
+      for (const topicDB of topicsFromDB) {
+        const topic: KnowledgeTopic = {
+          id: topicDB.id,
+          title: topicDB.title,
+          category: topicDB.category,
+          keywords: topicDB.keywords,
+          content: topicDB.content,
+          page: topicDB.page,
+          relatedTopics: topicDB.relatedTopics,
+        };
+        this.topics.set(topic.id, topic);
+      }
 
-        // Восстанавливаем темы
-        for (const topic of data.topics || []) {
-          this.topics.set(topic.id, topic);
-          
-          // Восстанавливаем индекс
-          for (const keyword of topic.keywords || []) {
-            const lowerKeyword = keyword.toLowerCase();
-            if (!this.searchIndex.has(lowerKeyword)) {
-              this.searchIndex.set(lowerKeyword, []);
+      // Загружаем поисковый индекс
+      const searchIndexFromDB = await extendedDb.knowledgeSearchIndex.toArray();
+      this.searchIndex.clear();
+      for (const indexDB of searchIndexFromDB) {
+        this.searchIndex.set(indexDB.keyword, indexDB.topicIds);
+      }
+
+      // Загружаем категории и восстанавливаем связи с темами
+      const categoriesFromDB = await extendedDb.knowledgeCategories.toArray();
+      this.categories.clear();
+      for (const categoryDB of categoriesFromDB) {
+        const topics = categoryDB.topicIds
+          .map(id => this.topics.get(id))
+          .filter((t): t is KnowledgeTopic => t !== undefined);
+
+        const category: KnowledgeCategory = {
+          id: categoryDB.id,
+          name: categoryDB.name,
+          description: categoryDB.description,
+          topics,
+        };
+        this.categories.set(category.id, category);
+      }
+
+      // Если в IndexedDB ничего нет, пробуем загрузить из localStorage (миграция)
+      if (topicsFromDB.length === 0) {
+        const stored = localStorage.getItem('knowledgeBase');
+        if (stored) {
+          try {
+            const data = JSON.parse(stored);
+            
+            this.topics.clear();
+            this.categories.clear();
+            this.searchIndex.clear();
+
+            // Восстанавливаем темы
+            for (const topic of data.topics || []) {
+              this.topics.set(topic.id, topic);
+              
+              // Восстанавливаем поисковый индекс
+              for (const keyword of topic.keywords) {
+                const lowerKeyword = keyword.toLowerCase();
+                if (!this.searchIndex.has(lowerKeyword)) {
+                  this.searchIndex.set(lowerKeyword, []);
+                }
+                this.searchIndex.get(lowerKeyword)!.push(topic.id);
+              }
             }
-            this.searchIndex.get(lowerKeyword)!.push(topic.id);
-          }
-        }
 
-        // Восстанавливаем категории
-        for (const category of data.categories || []) {
-          this.categories.set(category.id, category);
+            // Восстанавливаем категории
+            for (const category of data.categories || []) {
+              this.categories.set(category.id, category);
+            }
+
+            // Мигрируем в IndexedDB
+            await this.saveToStorage();
+            // Удаляем из localStorage после успешной миграции
+            localStorage.removeItem('knowledgeBase');
+          } catch (migrationError) {
+            console.error('Ошибка миграции из localStorage:', migrationError);
+          }
         }
       }
     } catch (error) {
-      console.error('Ошибка загрузки базы знаний:', error);
+      console.error('Ошибка загрузки базы знаний из IndexedDB:', error);
+      // Fallback на localStorage (только метаданные)
+      try {
+        const stored = localStorage.getItem('knowledgeBase_fallback');
+        if (stored) {
+          const data = JSON.parse(stored);
+          console.log(`Загружены метаданные базы знаний: ${data.topicCount} тем, ${data.categories?.length || 0} категорий`);
+        }
+      } catch (fallbackError) {
+        console.error('Ошибка загрузки из localStorage (fallback):', fallbackError);
+      }
     }
   }
 
   /**
    * Очистить базу знаний
    */
-  clear(): void {
+  async clear(): Promise<void> {
     this.topics.clear();
     this.categories.clear();
     this.searchIndex.clear();
-    localStorage.removeItem('knowledgeBase');
+    try {
+      await Promise.all([
+        extendedDb.knowledgeTopics.clear(),
+        extendedDb.knowledgeCategories.clear(),
+        extendedDb.knowledgeSearchIndex.clear()
+      ]);
+      localStorage.removeItem('knowledgeBase');
+      localStorage.removeItem('knowledgeBase_fallback');
+    } catch (error) {
+      console.error('Ошибка очистки базы знаний:', error);
+    }
   }
 }
 

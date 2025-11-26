@@ -198,9 +198,8 @@ export async function loadVNDDocuments(forceReindex: boolean = false): Promise<D
       const categories = knowledgeBase.getCategories();
       console.log(`✅ База знаний построена: ${categories.length} категорий, ${indexedDocuments.length} документов`);
     } else {
-      // Загружаем базу знаний из хранилища
-      // Загружаем базу знаний (синхронно, она использует localStorage)
-      knowledgeBase.loadFromStorage();
+      // Загружаем базу знаний из IndexedDB (асинхронно)
+      await knowledgeBase.loadFromStorage();
       const categories = knowledgeBase.getCategories();
       console.log(`📚 База знаний загружена из хранилища: ${categories.length} категорий, ${indexedDocuments.length} документов`);
     }

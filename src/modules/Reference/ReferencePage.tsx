@@ -259,10 +259,8 @@ const ReferencePage: React.FC = () => {
         evolutionService.initialize();
         
         // Загружаем индексы из IndexedDB (асинхронно)
-        documentIndexer.loadFromStorage().catch(err => {
-          console.error('Ошибка загрузки индексов:', err);
-        });
-        knowledgeBase.loadFromStorage();
+        await documentIndexer.loadFromStorage();
+        await knowledgeBase.loadFromStorage();
         
         // Загружаем категории из базы знаний (быстро)
         const loadedCategories = knowledgeBase.getCategories();

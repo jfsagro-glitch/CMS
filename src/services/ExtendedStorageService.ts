@@ -27,6 +27,29 @@ export interface DocumentChunkDB {
   isImage?: boolean;
 }
 
+// Интерфейсы для базы знаний
+export interface KnowledgeTopicDB {
+  id: string;
+  title: string;
+  category: string;
+  keywords: string[];
+  content: string;
+  page: number;
+  relatedTopics?: string[];
+}
+
+export interface KnowledgeCategoryDB {
+  id: string;
+  name: string;
+  description: string;
+  topicIds: string[]; // Ссылки на темы вместо полных объектов
+}
+
+export interface KnowledgeSearchIndexDB {
+  keyword: string;
+  topicIds: string[];
+}
+
 // Расширенная схема базы данных
 class ExtendedCMSDatabase extends Dexie {
   collateralCards!: Table<ExtendedCollateralCard, string>;
@@ -36,6 +59,9 @@ class ExtendedCMSDatabase extends Dexie {
   inspections!: Table<Inspection, string>;
   documentIndexes!: Table<DocumentIndexDB, string>;
   documentChunks!: Table<DocumentChunkDB, string>;
+  knowledgeTopics!: Table<KnowledgeTopicDB, string>;
+  knowledgeCategories!: Table<KnowledgeCategoryDB, string>;
+  knowledgeSearchIndex!: Table<KnowledgeSearchIndexDB, string>;
 
   constructor() {
     super('CMSDatabase');
@@ -75,6 +101,23 @@ class ExtendedCMSDatabase extends Dexie {
     }).upgrade(async () => {
       // Миграция данных из версии 3
       console.log('Upgrading database to version 4...');
+    });
+
+    // Версия 5 с таблицами для базы знаний
+    this.version(5).stores({
+      collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
+      partners: 'id, type, role, inn, lastName, organizationName',
+      documents: 'id, name, type, category, uploadDate',
+      settings: 'id',
+      inspections: 'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
+      documentIndexes: 'documentName',
+      documentChunks: 'id, documentName, page',
+      knowledgeTopics: 'id, category',
+      knowledgeCategories: 'id',
+      knowledgeSearchIndex: 'keyword'
+    }).upgrade(async () => {
+      // Миграция данных из версии 4
+      console.log('Upgrading database to version 5...');
     });
   }
 }
