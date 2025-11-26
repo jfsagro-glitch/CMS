@@ -33,10 +33,10 @@ import {
   ThunderboltOutlined,
   SettingOutlined,
   PaperClipOutlined,
-  HistoryOutlined,
-  DeleteOutlined,
-  EditOutlined,
   PlusOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import { documentIndexer } from '@/utils/documentIndexer';
 import { loadVNDDocuments, loadDocumentManually, reindexAllDocuments } from '@/utils/documentLoader';
@@ -52,9 +52,7 @@ import {
   getAllChats, 
   getChatById, 
   updateChat, 
-  addMessageToChat, 
-  deleteChat, 
-  renameChat,
+  addMessageToChat,
   type Chat,
   type ChatMessage 
 } from '@/utils/chatStorage';
@@ -89,9 +87,7 @@ const ReferencePage: React.FC = () => {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
-  const [chatsVisible, setChatsVisible] = useState(false);
-  const [editingChatId, setEditingChatId] = useState<string | null>(null);
-  const [editingTitle, setEditingTitle] = useState<string>('');
+  const [chatsVisible, setChatsVisible] = useState(true); // По умолчанию видима
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<any>(null);
 
@@ -949,8 +945,206 @@ const ReferencePage: React.FC = () => {
       });
   }, [loading, generateAIResponse]);
 
+  // Группировка чатов по датам
+  const groupedChats = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const monthAgo = new Date(today);
+    monthAgo.setDate(monthAgo.getDate() - 30);
+
+    const groups: { [key: string]: Chat[] } = {
+      today: [],
+      yesterday: [],
+      week: [],
+      month: [],
+    };
+
+    chats.forEach(chat => {
+      const updatedAt = new Date(chat.updatedAt);
+      updatedAt.setHours(0, 0, 0, 0);
+
+      if (updatedAt.getTime() === today.getTime()) {
+        groups.today.push(chat);
+      } else if (updatedAt.getTime() === yesterday.getTime()) {
+        groups.yesterday.push(chat);
+      } else if (updatedAt >= weekAgo) {
+        groups.week.push(chat);
+      } else if (updatedAt >= monthAgo) {
+        groups.month.push(chat);
+      }
+    });
+
+    return groups;
+  }, [chats]);
+
   return (
     <div className="reference-page">
+      {/* Боковая панель чатов */}
+      <div className={`reference-page__sidebar ${chatsVisible ? 'reference-page__sidebar--visible' : ''}`}>
+        <div className="reference-page__sidebar-header">
+          <Space>
+            <RobotIcon size={24} />
+            <Text strong style={{ color: '#fff', fontSize: '16px' }}>Чаты</Text>
+          </Space>
+          <Button
+            type="text"
+            icon={chatsVisible ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => setChatsVisible(!chatsVisible)}
+            style={{ color: '#fff' }}
+          />
+        </div>
+
+        {chatsVisible && (
+          <>
+            <div className="reference-page__sidebar-content">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => {
+                  const newChat = createChat();
+                  setCurrentChatId(newChat.id);
+                  setChats(getAllChats());
+                  setMessages([]);
+                  message.success('Создан новый чат');
+                }}
+                block
+                style={{ marginBottom: 16 }}
+              >
+                Новый чат
+              </Button>
+
+              <div className="reference-page__chats-list">
+                {groupedChats.today.length > 0 && (
+                  <div className="reference-page__chats-group">
+                    <Text type="secondary" style={{ fontSize: 12, color: '#8c8c8c', padding: '8px 16px', display: 'block' }}>
+                      Сегодня
+                    </Text>
+                    {groupedChats.today.map(chat => (
+                      <div
+                        key={chat.id}
+                        className={`reference-page__chat-item ${currentChatId === chat.id ? 'reference-page__chat-item--active' : ''}`}
+                        onClick={() => {
+                          setCurrentChatId(chat.id);
+                        }}
+                      >
+                        <Text ellipsis style={{ flex: 1, color: '#fff' }}>
+                          {chat.title}
+                        </Text>
+                        <Button
+                          type="text"
+                          icon={<MoreOutlined />}
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // TODO: Показываем меню действий
+                          }}
+                          style={{ color: '#8c8c8c' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {groupedChats.yesterday.length > 0 && (
+                  <div className="reference-page__chats-group">
+                    <Text type="secondary" style={{ fontSize: 12, color: '#8c8c8c', padding: '8px 16px', display: 'block' }}>
+                      Вчера
+                    </Text>
+                    {groupedChats.yesterday.map(chat => (
+                      <div
+                        key={chat.id}
+                        className={`reference-page__chat-item ${currentChatId === chat.id ? 'reference-page__chat-item--active' : ''}`}
+                        onClick={() => {
+                          setCurrentChatId(chat.id);
+                        }}
+                      >
+                        <Text ellipsis style={{ flex: 1, color: '#fff' }}>
+                          {chat.title}
+                        </Text>
+                        <Button
+                          type="text"
+                          icon={<MoreOutlined />}
+                          size="small"
+                          style={{ color: '#8c8c8c' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {groupedChats.week.length > 0 && (
+                  <div className="reference-page__chats-group">
+                    <Text type="secondary" style={{ fontSize: 12, color: '#8c8c8c', padding: '8px 16px', display: 'block' }}>
+                      7 дней
+                    </Text>
+                    {groupedChats.week.map(chat => (
+                      <div
+                        key={chat.id}
+                        className={`reference-page__chat-item ${currentChatId === chat.id ? 'reference-page__chat-item--active' : ''}`}
+                        onClick={() => {
+                          setCurrentChatId(chat.id);
+                        }}
+                      >
+                        <Text ellipsis style={{ flex: 1, color: '#fff' }}>
+                          {chat.title}
+                        </Text>
+                        <Button
+                          type="text"
+                          icon={<MoreOutlined />}
+                          size="small"
+                          style={{ color: '#8c8c8c' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {groupedChats.month.length > 0 && (
+                  <div className="reference-page__chats-group">
+                    <Text type="secondary" style={{ fontSize: 12, color: '#8c8c8c', padding: '8px 16px', display: 'block' }}>
+                      30 дней
+                    </Text>
+                    {groupedChats.month.map(chat => (
+                      <div
+                        key={chat.id}
+                        className={`reference-page__chat-item ${currentChatId === chat.id ? 'reference-page__chat-item--active' : ''}`}
+                        onClick={() => {
+                          setCurrentChatId(chat.id);
+                        }}
+                      >
+                        <Text ellipsis style={{ flex: 1, color: '#fff' }}>
+                          {chat.title}
+                        </Text>
+                        <Button
+                          type="text"
+                          icon={<MoreOutlined />}
+                          size="small"
+                          style={{ color: '#8c8c8c' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {chats.length === 0 && (
+                  <div style={{ padding: 16, textAlign: 'center' }}>
+                    <Text type="secondary" style={{ color: '#8c8c8c' }}>
+                      Нет сохраненных чатов
+                    </Text>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Основной контент */}
+      <div className={`reference-page__main-content ${chatsVisible ? 'reference-page__main-content--with-sidebar' : ''}`}>
       <div className="reference-page__header">
         <div className="reference-page__header-left">
           <RobotIcon size={robotSize} />
@@ -1010,14 +1204,6 @@ const ReferencePage: React.FC = () => {
               Документов: {indexedDocuments.length}
             </Tag>
           )}
-          <Button 
-            icon={<HistoryOutlined />} 
-            onClick={() => setChatsVisible(true)}
-            size="middle"
-            title="История чатов"
-          >
-            Чаты
-          </Button>
           <Button 
             icon={<SettingOutlined />} 
             onClick={() => setSettingsVisible(true)}
@@ -1399,145 +1585,7 @@ const ReferencePage: React.FC = () => {
             </div>
           </Space>
         </Modal>
-
-        {/* Модальное окно управления чатами */}
-        <Modal
-          title={
-            <Space>
-              <HistoryOutlined />
-              <span>История чатов</span>
-            </Space>
-          }
-          open={chatsVisible}
-          onCancel={() => {
-            setChatsVisible(false);
-            setEditingChatId(null);
-            setEditingTitle('');
-          }}
-          footer={null}
-          width={600}
-          style={{ top: 20 }}
-        >
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => {
-                const newChat = createChat();
-                setCurrentChatId(newChat.id);
-                setChats(getAllChats());
-                setChatsVisible(false);
-                setMessages([]);
-                message.success('Создан новый чат');
-              }}
-              block
-            >
-              Создать новый чат
-            </Button>
-
-            <Divider style={{ margin: '8px 0' }} />
-
-            <List
-              dataSource={chats}
-              style={{ maxHeight: 500, overflow: 'auto' }}
-              renderItem={(chat) => (
-                <List.Item
-                  style={{
-                    cursor: 'pointer',
-                    backgroundColor: currentChatId === chat.id ? '#e6f7ff' : 'transparent',
-                    borderRadius: 4,
-                    padding: '12px',
-                    border: currentChatId === chat.id ? '1px solid #1890ff' : '1px solid transparent',
-                  }}
-                  actions={[
-                    <Button
-                      key="edit"
-                      type="text"
-                      icon={<EditOutlined />}
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingChatId(chat.id);
-                        setEditingTitle(chat.title);
-                      }}
-                    />,
-                    <Button
-                      key="delete"
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (window.confirm(`Удалить чат "${chat.title}"?`)) {
-                          deleteChat(chat.id);
-                          if (currentChatId === chat.id) {
-                            setCurrentChatId(null);
-                            setMessages([]);
-                          }
-                          setChats(getAllChats());
-                          message.success('Чат удален');
-                        }
-                      }}
-                    />,
-                  ]}
-                  onClick={() => {
-                    setCurrentChatId(chat.id);
-                    setChatsVisible(false);
-                  }}
-                >
-                  <List.Item.Meta
-                    title={
-                      editingChatId === chat.id ? (
-                        <Input
-                          value={editingTitle}
-                          onChange={(e) => setEditingTitle(e.target.value)}
-                          onPressEnter={() => {
-                            if (editingTitle.trim()) {
-                              renameChat(chat.id, editingTitle.trim());
-                              setChats(getAllChats());
-                              setEditingChatId(null);
-                              setEditingTitle('');
-                              message.success('Название чата обновлено');
-                            }
-                          }}
-                          onBlur={() => {
-                            if (editingTitle.trim()) {
-                              renameChat(chat.id, editingTitle.trim());
-                              setChats(getAllChats());
-                            }
-                            setEditingChatId(null);
-                            setEditingTitle('');
-                          }}
-                          autoFocus
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      ) : (
-                        <Text strong>{chat.title}</Text>
-                      )
-                    }
-                    description={
-                      <Space direction="vertical" size={0}>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          {chat.messages.length} сообщений
-                        </Text>
-                        <Text type="secondary" style={{ fontSize: 11 }}>
-                          Обновлен: {chat.updatedAt.toLocaleString('ru-RU', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </Text>
-                      </Space>
-                    }
-                  />
-                </List.Item>
-              )}
-              locale={{ emptyText: 'Нет сохраненных чатов' }}
-            />
-          </Space>
-        </Modal>
+      </div>
     </div>
   );
 };

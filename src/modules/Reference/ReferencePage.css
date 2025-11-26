@@ -9,8 +9,106 @@
   padding: 0;
   height: 100vh;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   background: #f5f5f5;
+  position: relative;
+}
+
+/* Боковая панель чатов */
+.reference-page__sidebar {
+  width: 280px;
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #2d2d2d;
+  transition: transform 0.3s ease;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 100;
+  transform: translateX(100%);
+}
+
+.reference-page__sidebar--visible {
+  transform: translateX(0);
+}
+
+.reference-page__sidebar-header {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #2d2d2d;
+}
+
+.reference-page__sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.reference-page__sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.reference-page__sidebar-content::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.reference-page__sidebar-content::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  border-radius: 3px;
+}
+
+.reference-page__sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: #5a5a5a;
+}
+
+.reference-page__chats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reference-page__chats-group {
+  margin-bottom: 16px;
+}
+
+.reference-page__chat-item {
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+  color: #fff;
+}
+
+.reference-page__chat-item:hover {
+  background-color: #2d2d2d;
+}
+
+.reference-page__chat-item--active {
+  background-color: #1890ff;
+}
+
+.reference-page__chat-item--active:hover {
+  background-color: #40a9ff;
+}
+
+/* Основной контент */
+.reference-page__main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-right 0.3s ease;
+  margin-right: 0;
+}
+
+.reference-page__main-content--with-sidebar {
+  margin-right: 280px;
 }
 
 /* Header занимает ~38.2% от общей высоты (золотое сечение) */
