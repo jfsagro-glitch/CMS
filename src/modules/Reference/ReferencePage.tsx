@@ -24,7 +24,6 @@ import {
   FileTextOutlined,
   CalculatorOutlined,
   BulbOutlined,
-  UploadOutlined,
   BookOutlined,
   SearchOutlined,
   FolderOutlined,
@@ -33,6 +32,7 @@ import {
   ReloadOutlined,
   ThunderboltOutlined,
   SettingOutlined,
+  PaperClipOutlined,
 } from '@ant-design/icons';
 import { documentIndexer } from '@/utils/documentIndexer';
 import { loadVNDDocuments, loadDocumentManually, reindexAllDocuments } from '@/utils/documentLoader';
@@ -927,16 +927,6 @@ const ReferencePage: React.FC = () => {
           >
             Настройки
           </Button>
-            <Upload
-              accept=".pdf,.docx,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.bmp,.webp"
-              beforeUpload={handleFileUpload}
-              showUploadList={false}
-              disabled={indexing}
-            >
-              <Button icon={<UploadOutlined />} loading={indexing} size="middle">
-                Загрузить документ или изображение
-              </Button>
-            </Upload>
           <Button 
             icon={<ReloadOutlined />} 
             onClick={handleReindexAll}
@@ -964,31 +954,61 @@ const ReferencePage: React.FC = () => {
               {/* Поле ввода - основное, всегда видимое и по центру */}
               <div className="reference-page__input-container">
                 <div className="reference-page__input-wrapper">
-                  <TextArea
-                    ref={textAreaRef}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Задайте вопрос о залогах, ипотеке, оценке..."
-                    autoSize={{ minRows: 3, maxRows: 6 }}
-                    disabled={loading || indexing}
-                    className="reference-page__main-input"
-                    style={{
-                      fontSize: '16px',
-                      padding: '16px',
-                      borderRadius: '12px',
-                      border: '2px solid #d9d9d9',
-                      transition: 'all 0.3s',
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#1890ff';
-                      e.target.style.boxShadow = '0 0 0 2px rgba(24, 144, 255, 0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#d9d9d9';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                  />
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <TextArea
+                      ref={textAreaRef}
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Задайте вопрос о залогах, ипотеке, оценке..."
+                      autoSize={{ minRows: 3, maxRows: 6 }}
+                      disabled={loading || indexing}
+                      className="reference-page__main-input"
+                      style={{
+                        fontSize: '16px',
+                        padding: '16px 50px 16px 16px',
+                        borderRadius: '12px',
+                        border: '2px solid #d9d9d9',
+                        transition: 'all 0.3s',
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#1890ff';
+                        e.target.style.boxShadow = '0 0 0 2px rgba(24, 144, 255, 0.2)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#d9d9d9';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                    <Upload
+                      accept=".pdf,.docx,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.bmp,.webp"
+                      beforeUpload={handleFileUpload}
+                      showUploadList={false}
+                      disabled={indexing}
+                    >
+                      <Button
+                        type="text"
+                        icon={<PaperClipOutlined />}
+                        loading={indexing}
+                        disabled={indexing}
+                        style={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '8px',
+                          zIndex: 1,
+                          color: '#8c8c8c',
+                          fontSize: '18px',
+                          width: '32px',
+                          height: '32px',
+                          padding: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        title="Приложить документ или изображение"
+                      />
+                    </Upload>
+                  </div>
                   <Button
                     type="primary"
                     icon={<SendOutlined />}
