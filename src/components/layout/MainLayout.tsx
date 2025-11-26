@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Layout, Button } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import SidebarMenu from './SidebarMenu';
 import Header from './Header';
 import { useAppSelector } from '@/store/hooks';
@@ -10,12 +10,17 @@ import { useDemoData } from '@/hooks/useDemoData';
 const { Content } = Layout;
 
 const MainLayout: React.FC = () => {
+  const location = useLocation();
   const sidebarCollapsed = useAppSelector((state: any) => state.app.sidebarCollapsed);
   const cards = useAppSelector((state: any) => state.extendedCards?.filteredItems || []);
   const { loadDemoData, clearDemoData } = useDemoData();
   const [searchText, setSearchText] = useState('');
   const [searchAttribute, setSearchAttribute] = useState('name');
   const [headerVisible, setHeaderVisible] = useState(true);
+  
+  // Скрываем Header для страницы Reference
+  const isReferencePage = location.pathname === '/reference' || location.hash === '#/reference';
+  const shouldShowHeader = headerVisible && !isReferencePage;
 
   const handleCreateCard = () => {
     // Логика создания карточки будет передана через контекст
@@ -42,7 +47,7 @@ const MainLayout: React.FC = () => {
         hasCards={cards.length > 0}
       />
       <Layout style={{ marginLeft: sidebarCollapsed ? 80 : 250, transition: 'margin-left 0.2s' }}>
-        {headerVisible && (
+        {shouldShowHeader && (
           <Header
             onCreateCard={handleCreateCard}
             onExport={handleExport}
@@ -55,8 +60,8 @@ const MainLayout: React.FC = () => {
             headerVisible={headerVisible}
           />
         )}
-        <Content className="main-content" style={{ marginTop: headerVisible ? 64 : 0 }}>
-          {!headerVisible && (
+        <Content className="main-content" style={{ marginTop: shouldShowHeader ? 64 : 0 }}>
+          {!shouldShowHeader && !isReferencePage && (
             <div
               style={{
                 position: 'fixed',

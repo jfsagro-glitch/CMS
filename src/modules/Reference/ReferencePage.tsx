@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   Card,
   Input,
@@ -212,126 +212,160 @@ const ReferencePage: React.FC = () => {
     </svg>
   );
 
-  // Загрузка документов и построение базы знаний при монтировании
+  // Загрузка документов и построение базы знаний при монтировании (оптимизировано)
   useEffect(() => {
+    let isMounted = true;
+    
     const loadDocuments = async () => {
       setIndexing(true);
       try {
-        // Инициализируем систему самообучения и эволюции
+        // Инициализируем систему самообучения и эволюции (синхронно, быстро)
         learningService.initialize();
         evolutionService.initialize();
         
-        // Обновляем опыт на основе текущих данных
-        evolutionService.updateExperienceFromCurrentData();
-        
-        // Загружаем индексы
+        // Загружаем индексы из localStorage (быстро)
         documentIndexer.loadFromStorage();
         knowledgeBase.loadFromStorage();
         
-        // Загружаем документы из VND (с автоматическим обновлением при наличии новых)
-        console.log('🔄 Загружаю документы из VND...');
-        const documents = await loadVNDDocuments(false); // false = не принудительно, только новые
-        setIndexedDocuments(documents);
-        console.log(`✅ Загружено документов: ${documents.length}`);
-        
-        // Загружаем категории из базы знаний
+        // Загружаем категории из базы знаний (быстро)
         const loadedCategories = knowledgeBase.getCategories();
-        console.log('Загружено категорий:', loadedCategories.length);
-        setCategories(loadedCategories);
-        
-        // Если категории пустые, но есть документы, перестраиваем базу знаний
-        if (loadedCategories.length === 0 && documents.length > 0) {
-          console.log('Категории пустые, перестраиваю базу знаний...');
-          await knowledgeBase.buildFromDocuments();
-          const rebuiltCategories = knowledgeBase.getCategories();
-          console.log('Перестроено категорий:', rebuiltCategories.length);
-          setCategories(rebuiltCategories);
+        if (isMounted) {
+          setCategories(loadedCategories);
         }
         
-        // Анализируем документы для самообучения
-        if (documents.length > 0) {
-          console.log('🧠 Анализирую документы для обучения модели...');
-          learningService.analyzeDocuments();
-          console.log('✅ Анализ документов завершен');
-        }
-        
-        // Анализируем обратную связь для самообучения
-        console.log('Анализирую обратную связь для самообучения...');
-        learningService.analyzeFeedback();
-        console.log('✅ Анализ обратной связи завершен');
-        
-        // Показываем статистику обучения и обновляем индекс
+        // Обновляем статистику сразу (быстро)
         const stats = learningService.getLearningStats();
-        if (stats.patternsCount > 0) {
-          console.log(`📊 Статистика самообучения: ${stats.patternsCount} паттернов, средняя успешность ${(stats.averageSuccessRate * 100).toFixed(1)}%`);
-        }
-        
-        // Получаем данные эволюции
         const evolutionStats = evolutionService.getEvolutionStats();
         const progress = evolutionService.getProgressToNextLevel();
         
-        if (evolutionStats) {
+        if (isMounted && evolutionStats) {
           setEvolutionLevel(evolutionStats.level);
           setEvolutionProgress(progress);
-          console.log(`🎯 Уровень эволюции: ${evolutionService.getCurrentLevel()?.name} (${evolutionStats.level}), опыт: ${evolutionStats.totalExperience}`);
         }
         
-        // Вычисляем индекс самообучаемости (0-100) с учетом эволюции
-        const calculateLearningIndex = () => {
+        // Вычисляем индекс самообучаемости
+        if (isMounted) {
           const patternsWeight = Math.min(stats.patternsCount * 5, 30);
           const successWeight = stats.averageSuccessRate * 25;
           const usageWeight = Math.min(stats.totalUsage / 10, 15);
           const insightsWeight = Math.min(stats.insightsCount * 2, 10);
-          
-          // Добавляем бонус за уровень эволюции
           const evolutionBonus = evolutionStats ? Math.min(evolutionStats.level * 2, 20) : 0;
-          
-          return Math.round(patternsWeight + successWeight + usageWeight + insightsWeight + evolutionBonus);
+          setLearningIndex(Math.round(patternsWeight + successWeight + usageWeight + insightsWeight + evolutionBonus));
+        }
+        
+        // Загружаем документы из VND асинхронно (не блокируя UI)
+        const loadDocumentsAsync = async () => {
+          try {
+            console.log('🔄 Загружаю документы из VND...');
+            const documents = await loadVNDDocuments(false);
+            
+            if (!isMounted) return;
+            
+            setIndexedDocuments(documents);
+            console.log(`✅ Загружено документов: ${documents.length}`);
+            
+            // Если категории пустые, но есть документы, перестраиваем базу знаний
+            if (loadedCategories.length === 0 && documents.length > 0) {
+              console.log('Категории пустые, перестраиваю базу знаний...');
+              await knowledgeBase.buildFromDocuments();
+              if (isMounted) {
+                const rebuiltCategories = knowledgeBase.getCategories();
+                setCategories(rebuiltCategories);
+              }
+            }
+            
+            // Анализируем документы для самообучения (асинхронно, не блокируя)
+            if (documents.length > 0) {
+              setTimeout(() => {
+                if (!isMounted) return;
+                console.log('🧠 Анализирую документы для обучения модели...');
+                learningService.analyzeDocuments();
+                evolutionService.addExperienceFromDocuments();
+                console.log('✅ Анализ документов завершен');
+              }, 100);
+            }
+            
+            if (documents.length > 0 && isMounted) {
+              message.success(`Загружено документов: ${documents.length}. База знаний готова к использованию.`);
+            }
+          } catch (error) {
+            if (isMounted) {
+              console.error('Ошибка загрузки документов:', error);
+              message.warning('Не удалось загрузить документы из VND. Вы можете загрузить их вручную.');
+            }
+          } finally {
+            if (isMounted) {
+              setIndexing(false);
+            }
+          }
         };
         
-        setLearningIndex(calculateLearningIndex());
+        // Запускаем асинхронную загрузку документов
+        loadDocumentsAsync();
         
-        if (documents.length > 0) {
-          message.success(`Загружено документов: ${documents.length}. База знаний готова к использованию.`);
-        }
+        // Анализируем обратную связь асинхронно (не блокируя UI)
+        setTimeout(() => {
+          if (!isMounted) return;
+          learningService.analyzeFeedback();
+          evolutionService.updateExperienceFromCurrentData();
+        }, 50);
+        
       } catch (error) {
-        console.error('Ошибка загрузки документов:', error);
-        message.warning('Не удалось загрузить документы из VND. Вы можете загрузить их вручную.');
-      } finally {
-        setIndexing(false);
+        if (isMounted) {
+          console.error('Ошибка инициализации:', error);
+          setIndexing(false);
+        }
       }
     };
 
     loadDocuments();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Оптимизированный скролл (только при добавлении новых сообщений)
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages.length, scrollToBottom]);
 
-  // Поиск по базе знаний с debounce
+  // Поиск по базе знаний с debounce (оптимизировано)
   useEffect(() => {
-    if (searchQuery.trim().length <= 2) {
+    const trimmedQuery = searchQuery.trim();
+    
+    if (trimmedQuery.length <= 2) {
       setSearchResults([]);
       return;
     }
 
+    // Увеличиваем debounce для лучшей производительности
     const timeoutId = setTimeout(() => {
       try {
-        const results = knowledgeBase.search(searchQuery, 10);
+        // Ограничиваем количество результатов для производительности
+        const results = knowledgeBase.search(trimmedQuery, 10);
         setSearchResults(results);
       } catch (error) {
         console.error('Ошибка поиска:', error);
         setSearchResults([]);
       }
-    }, 300); // Debounce 300ms
+    }, 400); // Debounce 400ms для лучшей производительности
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
+
+  // Мемоизируем список названий категорий
+  const categoryNames = useMemo(() => {
+    return categories.map(c => c.name).join(', ');
+  }, [categories]);
 
   // Генерация ответа с использованием DeepSeek AI (мемоизировано)
   const generateAIResponse = useCallback(async (userMessage: string): Promise<{ content: string; sources: KnowledgeTopic[]; context: string }> => {
@@ -360,8 +394,10 @@ const ReferencePage: React.FC = () => {
         // Если есть контекст из базы знаний, используем его
         response = await deepSeekService.generateResponse(userMessage, knowledgeContext);
         
-        // Добавляем пассивный опыт за использование модели
-        evolutionService.addPassiveExperience(userMessage, response.length);
+        // Добавляем пассивный опыт за использование модели (асинхронно, не блокируя)
+        setTimeout(() => {
+          evolutionService.addPassiveExperience(userMessage, response.length);
+        }, 0);
       } else {
         // Если контекста нет, используем общий запрос
         if (lowerMessage.includes('привет') || lowerMessage.includes('здравствуй')) {
@@ -373,7 +409,7 @@ const ReferencePage: React.FC = () => {
           ]);
           knowledgeContext = 'Приветствие';
         } else {
-          const fallbackContext = `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categories.map(c => c.name).join(', ')}.`;
+          const fallbackContext = `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categoryNames}.`;
           response = await deepSeekService.generateResponse(userMessage, fallbackContext);
           knowledgeContext = fallbackContext;
         }
@@ -403,13 +439,13 @@ const ReferencePage: React.FC = () => {
         }
         knowledgeContext = knowledgeContext || 'Локальная генерация';
       } else {
-        response = `Извините, произошла ошибка при обращении к ИИ. Попробуйте переформулировать вопрос или использовать поиск по категориям слева.`;
+        response = `Извините, произошла ошибка при обращении к ИИ. Попробуйте переформулировать вопрос или использовать поиск по категориям.`;
         knowledgeContext = 'Ошибка';
       }
     }
 
     return { content: response, sources, context: knowledgeContext };
-  }, [categories]);
+  }, [categoryNames, categories]);
 
   const handleSend = useCallback(async () => {
     if (!inputValue.trim() || loading) return;
@@ -698,7 +734,8 @@ const ReferencePage: React.FC = () => {
   }, []);
 
 
-  const quickQuestions = [
+  // Мемоизируем популярные вопросы
+  const quickQuestions = useMemo(() => [
     { 
       icon: <CalculatorOutlined />, 
       text: 'Расчет LTV и залоговая стоимость', 
@@ -729,7 +766,7 @@ const ReferencePage: React.FC = () => {
       text: 'Обращение взыскания на залог', 
       query: 'В каких случаях можно обратить взыскание на залоговое имущество? Каков порядок реализации залога?' 
     },
-  ];
+  ], []);
 
   const handleQuickQuestion = useCallback((query: string) => {
     if (!query.trim() || loading) return;
@@ -775,90 +812,91 @@ const ReferencePage: React.FC = () => {
   return (
     <div className="reference-page">
       <div className="reference-page__header">
-        <Space>
+        <div className="reference-page__header-left">
           <RobotIcon />
-          <div>
-            <Space align="center" style={{ marginBottom: 4 }} direction="vertical" size="small">
-              <Space align="center">
-                <Title level={2} style={{ margin: 0 }}>
-                  Справочная с ИИ
-                </Title>
-                <Tag
-                  color={learningIndex >= 70 ? 'success' : learningIndex >= 40 ? 'processing' : 'default'}
-                  icon={<ThunderboltOutlined />}
-                  style={{
-                    fontSize: '12px',
-                    padding: '2px 8px',
-                    borderRadius: '12px',
-                    fontWeight: 600,
-                  }}
-                >
-                  Индекс самообучаемости: {learningIndex}%
-                </Tag>
-              </Space>
-              {evolutionProgress && (
-                <div style={{ width: '100%', maxWidth: 400 }}>
-                  <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                    <Space>
-                      <Text strong style={{ fontSize: '13px' }}>
-                        Уровень: {evolutionService.getCurrentLevel()?.name || 'Новичок'} ({evolutionLevel})
-                      </Text>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>
-                        Опыт: {evolutionService.getEvolutionStats()?.totalExperience || 0}
-                      </Text>
-                    </Space>
-                    <Progress
-                      percent={evolutionProgress.percentage}
-                      status={evolutionProgress.percentage >= 90 ? 'active' : 'normal'}
-                      strokeColor={{
-                        '0%': '#108ee9',
-                        '100%': '#87d068',
-                      }}
-                      format={() => `${evolutionProgress.current}/${evolutionProgress.required} опыта`}
-                      size="small"
-                    />
-                  </Space>
-                </div>
-              )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Space align="center" style={{ marginBottom: 8 }} size="middle">
+              <Title level={2} style={{ margin: 0, fontSize: '28px' }}>
+                Справочная с ИИ
+              </Title>
+              <Tag
+                color={learningIndex >= 70 ? 'success' : learningIndex >= 40 ? 'processing' : 'default'}
+                icon={<ThunderboltOutlined />}
+                style={{
+                  fontSize: '12px',
+                  padding: '4px 12px',
+                  borderRadius: '16px',
+                  fontWeight: 600,
+                  height: 'auto',
+                  lineHeight: '1.5',
+                }}
+              >
+                Индекс самообучаемости: {learningIndex}%
+              </Tag>
             </Space>
-            <Text type="secondary">
+            {evolutionProgress && (
+              <div style={{ marginBottom: 8, maxWidth: 500 }}>
+                <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                  <Space size="small">
+                    <Text strong style={{ fontSize: '13px' }}>
+                      Уровень: {evolutionService.getCurrentLevel()?.name || 'Новичок'} ({evolutionLevel})
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      Опыт: {evolutionService.getEvolutionStats()?.totalExperience || 0}
+                    </Text>
+                  </Space>
+                  <Progress
+                    percent={evolutionProgress.percentage}
+                    status={evolutionProgress.percentage >= 90 ? 'active' : 'normal'}
+                    strokeColor={{
+                      '0%': '#108ee9',
+                      '100%': '#87d068',
+                    }}
+                    format={() => `${evolutionProgress.current}/${evolutionProgress.required} опыта`}
+                    size="small"
+                    style={{ marginTop: 4 }}
+                  />
+                </Space>
+              </div>
+            )}
+            <Text type="secondary" style={{ fontSize: '13px' }}>
               База знаний на основе справочной литературы по банковским залогам
             </Text>
           </div>
-        </Space>
-        <Space>
+        </div>
+        <div className="reference-page__header-right">
           {indexedDocuments.length > 0 && (
-            <Tag icon={<BookOutlined />} color="blue">
+            <Tag icon={<BookOutlined />} color="blue" style={{ margin: 0, padding: '4px 12px' }}>
               Документов: {indexedDocuments.length}
             </Tag>
           )}
-          <Space>
-            <Button 
-              icon={<SettingOutlined />} 
-              onClick={() => setSettingsVisible(true)}
-            >
-              Настройки
+          <Button 
+            icon={<SettingOutlined />} 
+            onClick={() => setSettingsVisible(true)}
+            size="middle"
+          >
+            Настройки
+          </Button>
+          <Upload
+            accept=".pdf,.docx,.xlsx,.xls"
+            beforeUpload={handleFileUpload}
+            showUploadList={false}
+            disabled={indexing}
+          >
+            <Button icon={<UploadOutlined />} loading={indexing} size="middle">
+              Загрузить документ
             </Button>
-            <Upload
-              accept=".pdf,.docx,.xlsx,.xls"
-              beforeUpload={handleFileUpload}
-              showUploadList={false}
-              disabled={indexing}
-            >
-              <Button icon={<UploadOutlined />} loading={indexing}>
-                Загрузить документ (PDF/DOCX/XLSX)
-              </Button>
-            </Upload>
-            <Button 
-              icon={<ReloadOutlined />} 
-              onClick={handleReindexAll}
-              loading={indexing}
-              title="Переиндексировать все документы из папки VND"
-            >
-              Обновить базу
-            </Button>
-          </Space>
-        </Space>
+          </Upload>
+          <Button 
+            icon={<ReloadOutlined />} 
+            onClick={handleReindexAll}
+            loading={indexing}
+            title="Переиндексировать все документы из папки VND"
+            size="middle"
+          >
+            Обновить базу
+          </Button>
+        </div>
       </div>
 
       {indexing && (
@@ -962,7 +1000,14 @@ const ReferencePage: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    {messages.map((message) => (
+                    {messages.map((message) => {
+                      // Мемоизируем форматирование времени
+                      const timeString = message.timestamp.toLocaleTimeString('ru-RU', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      });
+                      
+                      return (
                       <div
                         key={message.id}
                         className={`reference-page__message reference-page__message--${message.role}`}
@@ -981,10 +1026,7 @@ const ReferencePage: React.FC = () => {
                                 {message.role === 'user' ? 'Вы' : 'ИИ Помощник'}
                               </Text>
                               <Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
-                                {message.timestamp.toLocaleTimeString('ru-RU', {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
+                                {timeString}
                               </Text>
                             </div>
                             <Paragraph
@@ -1002,9 +1044,9 @@ const ReferencePage: React.FC = () => {
                                   Источники:
                                 </Text>
                                 <div style={{ marginTop: 4 }}>
-                                  {message.sources.map((topic, idx) => (
+                                  {message.sources.map((topic) => (
                                     <Tag
-                                      key={idx}
+                                      key={`${topic.id || topic.title}-${topic.page}`}
                                       style={{ marginTop: 4, cursor: 'pointer' }}
                                       onClick={() => handleTopicClick(topic)}
                                     >
@@ -1045,7 +1087,8 @@ const ReferencePage: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                     {loading && (
                       <div className="reference-page__message reference-page__message--assistant">
                         <div className="reference-page__message-content">

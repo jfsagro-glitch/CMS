@@ -378,7 +378,7 @@ class LearningService {
    */
   private extractAnswerTemplate(answer: string): string {
     // Упрощаем ответ, убирая конкретные значения
-    let template = answer
+    const template = answer
       .replace(/\d+/g, '[число]')
       .replace(/"[^"]*"/g, '[пример]')
       .replace(/\b(?:https?:\/\/[^\s]+|www\.[^\s]+)/g, '[ссылка]')

@@ -1,49 +1,93 @@
-.reference-page {
-  padding: 24px;
-  height: calc(100vh - 64px);
-  display: flex;
-  flex-direction: column;
+/* Золотое сечение: φ = 1.618, меньшая часть = 38.2%, большая = 61.8% */
+:root {
+  --golden-ratio: 1.618;
+  --golden-ratio-small: 0.382; /* 38.2% */
+  --golden-ratio-large: 0.618; /* 61.8% */
 }
 
+.reference-page {
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+/* Header занимает ~38.2% от общей высоты (золотое сечение) */
 .reference-page__header {
-  margin-bottom: 24px;
+  padding: calc(32px * var(--golden-ratio)) calc(40px * var(--golden-ratio)) calc(24px * var(--golden-ratio));
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-bottom: 1px solid #e8e8e8;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: calc(24px * var(--golden-ratio));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  flex: 0 0 calc(100vh * var(--golden-ratio-small)); /* 38.2% высоты */
+  max-height: calc(100vh * var(--golden-ratio-small));
+  overflow-y: auto;
 }
 
 .reference-page__header .ant-space {
   flex: 1;
+  min-width: 0;
 }
 
+.reference-page__header-left {
+  display: flex;
+  align-items: center;
+  gap: calc(20px * var(--golden-ratio));
+  flex: var(--golden-ratio-large); /* 61.8% ширины */
+  min-width: 0;
+}
+
+.reference-page__header-right {
+  display: flex;
+  align-items: center;
+  gap: calc(12px * var(--golden-ratio));
+  flex-wrap: wrap;
+  flex: var(--golden-ratio-small); /* 38.2% ширины */
+  justify-content: flex-end;
+}
+
+/* Card занимает ~61.8% от общей высоты (золотое сечение) */
 .reference-page__card {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  min-height: calc(100vh * var(--golden-ratio-large)); /* 61.8% высоты */
 }
 
 .reference-page__chat {
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 500px;
+  min-height: 0;
 }
 
-/* Контейнер для основного поля ввода - по центру и сверху */
+/* Input container занимает ~38.2% от высоты chat (золотое сечение) */
 .reference-page__input-container {
-  padding: 24px;
-  background: linear-gradient(to bottom, #fafafa 0%, #ffffff 100%);
-  border-bottom: 1px solid #f0f0f0;
+  padding: calc(32px * var(--golden-ratio)) calc(40px * var(--golden-ratio));
+  background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
+  border-bottom: 1px solid #e8e8e8;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-shrink: 0;
+  flex: 0 0 calc(100% * var(--golden-ratio-small)); /* 38.2% высоты chat */
+  min-height: calc(100% * var(--golden-ratio-small));
 }
 
+/* Input wrapper использует золотое сечение для ширины */
 .reference-page__input-wrapper {
   width: 100%;
-  max-width: 800px;
+  max-width: calc(100vw * var(--golden-ratio-large) * 0.8); /* 61.8% от 80% ширины экрана */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -62,14 +106,24 @@
   align-self: flex-end;
 }
 
+/* Messages занимают ~61.8% от высоты chat (золотое сечение) */
 .reference-page__messages {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: calc(32px * var(--golden-ratio)) calc(40px * var(--golden-ratio));
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  background-color: #fafafa;
+  gap: calc(20px * var(--golden-ratio));
+  background-color: #ffffff;
+  min-height: calc(100% * var(--golden-ratio-large)); /* 61.8% высоты chat */
+}
+
+/* Централизация контента сообщений по золотому сечению */
+.reference-page__messages > * {
+  max-width: calc(100vw * var(--golden-ratio-large) * 0.8); /* 61.8% от 80% ширины */
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
 }
 
 .reference-page__empty {
@@ -77,18 +131,18 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  min-height: 300px;
-  padding: 24px;
+  min-height: calc(300px * var(--golden-ratio));
+  padding: calc(24px * var(--golden-ratio));
 }
 
 .reference-page__welcome {
   text-align: center;
-  max-width: 600px;
+  max-width: calc(100vw * var(--golden-ratio-large) * 0.6); /* 61.8% от 60% ширины */
   margin: 0 auto;
 }
 
 .reference-page__quick-questions {
-  max-width: 500px;
+  max-width: calc(100vw * var(--golden-ratio-large) * 0.5); /* 61.8% от 50% ширины */
   margin: 0 auto;
   width: 100%;
 }
@@ -108,7 +162,7 @@
 
 .reference-page__message-content {
   display: flex;
-  max-width: 70%;
+  max-width: calc(100% * var(--golden-ratio-large)); /* 61.8% ширины контейнера */
   align-items: flex-start;
 }
 

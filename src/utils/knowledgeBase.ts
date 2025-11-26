@@ -25,6 +25,7 @@ class KnowledgeBase {
   private topics: Map<string, KnowledgeTopic> = new Map();
   private categories: Map<string, KnowledgeCategory> = new Map();
   private searchIndex: Map<string, string[]> = new Map(); // keyword -> topicIds
+  private searchCache: { key: string; results: KnowledgeTopic[] } | null = null; // Кэш результатов поиска
 
   /**
    * Создает базу знаний из индексированных документов
@@ -63,6 +64,9 @@ class KnowledgeBase {
 
     // Сохраняем в localStorage
     this.saveToStorage();
+    
+    // Очищаем кэш поиска при обновлении базы знаний
+    this.searchCache = null;
   }
 
   /**
@@ -438,6 +442,11 @@ class KnowledgeBase {
    * Поиск по базе знаний (оптимизированная версия)
    */
   search(query: string, maxResults: number = 5): KnowledgeTopic[] {
+    // Кэширование результатов поиска для производительности
+    const cacheKey = `${query.toLowerCase()}-${maxResults}`;
+    if (this.searchCache && this.searchCache.key === cacheKey) {
+      return this.searchCache.results;
+    }
     if (!query || query.trim().length === 0) {
       return [];
     }
