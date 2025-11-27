@@ -79,6 +79,7 @@ class DeepSeekService {
 
       if (!response.ok) {
         let errorMessage = `DeepSeek API error: ${response.status} ${response.statusText}`;
+        
         try {
           const errorData = await response.json();
           errorMessage += ` - ${JSON.stringify(errorData)}`;
@@ -89,6 +90,17 @@ class DeepSeekService {
             errorMessage += ` - ${text}`;
           }
         }
+        
+        // Специальная обработка для ошибок авторизации
+        if (response.status === 401 || response.status === 403) {
+          throw new Error(`API ключ недействителен или отсутствует. Статус: ${response.status}`);
+        }
+        
+        // Специальная обработка для ошибок лимита
+        if (response.status === 429) {
+          throw new Error('Превышен лимит запросов к API. Попробуйте позже.');
+        }
+        
         throw new Error(errorMessage);
       }
 

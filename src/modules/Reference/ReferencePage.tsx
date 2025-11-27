@@ -620,8 +620,15 @@ const ReferencePage: React.FC = () => {
         }
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
       if (import.meta.env.MODE === 'development') {
         console.error('Ошибка запроса к DeepSeek API:', error);
+      }
+      
+      // Проверяем, не связана ли ошибка с API ключом или сетью
+      if (errorMessage.includes('API ключ') || errorMessage.includes('401') || errorMessage.includes('403')) {
+        throw new Error('Проблема с доступом к AI сервису. Проверьте настройки API.');
       }
       
       // Fallback на локальную генерацию ответа
@@ -704,11 +711,29 @@ const ReferencePage: React.FC = () => {
 
       setMessages(prev => [...prev, aiResponse]);
     } catch (error) {
-      console.error('Ошибка генерации ответа:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (import.meta.env.MODE === 'development') {
+        console.error('Ошибка генерации ответа:', error);
+      }
+      
+      // Более информативное сообщение об ошибке
+      let errorContent = 'Извините, произошла ошибка при генерации ответа. ';
+      
+      if (errorMessage.includes('API ключ') || errorMessage.includes('401') || errorMessage.includes('403')) {
+        errorContent += 'Проблема с доступом к AI сервису.';
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        errorContent += 'Проблема с подключением к интернету. Проверьте соединение.';
+      } else if (errorMessage.includes('timeout')) {
+        errorContent += 'Превышено время ожидания ответа. Попробуйте еще раз.';
+      } else {
+        errorContent += 'Попробуйте еще раз или переформулируйте вопрос.';
+      }
+      
       const errorResponse: Message = {
         id: `ai-error-${Date.now()}`,
         role: 'assistant',
-        content: 'Извините, произошла ошибка при генерации ответа. Попробуйте еще раз или переформулируйте вопрос.',
+        content: errorContent,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorResponse]);
