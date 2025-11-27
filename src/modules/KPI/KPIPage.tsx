@@ -34,6 +34,8 @@ interface KPIData {
   totalObjects: number;
   totalInsurance: number;
   activeInsurance: number;
+  averageConclusionDays: number; // Средний срок подготовки залогового заключения в рабочих днях
+  slaCompliance: number; // Процент соответствия SLA (<= 5 рабочих дней)
 }
 
 interface TaskStatistic {
@@ -61,6 +63,8 @@ const KPIPage: React.FC = () => {
     totalObjects: 0,
     totalInsurance: 0,
     activeInsurance: 0,
+    averageConclusionDays: 0,
+    slaCompliance: 0,
   });
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([
     dayjs().subtract(30, 'day'),
@@ -236,6 +240,38 @@ const KPIPage: React.FC = () => {
         (i: any) => i.status === 'active' || i.status === 'Активный'
       ).length;
 
+      // Расчет среднего срока подготовки залогового заключения и SLA
+      const approvedConclusionsList = conclusionsData.filter(
+        (c: any) => c.status === 'Согласовано' && c.authorDate && (c.approvalDate || c.conclusionDate)
+      );
+      
+      let averageConclusionDays = 0;
+      let slaCompliance = 0;
+      
+      if (approvedConclusionsList.length > 0) {
+        const workingDaysList: number[] = [];
+        
+        approvedConclusionsList.forEach((c: any) => {
+          const startDate = dayjs(c.authorDate);
+          const endDate = dayjs(c.approvalDate || c.conclusionDate);
+          
+          if (startDate.isValid() && endDate.isValid() && endDate.isAfter(startDate)) {
+            const workingDays = calculateWorkingDays(startDate, endDate);
+            workingDaysList.push(workingDays);
+          }
+        });
+        
+        if (workingDaysList.length > 0) {
+          averageConclusionDays = Math.round(
+            workingDaysList.reduce((sum, days) => sum + days, 0) / workingDaysList.length * 10
+          ) / 10; // Округляем до 1 знака после запятой
+          
+          // Процент соответствия SLA (<= 5 рабочих дней)
+          const compliantCount = workingDaysList.filter(days => days <= 5).length;
+          slaCompliance = Math.round((compliantCount / workingDaysList.length) * 100);
+        }
+      }
+
       setKpiData({
         totalPortfolioValue,
         totalContracts,
@@ -249,6 +285,8 @@ const KPIPage: React.FC = () => {
         totalObjects,
         totalInsurance,
         activeInsurance,
+        averageConclusionDays,
+        slaCompliance,
       });
     } catch (error) {
       console.error('Ошибка загрузки KPI данных:', error);
@@ -359,6 +397,22 @@ const KPIPage: React.FC = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
+  };
+
+  // Функция для расчета рабочих дней между двумя датами (исключая выходные)
+  const calculateWorkingDays = (startDate: Dayjs, endDate: Dayjs): number => {
+    let workingDays = 0;
+    let currentDate = startDate.clone();
+    
+    while (currentDate.isBefore(endDate) || currentDate.isSame(endDate, 'day')) {
+      const dayOfWeek = currentDate.day(); // 0 = воскресенье, 6 = суббота
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        workingDays++;
+      }
+      currentDate = currentDate.add(1, 'day');
+    }
+    
+    return workingDays;
   };
 
   if (loading) {
@@ -489,6 +543,74 @@ const KPIPage: React.FC = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* SLA по залоговым заключениям */}
+      <Card
+        title={
+          <Space>
+            <CheckCircleOutlined />
+            <span>Выполнение SLA по залоговым заключениям</span>
+          </Space>
+        }
+        style={{ marginBottom: 24 }}
+      >
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={12}>
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <Title level={3} style={{ marginBottom: 8 }}>
+                Средний срок подготовки
+              </Title>
+              <div style={{ fontSize: 48, fontWeight: 'bold', marginBottom: 8, 
+                           color: kpiData.averageConclusionDays <= 5 ? '#3f8600' : 
+                                  kpiData.averageConclusionDays <= 7 ? '#faad14' : '#cf1322' }}>
+                {kpiData.averageConclusionDays.toFixed(1)}
+              </div>
+              <Text type="secondary" style={{ fontSize: 18 }}>
+                рабочих дней
+              </Text>
+              <div style={{ marginTop: 16 }}>
+                <Text strong style={{ fontSize: 16 }}>
+                  Требование SLA: не более 5 рабочих дней
+                </Text>
+                <br />
+                <Text type={kpiData.averageConclusionDays <= 5 ? 'success' : 'danger'} style={{ fontSize: 14 }}>
+                  {kpiData.averageConclusionDays <= 5 ? '✅ Соответствует SLA' : 
+                   kpiData.averageConclusionDays <= 7 ? '⚠️ Превышение на ' + (kpiData.averageConclusionDays - 5).toFixed(1) + ' дня' :
+                   '❌ Превышение на ' + (kpiData.averageConclusionDays - 5).toFixed(1) + ' дней'}
+                </Text>
+              </div>
+            </div>
+          </Col>
+          <Col xs={24} md={12}>
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <Title level={3} style={{ marginBottom: 8 }}>
+                Процент соответствия SLA
+              </Title>
+              <Progress
+                type="circle"
+                percent={kpiData.slaCompliance}
+                strokeColor={kpiData.slaCompliance >= 90 ? '#3f8600' : 
+                            kpiData.slaCompliance >= 70 ? '#faad14' : '#cf1322'}
+                size={200}
+                format={(percent) => `${percent}%`}
+              />
+              <div style={{ marginTop: 16 }}>
+                <Text type="secondary" style={{ fontSize: 14 }}>
+                  Заключений, подготовленных в срок ≤ 5 дней
+                </Text>
+                <br />
+                <Text strong style={{ fontSize: 16, 
+                                     color: kpiData.slaCompliance >= 90 ? '#3f8600' : 
+                                            kpiData.slaCompliance >= 70 ? '#faad14' : '#cf1322' }}>
+                  {kpiData.slaCompliance >= 90 ? '✅ Отличный показатель' : 
+                   kpiData.slaCompliance >= 70 ? '⚠️ Требует улучшения' : 
+                   '❌ Критический уровень'}
+                </Text>
+              </div>
+            </div>
+          </Col>
+        </Row>
+      </Card>
 
       {/* Аналитика по регионам */}
       <Card
