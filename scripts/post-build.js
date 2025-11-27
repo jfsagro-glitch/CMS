@@ -15,10 +15,42 @@ const instructionDestDir = path.join(distDir, 'INSTRUCTION');
 
 console.log('🔧 Post-build processing for GitHub Pages...\n');
 
-// 1. Создаем 404.html для поддержки SPA роутинга
+// 1. Создаем 404.html для поддержки SPA роутинга с редиректом
 if (fs.existsSync(indexHtmlPath)) {
-  fs.copyFileSync(indexHtmlPath, notFoundHtmlPath);
-  console.log('✅ Created 404.html for SPA routing support');
+  let indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+  
+  // Добавляем скрипт для обработки 404 и редиректа на главную с hash
+  const redirectScript = `
+    <script>
+      // Обработка 404 для SPA с HashRouter
+      (function() {
+        const path = window.location.pathname;
+        const hash = window.location.hash;
+        
+        // Если есть hash, перенаправляем на главную с этим hash
+        if (hash && hash.startsWith('#/')) {
+          window.location.replace('/' + hash);
+          return;
+        }
+        
+        // Если нет hash, но есть путь (например /registry), создаем hash из пути
+        if (path && path !== '/' && path !== '/index.html') {
+          const hashPath = '#' + path;
+          window.location.replace('/' + hashPath);
+          return;
+        }
+        
+        // Иначе просто перенаправляем на главную
+        window.location.replace('/#/registry');
+      })();
+    </script>
+  `;
+  
+  // Вставляем скрипт перед закрывающим тегом </body>
+  indexHtml = indexHtml.replace('</body>', redirectScript + '</body>');
+  
+  fs.writeFileSync(notFoundHtmlPath, indexHtml);
+  console.log('✅ Created 404.html for SPA routing support with redirect');
 } else {
   console.error('❌ index.html not found in dist/');
   process.exit(1);
