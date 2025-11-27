@@ -173,24 +173,24 @@
 .reference-page__chat {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  max-height: 100%;
-  overflow: hidden; /* Предотвращаем переполнение */
-  position: relative;
   flex: 1 1 auto;
+  min-height: 0; /* Критически важно для работы flex и скролла */
+  overflow: hidden; /* Предотвращаем переполнение на уровне chat */
+  position: relative;
+  /* Гарантируем, что прокрутка будет в messages, а не в chat */
 }
 
-/* Input container - фиксированная высота, не растягивается */
+/* Input container - внутри messages, после всех сообщений */
 .reference-page__input-container {
-  padding: 20px 32px;
+  padding: 24px 32px;
   background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
-  border-bottom: 1px solid #e8e8e8;
+  border-top: 1px solid #e8e8e8;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-shrink: 0; /* Не сжимается */
   flex-grow: 0; /* Не растягивается */
+  margin-top: auto; /* Прижимается к низу */
 }
 
 /* Input wrapper использует золотое сечение для ширины */
@@ -218,16 +218,14 @@
 /* Messages занимают всю оставшуюся высоту и скроллятся */
 .reference-page__messages {
   flex: 1 1 auto;
-  overflow-y: scroll !important; /* Принудительно включаем прокрутку */
+  overflow-y: auto !important; /* Автоматическая прокрутка при необходимости */
   overflow-x: hidden;
   padding: 24px 32px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   background-color: #ffffff;
-  min-height: 0; /* Важно для правильной работы flex и скролла */
-  max-height: 100%; /* Ограничиваем максимальную высоту */
-  height: 100%; /* Занимаем всю доступную высоту */
+  min-height: 0; /* Критически важно для правильной работы flex и скролла */
   position: relative; /* Для правильного позиционирования скролла */
   -webkit-overflow-scrolling: touch; /* Плавный скролл на мобильных */
   width: 100%; /* Занимаем всю доступную ширину */
@@ -235,8 +233,6 @@
   scroll-behavior: smooth; /* Плавный скролл */
   /* Гарантируем видимость скроллбара */
   scrollbar-gutter: stable; /* Резервируем место для скроллбара */
-  /* Принудительно показываем скроллбар */
-  overflow-style: scrollbar; /* Для старых браузеров */
 }
 
 /* Централизация контента сообщений - увеличенная ширина */

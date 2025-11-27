@@ -1416,85 +1416,6 @@ const ReferencePage: React.FC = () => {
 
       <Card className="reference-page__card">
             <div className="reference-page__chat">
-              {/* Поле ввода - основное, всегда видимое и по центру */}
-              <div className="reference-page__input-container">
-                <div className="reference-page__input-wrapper">
-                  <div style={{ position: 'relative', width: '100%' }}>
-                    <TextArea
-                      ref={textAreaRef}
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Задайте вопрос о залогах, ипотеке, оценке..."
-                      autoSize={{ minRows: 3, maxRows: 6 }}
-                      disabled={loading || indexing}
-                      className="reference-page__main-input"
-                      style={{
-                        fontSize: '16px',
-                        padding: '16px 50px 16px 16px',
-                        borderRadius: '12px',
-                        border: '2px solid #d9d9d9',
-                        transition: 'all 0.3s',
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#1890ff';
-                        e.target.style.boxShadow = '0 0 0 2px rgba(24, 144, 255, 0.2)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#d9d9d9';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                    />
-                    <Upload
-                      accept=".pdf,.docx,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.bmp,.webp"
-                      beforeUpload={handleFileUpload}
-                      showUploadList={false}
-                      disabled={indexing}
-                    >
-                      <Button
-                        type="text"
-                        icon={<PaperClipOutlined />}
-                        loading={indexing}
-                        disabled={indexing}
-                        style={{
-                          position: 'absolute',
-                          right: '8px',
-                          top: '8px',
-                          zIndex: 1,
-                          color: '#8c8c8c',
-                          fontSize: '18px',
-                          width: '32px',
-                          height: '32px',
-                          padding: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                        title="Приложить документ или изображение"
-                      />
-                    </Upload>
-                  </div>
-                  <Button
-                    type="primary"
-                    icon={<SendOutlined />}
-                    onClick={handleSend}
-                    loading={loading}
-                    disabled={!inputValue.trim() || indexing}
-                    size="large"
-                    className="reference-page__send-button"
-                    style={{
-                      height: 'auto',
-                      padding: '12px 24px',
-                      fontSize: '16px',
-                      marginTop: '12px',
-                      borderRadius: '8px',
-                    }}
-                  >
-                    Отправить вопрос
-                  </Button>
-                </div>
-              </div>
-
               <div className="reference-page__messages">
                 {messages.length === 0 ? (
                   <div className="reference-page__empty">
@@ -1504,7 +1425,7 @@ const ReferencePage: React.FC = () => {
                         Справочная с ИИ
                       </Title>
                       <Text type="secondary" style={{ fontSize: 16, marginBottom: 24, display: 'block' }}>
-                        Задайте вопрос выше, и я найду ответ в базе знаний
+                        Задайте вопрос ниже, и я найду ответ в базе знаний
                       </Text>
                       <Divider style={{ margin: '16px 0' }} />
                       <div className="reference-page__quick-questions">
@@ -1560,6 +1481,85 @@ const ReferencePage: React.FC = () => {
                     <div ref={messagesEndRef} />
                   </>
                 )}
+                
+                {/* Поле ввода - появляется после сообщений */}
+                <div className="reference-page__input-container">
+                  <div className="reference-page__input-wrapper">
+                    <div style={{ position: 'relative', width: '100%' }}>
+                      <TextArea
+                        ref={textAreaRef}
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Задайте уточняющий вопрос..."
+                        autoSize={{ minRows: 3, maxRows: 6 }}
+                        disabled={loading || indexing}
+                        className="reference-page__main-input"
+                        style={{
+                          fontSize: '16px',
+                          padding: '16px 50px 16px 16px',
+                          borderRadius: '12px',
+                          border: '2px solid #d9d9d9',
+                          transition: 'all 0.3s',
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#1890ff';
+                          e.target.style.boxShadow = '0 0 0 2px rgba(24, 144, 255, 0.2)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#d9d9d9';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      />
+                      <Upload
+                        accept=".pdf,.docx,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.bmp,.webp"
+                        beforeUpload={handleFileUpload}
+                        showUploadList={false}
+                        disabled={indexing}
+                      >
+                        <Button
+                          type="text"
+                          icon={<PaperClipOutlined />}
+                          loading={indexing}
+                          disabled={indexing}
+                          style={{
+                            position: 'absolute',
+                            right: '8px',
+                            top: '8px',
+                            zIndex: 1,
+                            color: '#8c8c8c',
+                            fontSize: '18px',
+                            width: '32px',
+                            height: '32px',
+                            padding: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                          title="Приложить документ или изображение"
+                        />
+                      </Upload>
+                    </div>
+                    <Button
+                      type="primary"
+                      icon={<SendOutlined />}
+                      onClick={handleSend}
+                      loading={loading}
+                      disabled={!inputValue.trim() || indexing}
+                      size="large"
+                      className="reference-page__send-button"
+                      style={{
+                        height: 'auto',
+                        padding: '12px 24px',
+                        fontSize: '16px',
+                        marginTop: '12px',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      Отправить вопрос
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </Card>
