@@ -1491,7 +1491,7 @@ const ReferencePage: React.FC = () => {
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        placeholder="Задайте уточняющий вопрос..."
+                        placeholder={messages.length === 0 ? "Задайте вопрос о залогах, ипотеке, оценке..." : "Задайте уточняющий вопрос..."}
                         autoSize={{ minRows: 3, maxRows: 6 }}
                         disabled={loading || indexing}
                         className="reference-page__main-input"
