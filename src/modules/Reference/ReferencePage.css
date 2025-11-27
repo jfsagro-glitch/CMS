@@ -105,12 +105,15 @@
 
 /* Основной контент */
 .reference-page__main-content {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-right: 0;
   min-width: 0; /* Предотвращаем переполнение */
+  min-height: 0; /* Важно для flex */
+  height: 100%; /* Занимаем всю доступную высоту */
+  overflow: hidden; /* Предотвращаем переполнение */
 }
 
 .reference-page__main-content--with-sidebar {
@@ -158,7 +161,7 @@
 
 /* Card занимает всю оставшуюся высоту после header */
 .reference-page__card {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -167,7 +170,18 @@
   box-shadow: none;
   background: transparent;
   min-height: 0; /* Важно для правильной работы flex */
-  height: 0; /* Принудительно устанавливаем высоту для flex */
+  height: 100%; /* Занимаем всю доступную высоту */
+}
+
+/* Стили для body карточки Ant Design */
+.reference-page__card .ant-card-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  padding: 0 !important;
+  overflow: hidden;
 }
 
 .reference-page__chat {
@@ -175,8 +189,10 @@
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 0; /* Критически важно для работы flex и скролла */
+  max-height: 100%; /* Ограничиваем максимальную высоту */
   overflow: hidden; /* Предотвращаем переполнение на уровне chat */
   position: relative;
+  height: 100%; /* Занимаем всю доступную высоту */
   /* Гарантируем, что прокрутка будет в messages, а не в chat */
 }
 
@@ -218,7 +234,7 @@
 /* Messages занимают всю оставшуюся высоту и скроллятся */
 .reference-page__messages {
   flex: 1 1 auto;
-  overflow-y: scroll !important; /* Принудительная прокрутка */
+  overflow-y: auto !important; /* Автоматическая прокрутка при необходимости */
   overflow-x: hidden;
   padding: 24px 32px;
   display: flex;
@@ -226,7 +242,6 @@
   gap: 20px;
   background-color: #ffffff;
   min-height: 0; /* Критически важно для правильной работы flex и скролла */
-  max-height: 100%; /* Ограничиваем максимальную высоту */
   position: relative; /* Для правильного позиционирования скролла */
   -webkit-overflow-scrolling: touch; /* Плавный скролл на мобильных */
   width: 100%; /* Занимаем всю доступную ширину */
@@ -234,8 +249,6 @@
   scroll-behavior: smooth; /* Плавный скролл */
   /* Гарантируем видимость скроллбара */
   scrollbar-gutter: stable; /* Резервируем место для скроллбара */
-  /* Принудительно показываем скроллбар */
-  overflow-style: scrollbar; /* Для старых браузеров */
 }
 
 /* Централизация контента сообщений - увеличенная ширина */

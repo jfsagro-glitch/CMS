@@ -528,7 +528,10 @@ const ReferencePage: React.FC = () => {
 
   useEffect(() => {
     if (messages.length > 0) {
-      scrollToBottom();
+      // Добавляем небольшую задержку для гарантии, что DOM обновлен
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     }
   }, [messages.length, scrollToBottom]);
 
