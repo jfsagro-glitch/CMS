@@ -35,7 +35,7 @@ interface KPIData {
   totalInsurance: number;
   activeInsurance: number;
   averageConclusionDays: number; // Средний срок подготовки залогового заключения в рабочих днях
-  slaCompliance: number; // Процент соответствия SLA (<= 5 рабочих дней)
+  slaCompliance: number; // Процент соответствия SLA (<= 7 рабочих дней)
 }
 
 interface TaskStatistic {
@@ -83,9 +83,20 @@ const KPIPage: React.FC = () => {
     loadRegionStats();
   }, []); // loadRegionStats не зависит от dateRange и period
 
-  const loadRegionStats = () => {
+  const loadRegionStats = async () => {
     try {
-      const tasksData = JSON.parse(localStorage.getItem('zadachnik_tasks') || '[]');
+      // Проверяем наличие задач, если нет - генерируем
+      let tasksData = JSON.parse(localStorage.getItem('zadachnik_tasks') || '[]');
+      if (!tasksData || tasksData.length === 0) {
+        try {
+          const { generateTasksForEmployees } = await import('@/utils/generateTasksForEmployees');
+          generateTasksForEmployees();
+          tasksData = JSON.parse(localStorage.getItem('zadachnik_tasks') || '[]');
+        } catch (error) {
+          console.warn('Не удалось сгенерировать задачи:', error);
+        }
+      }
+
       const employees = employeeService.getEmployees();
       // Получаем актуальные регионы из EmployeeService (использует REGION_CENTERS)
       const regions = employeeService.getRegions();
@@ -266,8 +277,8 @@ const KPIPage: React.FC = () => {
             workingDaysList.reduce((sum, days) => sum + days, 0) / workingDaysList.length * 10
           ) / 10; // Округляем до 1 знака после запятой
           
-          // Процент соответствия SLA (<= 5 рабочих дней)
-          const compliantCount = workingDaysList.filter(days => days <= 5).length;
+          // Процент соответствия SLA (<= 7 рабочих дней)
+          const compliantCount = workingDaysList.filter(days => days <= 7).length;
           slaCompliance = Math.round((compliantCount / workingDaysList.length) * 100);
         }
       }
@@ -514,6 +525,57 @@ const KPIPage: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
+              title="Средний срок подготовки СЗ"
+              value={kpiData.averageConclusionDays}
+              suffix="раб. дней"
+              prefix={<ClockCircleOutlined />}
+              valueStyle={{ 
+                color: kpiData.averageConclusionDays <= 7 ? '#3f8600' : '#cf1322' 
+              }}
+            />
+            <div style={{ marginTop: 8 }}>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                SLA: не более 7 рабочих дней
+              </Text>
+              <br />
+              <Progress
+                percent={kpiData.averageConclusionDays > 0 ? Math.min((7 / kpiData.averageConclusionDays) * 100, 100) : 0}
+                strokeColor={kpiData.averageConclusionDays <= 7 ? '#3f8600' : '#faad14'}
+                size="small"
+                format={() => `${kpiData.averageConclusionDays.toFixed(1)} дн.`}
+              />
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="Выполнение SLA"
+              value={kpiData.slaCompliance}
+              suffix="%"
+              prefix={<CheckCircleOutlined />}
+              valueStyle={{ 
+                color: kpiData.slaCompliance >= 90 ? '#3f8600' : 
+                       kpiData.slaCompliance >= 70 ? '#faad14' : '#cf1322' 
+              }}
+            />
+            <div style={{ marginTop: 8 }}>
+              <Progress
+                percent={kpiData.slaCompliance}
+                strokeColor={kpiData.slaCompliance >= 90 ? '#3f8600' : 
+                            kpiData.slaCompliance >= 70 ? '#faad14' : '#cf1322'}
+                size="small"
+              />
+              <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+                {kpiData.slaCompliance >= 90 ? '✅ Отлично' : 
+                 kpiData.slaCompliance >= 70 ? '⚠️ Требует внимания' : '❌ Не соответствует'}
+              </Text>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
               title="Объектов в реестре"
               value={kpiData.totalObjects}
               prefix={<BarChartOutlined />}
@@ -521,6 +583,8 @@ const KPIPage: React.FC = () => {
             />
           </Card>
         </Col>
+      </Row>
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
@@ -561,8 +625,7 @@ const KPIPage: React.FC = () => {
                 Средний срок подготовки
               </Title>
               <div style={{ fontSize: 48, fontWeight: 'bold', marginBottom: 8, 
-                           color: kpiData.averageConclusionDays <= 5 ? '#3f8600' : 
-                                  kpiData.averageConclusionDays <= 7 ? '#faad14' : '#cf1322' }}>
+                           color: kpiData.averageConclusionDays <= 7 ? '#3f8600' : '#cf1322' }}>
                 {kpiData.averageConclusionDays.toFixed(1)}
               </div>
               <Text type="secondary" style={{ fontSize: 18 }}>
@@ -570,13 +633,12 @@ const KPIPage: React.FC = () => {
               </Text>
               <div style={{ marginTop: 16 }}>
                 <Text strong style={{ fontSize: 16 }}>
-                  Требование SLA: не более 5 рабочих дней
+                  Требование SLA: не более 7 рабочих дней
                 </Text>
                 <br />
-                <Text type={kpiData.averageConclusionDays <= 5 ? 'success' : 'danger'} style={{ fontSize: 14 }}>
-                  {kpiData.averageConclusionDays <= 5 ? '✅ Соответствует SLA' : 
-                   kpiData.averageConclusionDays <= 7 ? '⚠️ Превышение на ' + (kpiData.averageConclusionDays - 5).toFixed(1) + ' дня' :
-                   '❌ Превышение на ' + (kpiData.averageConclusionDays - 5).toFixed(1) + ' дней'}
+                <Text type={kpiData.averageConclusionDays <= 7 ? 'success' : 'danger'} style={{ fontSize: 14 }}>
+                  {kpiData.averageConclusionDays <= 7 ? '✅ Соответствует SLA' : 
+                   '❌ Превышение на ' + (kpiData.averageConclusionDays - 7).toFixed(1) + ' дней'}
                 </Text>
               </div>
             </div>
@@ -596,7 +658,7 @@ const KPIPage: React.FC = () => {
               />
               <div style={{ marginTop: 16 }}>
                 <Text type="secondary" style={{ fontSize: 14 }}>
-                  Заключений, подготовленных в срок ≤ 5 дней
+                  Заключений, подготовленных в срок ≤ 7 дней
                 </Text>
                 <br />
                 <Text strong style={{ fontSize: 16, 
