@@ -18,9 +18,34 @@ const MainLayout: React.FC = () => {
   const [searchAttribute, setSearchAttribute] = useState('name');
   const [headerVisible, setHeaderVisible] = useState(true);
   
-  // Скрываем Header для страницы Reference
-  const isReferencePage = location.pathname === '/reference' || location.hash === '#/reference';
-  const shouldShowHeader = headerVisible && !isReferencePage;
+  // Список страниц, где нужно скрывать Header
+  const pagesWithoutHeader = [
+    '/reference',
+    '/monitoring',
+    '/settings',
+    '/upload',
+    '/egrn',
+    '/cms-check',
+    '/appraisal',
+    '/credit-risk',
+    '/analytics',
+    '/fnp',
+    '/insurance',
+    '/collateral-conclusions',
+    '/collateral-dossier',
+    '/reports',
+    '/kpi',
+    '/tasks',
+    '/portfolio',
+  ];
+  
+  // Проверяем, нужно ли скрывать Header для текущей страницы
+  const currentPath = location.pathname || location.hash.replace('#', '');
+  const shouldHideHeader = pagesWithoutHeader.some(page => 
+    currentPath === page || currentPath === `#${page}` || location.hash === `#${page}`
+  );
+  
+  const shouldShowHeader = headerVisible && !shouldHideHeader;
 
   const handleCreateCard = () => {
     // Логика создания карточки будет передана через контекст
@@ -61,7 +86,7 @@ const MainLayout: React.FC = () => {
           />
         )}
         <Content className="main-content" style={{ marginTop: shouldShowHeader ? 64 : 0 }}>
-          {!shouldShowHeader && !isReferencePage && (
+          {!shouldShowHeader && !shouldHideHeader && (
             <div
               style={{
                 position: 'fixed',
