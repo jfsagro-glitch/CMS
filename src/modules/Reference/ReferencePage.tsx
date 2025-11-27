@@ -783,7 +783,7 @@ const ReferencePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [inputValue, loading, generateAIResponse, currentChatId]);
+  }, [inputValue, loading, generateAIResponse, currentChatId, messages, scrollToBottom]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
