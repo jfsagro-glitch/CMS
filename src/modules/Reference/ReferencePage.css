@@ -218,7 +218,7 @@
 /* Messages занимают всю оставшуюся высоту и скроллятся */
 .reference-page__messages {
   flex: 1 1 auto;
-  overflow-y: auto !important; /* Автоматическая прокрутка при необходимости */
+  overflow-y: scroll !important; /* Принудительная прокрутка */
   overflow-x: hidden;
   padding: 24px 32px;
   display: flex;
@@ -226,6 +226,7 @@
   gap: 20px;
   background-color: #ffffff;
   min-height: 0; /* Критически важно для правильной работы flex и скролла */
+  max-height: 100%; /* Ограничиваем максимальную высоту */
   position: relative; /* Для правильного позиционирования скролла */
   -webkit-overflow-scrolling: touch; /* Плавный скролл на мобильных */
   width: 100%; /* Занимаем всю доступную ширину */
@@ -233,6 +234,8 @@
   scroll-behavior: smooth; /* Плавный скролл */
   /* Гарантируем видимость скроллбара */
   scrollbar-gutter: stable; /* Резервируем место для скроллбара */
+  /* Принудительно показываем скроллбар */
+  overflow-style: scrollbar; /* Для старых браузеров */
 }
 
 /* Централизация контента сообщений - увеличенная ширина */

@@ -15,6 +15,7 @@ import {
   List,
   Badge,
   Modal,
+  Collapse,
 } from 'antd';
 import {
   SendOutlined,
@@ -501,27 +502,27 @@ const ReferencePage: React.FC = () => {
 
   // Оптимизированный скролл (только при добавлении новых сообщений)
   const scrollToBottom = useCallback(() => {
+    // Находим контейнер сообщений
+    const messagesContainer = document.querySelector('.reference-page__messages') as HTMLElement;
+    if (messagesContainer) {
+      // Используем scrollTo для более надежного скроллинга
+      requestAnimationFrame(() => {
+        messagesContainer.scrollTo({
+          top: messagesContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      });
+    }
+    
+    // Также прокручиваем к элементу messagesEndRef, если он существует
     if (messagesEndRef.current) {
-      // Находим контейнер сообщений
-      const messagesContainer = messagesEndRef.current.closest('.reference-page__messages') as HTMLElement;
-      if (messagesContainer) {
-        // Используем scrollTo для более надежного скроллинга
-        requestAnimationFrame(() => {
-          messagesContainer.scrollTo({
-            top: messagesContainer.scrollHeight,
-            behavior: 'smooth'
-          });
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end',
+          inline: 'nearest'
         });
-      } else {
-        // Fallback на scrollIntoView
-        requestAnimationFrame(() => {
-          messagesEndRef.current?.scrollIntoView({ 
-            behavior: 'smooth',
-            block: 'end',
-            inline: 'nearest'
-          });
-        });
-      }
+      });
     }
   }, []);
 
@@ -585,20 +586,33 @@ const ReferencePage: React.FC = () => {
     }
 
     try {
-      // Формируем контекст истории чата, если есть
-      let chatHistoryContext = '';
+      // Используем DeepSeek AI для генерации ответа с учетом истории чата
       if (chatHistory.length > 0) {
-        const historyParts = chatHistory.slice(-6).map(msg => 
-          `${msg.role === 'user' ? 'Пользователь' : 'Помощник'}: ${msg.content}`
-        );
-        chatHistoryContext = `\n\nКонтекст предыдущих сообщений в этом чате:\n${historyParts.join('\n\n')}\n\nУчитывай контекст предыдущих сообщений при ответе.`;
-      }
-
-      // Используем DeepSeek AI для генерации ответа
-      if (knowledgeContext) {
-        // Если есть контекст из базы знаний, используем его
-        const fullContext = knowledgeContext + chatHistoryContext;
-        response = await deepSeekService.generateResponse(userMessage, fullContext);
+        // Если есть история чата, используем метод chat() с полной историей для сохранения контекста
+        const chatMessages = chatHistory.slice(-10).map(msg => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+        }));
+        
+        // Добавляем текущий вопрос пользователя
+        chatMessages.push({
+          role: 'user',
+          content: userMessage,
+        });
+        
+        // Формируем контекст из базы знаний для системного промпта
+        const systemContext = knowledgeContext || `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categoryNames}.`;
+        
+        // Используем метод chat() с полной историей для сохранения контекста
+        response = await deepSeekService.chat(chatMessages, systemContext);
+        
+        // Добавляем пассивный опыт за использование модели (асинхронно, не блокируя)
+        setTimeout(() => {
+          evolutionService.addPassiveExperience(userMessage, response.length);
+        }, 0);
+      } else if (knowledgeContext) {
+        // Если нет истории, но есть контекст из базы знаний, используем его
+        response = await deepSeekService.generateResponse(userMessage, knowledgeContext);
         
         // Добавляем пассивный опыт за использование модели (асинхронно, не блокируя)
         setTimeout(() => {
@@ -615,7 +629,7 @@ const ReferencePage: React.FC = () => {
           ]);
           knowledgeContext = 'Приветствие';
         } else {
-          const fallbackContext = `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categoryNames}.${chatHistoryContext}`;
+          const fallbackContext = `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categoryNames}.`;
           response = await deepSeekService.generateResponse(userMessage, fallbackContext);
           knowledgeContext = fallbackContext;
         }
@@ -691,9 +705,18 @@ const ReferencePage: React.FC = () => {
     setInputValue('');
     setLoading(true);
 
-    // Генерация ответа с использованием DeepSeek AI (передаем историю чата)
+    // Генерация ответа с использованием DeepSeek AI (передаем полную историю чата)
     try {
-      const { content, sources, context } = await generateAIResponse(question, messages);
+      // Получаем полную историю чата из хранилища
+      const chat = chatId ? getChatById(chatId) : null;
+      const chatHistory = chat ? chat.messages.map(msg => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp),
+      })) : messages;
+      
+      const { content, sources, context } = await generateAIResponse(question, chatHistory);
       
       const aiResponse: Message = {
         id: `ai-${Date.now()}`,
@@ -711,6 +734,11 @@ const ReferencePage: React.FC = () => {
       }
 
       setMessages(prev => [...prev, aiResponse]);
+      
+      // Автоматическая прокрутка после добавления ответа
+      setTimeout(() => {
+        scrollToBottom();
+      }, 150);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       
@@ -1083,6 +1111,15 @@ const ReferencePage: React.FC = () => {
   const handleQuickQuestion = useCallback((query: string) => {
     if (!query.trim() || loading) return;
 
+    // Создаем новый чат, если его нет
+    let chatId = currentChatId;
+    if (!chatId) {
+      const newChat = createChat();
+      chatId = newChat.id;
+      setCurrentChatId(chatId);
+      setChats(getAllChats());
+    }
+
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -1090,11 +1127,25 @@ const ReferencePage: React.FC = () => {
       timestamp: new Date(),
     };
 
+    // Добавляем сообщение в чат
+    if (chatId) {
+      addMessageToChat(chatId, userMessage as ChatMessage);
+    }
+
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setLoading(true);
 
-    generateAIResponse(query.trim())
+    // Получаем полную историю чата из хранилища
+    const chat = chatId ? getChatById(chatId) : null;
+    const chatHistory = chat ? chat.messages.map(msg => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp),
+    })) : messages;
+
+    generateAIResponse(query.trim(), chatHistory)
       .then(({ content, sources, context }) => {
         const aiResponse: Message = {
           id: `ai-${Date.now()}`,
@@ -1104,7 +1155,19 @@ const ReferencePage: React.FC = () => {
           sources: sources.length > 0 ? sources : undefined,
           context,
         };
+
+        // Добавляем ответ в чат
+        if (chatId) {
+          addMessageToChat(chatId, aiResponse as ChatMessage);
+          setChats(getAllChats());
+        }
+
         setMessages(prev => [...prev, aiResponse]);
+        
+        // Автоматическая прокрутка после добавления ответа
+        setTimeout(() => {
+          scrollToBottom();
+        }, 150);
       })
       .catch((error) => {
         if (import.meta.env.MODE === 'development') {
@@ -1116,12 +1179,24 @@ const ReferencePage: React.FC = () => {
           content: 'Извините, произошла ошибка при генерации ответа. Попробуйте еще раз или переформулируйте вопрос.',
           timestamp: new Date(),
         };
+
+        // Добавляем ошибку в чат
+        if (chatId) {
+          addMessageToChat(chatId, errorResponse as ChatMessage);
+          setChats(getAllChats());
+        }
+
         setMessages(prev => [...prev, errorResponse]);
+        
+        // Автоматическая прокрутка после добавления ошибки
+        setTimeout(() => {
+          scrollToBottom();
+        }, 150);
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [loading, generateAIResponse]);
+  }, [loading, generateAIResponse, currentChatId, messages, scrollToBottom]);
 
   // Группировка чатов по датам
   const groupedChats = useMemo(() => {
@@ -1429,28 +1504,36 @@ const ReferencePage: React.FC = () => {
                       </Text>
                       <Divider style={{ margin: '16px 0' }} />
                       <div className="reference-page__quick-questions">
-                        <Text strong style={{ marginBottom: 12, display: 'block', fontSize: 14 }}>
-                          Популярные вопросы:
-                        </Text>
-                        <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                          {quickQuestions.map((q, index) => (
-                            <Button
-                              key={index}
-                              type="default"
-                              icon={q.icon}
-                              onClick={() => handleQuickQuestion(q.query)}
-                              style={{ 
-                                width: '100%', 
-                                textAlign: 'left', 
-                                height: 'auto', 
-                                padding: '10px 16px',
-                                fontSize: '14px',
-                              }}
-                            >
-                              {q.text}
-                            </Button>
-                          ))}
-                        </Space>
+                        <Collapse
+                          ghost
+                          items={[
+                            {
+                              key: '1',
+                              label: <Text strong style={{ fontSize: 14 }}>Популярные вопросы</Text>,
+                              children: (
+                                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                                  {quickQuestions.map((q, index) => (
+                                    <Button
+                                      key={index}
+                                      type="default"
+                                      icon={q.icon}
+                                      onClick={() => handleQuickQuestion(q.query)}
+                                      style={{ 
+                                        width: '100%', 
+                                        textAlign: 'left', 
+                                        height: 'auto', 
+                                        padding: '10px 16px',
+                                        fontSize: '14px',
+                                      }}
+                                    >
+                                      {q.text}
+                                    </Button>
+                                  ))}
+                                </Space>
+                              ),
+                            },
+                          ]}
+                        />
                       </div>
                     </div>
                   </div>
