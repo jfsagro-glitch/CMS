@@ -49,8 +49,40 @@ class DocumentIndexer {
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
       }
       
+      // Подавляем предупреждения PDF.js в консоли (некритические)
+      if (typeof window !== 'undefined' && window.console) {
+        const originalWarn = console.warn;
+        console.warn = (...args: any[]) => {
+          // Фильтруем предупреждения о шрифтах TrueType
+          const message = args.join(' ');
+          if (message.includes('TT: undefined function') || 
+              message.includes('Warning: TT:') ||
+              message.includes('Missing or invalid font')) {
+            // Подавляем эти предупреждения, так как они не критичны
+            return;
+          }
+          originalWarn.apply(console, args);
+        };
+      }
+      
       this.workerInitialized = true;
-      console.log('PDF.js worker инициализирован:', pdfjsLib.GlobalWorkerOptions.workerSrc);
+      if (import.meta.env.MODE === 'development') {
+        // Подавляем предупреждения PDF.js о шрифтах
+        if (typeof window !== 'undefined') {
+          const originalWarn = console.warn;
+          console.warn = function(...args: any[]) {
+            // Пропускаем предупреждения о шрифтах PDF.js
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('TT: undefined function')) {
+              return;
+            }
+            originalWarn.apply(console, args);
+          };
+        }
+        
+        if (import.meta.env.MODE === 'development') {
+          console.log('PDF.js worker инициализирован:', pdfjsLib.GlobalWorkerOptions.workerSrc);
+        }
+      }
     } catch (error) {
       console.error('Ошибка инициализации PDF.js worker:', error);
       // Fallback на jsdelivr
@@ -122,15 +154,44 @@ class DocumentIndexer {
    * Индексирует PDF документ
    */
   async indexPDF(file: File): Promise<DocumentIndex> {
+    // Сохраняем оригинальный console.warn для восстановления
+    const originalConsoleWarn = console.warn;
+    
     try {
       // Инициализируем worker перед использованием
       await this.initializeWorker();
       
       const arrayBuffer = await file.arrayBuffer();
       const pdfjsLib = await import('pdfjs-dist');
-
-      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      
+      // Настройки для более мягкой обработки ошибок и предупреждений
+      const loadingTask = pdfjsLib.getDocument({ 
+        data: arrayBuffer,
+        // Игнорируем некритичные предупреждения о шрифтах
+        verbosity: 0, // 0 = errors, 1 = warnings, 5 = infos
+        // Отключаем строгую проверку шрифтов
+        stopAtErrors: false,
+        // Дополнительные опции для обработки проблемных PDF
+        isEvalSupported: false,
+        disableFontFace: false,
+        // Игнорируем предупреждения о неопределенных функциях шрифтов
+        useSystemFonts: true,
+      });
       const pdf = await loadingTask.promise;
+      
+      // Подавляем предупреждения при обработке страниц
+      console.warn = (...args: any[]) => {
+        const message = args.join(' ');
+        if (message.includes('TT: undefined function') || 
+            message.includes('Warning: TT:') ||
+            message.includes('Missing or invalid font') ||
+            message.includes('pdf.worker')) {
+          // Подавляем некритические предупреждения о шрифтах
+          return;
+        }
+        originalConsoleWarn.apply(console, args);
+      };
+      
       const totalPages = pdf.numPages;
 
       const chunks: DocumentChunk[] = [];
@@ -166,8 +227,13 @@ class DocumentIndexer {
       // Сохраняем в IndexedDB (асинхронно, не блокируя)
       this.saveToStorage().catch(err => console.error('Ошибка сохранения индекса PDF:', err));
 
+      // Восстанавливаем оригинальный console.warn
+      console.warn = originalConsoleWarn;
+      
       return index;
     } catch (error) {
+      // Восстанавливаем оригинальный console.warn в случае ошибки
+      console.warn = originalConsoleWarn;
       console.error('Ошибка индексации PDF:', error);
       throw error;
     }

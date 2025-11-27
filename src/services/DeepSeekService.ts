@@ -62,6 +62,10 @@ class DeepSeekService {
     ];
 
     try {
+      // Добавляем таймаут для запроса (30 секунд)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      
       const response = await fetch(this.API_URL, {
         method: 'POST',
         headers: {
@@ -75,7 +79,10 @@ class DeepSeekService {
           max_tokens: 1500, // Уменьшено для более кратких ответов
           stream: false,
         }),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         let errorMessage = `DeepSeek API error: ${response.status} ${response.statusText}`;
@@ -112,7 +119,24 @@ class DeepSeekService {
 
       throw new Error('Неожиданный формат ответа от DeepSeek API');
     } catch (error) {
-      console.error('Ошибка запроса к DeepSeek API:', error);
+      // Обработка различных типов ошибок
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Превышено время ожидания ответа от API (30 секунд). Попробуйте еще раз.');
+        }
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          throw new Error('Ошибка сети. Проверьте подключение к интернету.');
+        }
+        if (error.message.includes('CORS')) {
+          throw new Error('Ошибка CORS. Проблема с настройками сервера.');
+        }
+      }
+      
+      // Логируем ошибку только в development режиме
+      if (import.meta.env.MODE === 'development') {
+        console.error('Ошибка запроса к DeepSeek API:', error);
+      }
+      
       throw error;
     }
   }

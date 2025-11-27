@@ -16,7 +16,7 @@
 
 /* Боковая панель чатов */
 .reference-page__sidebar {
-  width: 280px;
+  width: 320px;
   background: #1a1a1a;
   display: flex;
   flex-direction: column;
@@ -26,13 +26,17 @@
   right: 0;
   top: 0;
   bottom: 0;
-  z-index: 100;
+  z-index: 1000;
   transform: translateX(100%);
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+  visibility: hidden;
+  opacity: 0;
 }
 
 .reference-page__sidebar--visible {
   transform: translateX(0);
+  visibility: visible;
+  opacity: 1;
 }
 
 .reference-page__sidebar-header {
@@ -110,22 +114,23 @@
 }
 
 .reference-page__main-content--with-sidebar {
-  margin-right: 280px;
+  margin-right: 320px;
 }
 
-/* Header занимает ~38.2% от общей высоты (золотое сечение) */
+/* Header - уменьшенная высота для большего пространства для сообщений */
 .reference-page__header {
-  padding: calc(32px * var(--golden-ratio)) calc(40px * var(--golden-ratio)) calc(24px * var(--golden-ratio));
+  padding: 16px 24px;
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border-bottom: 1px solid #e8e8e8;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: calc(24px * var(--golden-ratio));
+  gap: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  flex: 0 0 calc(100vh * var(--golden-ratio-small)); /* 38.2% высоты */
-  max-height: calc(100vh * var(--golden-ratio-small));
+  flex: 0 0 auto; /* Автоматическая высота */
+  min-height: auto;
+  max-height: 180px; /* Максимальная высота */
   overflow-y: auto;
 }
 
@@ -178,7 +183,7 @@
 
 /* Input container - фиксированная высота, не растягивается */
 .reference-page__input-container {
-  padding: calc(32px * var(--golden-ratio)) calc(40px * var(--golden-ratio));
+  padding: 20px 32px;
   background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
   border-bottom: 1px solid #e8e8e8;
   display: flex;
@@ -215,10 +220,10 @@
   flex: 1 1 auto;
   overflow-y: auto !important;
   overflow-x: hidden;
-  padding: calc(32px * var(--golden-ratio)) calc(40px * var(--golden-ratio));
+  padding: 24px 32px;
   display: flex;
   flex-direction: column;
-  gap: calc(20px * var(--golden-ratio));
+  gap: 20px;
   background-color: #ffffff;
   min-height: 0; /* Важно для правильной работы flex и скролла */
   max-height: 100%; /* Ограничиваем максимальную высоту */
@@ -228,16 +233,19 @@
   width: 100%; /* Занимаем всю доступную ширину */
   box-sizing: border-box; /* Учитываем padding в ширине */
   scroll-behavior: smooth; /* Плавный скролл */
+  /* Гарантируем видимость скроллбара */
+  scrollbar-gutter: stable; /* Резервируем место для скроллбара */
 }
 
 /* Централизация контента сообщений - увеличенная ширина */
 .reference-page__messages > * {
-  max-width: calc(100vw * 0.9); /* 90% ширины экрана */
+  max-width: calc(100vw * 0.85); /* 85% ширины экрана для лучшей видимости */
   margin-left: auto;
   margin-right: auto;
   width: 100%;
   flex-shrink: 0; /* Сообщения не сжимаются */
   min-height: fit-content; /* Сообщения занимают необходимое пространство */
+  box-sizing: border-box; /* Учитываем padding и border */
 }
 
 .reference-page__empty {
@@ -331,27 +339,35 @@
 /* Удалено - поле ввода теперь в input-container */
 
 .reference-page__messages::-webkit-scrollbar {
-  width: 10px;
+  width: 12px; /* Увеличена ширина для лучшей видимости */
 }
 
 .reference-page__messages::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 5px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0; /* Добавлена граница для видимости */
 }
 
 .reference-page__messages::-webkit-scrollbar-thumb {
   background: #888;
-  border-radius: 5px;
+  border-radius: 6px;
+  border: 2px solid #f1f1f1; /* Добавлена граница для контраста */
   transition: background 0.2s;
+  min-height: 40px; /* Минимальная высота для удобства */
 }
 
 .reference-page__messages::-webkit-scrollbar-thumb:hover {
   background: #555;
+  border-color: #e0e0e0;
 }
 
-/* Для Firefox */
+.reference-page__messages::-webkit-scrollbar-thumb:active {
+  background: #333;
+}
+
+/* Для Firefox - более видимая полоса */
 .reference-page__messages {
-  scrollbar-width: thin;
+  scrollbar-width: auto; /* Изменено с thin на auto для большей видимости */
   scrollbar-color: #888 #f1f1f1;
 }
 

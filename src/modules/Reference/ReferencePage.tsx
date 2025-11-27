@@ -37,6 +37,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MoreOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import { documentIndexer } from '@/utils/documentIndexer';
 import { loadVNDDocuments, loadDocumentManually, reindexAllDocuments } from '@/utils/documentLoader';
@@ -713,22 +714,33 @@ const ReferencePage: React.FC = () => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       
-      if (import.meta.env.MODE === 'development') {
-        console.error('Ошибка генерации ответа:', error);
-      }
+      // Всегда логируем ошибки для отладки
+      console.error('Ошибка генерации ответа:', error);
+      console.error('Детали ошибки:', {
+        message: errorMessage,
+        question: question,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       
       // Более информативное сообщение об ошибке
       let errorContent = 'Извините, произошла ошибка при генерации ответа. ';
       
       if (errorMessage.includes('API ключ') || errorMessage.includes('401') || errorMessage.includes('403')) {
-        errorContent += 'Проблема с доступом к AI сервису.';
-      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-        errorContent += 'Проблема с подключением к интернету. Проверьте соединение.';
-      } else if (errorMessage.includes('timeout')) {
-        errorContent += 'Превышено время ожидания ответа. Попробуйте еще раз.';
+        errorContent += 'Проблема с доступом к AI сервису. Проверьте настройки API ключа.';
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('NetworkError') || errorMessage.includes('Failed to fetch')) {
+        errorContent += 'Проблема с подключением к интернету. Проверьте соединение и попробуйте еще раз.';
+      } else if (errorMessage.includes('timeout') || errorMessage.includes('время ожидания')) {
+        errorContent += 'Превышено время ожидания ответа (30 секунд). Попробуйте еще раз или упростите вопрос.';
+      } else if (errorMessage.includes('429') || errorMessage.includes('лимит')) {
+        errorContent += 'Превышен лимит запросов к API. Подождите немного и попробуйте позже.';
+      } else if (errorMessage.includes('CORS')) {
+        errorContent += 'Ошибка CORS. Проблема с настройками сервера.';
       } else {
-        errorContent += 'Попробуйте еще раз или переформулируйте вопрос.';
+        errorContent += `Попробуйте еще раз или переформулируйте вопрос. (Ошибка: ${errorMessage.substring(0, 100)})`;
       }
+      
+      // Показываем сообщение пользователю
+      message.error('Не удалось получить ответ от AI помощника. Проверьте консоль браузера для деталей.');
       
       const errorResponse: Message = {
         id: `ai-error-${Date.now()}`,
@@ -1316,8 +1328,8 @@ const ReferencePage: React.FC = () => {
         <div className="reference-page__header-left">
           <RobotIcon size={robotSize} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <Space align="center" style={{ marginBottom: 8 }} size="middle">
-              <Title level={2} style={{ margin: 0, fontSize: '28px' }}>
+            <Space align="center" style={{ marginBottom: 4 }} size="small">
+              <Title level={2} style={{ margin: 0, fontSize: '22px', lineHeight: '1.2' }}>
                 Справочная с ИИ
               </Title>
               <Tag
@@ -1336,13 +1348,13 @@ const ReferencePage: React.FC = () => {
               </Tag>
             </Space>
             {evolutionProgress && (
-              <div style={{ marginBottom: 8, maxWidth: 500 }}>
-                <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <div style={{ marginBottom: 4, maxWidth: 500 }}>
+                <Space direction="vertical" size={2} style={{ width: '100%' }}>
                   <Space size="small">
-                    <Text strong style={{ fontSize: '13px' }}>
+                    <Text strong style={{ fontSize: '12px' }}>
                       Уровень: {evolutionService.getCurrentLevel()?.name || 'Новичок'} ({evolutionLevel})
                     </Text>
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                    <Text type="secondary" style={{ fontSize: '11px' }}>
                       Опыт: {evolutionService.getEvolutionStats()?.totalExperience || 0}
                     </Text>
                   </Space>
@@ -1355,12 +1367,13 @@ const ReferencePage: React.FC = () => {
                     }}
                     format={() => `${evolutionProgress.current}/${evolutionProgress.required} опыта`}
                     size="small"
-                    style={{ marginTop: 4 }}
+                    style={{ marginTop: 2 }}
+                    showInfo={false}
                   />
                 </Space>
               </div>
             )}
-            <Text type="secondary" style={{ fontSize: '13px' }}>
+            <Text type="secondary" style={{ fontSize: '11px', lineHeight: '1.3' }}>
               База знаний на основе справочной литературы по банковским залогам
             </Text>
           </div>
@@ -1371,6 +1384,16 @@ const ReferencePage: React.FC = () => {
               Документов: {indexedDocuments.length}
             </Tag>
           )}
+          <Button 
+            icon={<HistoryOutlined />} 
+            onClick={() => setChatsVisible(!chatsVisible)}
+            size="middle"
+            type={chatsVisible ? 'primary' : 'default'}
+            style={{ marginRight: 8 }}
+            title={chatsVisible ? 'Скрыть историю чатов' : 'Показать историю чатов'}
+          >
+            Чаты {chats.length > 0 && <Badge count={chats.length} size="small" style={{ marginLeft: 4 }} />}
+          </Button>
           <Button 
             icon={<SettingOutlined />} 
             onClick={() => setSettingsVisible(true)}
