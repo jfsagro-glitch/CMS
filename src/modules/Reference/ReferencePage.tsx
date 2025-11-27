@@ -1498,14 +1498,14 @@ const ReferencePage: React.FC = () => {
                 {messages.length === 0 ? (
                   <div className="reference-page__empty">
                     <div className="reference-page__welcome">
-                      <RobotOutlined style={{ fontSize: 64, color: '#1890ff', marginBottom: 16 }} />
-                      <Title level={3} style={{ marginBottom: 8 }}>
+                      <RobotOutlined style={{ fontSize: 40, color: '#1890ff', marginBottom: 8 }} />
+                      <Title level={4} style={{ marginBottom: 4, fontSize: '18px' }}>
                         Справочная с ИИ
                       </Title>
-                      <Text type="secondary" style={{ fontSize: 16, marginBottom: 24, display: 'block' }}>
+                      <Text type="secondary" style={{ fontSize: 13, marginBottom: 12, display: 'block' }}>
                         Задайте вопрос ниже, и я найду ответ в базе знаний
                       </Text>
-                      <Divider style={{ margin: '16px 0' }} />
+                      <Divider style={{ margin: '8px 0' }} />
                       <div className="reference-page__quick-questions">
                         <Collapse
                           ghost
