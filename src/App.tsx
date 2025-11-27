@@ -74,12 +74,24 @@ const AppContent: React.FC = () => {
           const { syncEmployeesToZadachnik } = await import('./utils/syncEmployeesToZadachnik');
           syncEmployeesToZadachnik();
           
-          // Проверяем, есть ли задачи, если нет - генерируем
+          // Проверяем, есть ли задачи, если нет - генерируем разово
+          // Задачи фиксируются и не перегенерируются автоматически
           const existingTasks = localStorage.getItem('zadachnik_tasks');
-          if (!existingTasks || JSON.parse(existingTasks).length === 0) {
+          const tasksData = existingTasks ? JSON.parse(existingTasks) : [];
+          
+          // Импортируем employeeService для проверки сотрудников
+          const employeeServiceModule = await import('./services/EmployeeService');
+          const employeeService = employeeServiceModule.default;
+          const employees = employeeService.getEmployees().filter((emp: any) => emp.isActive);
+          
+          // Проверяем, есть ли задачи для всех активных сотрудников
+          const employeesWithTasks = new Set(tasksData.map((task: any) => task.employeeId).filter(Boolean));
+          const allEmployeesHaveTasks = employees.every((emp: any) => employeesWithTasks.has(emp.id));
+          
+          if (!existingTasks || tasksData.length === 0 || !allEmployeesHaveTasks) {
             const { generateTasksForEmployees } = await import('./utils/generateTasksForEmployees');
             generateTasksForEmployees();
-            console.log('✅ Задачи для сотрудников сгенерированы автоматически');
+            console.log('✅ Задачи для сотрудников сгенерированы автоматически (разовая фиксация)');
           }
         } catch (error) {
           console.warn('Не удалось синхронизировать сотрудников с zadachnik:', error);

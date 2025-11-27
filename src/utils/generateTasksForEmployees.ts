@@ -235,13 +235,14 @@ export const generateTasksForEmployees = (): void => {
     const now = dayjs();
     
     employees.forEach(employee => {
-      // Генерируем 40-70 задач на сотрудника (увеличено для большего разнообразия)
-      const tasksCount = 40 + Math.floor(Math.random() * 31); // 40-70 задач
+      // Генерируем 60-80 задач на сотрудника для полной статистики
+      const tasksCount = 60 + Math.floor(Math.random() * 21); // 60-80 задач
       
-      // Распределение: большая часть выполнена, 1% просрочена, остальные в работе
-      const completedCount = Math.floor(tasksCount * 0.85); // 85% выполнено
-      const overdueCount = Math.max(1, Math.floor(tasksCount * 0.01)); // 1% просрочено (минимум 1)
-      const pendingCount = tasksCount - completedCount - overdueCount; // остальные в работе
+      // Распределение: большая часть выполнена, 2-3% просрочена, остальные в работе
+      // Для более реалистичной статистики
+      const completedCount = Math.floor(tasksCount * 0.82); // 82% выполнено
+      const overdueCount = Math.max(1, Math.floor(tasksCount * 0.02)); // 2% просрочено (минимум 1)
+      const pendingCount = tasksCount - completedCount - overdueCount; // остальные в работе (16%)
       
       // Определяем регион сотрудника
       const employeeRegion = employee.region;
@@ -252,6 +253,9 @@ export const generateTasksForEmployees = (): void => {
       // Полное имя сотрудника
       const employeeFullName = `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim();
       
+      // Счетчик для циклического использования всех типов задач
+      let typeIndexCounter = 0;
+      
       // Генерируем выполненные задачи
       for (let i = 0; i < completedCount; i++) {
         const daysAgo = Math.floor(Math.random() * 90); // выполнены в последние 90 дней
@@ -259,7 +263,9 @@ export const generateTasksForEmployees = (): void => {
         const completedAt = createdAt.add(Math.floor(Math.random() * 20), 'day');
         const dueDate = completedAt.add(Math.floor(Math.random() * 10), 'day');
         
-        const taskType = TASK_TYPES[Math.floor(Math.random() * TASK_TYPES.length)];
+        // Циклически используем все типы задач для равномерного распределения
+        const taskType = TASK_TYPES[typeIndexCounter % TASK_TYPES.length];
+        typeIndexCounter++;
         const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'];
         const title = titles[Math.floor(Math.random() * titles.length)];
         const description = getTaskDescription(taskType, title, employeeRegion);
@@ -315,7 +321,9 @@ export const generateTasksForEmployees = (): void => {
         const createdAt = now.subtract(60 + daysOverdue, 'day');
         const dueDate = now.subtract(daysOverdue, 'day');
         
-        const taskType = TASK_TYPES[Math.floor(Math.random() * TASK_TYPES.length)];
+        // Используем разные типы задач для просроченных
+        const taskType = TASK_TYPES[typeIndexCounter % TASK_TYPES.length];
+        typeIndexCounter++;
         const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'];
         const title = titles[Math.floor(Math.random() * titles.length)];
         const description = getTaskDescription(taskType, title, employeeRegion);
@@ -370,7 +378,9 @@ export const generateTasksForEmployees = (): void => {
         const daysUntilDue = Math.floor(Math.random() * 30) + 1; // срок выполнения через 1-30 дней
         const dueDate = now.add(daysUntilDue, 'day');
         
-        const taskType = TASK_TYPES[Math.floor(Math.random() * TASK_TYPES.length)];
+        // Используем разные типы задач для задач в работе
+        const taskType = TASK_TYPES[typeIndexCounter % TASK_TYPES.length];
+        typeIndexCounter++;
         const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'];
         const title = titles[Math.floor(Math.random() * titles.length)];
         const description = getTaskDescription(taskType, title, employeeRegion);
