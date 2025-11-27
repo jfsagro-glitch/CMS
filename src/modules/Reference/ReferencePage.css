@@ -131,7 +131,7 @@
   flex: 0 0 auto; /* Автоматическая высота */
   min-height: auto;
   max-height: 180px; /* Максимальная высота */
-  overflow-y: auto;
+  overflow: visible; /* Убираем прокрутку из header полностью */
 }
 
 .reference-page__header .ant-space {
@@ -218,7 +218,7 @@
 /* Messages занимают всю оставшуюся высоту и скроллятся */
 .reference-page__messages {
   flex: 1 1 auto;
-  overflow-y: auto !important;
+  overflow-y: scroll !important; /* Принудительно включаем прокрутку */
   overflow-x: hidden;
   padding: 24px 32px;
   display: flex;
@@ -235,6 +235,8 @@
   scroll-behavior: smooth; /* Плавный скролл */
   /* Гарантируем видимость скроллбара */
   scrollbar-gutter: stable; /* Резервируем место для скроллбара */
+  /* Принудительно показываем скроллбар */
+  overflow-style: scrollbar; /* Для старых браузеров */
 }
 
 /* Централизация контента сообщений - увеличенная ширина */
