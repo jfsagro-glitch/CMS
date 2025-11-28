@@ -103,14 +103,25 @@ class ZadachnikApp {
 
             const employees = this.users.employee;
 
+            // Разделяем сотрудников на руководителей и обычных сотрудников
+            const managers = employees.filter(emp => emp.role === 'manager' || emp.isManager);
+            const regularEmployees = employees.filter(emp => !emp.isManager && emp.role !== 'manager');
+
             // Группируем сотрудников по региональному центру (название РЦ)
             const employeesByRegion = {};
+            const managersByRegion = {};
+            
             employees.forEach(emp => {
                 const center = emp.region || 'Без региона';
                 if (!employeesByRegion[center]) {
                     employeesByRegion[center] = [];
+                    managersByRegion[center] = [];
                 }
-                employeesByRegion[center].push(emp);
+                if (emp.role === 'manager' || emp.isManager) {
+                    managersByRegion[center].push(emp);
+                } else {
+                    employeesByRegion[center].push(emp);
+                }
             });
 
             let tasksChanged = false;
@@ -122,28 +133,46 @@ class ZadachnikApp {
                 const cityToCenter = this.auth && this.auth.cityToCenter ? this.auth.cityToCenter : {};
                 const centerKey = cityToCenter[task.region] || task.region;
 
-                const regionEmployees = employeesByRegion[centerKey] || employees;
-                if (!Array.isArray(regionEmployees) || regionEmployees.length === 0) return;
+                const regionEmployees = employeesByRegion[centerKey] || [];
+                const regionManagers = managersByRegion[centerKey] || [];
+                
+                if (regionEmployees.length === 0 && regionManagers.length === 0) return;
 
-                // Если задача уже имеет корректные email из CMS (совпадают с сотрудниками), пропускаем
+                const taskStatus = (task.status || '').toString();
+
+                // Задачи со статусом 'created' остаются у руководителей (не распределены)
+                if (taskStatus === 'created') {
+                    // Убеждаемся, что задача не привязана к сотруднику, только к бизнесу
+                    if (task.assignedTo && task.assignedTo.length > 0) {
+                        task.assignedTo = [];
+                        task.currentAssignee = null;
+                        task.currentAssigneeName = null;
+                        tasksChanged = true;
+                    }
+                    return; // Не трогаем задачи в статусе 'created'
+                }
+
+                // Для остальных статусов проверяем и исправляем привязку
+                // Если задача уже имеет корректные email из CMS, пропускаем
                 const allAssigneesValid = Array.isArray(task.assignedTo) && task.assignedTo.every(email =>
                     employees.some(emp => emp.email === email)
                 );
-                if (allAssigneesValid) return;
+                
+                if (allAssigneesValid && task.currentAssignee && 
+                    employees.some(emp => emp.email === task.currentAssignee)) {
+                    return; // Задача уже правильно привязана
+                }
 
                 // Перераспределяем исполнителей задачи на реальных сотрудников региона
-                if (Array.isArray(task.assignedTo) && task.assignedTo.length > 0) {
-                    const newAssigned = [];
-                    task.assignedTo.forEach((_, index) => {
-                        const emp = regionEmployees[index % regionEmployees.length];
-                        if (emp && emp.email) {
-                            newAssigned.push(emp.email);
-                        }
-                    });
-
-                    if (newAssigned.length > 0) {
-                        task.assignedTo = newAssigned;
-                        task.currentAssignee = newAssigned[0];
+                if (regionEmployees.length > 0) {
+                    // Выбираем случайного сотрудника из региона
+                    const randomEmployee = regionEmployees[Math.floor(Math.random() * regionEmployees.length)];
+                    
+                    if (randomEmployee && randomEmployee.email) {
+                        task.assignedTo = [randomEmployee.email];
+                        task.currentAssignee = randomEmployee.email;
+                        task.currentAssigneeName = `${randomEmployee.lastName || ''} ${randomEmployee.firstName || ''} ${randomEmployee.middleName || ''}`.trim();
+                        task.employeeId = randomEmployee.id;
                         tasksChanged = true;
                     }
                 }

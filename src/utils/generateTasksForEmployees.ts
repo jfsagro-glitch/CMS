@@ -6,6 +6,13 @@ import employeeService from '@/services/EmployeeService';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import type { TaskDB } from '@/services/ExtendedStorageService';
 import dayjs from 'dayjs';
+import { REGION_CENTERS } from '@/utils/regionCenters';
+import {
+  TASK_NORM_HOURS,
+  WORK_HOURS_PER_MONTH,
+  getTaskNormHours,
+  calculateWorkloadPercent,
+} from '@/utils/workloadCalculator';
 
 // Используем TaskDB из ExtendedStorageService
 type Task = TaskDB;
@@ -202,6 +209,7 @@ const getTaskDescription = (type: string, title: string, region: string): string
 
 /**
  * Генерация задач для всех сотрудников в формате Задачника
+ * С учетом нормочасов и целевой загрузки 85-125% по региональным центрам
  */
 export const generateTasksForEmployees = async (): Promise<void> => {
   try {
@@ -209,14 +217,311 @@ export const generateTasksForEmployees = async (): Promise<void> => {
     const tasks: Task[] = [];
     const now = dayjs();
     
-    employees.forEach(employee => {
-      // Генерируем 60-80 задач на сотрудника для полной статистики
-      const tasksCount = 60 + Math.floor(Math.random() * 21); // 60-80 задач
+    // Группируем сотрудников по региональным центрам
+    const employeesByCenter: Record<string, typeof employees> = {};
+    REGION_CENTERS.forEach(center => {
+      employeesByCenter[center.code] = employees.filter(emp => 
+        center.cities.includes(emp.region) || emp.region === center.code
+      );
+    });
+    
+    // Генерируем задачи для каждого регионального центра
+    REGION_CENTERS.forEach(center => {
+      const centerEmployees = employeesByCenter[center.code] || [];
+      const workingEmployees = centerEmployees.filter(
+        emp => emp.isActive && (!emp.status || emp.status === 'working') && !emp.isManager
+      );
+      const managers = centerEmployees.filter(emp => emp.isActive && emp.isManager);
       
-      // Распределение: большая часть выполнена, 1% просрочена, остальные в работе
-      const completedCount = Math.floor(tasksCount * 0.85); // 85% выполнено
-      const overdueCount = Math.max(1, Math.floor(tasksCount * 0.01)); // 1% просрочено (минимум 1)
-      const pendingCount = tasksCount - completedCount - overdueCount; // остальные в работе
+      if (workingEmployees.length === 0 || managers.length === 0) return;
+      
+      // Целевая загрузка для центра: 85-125%
+      const targetWorkloadPercent = 85 + Math.random() * 40; // 85-125%
+      const targetNormHoursPerEmployee = (targetWorkloadPercent / 100) * WORK_HOURS_PER_MONTH;
+      const totalTargetNormHours = targetNormHoursPerEmployee * workingEmployees.length;
+      
+      // Распределяем нормочасы между сотрудниками
+      let remainingNormHours = totalTargetNormHours;
+      
+      workingEmployees.forEach((employee, empIndex) => {
+        const isLastEmployee = empIndex === workingEmployees.length - 1;
+        // Для последнего сотрудника даем все оставшиеся нормочасы
+        const employeeTargetNormHours = isLastEmployee 
+          ? remainingNormHours 
+          : targetNormHoursPerEmployee * (0.9 + Math.random() * 0.2); // ±10% вариация
+        
+        remainingNormHours -= employeeTargetNormHours;
+        
+        // Распределение: 70% выполнено/согласовано, 1% просрочено, 10% в работе, 10% распределено, 9% на согласовании
+        const completedNormHours = employeeTargetNormHours * 0.70;
+        const overdueNormHours = employeeTargetNormHours * 0.01;
+        const inProgressNormHours = employeeTargetNormHours * 0.10;
+        const assignedNormHours = employeeTargetNormHours * 0.10;
+        const approvalNormHours = employeeTargetNormHours * 0.09;
+        
+        const employeeRegion = employee.region;
+        const businessUser = BUSINESS_USERS[Math.floor(Math.random() * BUSINESS_USERS.length)];
+        const employeeFullName = `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim();
+        
+        // Находим руководителя для этого региона
+        const manager = managers[0]; // Берем первого руководителя центра
+        const managerFullName = manager ? `${manager.lastName} ${manager.firstName} ${manager.middleName || ''}`.trim() : '';
+        
+        // Генерируем задачи для каждого статуса
+        const generateTasksForStatus = (
+          targetNormHours: number,
+          status: 'completed' | 'in_progress' | 'assigned' | 'approval' | 'approved',
+          isOverdue: boolean = false
+        ) => {
+          const generatedTasks: Task[] = [];
+          let currentNormHours = 0;
+          
+          // Создаем список типов задач с их нормочасами, отсортированный по убыванию
+          const taskTypesWithHours = Object.entries(TASK_NORM_HOURS)
+            .map(([type, hours]) => ({ type, hours }))
+            .sort((a, b) => b.hours - a.hours);
+          
+          while (currentNormHours < targetNormHours) {
+            // Выбираем тип задачи, который впишется в оставшиеся нормочасы
+            const remainingHours = targetNormHours - currentNormHours;
+            const availableTypes = taskTypesWithHours.filter(t => t.hours <= remainingHours);
+            
+            if (availableTypes.length === 0) break;
+            
+            // Предпочитаем задачи с большими нормочасами, но иногда выбираем случайно
+            const selectedType = Math.random() > 0.3 
+              ? availableTypes[0] 
+              : availableTypes[Math.floor(Math.random() * Math.min(3, availableTypes.length))];
+            
+            let taskType = selectedType.type;
+            let normHours = selectedType.hours;
+            
+            // Специальная обработка для "Подготовка СЗ"
+            if (taskType === 'Подготовка СЗ') {
+              // 10% задач - АЗС (24 часа), остальные - обычные (6 часов)
+              if (Math.random() < 0.1 && remainingHours >= 24) {
+                taskType = 'Подготовка СЗ (АЗС)';
+                normHours = 24;
+              } else {
+                normHours = 6;
+              }
+            }
+            
+            if (normHours > remainingHours) break;
+            
+            const daysAgo = Math.floor(Math.random() * 90);
+            const createdAt = now.subtract(daysAgo + (status === 'completed' ? 30 : 0), 'day');
+            const completedAt = status === 'completed' 
+              ? createdAt.add(Math.floor(Math.random() * 20), 'day')
+              : null;
+            const dueDate = isOverdue
+              ? now.subtract(1 + Math.floor(Math.random() * 30), 'day')
+              : status === 'completed' && completedAt
+              ? completedAt.add(Math.floor(Math.random() * 10), 'day')
+              : now.add(Math.floor(Math.random() * 30) + 1, 'day');
+            
+            const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'] || ['Задача'];
+            const title = titles[Math.floor(Math.random() * titles.length)];
+            const description = getTaskDescription(taskType, title, employeeRegion);
+            
+            const taskId = `T-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const createdAtISO = createdAt.toISOString();
+            
+            // Определяем статус и историю в зависимости от типа задачи
+            let taskStatus = status;
+            let assignedToEmails: string[] = [];
+            let currentAssigneeEmail: string | null = null;
+            let currentAssigneeName: string | null = null;
+            const historyItems: any[] = [
+              {
+                date: createdAtISO,
+                user: businessUser.name,
+                userRole: 'business',
+                action: 'Создана',
+                comment: 'Задача создана бизнесом',
+                status: 'created',
+              },
+            ];
+            
+            if (status === 'completed' || status === 'approved') {
+              // Завершенные задачи: прошли полный цикл
+              const assignedDate = createdAt.add(1, 'day');
+              const inProgressDate = assignedDate.add(1, 'day');
+              const approvalDate = inProgressDate.add(Math.floor(Math.random() * 10), 'day');
+              const completedDate = status === 'approved' && completedAt ? completedAt : approvalDate.add(1, 'day');
+              
+              assignedToEmails = employee.email ? [employee.email] : [];
+              currentAssigneeEmail = employee.email || null;
+              currentAssigneeName = employeeFullName;
+              
+              historyItems.push(
+                {
+                  date: assignedDate.toISOString(),
+                  user: managerFullName || 'Руководитель',
+                  userRole: 'manager',
+                  action: 'Распределена',
+                  comment: `Назначена на: ${employeeFullName}`,
+                  status: 'assigned',
+                  assignedTo: assignedToEmails,
+                },
+                {
+                  date: inProgressDate.toISOString(),
+                  user: employeeFullName,
+                  userRole: 'employee',
+                  action: 'Принята в работу',
+                  comment: 'Задача принята в работу',
+                  status: 'in_progress',
+                },
+                {
+                  date: approvalDate.toISOString(),
+                  user: employeeFullName,
+                  userRole: 'employee',
+                  action: 'Отправлена на утверждение',
+                  comment: 'Задача отправлена на согласование руководителю',
+                  status: 'approval',
+                },
+                {
+                  date: completedDate.toISOString(),
+                  user: managerFullName || 'Руководитель',
+                  userRole: 'manager',
+                  action: status === 'approved' ? 'Согласовано' : 'Выполнена',
+                  comment: status === 'approved' ? 'Задача согласована руководителем' : 'Задача выполнена',
+                  status: status === 'approved' ? 'approved' : 'completed',
+                }
+              );
+              
+              taskStatus = status === 'approved' ? 'approved' : 'completed';
+            } else if (status === 'in_progress') {
+              // Задачи в работе: распределены и приняты сотрудником
+              const assignedDate = createdAt.add(1, 'day');
+              const inProgressDate = assignedDate.add(1, 'day');
+              
+              assignedToEmails = employee.email ? [employee.email] : [];
+              currentAssigneeEmail = employee.email || null;
+              currentAssigneeName = employeeFullName;
+              
+              historyItems.push(
+                {
+                  date: assignedDate.toISOString(),
+                  user: managerFullName || 'Руководитель',
+                  userRole: 'manager',
+                  action: 'Распределена',
+                  comment: `Назначена на: ${employeeFullName}`,
+                  status: 'assigned',
+                  assignedTo: assignedToEmails,
+                },
+                {
+                  date: inProgressDate.toISOString(),
+                  user: employeeFullName,
+                  userRole: 'employee',
+                  action: 'Принята в работу',
+                  comment: 'Задача принята в работу',
+                  status: 'in_progress',
+                }
+              );
+              
+              taskStatus = 'in_progress';
+            } else if (status === 'assigned') {
+              // Задачи распределены руководителем, но еще не приняты сотрудником
+              const assignedDate = createdAt.add(1, 'day');
+              
+              assignedToEmails = employee.email ? [employee.email] : [];
+              currentAssigneeEmail = employee.email || null;
+              currentAssigneeName = employeeFullName;
+              
+              historyItems.push({
+                date: assignedDate.toISOString(),
+                user: managerFullName || 'Руководитель',
+                userRole: 'manager',
+                action: 'Распределена',
+                comment: `Назначена на: ${employeeFullName}`,
+                status: 'assigned',
+                assignedTo: assignedToEmails,
+              });
+              
+              taskStatus = 'assigned';
+            } else if (status === 'approval') {
+              // Задачи на согласовании у руководителя
+              const assignedDate = createdAt.add(1, 'day');
+              const inProgressDate = assignedDate.add(1, 'day');
+              const approvalDate = inProgressDate.add(Math.floor(Math.random() * 10), 'day');
+              
+              assignedToEmails = employee.email ? [employee.email] : [];
+              currentAssigneeEmail = manager?.email || null;
+              currentAssigneeName = managerFullName;
+              
+              historyItems.push(
+                {
+                  date: assignedDate.toISOString(),
+                  user: managerFullName || 'Руководитель',
+                  userRole: 'manager',
+                  action: 'Распределена',
+                  comment: `Назначена на: ${employeeFullName}`,
+                  status: 'assigned',
+                  assignedTo: assignedToEmails,
+                },
+                {
+                  date: inProgressDate.toISOString(),
+                  user: employeeFullName,
+                  userRole: 'employee',
+                  action: 'Принята в работу',
+                  comment: 'Задача принята в работу',
+                  status: 'in_progress',
+                },
+                {
+                  date: approvalDate.toISOString(),
+                  user: employeeFullName,
+                  userRole: 'employee',
+                  action: 'Отправлена на утверждение',
+                  comment: 'Задача отправлена на согласование руководителю',
+                  status: 'approval',
+                }
+              );
+              
+              taskStatus = 'approval';
+            }
+            
+            generatedTasks.push({
+              id: taskId,
+              region: employeeRegion,
+              type: taskType,
+              category: taskType,
+              title,
+              description,
+              priority: Math.random() > 0.6 ? 'high' : Math.random() > 0.3 ? 'medium' : 'low',
+              dueDate: dueDate.format('YYYY-MM-DD'),
+              status: taskStatus,
+              businessUser: businessUser.email,
+              businessUserName: businessUser.name,
+              assignedTo: assignedToEmails,
+              currentAssignee: currentAssigneeEmail,
+              currentAssigneeName: currentAssigneeName,
+              employeeId: employee.id,
+              documents: [],
+              comments: [],
+              createdAt: createdAtISO,
+              updatedAt: status === 'completed' && completedAt ? completedAt.toISOString() : now.toISOString(),
+              completedAt: status === 'completed' && completedAt ? completedAt.toISOString() : undefined,
+              history: historyItems,
+            });
+            
+            currentNormHours += normHours;
+          }
+          
+          return generatedTasks;
+        };
+        
+        // Генерируем задачи по статусам
+        const completedTasks = generateTasksForStatus(completedNormHours * 0.8, 'completed');
+        const approvedTasks = generateTasksForStatus(completedNormHours * 0.2, 'approved');
+        const overdueTasks = generateTasksForStatus(overdueNormHours, 'in_progress', true);
+        const inProgressTasks = generateTasksForStatus(inProgressNormHours, 'in_progress');
+        const assignedTasks = generateTasksForStatus(assignedNormHours, 'assigned');
+        const approvalTasks = generateTasksForStatus(approvalNormHours, 'approval');
+        
+        tasks.push(...completedTasks, ...approvedTasks, ...overdueTasks, ...inProgressTasks, ...assignedTasks, ...approvalTasks);
+      });
+    });
       
       // Создаем список всех типов задач для равномерного распределения
       const allTaskTypes = [...TASK_TYPES];

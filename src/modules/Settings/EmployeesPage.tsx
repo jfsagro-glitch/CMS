@@ -40,6 +40,7 @@ import { generateTasksForEmployees } from '@/utils/generateTasksForEmployees';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import type { TaskDB } from '@/services/ExtendedStorageService';
 import dayjs from 'dayjs';
+import { calculateRegionCenterWorkload } from '@/utils/workloadCalculator';
 import './EmployeesPage.css';
 
 const { Title } = Typography;
@@ -164,49 +165,25 @@ const EmployeesPage: React.FC = () => {
     return grouped;
   }, [filteredEmployees]);
 
-  // Статистика задач по региональным центрам (для расчёта загрузки)
-  const tasksByRegionCenter = useMemo(() => {
-    const stats: Record<string, { inProgress: number }> = {};
-    REGION_CENTERS.forEach(center => {
-      stats[center.code] = { inProgress: 0 };
-    });
-
-    tasks.forEach(task => {
-      const taskRegion = (task.region || '').toString();
-      if (!taskRegion) return;
-
-      const center = REGION_CENTERS.find(
-        c => c.cities.includes(taskRegion) || c.name === taskRegion || c.code === taskRegion
-      );
-      if (!center) return;
-
-      const status = (task.status || '').toString();
-      const isCompleted =
-        status === 'completed' ||
-        status === 'Выполнено' ||
-        status === 'done' ||
-        status === 'approved';
-      if (isCompleted) return;
-
-      const isInWorkStatus = [
-        'pending',
-        'created',
-        'assigned',
-        'in_progress',
-        'in-progress',
-        'review',
-        'approval',
-        'rework',
-        'paused',
-      ].includes(status);
-
-      if (isInWorkStatus) {
-        stats[center.code].inProgress += 1;
+  // Статистика загрузки по региональным центрам (на основе нормочасов)
+  const workloadByRegionCenter = useMemo(() => {
+    const stats: Record<
+      string,
+      {
+        workloadPercent: number;
+        totalNormHours: number;
+        tasksCount: number;
+        workingEmployeesCount: number;
       }
+    > = {};
+
+    REGION_CENTERS.forEach(center => {
+      const workload = calculateRegionCenterWorkload(tasks, employees, center.code, center.cities);
+      stats[center.code] = workload;
     });
 
     return stats;
-  }, [tasks]);
+  }, [tasks, employees]);
 
   const handleAdd = () => {
     setEditingEmployee(null);
@@ -590,16 +567,17 @@ const EmployeesPage: React.FC = () => {
         {REGION_CENTERS.map(center => {
           const centerEmployees = Object.values(employeesByRegion[center.code] || {}).flat();
           const activeEmployees = centerEmployees.filter(emp => emp.isActive).length;
-          const workingEmployees = centerEmployees.filter(
-            emp => emp.isActive && (!emp.status || emp.status === 'working')
-          ).length;
 
           const monitoringEmployees = centerEmployees.filter(emp => emp.canMonitor).length;
           const appraisalEmployees = centerEmployees.filter(emp => emp.canAppraise).length;
 
-          const regionTasksInWork = tasksByRegionCenter[center.code]?.inProgress ?? 0;
-          const loadPercent =
-            workingEmployees > 0 ? Math.round((regionTasksInWork / workingEmployees) * 100) : 0;
+          const workload = workloadByRegionCenter[center.code] || {
+            workloadPercent: 0,
+            totalNormHours: 0,
+            tasksCount: 0,
+            workingEmployeesCount: 0,
+          };
+          const loadPercent = workload.workloadPercent;
 
           return (
             <Panel
