@@ -210,40 +210,41 @@ export const generateTasksForEmployees = async (): Promise<void> => {
     // Генерируем задачи для каждого регионального центра
     REGION_CENTERS.forEach(center => {
       const centerEmployees = employeesByCenter[center.code] || [];
-      // Фильтруем только работающих сотрудников (исключаем в командировках, отпусках, больничных)
+      // Исключаем менеджеров и сотрудников в отпуске, больничном и командировке
       const workingEmployees = centerEmployees.filter(
-        emp => emp.isActive && (!emp.status || emp.status === 'working') && !emp.isManager
+        emp => emp.isActive && 
+               !emp.isManager &&
+               (!emp.status || emp.status === 'working') &&
+               emp.status !== 'sick_leave' &&
+               emp.status !== 'vacation' &&
+               emp.status !== 'business_trip'
       );
       const managers = centerEmployees.filter(emp => emp.isActive && emp.isManager);
       
       if (workingEmployees.length === 0 || managers.length === 0) return;
       
-      // Целевая загрузка для центра: 85-125%
-      // Загрузка рассчитывается только для работающих сотрудников
+      // Целевая загрузка для центра по задачам в работе: 85-125%
+      // Это загрузка только по задачам в работе (assigned, in_progress, approval)
       const targetWorkloadPercent = 85 + Math.random() * 40; // 85-125%
-      const targetNormHoursPerEmployee = (targetWorkloadPercent / 100) * WORK_HOURS_PER_MONTH;
-      const totalTargetNormHours = targetNormHoursPerEmployee * workingEmployees.length;
+      const targetNormHoursPerEmployeeInWork = (targetWorkloadPercent / 100) * WORK_HOURS_PER_MONTH;
       
       // Распределяем нормочасы между сотрудниками
-      let remainingNormHours = totalTargetNormHours;
-      
       workingEmployees.forEach((employee, empIndex) => {
-        const isLastEmployee = empIndex === workingEmployees.length - 1;
-        // Для последнего сотрудника даем все оставшиеся нормочасы
-        const employeeTargetNormHours = isLastEmployee 
-          ? remainingNormHours 
-          : targetNormHoursPerEmployee * (0.9 + Math.random() * 0.2); // ±10% вариация
+        // Для каждого сотрудника генерируем загрузку в диапазоне 85-125% по задачам в работе
+        const employeeWorkloadPercent = 85 + Math.random() * 40; // 85-125%
+        const employeeTargetNormHoursInWork = (employeeWorkloadPercent / 100) * WORK_HOURS_PER_MONTH;
         
-        remainingNormHours -= employeeTargetNormHours;
+        // Распределение задач в работе: assigned (10%), in_progress (5%), approval (4%) = 19% от общей загрузки
+        // Но мы хотим, чтобы загрузка по задачам в работе была 85-125%
+        // Поэтому генерируем задачи в работе с нормочасами, которые дают загрузку 85-125%
+        const assignedNormHours = employeeTargetNormHoursInWork * (10 / 19); // ~52.6%
+        const inProgressNormHours = employeeTargetNormHoursInWork * (5 / 19); // ~26.3%
+        const approvalNormHours = employeeTargetNormHoursInWork * (4 / 19); // ~21.1%
         
-        // Распределение: 70% выполнено/согласовано, 1% просрочено, 19% в работе (assigned + in_progress + approval)
-        // В загрузку идут только задачи в работе: assigned, in_progress, approval (не completed/approved)
-        const completedNormHours = employeeTargetNormHours * 0.70;
-        const overdueNormHours = employeeTargetNormHours * 0.01;
-        // Задачи в работе: assigned (10%), in_progress (5%), approval (4%) = 19% от общей загрузки
-        const assignedNormHours = employeeTargetNormHours * 0.10;
-        const inProgressNormHours = employeeTargetNormHours * 0.05;
-        const approvalNormHours = employeeTargetNormHours * 0.04;
+        // Для истории генерируем выполненные задачи (примерно в 3.7 раза больше, чем задачи в работе)
+        // Это нужно для реалистичности данных
+        const completedNormHours = employeeTargetNormHoursInWork * 3.7;
+        const overdueNormHours = employeeTargetNormHoursInWork * 0.05; // 5% от задач в работе
         
         const employeeRegion = employee.region;
         const businessUser = BUSINESS_USERS[Math.floor(Math.random() * BUSINESS_USERS.length)];

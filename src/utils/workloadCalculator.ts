@@ -207,14 +207,14 @@ export function calculateRegionCenterWorkload(
   workingEmployeesCount: number;
 } {
   // Фильтруем активных работающих сотрудников региона
-  // Исключаем сотрудников в командировках, отпусках и больничных
+  // Исключаем сотрудников в отпуске, больничном и командировке
   const workingEmployees = employees.filter(
-    emp => emp.isActive && (!emp.status || emp.status === 'working')
+    emp => emp.isActive && 
+           (!emp.status || emp.status === 'working') &&
+           emp.status !== 'sick_leave' &&
+           emp.status !== 'vacation' &&
+           emp.status !== 'business_trip'
   );
-  
-  // Создаем множества для быстрой проверки работающих сотрудников
-  const workingEmployeeIds = new Set(workingEmployees.map(emp => emp.id).filter(Boolean));
-  const workingEmployeeEmails = new Set(workingEmployees.map(emp => emp.email).filter(Boolean));
   
   // Получаем задачи региона
   const regionTasks = tasks.filter(task => {
@@ -223,7 +223,9 @@ export function calculateRegionCenterWorkload(
   });
   
   // Получаем задачи в работе (исключаем 'created' - они еще не распределены)
-  // И учитываем только задачи, назначенные на РАБОТАЮЩИХ сотрудников региона
+  // И учитываем только задачи, назначенные на сотрудников региона
+  const employeeEmails = new Set(workingEmployees.map(emp => emp.email).filter(Boolean));
+  
   const tasksInProgress = regionTasks.filter(task => {
     const status = (task.status || '').toString();
     
@@ -239,14 +241,13 @@ export function calculateRegionCenterWorkload(
     // Исключаем задачи со статусом 'created' - они еще не распределены руководителем
     if (status === 'created') return false;
     
-    // Проверяем, что задача назначена на РАБОТАЮЩЕГО сотрудника региона
-    // (не на сотрудника в отпуске, больничном или командировке)
-    const isAssignedToWorkingEmployee = 
-      (task.employeeId && workingEmployeeIds.has(task.employeeId)) ||
-      (task.currentAssignee && workingEmployeeEmails.has(task.currentAssignee)) ||
-      (Array.isArray(task.assignedTo) && task.assignedTo.some(email => workingEmployeeEmails.has(email)));
+    // Проверяем, что задача назначена на сотрудника региона
+    const isAssignedToEmployee = 
+      (task.currentAssignee && employeeEmails.has(task.currentAssignee)) ||
+      (Array.isArray(task.assignedTo) && task.assignedTo.some(email => employeeEmails.has(email))) ||
+      (task.employeeId && workingEmployees.some(emp => emp.id === task.employeeId));
     
-    if (!isAssignedToWorkingEmployee) return false;
+    if (!isAssignedToEmployee) return false;
     
     // Включаем только задачи, которые реально в работе у сотрудников
     return [
