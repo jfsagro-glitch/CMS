@@ -260,10 +260,10 @@ const KPIPage: React.FC = () => {
         const activeEmployees = employees.filter(
           emp => emp.isActive && 
                  !emp.isManager &&
-                 (!emp.status || emp.status === 'working') &&
                  emp.status !== 'sick_leave' &&
                  emp.status !== 'vacation' &&
-                 emp.status !== 'business_trip'
+                 emp.status !== 'business_trip' &&
+                 (!emp.status || emp.status === 'working')
         );
         
         // Получаем все задачи в работе для всех сотрудников (исключаем 'created')

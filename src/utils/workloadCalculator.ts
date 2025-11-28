@@ -210,10 +210,10 @@ export function calculateRegionCenterWorkload(
   // Исключаем сотрудников в отпуске, больничном и командировке
   const workingEmployees = employees.filter(
     emp => emp.isActive && 
-           (!emp.status || emp.status === 'working') &&
            emp.status !== 'sick_leave' &&
            emp.status !== 'vacation' &&
-           emp.status !== 'business_trip'
+           emp.status !== 'business_trip' &&
+           (!emp.status || emp.status === 'working')
   );
   
   // Получаем задачи региона

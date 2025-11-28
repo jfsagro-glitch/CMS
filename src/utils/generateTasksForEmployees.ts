@@ -214,22 +214,17 @@ export const generateTasksForEmployees = async (): Promise<void> => {
       const workingEmployees = centerEmployees.filter(
         emp => emp.isActive && 
                !emp.isManager &&
-               (!emp.status || emp.status === 'working') &&
                emp.status !== 'sick_leave' &&
                emp.status !== 'vacation' &&
-               emp.status !== 'business_trip'
+               emp.status !== 'business_trip' &&
+               (!emp.status || emp.status === 'working')
       );
       const managers = centerEmployees.filter(emp => emp.isActive && emp.isManager);
       
       if (workingEmployees.length === 0 || managers.length === 0) return;
       
-      // Целевая загрузка для центра по задачам в работе: 85-125%
-      // Это загрузка только по задачам в работе (assigned, in_progress, approval)
-      const targetWorkloadPercent = 85 + Math.random() * 40; // 85-125%
-      const targetNormHoursPerEmployeeInWork = (targetWorkloadPercent / 100) * WORK_HOURS_PER_MONTH;
-      
       // Распределяем нормочасы между сотрудниками
-      workingEmployees.forEach((employee, empIndex) => {
+      workingEmployees.forEach((employee) => {
         // Для каждого сотрудника генерируем загрузку в диапазоне 85-125% по задачам в работе
         const employeeWorkloadPercent = 85 + Math.random() * 40; // 85-125%
         const employeeTargetNormHoursInWork = (employeeWorkloadPercent / 100) * WORK_HOURS_PER_MONTH;
