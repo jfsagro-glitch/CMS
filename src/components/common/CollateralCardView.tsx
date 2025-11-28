@@ -161,8 +161,10 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
     }
   };
 
-  // Определяем, требуется ли осмотр для данного типа объекта
-  const objectType = card.classification?.level2 || '';
+  // Определяем, требуется ли осмотр / выписка ЕГРН для данного типа объекта
+  // Берём именно "Тип имущества" из карточки (propertyType), так как таблица требований
+  // составлена по этим названиям. Если его нет, используем классификацию level2.
+  const objectType = card.propertyType || card.classification?.level2 || '';
   const needsInspection = useMemo(() => requiresInspection(objectType), [objectType]);
   const needsEgrn = useMemo(() => requiresEgrn(objectType), [objectType]);
 
