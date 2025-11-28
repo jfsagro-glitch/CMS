@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from './store/hooks';
 import { setInitialized, setSettings } from './store/slices/appSlice';
 import { setCards } from './store/slices/cardsSlice';
 import extendedStorageService from './services/ExtendedStorageService';
+import employeeService from './services/EmployeeService';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DemoDataProvider } from './contexts/DemoDataContext';
 import MainLayout from './components/layout/MainLayout';
