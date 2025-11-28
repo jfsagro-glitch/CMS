@@ -4,7 +4,7 @@
 
 import employeeService from '@/services/EmployeeService';
 import type { Employee } from '@/types/employee';
-import { REGION_CENTERS } from '@/utils/regionCenters';
+import { REGION_CENTERS, getRegionCenterByCity } from '@/utils/regionCenters';
 import type { RegionCenter } from '@/utils/regionCenters';
 
 /**
@@ -12,6 +12,10 @@ import type { RegionCenter } from '@/utils/regionCenters';
  */
 const convertEmployeeToZadachnikFormat = (employee: Employee) => {
   const fullName = `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim();
+
+  // Определяем региональный центр по городу/региону сотрудника
+  const center = employee.region ? getRegionCenterByCity(employee.region) : null;
+  const regionName = center ? center.name : employee.region;
   
   // Определяем роль: руководитель -> 'manager', остальные -> 'employee'
   // В системе могут быть также роли 'business' (Бизнес) и 'superuser' (Суперпользователь)
@@ -26,7 +30,7 @@ const convertEmployeeToZadachnikFormat = (employee: Employee) => {
     email: employee.email,
     name: fullName,
     role: role,
-    region: employee.region,
+    region: regionName,
     position: employee.position,
     department: employee.department,
   };

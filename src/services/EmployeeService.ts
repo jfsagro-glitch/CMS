@@ -302,8 +302,9 @@ class EmployeeService {
             firstName,
             middleName,
             position,
-            // В качестве "региона" используем региональный центр, а не город
-            region: center.name,
+            // В качестве "региона" для CMS сохраняем город,
+            // а региональный центр вычисляем при синхронизации с Задачником
+            region: city,
             email,
             phone,
             department,
@@ -325,6 +326,7 @@ class EmployeeService {
           });
           
           globalIndex++;
+          regionEmployeeIndex++;
         }
       });
     });
