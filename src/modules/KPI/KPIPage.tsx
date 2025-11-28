@@ -255,10 +255,20 @@ const KPIPage: React.FC = () => {
         }
 
         // Расчет текущей загрузки
+        // Учитываем только работающих сотрудников (исключаем в командировках, отпусках, больничных)
         const employees = employeeService.getEmployees();
-        const activeEmployees = employees.filter(emp => emp.isActive && (!emp.status || emp.status === 'working') && !emp.isManager);
+        const activeEmployees = employees.filter(emp => 
+          emp.isActive && 
+          (!emp.status || emp.status === 'working') && 
+          !emp.isManager
+        );
         
-        // Получаем все задачи в работе для всех сотрудников (исключаем 'created')
+        // Создаем множества для быстрой проверки работающих сотрудников
+        const activeEmployeeIds = new Set(activeEmployees.map(emp => emp.id).filter(Boolean));
+        const activeEmployeeEmails = new Set(activeEmployees.map(emp => emp.email).filter(Boolean));
+        
+        // Получаем все задачи в работе для всех РАБОТАЮЩИХ сотрудников (исключаем 'created')
+        // Исключаем задачи, назначенные на сотрудников в командировках, отпусках, больничных
         const allTasksInProgress: TaskDB[] = tasksData.filter(task => {
           const status = (task.status || '').toString();
           const isCompleted = status === 'completed' || status === 'Выполнено' || status === 'done' || status === 'approved';
@@ -267,11 +277,14 @@ const KPIPage: React.FC = () => {
           const isInWorkStatus = ['assigned', 'in_progress', 'in-progress', 'review', 'rework', 'paused', 'approval'].includes(status);
           if (!isInWorkStatus) return false;
           
-          // Проверяем, что задача назначена на активного сотрудника
-          return activeEmployees.some(emp => 
-            (emp.id && task.employeeId === emp.id) ||
-            (emp.email && (task.currentAssignee === emp.email || (Array.isArray(task.assignedTo) && task.assignedTo.includes(emp.email))))
-          );
+          // Проверяем, что задача назначена на РАБОТАЮЩЕГО сотрудника
+          // (не на сотрудника в отпуске, больничном или командировке)
+          const isAssignedToWorkingEmployee = 
+            (task.employeeId && activeEmployeeIds.has(task.employeeId)) ||
+            (task.currentAssignee && activeEmployeeEmails.has(task.currentAssignee)) ||
+            (Array.isArray(task.assignedTo) && task.assignedTo.some(email => activeEmployeeEmails.has(email)));
+          
+          return isAssignedToWorkingEmployee;
         });
         
         // Убираем дубликаты задач

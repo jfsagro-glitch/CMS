@@ -210,6 +210,7 @@ export const generateTasksForEmployees = async (): Promise<void> => {
     // Генерируем задачи для каждого регионального центра
     REGION_CENTERS.forEach(center => {
       const centerEmployees = employeesByCenter[center.code] || [];
+      // Фильтруем только работающих сотрудников (исключаем в командировках, отпусках, больничных)
       const workingEmployees = centerEmployees.filter(
         emp => emp.isActive && (!emp.status || emp.status === 'working') && !emp.isManager
       );
@@ -218,6 +219,7 @@ export const generateTasksForEmployees = async (): Promise<void> => {
       if (workingEmployees.length === 0 || managers.length === 0) return;
       
       // Целевая загрузка для центра: 85-125%
+      // Загрузка рассчитывается только для работающих сотрудников
       const targetWorkloadPercent = 85 + Math.random() * 40; // 85-125%
       const targetNormHoursPerEmployee = (targetWorkloadPercent / 100) * WORK_HOURS_PER_MONTH;
       const totalTargetNormHours = targetNormHoursPerEmployee * workingEmployees.length;
