@@ -1,6 +1,6 @@
 {
   "name": "cms-collateral-management",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "CMS для управления залоговым имуществом",
   "homepage": "https://jfsagro-glitch.github.io/cms/",
   "type": "module",

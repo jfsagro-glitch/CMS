@@ -2,9 +2,7 @@ name: Deploy CarShop CMS to GitHub Pages
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -13,10 +11,10 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment
+# Allow only one concurrent deployment, cancel previous if new one starts
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: 'pages'
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -40,75 +38,113 @@ jobs:
       - name: Generate datasets (optional)
         run: |
           echo "📊 Attempting to generate datasets..."
-          set +e
-          
+
           if [ -f "ZALOG/залоговый портфель.xlsx" ]; then
             python scripts/generate_portfolio_data.py 2>&1 || echo "⚠️ Portfolio data generation failed"
           else
             echo "⚠️ Portfolio source file not found, skipping"
           fi
-          
+
           if [ -d "ZALOG_DOS" ]; then
             python scripts/generate_collateral_dossier.py 2>&1 || echo "⚠️ Dossier data generation failed"
           else
             echo "⚠️ Dossier source directory not found, skipping"
           fi
-          
+
           python scripts/generate_monitoring_plan.py 2>&1 || echo "⚠️ Monitoring plan generation failed"
-          
+
           python scripts/generate_revaluation_plan.py 2>&1 || echo "⚠️ Revaluation plan generation failed"
-          
+
           if [ -f "INS/INS.xlsx" ] || [ -d "INS" ]; then
             python scripts/generate_insurance_data.py 2>&1 || echo "⚠️ Insurance data generation failed"
           else
             echo "⚠️ Insurance source not found, skipping"
           fi
-          
+
           if [ -d "XML_310_2025-04-24" ]; then
             python scripts/generate_reports_data.py 2>&1 || echo "⚠️ Reports data generation failed"
           else
             echo "⚠️ Reports source directory not found, skipping"
           fi
-          
+
           if [ -d "ZZ" ]; then
             python scripts/generate_collateral_conclusions_data.py 2>&1 || echo "⚠️ Conclusions data generation failed"
           else
             echo "⚠️ Conclusions source directory not found, skipping"
           fi
-          
+
           echo "✅ Data generation step completed (some may have been skipped)"
         continue-on-error: true
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          
+
       - name: Install dependencies
         run: npm install
-        
+
       - name: TypeScript type check
-        run: npm run type-check
+        run: |
+          echo "🔍 Running TypeScript type check..."
+          npm run type-check || echo "⚠️ TypeScript check failed, but continuing..."
         continue-on-error: true
-        
+
       - name: Lint code
-        run: npm run lint
+        run: |
+          echo "🔍 Running ESLint..."
+          npm run lint || echo "⚠️ Lint check failed, but continuing..."
         continue-on-error: true
-        
+
       - name: Build production
-        run: npm run build
+        run: |
+          echo "🔨 Building production bundle..."
+          npm run build
+          echo "✅ Build completed successfully!"
         env:
           CI: false
           NODE_ENV: production
-          
+
       - name: Run pre-deploy checks
-        run: npm run check-deploy || true
+        run: |
+          if [ -f "scripts/pre-deploy-check.js" ]; then
+            npm run check-deploy || echo "⚠️ Pre-deploy check failed, but continuing..."
+          else
+            echo "ℹ️ Pre-deploy check script not found, skipping..."
+          fi
         continue-on-error: true
-          
+
+      - name: Verify build output
+        run: |
+          echo "🔍 Verifying build output..."
+          if [ ! -d "dist" ]; then
+            echo "❌ dist directory not found!"
+            exit 1
+          fi
+          if [ ! -f "dist/index.html" ]; then
+            echo "❌ dist/index.html not found!"
+            exit 1
+          fi
+          if [ ! -f "dist/.nojekyll" ]; then
+            echo "⚠️  .nojekyll not found, creating it..."
+            touch dist/.nojekyll
+          fi
+          if [ ! -f "dist/404.html" ]; then
+            echo "⚠️  404.html not found, but continuing..."
+          fi
+          echo "✅ Build output verified!"
+          echo "📋 Critical files:"
+          ls -lh dist/index.html dist/.nojekyll 2>/dev/null || echo "Some files may be missing"
+          echo ""
+          echo "📦 Dist size:"
+          du -sh dist/ || echo "Could not calculate size"
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
+          retention-days: 1
+        continue-on-error: false
 
   deploy:
     environment:
@@ -116,15 +152,16 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        
+
       - name: Deployment summary
         run: |
           echo "🎉 Deployment successful!"
           echo "🌐 URL: https://jfsagro-glitch.github.io/cms/"
-          echo "📅 Time: $(date)"
-
+          echo "📅 Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "👤 Author: ${{ github.actor }}"

@@ -3,37 +3,12 @@
  */
 
 import employeeService from '@/services/EmployeeService';
+import extendedStorageService from '@/services/ExtendedStorageService';
+import type { TaskDB } from '@/services/ExtendedStorageService';
 import dayjs from 'dayjs';
 
-interface Task {
-  id: string;
-  region: string;
-  type: string;
-  title: string;
-  description?: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  dueDate: string;
-  status: 'created' | 'pending' | 'in_progress' | 'completed' | 'Выполнено' | 'В работе';
-  businessUser: string;
-  businessUserName: string;
-  assignedTo: string[];
-  currentAssignee: string | null;
-  currentAssigneeName: string | null;
-  employeeId?: string;
-  documents: any[];
-  comments: any[];
-  createdAt: string;
-  updatedAt: string;
-  completedAt?: string;
-  history: Array<{
-    date: string;
-    user: string;
-    userRole: string;
-    action: string;
-    comment?: string;
-    status: string;
-  }>;
-}
+// Используем TaskDB из ExtendedStorageService
+type Task = TaskDB;
 
 // Типы задач из Задачника
 const TASK_TYPES = [
@@ -228,7 +203,7 @@ const getTaskDescription = (type: string, title: string, region: string): string
 /**
  * Генерация задач для всех сотрудников в формате Задачника
  */
-export const generateTasksForEmployees = (): void => {
+export const generateTasksForEmployees = async (): Promise<void> => {
   try {
     const employees = employeeService.getEmployees().filter(emp => emp.isActive);
     const tasks: Task[] = [];
@@ -238,11 +213,28 @@ export const generateTasksForEmployees = (): void => {
       // Генерируем 60-80 задач на сотрудника для полной статистики
       const tasksCount = 60 + Math.floor(Math.random() * 21); // 60-80 задач
       
-      // Распределение: большая часть выполнена, 2-3% просрочена, остальные в работе
-      // Для более реалистичной статистики
-      const completedCount = Math.floor(tasksCount * 0.82); // 82% выполнено
-      const overdueCount = Math.max(1, Math.floor(tasksCount * 0.02)); // 2% просрочено (минимум 1)
-      const pendingCount = tasksCount - completedCount - overdueCount; // остальные в работе (16%)
+      // Распределение: большая часть выполнена, 1% просрочена, остальные в работе
+      const completedCount = Math.floor(tasksCount * 0.85); // 85% выполнено
+      const overdueCount = Math.max(1, Math.floor(tasksCount * 0.01)); // 1% просрочено (минимум 1)
+      const pendingCount = tasksCount - completedCount - overdueCount; // остальные в работе
+      
+      // Создаем список всех типов задач для равномерного распределения
+      const allTaskTypes = [...TASK_TYPES];
+      const taskTypesPool: string[] = [];
+      
+      // Заполняем пул типами задач, чтобы каждый тип встречался примерно одинаково
+      const tasksPerType = Math.ceil(tasksCount / allTaskTypes.length);
+      for (let i = 0; i < tasksPerType; i++) {
+        taskTypesPool.push(...allTaskTypes);
+      }
+      
+      // Перемешиваем пул для случайного распределения
+      for (let i = taskTypesPool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [taskTypesPool[i], taskTypesPool[j]] = [taskTypesPool[j], taskTypesPool[i]];
+      }
+      
+      let taskTypeIndex = 0;
       
       // Определяем регион сотрудника
       const employeeRegion = employee.region;
@@ -253,9 +245,6 @@ export const generateTasksForEmployees = (): void => {
       // Полное имя сотрудника
       const employeeFullName = `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim();
       
-      // Счетчик для циклического использования всех типов задач
-      let typeIndexCounter = 0;
-      
       // Генерируем выполненные задачи
       for (let i = 0; i < completedCount; i++) {
         const daysAgo = Math.floor(Math.random() * 90); // выполнены в последние 90 дней
@@ -263,9 +252,9 @@ export const generateTasksForEmployees = (): void => {
         const completedAt = createdAt.add(Math.floor(Math.random() * 20), 'day');
         const dueDate = completedAt.add(Math.floor(Math.random() * 10), 'day');
         
-        // Циклически используем все типы задач для равномерного распределения
-        const taskType = TASK_TYPES[typeIndexCounter % TASK_TYPES.length];
-        typeIndexCounter++;
+        // Используем тип задачи из пула для равномерного распределения
+        const taskType = taskTypesPool[taskTypeIndex % taskTypesPool.length];
+        taskTypeIndex++;
         const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'];
         const title = titles[Math.floor(Math.random() * titles.length)];
         const description = getTaskDescription(taskType, title, employeeRegion);
@@ -321,9 +310,9 @@ export const generateTasksForEmployees = (): void => {
         const createdAt = now.subtract(60 + daysOverdue, 'day');
         const dueDate = now.subtract(daysOverdue, 'day');
         
-        // Используем разные типы задач для просроченных
-        const taskType = TASK_TYPES[typeIndexCounter % TASK_TYPES.length];
-        typeIndexCounter++;
+        // Используем тип задачи из пула для равномерного распределения
+        const taskType = taskTypesPool[taskTypeIndex % taskTypesPool.length];
+        taskTypeIndex++;
         const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'];
         const title = titles[Math.floor(Math.random() * titles.length)];
         const description = getTaskDescription(taskType, title, employeeRegion);
@@ -335,6 +324,7 @@ export const generateTasksForEmployees = (): void => {
           id: taskId,
           region: employeeRegion,
           type: taskType,
+          category: taskType, // Добавляем category для совместимости
           title,
           description,
           priority: Math.random() > 0.5 ? 'high' : 'medium',
@@ -378,9 +368,9 @@ export const generateTasksForEmployees = (): void => {
         const daysUntilDue = Math.floor(Math.random() * 30) + 1; // срок выполнения через 1-30 дней
         const dueDate = now.add(daysUntilDue, 'day');
         
-        // Используем разные типы задач для задач в работе
-        const taskType = TASK_TYPES[typeIndexCounter % TASK_TYPES.length];
-        typeIndexCounter++;
+        // Используем тип задачи из пула для равномерного распределения
+        const taskType = taskTypesPool[taskTypeIndex % taskTypesPool.length];
+        taskTypeIndex++;
         const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'];
         const title = titles[Math.floor(Math.random() * titles.length)];
         const description = getTaskDescription(taskType, title, employeeRegion);
@@ -393,6 +383,7 @@ export const generateTasksForEmployees = (): void => {
           id: taskId,
           region: employeeRegion,
           type: taskType,
+          category: taskType, // Добавляем category для совместимости
           title,
           description,
           priority: Math.random() > 0.6 ? 'high' : Math.random() > 0.3 ? 'medium' : 'low',
@@ -430,13 +421,42 @@ export const generateTasksForEmployees = (): void => {
       }
     });
     
-    // Сохраняем задачи в localStorage (формат zadachnik)
-    localStorage.setItem('zadachnik_tasks', JSON.stringify(tasks));
+    // Сохраняем задачи в IndexedDB (не в localStorage, так как данные слишком большие)
+    try {
+      await extendedStorageService.saveTasks(tasks);
+      console.log(`✅ Задачи сохранены в IndexedDB (${tasks.length} задач)`);
+      
+      // Пытаемся очистить старые данные из localStorage, если они есть
+      try {
+        localStorage.removeItem('zadachnik_tasks');
+      } catch (e) {
+        // Игнорируем ошибку, если не удалось удалить (не критично)
+      }
+    } catch (error) {
+      console.error('Ошибка сохранения задач в IndexedDB:', error);
+      throw error;
+    }
     
-    console.log(`✅ Сгенерировано ${tasks.length} задач для ${employees.length} сотрудников`);
-    console.log(`   - Выполнено: ${tasks.filter(t => t.status === 'completed').length}`);
-    console.log(`   - В работе: ${tasks.filter(t => t.status === 'in_progress' || t.status === 'created').length}`);
-    console.log(`   - Просрочено: ${tasks.filter(t => dayjs(t.dueDate).isBefore(dayjs(), 'day') && t.status !== 'completed').length}`);
+    // НЕ сохраняем в localStorage, так как данные слишком большие
+    // Все данные теперь хранятся в IndexedDB, а чтение из localStorage используется только как fallback
+    
+    // Статистика по типам задач
+    const tasksByType = tasks.reduce((acc, task) => {
+      acc[task.type] = (acc[task.type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const activeEmployees = employees.filter(emp => emp.isActive);
+    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    const inProgressTasks = tasks.filter(t => t.status === 'in_progress' || t.status === 'created').length;
+    const overdueTasks = tasks.filter(t => dayjs(t.dueDate).isBefore(dayjs(), 'day') && t.status !== 'completed').length;
+    
+    console.log(`✅ Сгенерировано ${tasks.length} задач для ${activeEmployees.length} активных сотрудников`);
+    console.log(`   - Среднее количество задач на сотрудника: ${(tasks.length / activeEmployees.length).toFixed(1)}`);
+    console.log(`   - Выполнено: ${completedTasks} (${((completedTasks / tasks.length) * 100).toFixed(1)}%)`);
+    console.log(`   - В работе: ${inProgressTasks} (${((inProgressTasks / tasks.length) * 100).toFixed(1)}%)`);
+    console.log(`   - Просрочено: ${overdueTasks} (${((overdueTasks / tasks.length) * 100).toFixed(1)}%)`);
+    console.log(`   - Распределение по типам задач:`, Object.entries(tasksByType).map(([type, count]) => `${type}: ${count}`).join(', '));
   } catch (error) {
     console.error('Ошибка генерации задач:', error);
     throw error;

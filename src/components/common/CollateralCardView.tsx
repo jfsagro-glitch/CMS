@@ -9,6 +9,7 @@ import {
   LinkOutlined,
   ExclamationCircleOutlined,
   CameraOutlined,
+  FileSearchOutlined,
 } from '@ant-design/icons';
 import type { ExtendedCollateralCard } from '../../types';
 import { getAttributesForPropertyType, distributeAttributesByTabs } from '@/utils/collateralAttributesFromDict';
@@ -16,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import inspectionService from '@/services/InspectionService';
 import InspectionCardModal from '@/components/InspectionCardModal/InspectionCardModal';
 import type { Inspection } from '@/types/inspection';
+import { requiresInspection, requiresEgrn } from '@/utils/objectTypeRequirements';
 import dayjs from 'dayjs';
 import './CollateralCardView.css';
 
@@ -159,6 +161,11 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
     }
   };
 
+  // Определяем, требуется ли осмотр для данного типа объекта
+  const objectType = card.classification?.level2 || '';
+  const needsInspection = useMemo(() => requiresInspection(objectType), [objectType]);
+  const needsEgrn = useMemo(() => requiresEgrn(objectType), [objectType]);
+
   // Форматирование значения атрибута
   const formatAttributeValue = (value: any): string => {
     if (value === null || value === undefined || value === '') return '—';
@@ -287,7 +294,8 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
               Перейти в Залоговое досье
             </Button>
             
-            {card.mainCategory === 'real_estate' && (
+            {/* Выписка ЕГРН показывается только для типов объектов, где требуется ЕГРН */}
+            {needsEgrn && (
               <div>
                 <Descriptions bordered column={1} size="small">
                   <Descriptions.Item label="Дата выписки ЕГРН">
@@ -401,7 +409,8 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
         </div>
       ),
     },
-    {
+    // Вкладка "Осмотры" показывается только для типов объектов, где требуется осмотр
+    ...(needsInspection ? [{
       key: '7',
       label: (
         <Space>
@@ -480,7 +489,55 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
           </Button>
         </div>
       ),
-    },
+    }] : []),
+    // Вкладка "Выписка ЕГРН" показывается только для типов объектов, где требуется ЕГРН
+    ...(needsEgrn ? [{
+      key: '8',
+      label: (
+        <Space>
+          <FileSearchOutlined />
+          Выписка ЕГРН
+        </Space>
+      ),
+      children: (
+        <div>
+          <Descriptions bordered column={1} size="small">
+            <Descriptions.Item label="Дата выписки ЕГРН">
+              {card.egrnStatementDate ? dayjs(card.egrnStatementDate).format('DD.MM.YYYY') : '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Кадастровый номер">
+              {card.address?.cadastralNumber || card.characteristics?.objectCadastralNumber || '—'}
+            </Descriptions.Item>
+          </Descriptions>
+          
+          <Divider />
+          
+          <Space direction="vertical" style={{ width: '100%' }}>
+            {shouldShowOrderEgrnButton && (
+              <Button
+                type="primary"
+                danger
+                icon={<ExclamationCircleOutlined />}
+                onClick={handleOrderEgrn}
+              >
+                Заказать выписку ЕГРН (выписка более 30 дней)
+              </Button>
+            )}
+            
+            <Button
+              type="default"
+              icon={<FileSearchOutlined />}
+              onClick={() => {
+                const cadastralNumber = card.address?.cadastralNumber || card.characteristics?.objectCadastralNumber;
+                navigate(`/egrn?objectId=${card.id}&cadastralNumber=${cadastralNumber}&objectName=${encodeURIComponent(card.name || '')}`);
+              }}
+            >
+              Перейти в модуль ЕГРН
+            </Button>
+          </Space>
+        </div>
+      ),
+    }] : []),
   ];
 
   return (

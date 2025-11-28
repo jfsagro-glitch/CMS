@@ -50,6 +50,38 @@ export interface KnowledgeSearchIndexDB {
   topicIds: string[];
 }
 
+// Интерфейс для задач (Zadachnik)
+export interface TaskDB {
+  id: string;
+  region: string;
+  type: string;
+  title: string;
+  description?: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  dueDate: string;
+  status: string;
+  businessUser: string;
+  businessUserName: string;
+  assignedTo: string[];
+  currentAssignee: string | null;
+  currentAssigneeName: string | null;
+  employeeId?: string;
+  documents: any[];
+  comments: any[];
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+  history: Array<{
+    date: string;
+    user: string;
+    userRole: string;
+    action: string;
+    comment?: string;
+    status: string;
+  }>;
+  category?: string;
+}
+
 // Расширенная схема базы данных
 class ExtendedCMSDatabase extends Dexie {
   collateralCards!: Table<ExtendedCollateralCard, string>;
@@ -62,6 +94,7 @@ class ExtendedCMSDatabase extends Dexie {
   knowledgeTopics!: Table<KnowledgeTopicDB, string>;
   knowledgeCategories!: Table<KnowledgeCategoryDB, string>;
   knowledgeSearchIndex!: Table<KnowledgeSearchIndexDB, string>;
+  tasks!: Table<TaskDB, string>;
 
   constructor() {
     super('CMSDatabase');
@@ -118,6 +151,65 @@ class ExtendedCMSDatabase extends Dexie {
     }).upgrade(async () => {
       // Миграция данных из версии 4
       console.log('Upgrading database to version 5...');
+    });
+
+    // Версия 6 с таблицей для задач
+    this.version(6).stores({
+      collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
+      partners: 'id, type, role, inn, lastName, organizationName',
+      documents: 'id, name, type, category, uploadDate',
+      settings: 'id',
+      inspections: 'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
+      documentIndexes: 'documentName',
+      documentChunks: 'id, documentName, page',
+      knowledgeTopics: 'id, category',
+      knowledgeCategories: 'id',
+      knowledgeSearchIndex: 'keyword',
+      tasks: 'id, employeeId, region, status, type, dueDate, createdAt'
+    }).upgrade(async (tx) => {
+      // Миграция задач из localStorage в IndexedDB
+      console.log('Upgrading database to version 6: migrating tasks from localStorage...');
+      try {
+        let tasksJson: string | null = null;
+        try {
+          tasksJson = localStorage.getItem('zadachnik_tasks');
+        } catch (error) {
+          // Если не удалось прочитать из localStorage (например, QuotaExceededError), просто пропускаем миграцию
+          console.warn('Не удалось прочитать задачи из localStorage (возможно, данные слишком большие), пропускаем миграцию');
+          return;
+        }
+        
+        if (tasksJson) {
+          try {
+            const tasks = JSON.parse(tasksJson);
+            if (Array.isArray(tasks) && tasks.length > 0) {
+              // Сохраняем задачи батчами по 1000
+              const batchSize = 1000;
+              for (let i = 0; i < tasks.length; i += batchSize) {
+                const batch = tasks.slice(i, i + batchSize);
+                await tx.table('tasks').bulkPut(batch);
+              }
+              console.log(`✅ Мигрировано ${tasks.length} задач из localStorage в IndexedDB`);
+              // Удаляем из localStorage после успешной миграции
+              try {
+                localStorage.removeItem('zadachnik_tasks');
+              } catch (e) {
+                console.warn('Не удалось удалить задачи из localStorage (не критично)');
+              }
+            }
+          } catch (parseError) {
+            console.error('Ошибка парсинга задач из localStorage:', parseError);
+            // Пытаемся очистить поврежденные данные
+            try {
+              localStorage.removeItem('zadachnik_tasks');
+            } catch (e) {
+              // Игнорируем ошибку удаления
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка миграции задач:', error);
+      }
     });
   }
 }
@@ -378,6 +470,76 @@ class ExtendedStorageService {
       });
     } catch (error) {
       console.error('Failed to save settings:', error);
+      throw error;
+    }
+  }
+
+  // ============ Задачи (Zadachnik) ============
+
+  // Получить все задачи
+  async getTasks(): Promise<TaskDB[]> {
+    try {
+      return await this.db.tasks.toArray();
+    } catch (error) {
+      console.error('Failed to get tasks:', error);
+      throw error;
+    }
+  }
+
+  // Сохранить задачи (батчами)
+  async saveTasks(tasks: TaskDB[]): Promise<void> {
+    try {
+      // Очищаем старые задачи перед сохранением новых
+      await this.db.tasks.clear();
+      
+      // Сохраняем батчами по 1000 для производительности
+      const batchSize = 1000;
+      for (let i = 0; i < tasks.length; i += batchSize) {
+        const batch = tasks.slice(i, i + batchSize);
+        await this.db.tasks.bulkPut(batch);
+      }
+    } catch (error) {
+      console.error('Failed to save tasks:', error);
+      throw error;
+    }
+  }
+
+  // Добавить или обновить задачу
+  async saveTask(task: TaskDB): Promise<void> {
+    try {
+      await this.db.tasks.put(task);
+    } catch (error) {
+      console.error('Failed to save task:', error);
+      throw error;
+    }
+  }
+
+  // Удалить задачу
+  async deleteTask(taskId: string): Promise<void> {
+    try {
+      await this.db.tasks.delete(taskId);
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      throw error;
+    }
+  }
+
+  // Получить задачи по employeeId
+  async getTasksByEmployeeId(employeeId: string): Promise<TaskDB[]> {
+    try {
+      return await this.db.tasks.where('employeeId').equals(employeeId).toArray();
+    } catch (error) {
+      console.error('Failed to get tasks by employeeId:', error);
+      throw error;
+    }
+  }
+
+  // Получить задачи по региону
+  async getTasksByRegion(region: string): Promise<TaskDB[]> {
+    try {
+      return await this.db.tasks.where('region').equals(region).toArray();
+    } catch (error) {
+      console.error('Failed to get tasks by region:', error);
       throw error;
     }
   }

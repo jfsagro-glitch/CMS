@@ -1,0 +1,14 @@
+# deploy.ps1 — автокоммит и автодеплой
+
+cd "C:\Users\79184.WIN-OOR1JAM5834\carshop-bot\CMS"
+
+git add .
+git commit -m "auto: обновление CMS и автодеплой" || echo "Нет изменений для коммита"
+git push origin main
+
+# Пустой коммит для гарантированного триггера (если выше не было изменений)
+git commit --allow-empty -m "deploy: авто-триггер" 
+git push origin main
+
+Write-Host "`n✅ Коммиты отправлены, деплой запущен!" -ForegroundColor Green
+Write-Host "🔗 Статус: https://github.com/jfsagro-glitch/CMS/actions" -ForegroundColor Cyan

@@ -81,15 +81,29 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ visible, deal, onCanc
       const values = await form.validateFields();
       setLoading(true);
 
-      // Получаем текущие задачи из Задачника
-      const tasksData = localStorage.getItem('zadachnik_tasks');
-      const tasks = tasksData ? JSON.parse(tasksData) : [];
+      // Получаем текущие задачи из IndexedDB (с fallback на localStorage)
+      const extendedStorageService = (await import('@/services/ExtendedStorageService')).default;
+      let tasks: any[] = [];
+      try {
+        tasks = await extendedStorageService.getTasks();
+      } catch (error) {
+        // Fallback на localStorage
+        try {
+          const tasksData = localStorage.getItem('zadachnik_tasks');
+          if (tasksData) {
+            tasks = JSON.parse(tasksData);
+          }
+        } catch (e) {
+          console.warn('Не удалось загрузить задачи:', e);
+        }
+      }
 
       // Создаем новую задачу
       const newTask = {
-        id: `T-${Date.now()}`,
+        id: `T-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         region: values.region,
         type: values.type,
+        category: values.type, // Добавляем category для совместимости
         title: values.title,
         description: values.description || '',
         priority: values.priority,
@@ -102,6 +116,9 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ visible, deal, onCanc
         currentAssigneeName: values.assignedTo?.[0] 
           ? employees.find(e => e.email === values.assignedTo[0])?.name 
           : null,
+        employeeId: values.assignedTo?.[0] 
+          ? employees.find(e => e.email === values.assignedTo[0])?.id 
+          : undefined,
         documents: [],
         comments: [],
         createdAt: new Date().toISOString(),
@@ -120,7 +137,16 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ visible, deal, onCanc
 
       // Добавляем задачу
       tasks.push(newTask);
-      localStorage.setItem('zadachnik_tasks', JSON.stringify(tasks));
+      
+      // Сохраняем в IndexedDB
+      try {
+        await extendedStorageService.saveTasks(tasks);
+      } catch (error) {
+        console.error('Ошибка сохранения задачи в IndexedDB:', error);
+        message.error('Не удалось сохранить задачу. Попробуйте еще раз.');
+        setLoading(false);
+        return;
+      }
 
       message.success('Задача успешно создана в Задачнике');
       form.resetFields();

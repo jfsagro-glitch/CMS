@@ -57,8 +57,20 @@ if (fs.existsSync(indexHtmlPath)) {
 }
 
 // 2. Создаем .nojekyll для отключения Jekyll processing на GitHub Pages
-fs.writeFileSync(noJekyllPath, '');
-console.log('✅ Created .nojekyll file');
+try {
+  fs.writeFileSync(noJekyllPath, '');
+  console.log('✅ Created .nojekyll file in dist/');
+  
+  // Также создаем .nojekyll в корне репозитория для надежности
+  const rootNoJekyllPath = path.join(__dirname, '../.nojekyll');
+  if (!fs.existsSync(rootNoJekyllPath)) {
+    fs.writeFileSync(rootNoJekyllPath, '');
+    console.log('✅ Created .nojekyll file in root directory');
+  }
+} catch (error) {
+  console.error('❌ Error creating .nojekyll:', error);
+  process.exit(1);
+}
 
 // 3. Копируем папку INSTRUCTION в dist
 if (fs.existsSync(instructionSourceDir)) {

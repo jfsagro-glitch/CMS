@@ -43,6 +43,17 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     const initApp = async () => {
       try {
+        // Очищаем старые задачи из localStorage, если они слишком большие (чтобы избежать QuotaExceededError)
+        // Пытаемся удалить сразу, без чтения, чтобы избежать QuotaExceededError при чтении
+        try {
+          // Просто удаляем старые данные, если они есть
+          localStorage.removeItem('zadachnik_tasks');
+          console.log('✅ Очищены старые задачи из localStorage (данные теперь в IndexedDB)');
+        } catch (error) {
+          // Если не удалось удалить, просто продолжаем (не критично)
+          console.warn('Не удалось очистить задачи из localStorage (не критично):', error);
+        }
+
         // Инициализация расширенной базы данных
         await extendedStorageService.initDatabase();
 
@@ -74,24 +85,41 @@ const AppContent: React.FC = () => {
           const { syncEmployeesToZadachnik } = await import('./utils/syncEmployeesToZadachnik');
           syncEmployeesToZadachnik();
           
-          // Проверяем, есть ли задачи, если нет - генерируем разово
-          // Задачи фиксируются и не перегенерируются автоматически
-          const existingTasks = localStorage.getItem('zadachnik_tasks');
-          const tasksData = existingTasks ? JSON.parse(existingTasks) : [];
+          // Проверяем наличие сотрудников
+          const employees = employeeService.getEmployees();
+          const activeEmployees = employees.filter(emp => emp.isActive);
           
-          // Импортируем employeeService для проверки сотрудников
-          const employeeServiceModule = await import('./services/EmployeeService');
-          const employeeService = employeeServiceModule.default;
-          const employees = employeeService.getEmployees().filter((emp: any) => emp.isActive);
+          // Проверяем, есть ли задачи, и достаточно ли их (минимум 60 задач на сотрудника)
+          let tasksData: any[] = [];
+          try {
+            tasksData = await extendedStorageService.getTasks();
+          } catch (error) {
+            // Fallback на localStorage (только если IndexedDB недоступен)
+            try {
+              const existingTasks = localStorage.getItem('zadachnik_tasks');
+              if (existingTasks) {
+                // Проверяем размер перед парсингом
+                if (existingTasks.length < 4 * 1024 * 1024) { // Только если меньше 4MB
+                  tasksData = JSON.parse(existingTasks);
+                } else {
+                  console.warn('Задачи в localStorage слишком большие, используем только IndexedDB');
+                }
+              }
+            } catch (e) {
+              console.warn('Не удалось загрузить задачи из localStorage:', e);
+            }
+          }
+
+          const minTasksPerEmployee = 60;
+          const expectedMinTasks = activeEmployees.length * minTasksPerEmployee;
           
-          // Проверяем, есть ли задачи для всех активных сотрудников
-          const employeesWithTasks = new Set(tasksData.map((task: any) => task.employeeId).filter(Boolean));
-          const allEmployeesHaveTasks = employees.every((emp: any) => employeesWithTasks.has(emp.id));
-          
-          if (!existingTasks || tasksData.length === 0 || !allEmployeesHaveTasks) {
+          if (!tasksData || tasksData.length === 0 || tasksData.length < expectedMinTasks) {
             const { generateTasksForEmployees } = await import('./utils/generateTasksForEmployees');
-            generateTasksForEmployees();
-            console.log('✅ Задачи для сотрудников сгенерированы автоматически (разовая фиксация)');
+            await generateTasksForEmployees();
+            tasksData = await extendedStorageService.getTasks();
+            console.log(`✅ Сгенерировано ${tasksData.length} задач для ${activeEmployees.length} активных сотрудников (${(tasksData.length / activeEmployees.length).toFixed(1)} задач на сотрудника)`);
+          } else {
+            console.log(`✅ Загружено ${tasksData.length} задач для ${activeEmployees.length} активных сотрудников (${(tasksData.length / activeEmployees.length).toFixed(1)} задач на сотрудника)`);
           }
         } catch (error) {
           console.warn('Не удалось синхронизировать сотрудников с zadachnik:', error);

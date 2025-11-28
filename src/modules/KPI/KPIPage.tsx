@@ -16,6 +16,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import employeeService from '@/services/EmployeeService';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import type { RegionStats } from '@/types/employee';
+import type { TaskDB } from '@/services/ExtendedStorageService';
 import './KPIPage.css';
 
 const { Title, Text } = Typography;
@@ -76,28 +77,217 @@ const KPIPage: React.FC = () => {
   const [regionModalVisible, setRegionModalVisible] = useState(false);
 
   useEffect(() => {
-    loadKPIData();
+    // Функция для расчета рабочих дней между двумя датами (исключая выходные)
+    const calculateWorkingDays = (startDate: Dayjs, endDate: Dayjs): number => {
+      let workingDays = 0;
+      let currentDate = startDate.clone();
+
+      while (currentDate.isBefore(endDate) || currentDate.isSame(endDate, 'day')) {
+        const dayOfWeek = currentDate.day(); // 0 = воскресенье, 6 = суббота
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          workingDays++;
+        }
+        currentDate = currentDate.add(1, 'day');
+      }
+
+      return workingDays;
+    };
+
+    const loadKPIData = async () => {
+      setLoading(true);
+      try {
+        // Загружаем данные из различных модулей
+        const [portfolioData, conclusionsData, insuranceData] = await Promise.all([
+          fetch('/portfolioData.json').then((res) => res.json()).catch(() => []),
+          fetch('/collateralConclusionsData.json').then((res) => res.json()).catch(() => []),
+          fetch('/insuranceData.json').then((res) => res.json()).catch(() => []),
+        ]);
+
+        // Загружаем объекты реестра из IndexedDB
+        const registryData = await extendedStorageService.getExtendedCards();
+
+        // Загружаем задачи из IndexedDB (с fallback на localStorage)
+        let tasksData: TaskDB[] = [];
+        try {
+          tasksData = await extendedStorageService.getTasks();
+        } catch (error) {
+          // Fallback на localStorage
+          try {
+            const tasksJson = localStorage.getItem('zadachnik_tasks');
+            if (tasksJson) {
+              tasksData = JSON.parse(tasksJson);
+            }
+          } catch (e) {
+            console.warn('Не удалось загрузить задачи:', e);
+          }
+        }
+
+        // Вычисляем KPI
+        const totalPortfolioValue = portfolioData.reduce(
+          (sum: number, deal: any) => sum + (parseFloat(deal.collateralValue) || 0),
+          0
+        );
+
+        const totalContracts = portfolioData.length;
+        const activeContracts = portfolioData.filter(
+          (deal: any) => deal.status === 'active' || deal.status === 'Активный'
+        ).length;
+
+        // Выполнено задач - задачи со статусом completed или Выполнено
+        const completedTasks = tasksData.filter((task: any) =>
+          task.status === 'completed' || task.status === 'Выполнено'
+        ).length;
+
+        // Задач в работе - задачи со статусом pending, in_progress или В работе, у которых срок еще не наступил
+        const pendingTasks = tasksData.filter((task: any) => {
+          // Проверяем статус
+          const isInProgress = task.status === 'pending' ||
+                              task.status === 'in_progress' ||
+                              task.status === 'В работе' ||
+                              task.status === 'created';
+
+          if (!isInProgress) return false;
+
+          // Если нет срока, считаем задачей в работе
+          if (!task.dueDate) return true;
+
+          // Если срок еще не наступил или сегодня - задача в работе
+          const dueDate = dayjs(task.dueDate);
+          return dueDate.isAfter(dayjs(), 'day') || dueDate.isSame(dayjs(), 'day');
+        }).length;
+
+        // Просрочено - задачи не completed, у которых срок прошел
+        const overdueTasks = tasksData.filter((task: any) => {
+          // Исключаем выполненные задачи
+          if (task.status === 'completed' || task.status === 'Выполнено') return false;
+
+          // Если нет срока, не считаем просроченной
+          if (!task.dueDate) return false;
+
+          // Если срок прошел - просрочено
+          return dayjs(task.dueDate).isBefore(dayjs(), 'day');
+        }).length;
+
+        const totalConclusions = conclusionsData.length;
+        const approvedConclusions = conclusionsData.filter(
+          (c: any) => c.status === 'Согласовано'
+        ).length;
+        const pendingConclusions = conclusionsData.filter(
+          (c: any) => c.status === 'На согласовании' || c.status === 'Черновик'
+        ).length;
+
+        const totalObjects = registryData.length;
+        const totalInsurance = insuranceData.length;
+        const activeInsurance = insuranceData.filter(
+          (i: any) => i.status === 'active' || i.status === 'Активный'
+        ).length;
+
+        // Расчет среднего срока подготовки залогового заключения и SLA
+        const approvedConclusionsList = conclusionsData.filter(
+          (c: any) => c.status === 'Согласовано' && c.authorDate && (c.approvalDate || c.conclusionDate)
+        );
+
+        let averageConclusionDays = 0;
+        let slaCompliance = 0;
+
+        if (approvedConclusionsList.length > 0) {
+          const workingDaysList: number[] = [];
+
+          approvedConclusionsList.forEach((c: any) => {
+            const startDate = dayjs(c.authorDate);
+            const endDate = dayjs(c.approvalDate || c.conclusionDate);
+
+            if (startDate.isValid() && endDate.isValid() && endDate.isAfter(startDate)) {
+              const workingDays = calculateWorkingDays(startDate, endDate);
+              workingDaysList.push(workingDays);
+            }
+          });
+
+          if (workingDaysList.length > 0) {
+            averageConclusionDays = Math.round(
+              (workingDaysList.reduce((sum, days) => sum + days, 0) / workingDaysList.length) * 10
+            ) / 10; // Округляем до 1 знака после запятой
+
+            // Процент соответствия SLA (<= 7 рабочих дней)
+            const compliantCount = workingDaysList.filter(days => days <= 7).length;
+            slaCompliance = Math.round((compliantCount / workingDaysList.length) * 100);
+          }
+        }
+
+        setKpiData({
+          totalPortfolioValue,
+          totalContracts,
+          activeContracts,
+          completedTasks,
+          pendingTasks,
+          overdueTasks,
+          totalConclusions,
+          approvedConclusions,
+          pendingConclusions,
+          totalObjects,
+          totalInsurance,
+          activeInsurance,
+          averageConclusionDays,
+          slaCompliance,
+        });
+      } catch (error) {
+        console.error('Ошибка загрузки KPI данных:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadKPIData();
   }, [dateRange, period]);
 
+  // Нам нужно вызвать загрузку региональной статистики один раз при монтировании
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadRegionStats();
   }, []); // loadRegionStats не зависит от dateRange и period
 
   const loadRegionStats = async () => {
     try {
-      // Проверяем наличие задач, если нет - генерируем
-      let tasksData = JSON.parse(localStorage.getItem('zadachnik_tasks') || '[]');
-      if (!tasksData || tasksData.length === 0) {
+      // Проверяем наличие сотрудников и задач, если нет - генерируем
+      let employees = employeeService.getEmployees();
+      if (!employees || employees.length === 0) {
+        // Сотрудники будут созданы автоматически при первом вызове getEmployees()
+        employees = employeeService.getEmployees();
+      }
+
+      // Загружаем задачи из IndexedDB (с fallback на localStorage)
+      let tasksData: TaskDB[] = [];
+      try {
+        tasksData = await extendedStorageService.getTasks();
+      } catch (error) {
+        // Fallback на localStorage
+        try {
+          const tasksJson = localStorage.getItem('zadachnik_tasks');
+          if (tasksJson) {
+            tasksData = JSON.parse(tasksJson);
+          }
+        } catch (e) {
+          console.warn('Не удалось загрузить задачи:', e);
+        }
+      }
+
+      const activeEmployees = employees.filter(emp => emp.isActive);
+      
+      // Проверяем, достаточно ли задач (минимум 60 задач на активного сотрудника)
+      const minTasksPerEmployee = 60;
+      const expectedMinTasks = activeEmployees.length * minTasksPerEmployee;
+      
+      if (!tasksData || tasksData.length === 0 || tasksData.length < expectedMinTasks) {
         try {
           const { generateTasksForEmployees } = await import('@/utils/generateTasksForEmployees');
-          generateTasksForEmployees();
-          tasksData = JSON.parse(localStorage.getItem('zadachnik_tasks') || '[]');
+          await generateTasksForEmployees();
+          tasksData = await extendedStorageService.getTasks();
+          console.log(`✅ Сгенерировано ${tasksData.length} задач для ${activeEmployees.length} активных сотрудников`);
         } catch (error) {
           console.warn('Не удалось сгенерировать задачи:', error);
         }
       }
 
-      const employees = employeeService.getEmployees();
       // Получаем актуальные регионы из EmployeeService (использует REGION_CENTERS)
       const regions = employeeService.getRegions();
 
@@ -175,140 +365,19 @@ const KPIPage: React.FC = () => {
     }
   };
 
-  const loadKPIData = async () => {
-    setLoading(true);
-    try {
-      // Загружаем данные из различных модулей
-      const [portfolioData, conclusionsData, insuranceData] = await Promise.all([
-        fetch('/portfolioData.json').then((res) => res.json()).catch(() => []),
-        fetch('/collateralConclusionsData.json').then((res) => res.json()).catch(() => []),
-        fetch('/insuranceData.json').then((res) => res.json()).catch(() => []),
-      ]);
-
-      // Загружаем объекты реестра из IndexedDB
-      const registryData = await extendedStorageService.getExtendedCards();
-
-      // Загружаем задачи из localStorage (Zadachnik)
-      const tasksData = JSON.parse(localStorage.getItem('zadachnik_tasks') || '[]');
-
-      // Вычисляем KPI
-      const totalPortfolioValue = portfolioData.reduce(
-        (sum: number, deal: any) => sum + (parseFloat(deal.collateralValue) || 0),
-        0
-      );
-
-      const totalContracts = portfolioData.length;
-      const activeContracts = portfolioData.filter(
-        (deal: any) => deal.status === 'active' || deal.status === 'Активный'
-      ).length;
-
-      // Выполнено задач - задачи со статусом completed или Выполнено
-      const completedTasks = tasksData.filter((task: any) => 
-        task.status === 'completed' || task.status === 'Выполнено'
-      ).length;
-      
-      // Задач в работе - задачи со статусом pending, in_progress или В работе, у которых срок еще не наступил
-      const pendingTasks = tasksData.filter((task: any) => {
-        // Проверяем статус
-        const isInProgress = task.status === 'pending' || 
-                            task.status === 'in_progress' || 
-                            task.status === 'В работе' ||
-                            task.status === 'created';
-        
-        if (!isInProgress) return false;
-        
-        // Если нет срока, считаем задачей в работе
-        if (!task.dueDate) return true;
-        
-        // Если срок еще не наступил или сегодня - задача в работе
-        const dueDate = dayjs(task.dueDate);
-        return dueDate.isAfter(dayjs(), 'day') || dueDate.isSame(dayjs(), 'day');
-      }).length;
-      
-      // Просрочено - задачи не completed, у которых срок прошел
-      const overdueTasks = tasksData.filter((task: any) => {
-        // Исключаем выполненные задачи
-        if (task.status === 'completed' || task.status === 'Выполнено') return false;
-        
-        // Если нет срока, не считаем просроченной
-        if (!task.dueDate) return false;
-        
-        // Если срок прошел - просрочено
-        return dayjs(task.dueDate).isBefore(dayjs(), 'day');
-      }).length;
-
-      const totalConclusions = conclusionsData.length;
-      const approvedConclusions = conclusionsData.filter(
-        (c: any) => c.status === 'Согласовано'
-      ).length;
-      const pendingConclusions = conclusionsData.filter(
-        (c: any) => c.status === 'На согласовании' || c.status === 'Черновик'
-      ).length;
-
-      const totalObjects = registryData.length;
-      const totalInsurance = insuranceData.length;
-      const activeInsurance = insuranceData.filter(
-        (i: any) => i.status === 'active' || i.status === 'Активный'
-      ).length;
-
-      // Расчет среднего срока подготовки залогового заключения и SLA
-      const approvedConclusionsList = conclusionsData.filter(
-        (c: any) => c.status === 'Согласовано' && c.authorDate && (c.approvalDate || c.conclusionDate)
-      );
-      
-      let averageConclusionDays = 0;
-      let slaCompliance = 0;
-      
-      if (approvedConclusionsList.length > 0) {
-        const workingDaysList: number[] = [];
-        
-        approvedConclusionsList.forEach((c: any) => {
-          const startDate = dayjs(c.authorDate);
-          const endDate = dayjs(c.approvalDate || c.conclusionDate);
-          
-          if (startDate.isValid() && endDate.isValid() && endDate.isAfter(startDate)) {
-            const workingDays = calculateWorkingDays(startDate, endDate);
-            workingDaysList.push(workingDays);
-          }
-        });
-        
-        if (workingDaysList.length > 0) {
-          averageConclusionDays = Math.round(
-            workingDaysList.reduce((sum, days) => sum + days, 0) / workingDaysList.length * 10
-          ) / 10; // Округляем до 1 знака после запятой
-          
-          // Процент соответствия SLA (<= 7 рабочих дней)
-          const compliantCount = workingDaysList.filter(days => days <= 7).length;
-          slaCompliance = Math.round((compliantCount / workingDaysList.length) * 100);
-        }
-      }
-
-      setKpiData({
-        totalPortfolioValue,
-        totalContracts,
-        activeContracts,
-        completedTasks,
-        pendingTasks,
-        overdueTasks,
-        totalConclusions,
-        approvedConclusions,
-        pendingConclusions,
-        totalObjects,
-        totalInsurance,
-        activeInsurance,
-        averageConclusionDays,
-        slaCompliance,
-      });
-    } catch (error) {
-      console.error('Ошибка загрузки KPI данных:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const taskStatistics: TaskStatistic[] = React.useMemo(() => {
     try {
-      const tasksData = JSON.parse(localStorage.getItem('zadachnik_tasks') || '[]');
+      // Используем синхронную загрузку из localStorage для useMemo
+      // (IndexedDB асинхронный, поэтому используем fallback)
+      let tasksData: TaskDB[] = [];
+      try {
+        const tasksJson = localStorage.getItem('zadachnik_tasks');
+        if (tasksJson) {
+          tasksData = JSON.parse(tasksJson);
+        }
+      } catch (e) {
+        console.warn('Не удалось загрузить задачи из localStorage:', e);
+      }
       
       // Группируем задачи по категориям
       const categoryMap = new Map<string, { total: number; completed: number; pending: number; overdue: number }>();
@@ -408,22 +477,6 @@ const KPIPage: React.FC = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
-  };
-
-  // Функция для расчета рабочих дней между двумя датами (исключая выходные)
-  const calculateWorkingDays = (startDate: Dayjs, endDate: Dayjs): number => {
-    let workingDays = 0;
-    let currentDate = startDate.clone();
-    
-    while (currentDate.isBefore(endDate) || currentDate.isSame(endDate, 'day')) {
-      const dayOfWeek = currentDate.day(); // 0 = воскресенье, 6 = суббота
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        workingDays++;
-      }
-      currentDate = currentDate.add(1, 'day');
-    }
-    
-    return workingDays;
   };
 
   if (loading) {
