@@ -214,36 +214,54 @@ class EmployeeService {
     
     let globalIndex = 1;
     
+    // Жёстко задаём распределение ролей по региональным центрам
+    const regionRoleDistribution: Record<string, { monitoring: number; appraisal: number }> = {
+      ЦО:    { monitoring: 2, appraisal: 7 },
+      СЗРЦ:  { monitoring: 6, appraisal: 9 },
+      ЮРЦ:   { monitoring: 7, appraisal: 10 },
+      СРЦ:   { monitoring: 10, appraisal: 4 },
+      ЕКЦ:   { monitoring: 5, appraisal: 12 },
+      ДВЦ:   { monitoring: 8, appraisal: 9 },
+      ПРЦ:   { monitoring: 6, appraisal: 6 },
+      СЗРЦ2: { monitoring: 4, appraisal: 6 },
+    };
+    
     // Генерируем сотрудников по каждому региональному центру
     REGION_CENTERS.forEach((center, centerIndex) => {
-      // 30 сотрудников на каждый региональный центр
-      const employeesPerRegion = 30;
+      const employeesPerRegion = 30; // 30 сотрудников на центр
       
-      // Определяем, какой город будет иметь руководителя (первый город региона)
-      const managerCityIndex = 0;
-      let managerAssigned = false; // Флаг, чтобы назначить только одного руководителя на регион
+      // Формируем распределение индексов для мониторинга и оценки,
+      // чтобы роли были "в разброс", а не подряд
+      const indices: number[] = Array.from({ length: employeesPerRegion }, (_, i) => i);
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+      
+      const dist = regionRoleDistribution[center.code] || { monitoring: 5, appraisal: 10 };
+      const monitoringIndices = new Set(indices.slice(0, dist.monitoring));
+      const appraisalIndices = new Set(indices.slice(dist.monitoring, dist.monitoring + dist.appraisal));
+      
+      // Один руководитель на региональный центр (первый сотрудник региона)
+      let regionEmployeeIndex = 0;
       
       center.cities.forEach((city, cityIndex) => {
-        // Распределяем сотрудников по городам региона равномерно
         const baseEmployeesPerCity = Math.floor(employeesPerRegion / center.cities.length);
         const remainder = employeesPerRegion % center.cities.length;
         const employeesPerCity = baseEmployeesPerCity + (cityIndex < remainder ? 1 : 0);
         
         for (let i = 0; i < employeesPerCity; i++) {
-          // Первый сотрудник в первом городе региона становится руководителем (только один на регион)
-          const isManager = !managerAssigned && cityIndex === managerCityIndex && i === 0;
-          if (isManager) {
-            managerAssigned = true;
-          }
+          const currentIndex = regionEmployeeIndex;
+          const isManager = currentIndex === 0; // первый сотрудник центра — руководитель
+          
           const nameIndex = (globalIndex - 1) % surnames.length;
           const lastName = surnames[nameIndex];
           const firstName = firstNames[(globalIndex - 1) % firstNames.length];
           const middleName = middleNames[(globalIndex - 1) % middleNames.length];
           
-          // Определяем роли: 15% мониторинг, 30% оценка
-          const roleRandom = Math.random();
-          const isMonitoring = roleRandom < 0.15;
-          const isAppraisal = roleRandom >= 0.15 && roleRandom < 0.45;
+          // Определяем роли по заранее рассчитанному распределению
+          const isMonitoring = monitoringIndices.has(currentIndex);
+          const isAppraisal = appraisalIndices.has(currentIndex);
           
           // Если руководитель - назначаем соответствующую должность
           let positionIndex = isMonitoring ? 1 : isAppraisal ? 2 : 0;
@@ -284,7 +302,8 @@ class EmployeeService {
             firstName,
             middleName,
             position,
-            region: city,
+            // В качестве "региона" используем региональный центр, а не город
+            region: center.name,
             email,
             phone,
             department,

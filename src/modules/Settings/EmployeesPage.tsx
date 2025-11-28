@@ -37,6 +37,8 @@ import type { Employee, EmployeePermission, EmployeeStatus } from '@/types/emplo
 import { REGION_CENTERS } from '@/utils/regionCenters';
 import { syncEmployeesToZadachnik } from '@/utils/syncEmployeesToZadachnik';
 import { generateTasksForEmployees } from '@/utils/generateTasksForEmployees';
+import extendedStorageService from '@/services/ExtendedStorageService';
+import type { TaskDB } from '@/services/ExtendedStorageService';
 import dayjs from 'dayjs';
 import './EmployeesPage.css';
 
@@ -70,6 +72,7 @@ const PERMISSION_LABELS: Record<EmployeePermission, string> = {
 
 const EmployeesPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [tasks, setTasks] = useState<TaskDB[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -79,6 +82,7 @@ const EmployeesPage: React.FC = () => {
 
   useEffect(() => {
     loadEmployees();
+    loadTasks();
   }, []);
 
   const loadEmployees = (showMessage = false) => {
@@ -97,6 +101,30 @@ const EmployeesPage: React.FC = () => {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTasks = async () => {
+    try {
+      let loaded: TaskDB[] = [];
+      try {
+        loaded = await extendedStorageService.getTasks();
+      } catch (error) {
+        // Fallback на localStorage, если IndexedDB недоступен
+        try {
+          const existingTasks = localStorage.getItem('zadachnik_tasks');
+          if (existingTasks) {
+            loaded = JSON.parse(existingTasks);
+          }
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.warn('Не удалось загрузить задачи из localStorage:', e);
+        }
+      }
+      setTasks(loaded);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn('Ошибка загрузки задач для статистики загрузки сотрудников:', error);
     }
   };
 
@@ -135,6 +163,50 @@ const EmployeesPage: React.FC = () => {
 
     return grouped;
   }, [filteredEmployees]);
+
+  // Статистика задач по региональным центрам (для расчёта загрузки)
+  const tasksByRegionCenter = useMemo(() => {
+    const stats: Record<string, { inProgress: number }> = {};
+    REGION_CENTERS.forEach(center => {
+      stats[center.code] = { inProgress: 0 };
+    });
+
+    tasks.forEach(task => {
+      const taskRegion = (task.region || '').toString();
+      if (!taskRegion) return;
+
+      const center = REGION_CENTERS.find(
+        c => c.cities.includes(taskRegion) || c.name === taskRegion || c.code === taskRegion
+      );
+      if (!center) return;
+
+      const status = (task.status || '').toString();
+      const isCompleted =
+        status === 'completed' ||
+        status === 'Выполнено' ||
+        status === 'done' ||
+        status === 'approved';
+      if (isCompleted) return;
+
+      const isInWorkStatus = [
+        'pending',
+        'created',
+        'assigned',
+        'in_progress',
+        'in-progress',
+        'review',
+        'approval',
+        'rework',
+        'paused',
+      ].includes(status);
+
+      if (isInWorkStatus) {
+        stats[center.code].inProgress += 1;
+      }
+    });
+
+    return stats;
+  }, [tasks]);
 
   const handleAdd = () => {
     setEditingEmployee(null);
@@ -516,16 +588,18 @@ const EmployeesPage: React.FC = () => {
         style={{ marginBottom: 8 }}
       >
         {REGION_CENTERS.map(center => {
-          const activeEmployees = Object.values(employeesByRegion[center.code] || {})
-            .flat()
-            .filter(emp => emp.isActive).length;
+          const centerEmployees = Object.values(employeesByRegion[center.code] || {}).flat();
+          const activeEmployees = centerEmployees.filter(emp => emp.isActive).length;
+          const workingEmployees = centerEmployees.filter(
+            emp => emp.isActive && (!emp.status || emp.status === 'working')
+          ).length;
 
-          const monitoringEmployees = Object.values(employeesByRegion[center.code] || {})
-            .flat()
-            .filter(emp => emp.canMonitor).length;
-          const appraisalEmployees = Object.values(employeesByRegion[center.code] || {})
-            .flat()
-            .filter(emp => emp.canAppraise).length;
+          const monitoringEmployees = centerEmployees.filter(emp => emp.canMonitor).length;
+          const appraisalEmployees = centerEmployees.filter(emp => emp.canAppraise).length;
+
+          const regionTasksInWork = tasksByRegionCenter[center.code]?.inProgress ?? 0;
+          const loadPercent =
+            workingEmployees > 0 ? Math.round((regionTasksInWork / workingEmployees) * 100) : 0;
 
           return (
             <Panel
@@ -543,6 +617,9 @@ const EmployeesPage: React.FC = () => {
                   </Tag>
                   <Tag color="purple" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
                     {appraisalEmployees} оц.
+                  </Tag>
+                  <Tag color="gold" style={{ margin: 0, fontSize: '11px', padding: '0 4px' }}>
+                    Загрузка: {loadPercent}%
                   </Tag>
                 </Space>
               }
