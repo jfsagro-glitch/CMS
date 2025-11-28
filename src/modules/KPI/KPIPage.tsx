@@ -20,8 +20,6 @@ import type { TaskDB } from '@/services/ExtendedStorageService';
 import { REGION_CENTERS } from '@/utils/regionCenters';
 import {
   calculateWorkloadForPeriod,
-  getTasksInProgress,
-  calculateWorkloadPercent,
   WORK_HOURS_PER_MONTH,
   TASK_NORM_HOURS,
 } from '@/utils/workloadCalculator';

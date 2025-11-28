@@ -186,7 +186,6 @@ export function getTasksInProgress(tasks: TaskDB[], employeeId?: string, employe
     if (employeeEmail) {
       if (task.currentAssignee === employeeEmail) return true;
       if (Array.isArray(task.assignedTo) && task.assignedTo.includes(employeeEmail)) return true;
-      if (task.assignee === employeeEmail) return true;
     }
     
     return false;

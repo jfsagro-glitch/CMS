@@ -10,28 +10,10 @@ import { REGION_CENTERS } from '@/utils/regionCenters';
 import {
   TASK_NORM_HOURS,
   WORK_HOURS_PER_MONTH,
-  getTaskNormHours,
-  calculateWorkloadPercent,
 } from '@/utils/workloadCalculator';
 
 // Используем TaskDB из ExtendedStorageService
 type Task = TaskDB;
-
-// Типы задач из Задачника
-const TASK_TYPES = [
-  'Оценка',
-  'Экспертиза',
-  'Рецензия',
-  'ПРКК',
-  'Прочее',
-  'Отчетность',
-  'Подготовка СЗ',
-  'Мониторинг',
-  'Осмотр',
-  'Проверка документов',
-  'Согласование',
-  'Контроль качества',
-];
 
 // Бизнес-пользователи (для генерации задач)
 const BUSINESS_USERS = [
