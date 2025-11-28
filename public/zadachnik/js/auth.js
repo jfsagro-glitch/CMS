@@ -220,12 +220,20 @@ class AuthManager {
             return true;
         }
         
-        // Руководитель видит заявки своего региона
+        // Руководитель видит заявки своего регионального центра
         if (role === 'manager') {
-            return task.region === userRegion;
+            if (!userRegion) return false;
+
+            // Определяем региональный центр задачи
+            let taskRegionCenter = task.region;
+            if (this.cityToCenter && this.cityToCenter[task.region]) {
+                taskRegionCenter = this.cityToCenter[task.region];
+            }
+
+            return taskRegionCenter === userRegion;
         }
         
-        // Сотрудник видит назначенные ему задачи
+        // Сотрудник видит назначенные ему задачи (независимо от города внутри его регионального центра)
         if (role === 'employee') {
             // Проверяем по email сотрудника (если выбран конкретный)
             const employeeEmail = this.currentUser.employeeEmail || userEmail;

@@ -103,14 +103,14 @@ class ZadachnikApp {
 
             const employees = this.users.employee;
 
-            // Группируем сотрудников по региону (город / название РЦ)
+            // Группируем сотрудников по региональному центру (название РЦ)
             const employeesByRegion = {};
             employees.forEach(emp => {
-                const region = emp.region || 'Без региона';
-                if (!employeesByRegion[region]) {
-                    employeesByRegion[region] = [];
+                const center = emp.region || 'Без региона';
+                if (!employeesByRegion[center]) {
+                    employeesByRegion[center] = [];
                 }
-                employeesByRegion[region].push(emp);
+                employeesByRegion[center].push(emp);
             });
 
             let tasksChanged = false;
@@ -118,7 +118,11 @@ class ZadachnikApp {
             this.tasks.forEach(task => {
                 if (!task.region) return;
 
-                const regionEmployees = employeesByRegion[task.region] || employees;
+                // Определяем региональный центр для региона задачи
+                const cityToCenter = this.auth && this.auth.cityToCenter ? this.auth.cityToCenter : {};
+                const centerKey = cityToCenter[task.region] || task.region;
+
+                const regionEmployees = employeesByRegion[centerKey] || employees;
                 if (!Array.isArray(regionEmployees) || regionEmployees.length === 0) return;
 
                 // Если задача уже имеет корректные email из CMS (совпадают с сотрудниками), пропускаем
@@ -501,7 +505,9 @@ class ZadachnikApp {
                 employeesList = this.users.employee;
             }
             
-            const employees = employeesList.filter(e => e.region === task.region);
+            const cityToCenter = this.auth && this.auth.cityToCenter ? this.auth.cityToCenter : {};
+            const taskRegionCenter = cityToCenter[task.region] || task.region;
+            const employees = employeesList.filter(e => e.region === taskRegionCenter);
             assigneesList.innerHTML = employees.map(emp => `
                 <div class="assignee-item">
                     <input type="checkbox" id="emp-${emp.id}" value="${emp.email}" ${task.assignedTo && task.assignedTo.includes(emp.email) ? 'checked' : ''}>
@@ -1240,10 +1246,12 @@ class ZadachnikApp {
         if (user.role !== 'manager') return;
         
         // Находим все задачи со статусом "created" в регионе руководителя
-        const tasksToAssign = this.tasks.filter(task => 
-            task.status === 'created' && 
-            task.region === user.region
-        );
+        const cityToCenter = this.auth && this.auth.cityToCenter ? this.auth.cityToCenter : {};
+        const tasksToAssign = this.tasks.filter(task => {
+            if (task.status !== 'created') return false;
+            const taskRegionCenter = cityToCenter[task.region] || task.region;
+            return taskRegionCenter === user.region;
+        });
         
         if (tasksToAssign.length === 0) {
             console.log('Autopilot: No tasks to assign');
