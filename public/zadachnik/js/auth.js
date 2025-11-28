@@ -5,6 +5,7 @@
 class AuthManager {
     constructor() {
         this.currentUser = null;
+        this.cityToCenter = {};
         this.roles = {
             business: 'Бизнес',
             manager: 'Руководитель',
@@ -81,14 +82,29 @@ class AuthManager {
             this.setDemoUser('business', 'Москва', 'demo.business@company.com');
         }
 
-        // Пытаемся загрузить регионы из синхронизированных данных CMS (zadachnik_users)
+        // Пытаемся загрузить регионы и структуру региональных центров из синхронизированных данных CMS (zadachnik_users)
         try {
             const usersDataRaw = localStorage.getItem('zadachnik_users');
             if (usersDataRaw) {
                 const usersData = JSON.parse(usersDataRaw);
                 let regionsSet = new Set();
 
-                // Приоритет: регионы берём из сотрудников, синхронизированных из CMS
+                // Строим карту "город → региональный центр", если есть структура регионов
+                if (Array.isArray(usersData.regions)) {
+                    usersData.regions.forEach((center) => {
+                        const centerName = center.name || center.region || center.code;
+                        if (!centerName) return;
+                        if (Array.isArray(center.cities)) {
+                            center.cities.forEach((city) => {
+                                if (city) {
+                                    this.cityToCenter[city] = centerName;
+                                }
+                            });
+                        }
+                    });
+                }
+
+                // Приоритет: регионы берём из сотрудников, синхронизированных из CMS (это имена региональных центров)
                 if (usersData && Array.isArray(usersData.employee) && usersData.employee.length > 0) {
                     usersData.employee.forEach((emp) => {
                         if (emp.region) {
@@ -97,11 +113,12 @@ class AuthManager {
                     });
                 }
 
-                // Фоллбэк: если есть массив regions из CMS, используем его
+                // Фоллбэк: если сотрудников нет, но есть структура региональных центров
                 if (regionsSet.size === 0 && Array.isArray(usersData.regions)) {
                     usersData.regions.forEach((center) => {
-                        if (Array.isArray(center.cities)) {
-                            center.cities.forEach((city) => regionsSet.add(city));
+                        const centerName = center.name || center.region || center.code;
+                        if (centerName) {
+                            regionsSet.add(centerName);
                         }
                     });
                 }
@@ -180,9 +197,27 @@ class AuthManager {
         // Суперпользователь видит все
         if (role === 'superuser') return true;
         
-        // Бизнес видит только свои заявки
+        // Бизнес видит только свои заявки в пределах выбранного регионального центра
         if (role === 'business') {
-            return task.businessUser === userEmail;
+            // Если задача привязана к конкретному бизнес-пользователю,
+            // проверяем соответствие email (для обратной совместимости демо-данных)
+            if (task.businessUser && task.businessUser !== userEmail) {
+                return false;
+            }
+
+            // Ограничиваем задачи выбранным региональным центром
+            if (userRegion) {
+                // Если у задачи регион — город, пытаемся сопоставить его с региональным центром
+                let taskRegionCenter = task.region;
+                if (this.cityToCenter && this.cityToCenter[task.region]) {
+                    taskRegionCenter = this.cityToCenter[task.region];
+                }
+                if (taskRegionCenter && taskRegionCenter !== userRegion) {
+                    return false;
+                }
+            }
+
+            return true;
         }
         
         // Руководитель видит заявки своего региона
