@@ -18,6 +18,13 @@ import extendedStorageService from '@/services/ExtendedStorageService';
 import type { EmployeeTaskStats } from '@/types/employee';
 import type { TaskDB } from '@/services/ExtendedStorageService';
 import { REGION_CENTERS } from '@/utils/regionCenters';
+import {
+  calculateWorkloadForPeriod,
+  getTasksInProgress,
+  calculateWorkloadPercent,
+  WORK_HOURS_PER_MONTH,
+  TASK_NORM_HOURS,
+} from '@/utils/workloadCalculator';
 import './KPIPage.css';
 
 const { Title, Text } = Typography;
@@ -38,6 +45,12 @@ interface KPIData {
   activeInsurance: number;
   averageConclusionDays: number; // Средний срок подготовки залогового заключения в рабочих днях
   slaCompliance: number; // Процент соответствия SLA (<= 7 рабочих дней)
+  currentWorkload: number; // Текущая загрузка (%)
+  workloadByPeriod: {
+    last7Days: number;
+    last30Days: number;
+    last90Days: number;
+  };
 }
 
 interface TaskStatistic {
@@ -86,9 +99,15 @@ const KPIPage: React.FC = () => {
     totalObjects: 0,
     totalInsurance: 0,
     activeInsurance: 0,
-    averageConclusionDays: 0,
-    slaCompliance: 0,
-  });
+          averageConclusionDays: 0,
+          slaCompliance: 0,
+          currentWorkload: 0,
+          workloadByPeriod: {
+            last7Days: 0,
+            last30Days: 0,
+            last90Days: 0,
+          },
+        });
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([
     dayjs().subtract(30, 'day'),
     dayjs(),
@@ -237,6 +256,59 @@ const KPIPage: React.FC = () => {
           }
         }
 
+        // Расчет текущей загрузки
+        const employees = employeeService.getEmployees();
+        const activeEmployees = employees.filter(emp => emp.isActive && (!emp.status || emp.status === 'working') && !emp.isManager);
+        
+        // Получаем все задачи в работе для всех сотрудников (исключаем 'created')
+        const allTasksInProgress: TaskDB[] = tasksData.filter(task => {
+          const status = (task.status || '').toString();
+          const isCompleted = status === 'completed' || status === 'Выполнено' || status === 'done' || status === 'approved';
+          if (isCompleted || status === 'created') return false;
+          
+          const isInWorkStatus = ['assigned', 'in_progress', 'in-progress', 'review', 'rework', 'paused', 'approval'].includes(status);
+          if (!isInWorkStatus) return false;
+          
+          // Проверяем, что задача назначена на активного сотрудника
+          return activeEmployees.some(emp => 
+            (emp.id && task.employeeId === emp.id) ||
+            (emp.email && (task.currentAssignee === emp.email || (Array.isArray(task.assignedTo) && task.assignedTo.includes(emp.email))))
+          );
+        });
+        
+        // Убираем дубликаты задач
+        const uniqueTasksInProgress = Array.from(
+          new Map(allTasksInProgress.map(task => [task.id, task])).values()
+        );
+        
+        // Рассчитываем среднюю загрузку на одного сотрудника
+        const totalNormHours = uniqueTasksInProgress.reduce((sum, task) => {
+          const taskType = task.type || 'Прочее';
+          const storedNormHours = JSON.parse(localStorage.getItem('normHoursSettings') || '{}');
+          let normHours = storedNormHours[taskType] || TASK_NORM_HOURS[taskType] || 2;
+          
+          if (taskType === 'Подготовка СЗ') {
+            const title = (task.title || '').toLowerCase();
+            const description = (task.description || '').toLowerCase();
+            if (title.includes('азс') || description.includes('азс')) {
+              normHours = storedNormHours['Подготовка СЗ (АЗС)'] || 24;
+            } else if (title.includes('2 объекта') || description.includes('2 объекта')) {
+              normHours = storedNormHours['Подготовка СЗ (2 объекта)'] || 7;
+            }
+          }
+          
+          return sum + normHours;
+        }, 0);
+        
+        const avgNormHoursPerEmployee = activeEmployees.length > 0 ? totalNormHours / activeEmployees.length : 0;
+        const currentWorkload = Math.min(Math.round((avgNormHoursPerEmployee / WORK_HOURS_PER_MONTH) * 100 * 10) / 10, 150);
+        
+        // Расчет загрузки за периоды
+        const now = dayjs();
+        const last7Days = calculateWorkloadForPeriod(tasksData, now.subtract(7, 'day'), now, WORK_HOURS_PER_MONTH);
+        const last30Days = calculateWorkloadForPeriod(tasksData, now.subtract(30, 'day'), now, WORK_HOURS_PER_MONTH);
+        const last90Days = calculateWorkloadForPeriod(tasksData, now.subtract(90, 'day'), now, WORK_HOURS_PER_MONTH);
+
         setKpiData({
           totalPortfolioValue,
           totalContracts,
@@ -252,6 +324,12 @@ const KPIPage: React.FC = () => {
           activeInsurance,
           averageConclusionDays,
           slaCompliance,
+          currentWorkload,
+          workloadByPeriod: {
+            last7Days: last7Days.workloadPercent,
+            last30Days: last30Days.workloadPercent,
+            last90Days: last90Days.workloadPercent,
+          },
         });
       } catch (error) {
         console.error('Ошибка загрузки KPI данных:', error);
@@ -684,6 +762,112 @@ const KPIPage: React.FC = () => {
             </div>
           </Card>
         </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="Текущая загрузка"
+              value={kpiData.currentWorkload}
+              suffix="%"
+              prefix={<UserOutlined />}
+              valueStyle={{ 
+                color: kpiData.currentWorkload <= 100 ? '#3f8600' : 
+                       kpiData.currentWorkload <= 125 ? '#faad14' : '#cf1322' 
+              }}
+            />
+            <div style={{ marginTop: 8 }}>
+              <Progress
+                percent={Math.min(kpiData.currentWorkload, 150)}
+                strokeColor={kpiData.currentWorkload <= 100 ? '#3f8600' : 
+                            kpiData.currentWorkload <= 125 ? '#faad14' : '#cf1322'}
+                size="small"
+              />
+              <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+                {kpiData.currentWorkload <= 100 ? '✅ Нормальная' : 
+                 kpiData.currentWorkload <= 125 ? '⚠️ Повышенная' : '❌ Перегрузка'}
+              </Text>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+      
+      {/* Загрузка за периоды */}
+      <Card
+        title={
+          <Space>
+            <LineChartOutlined />
+            <span>Загрузка сотрудников по периодам</span>
+          </Space>
+        }
+        style={{ marginBottom: 24 }}
+      >
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={8}>
+            <Card size="small">
+              <Statistic
+                title="За последние 7 дней"
+                value={kpiData.workloadByPeriod.last7Days}
+                suffix="%"
+                prefix={<ClockCircleOutlined />}
+                valueStyle={{ 
+                  color: kpiData.workloadByPeriod.last7Days <= 100 ? '#3f8600' : 
+                         kpiData.workloadByPeriod.last7Days <= 125 ? '#faad14' : '#cf1322' 
+                }}
+              />
+              <Progress
+                percent={Math.min(kpiData.workloadByPeriod.last7Days, 150)}
+                strokeColor={kpiData.workloadByPeriod.last7Days <= 100 ? '#3f8600' : 
+                            kpiData.workloadByPeriod.last7Days <= 125 ? '#faad14' : '#cf1322'}
+                size="small"
+                style={{ marginTop: 8 }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card size="small">
+              <Statistic
+                title="За последние 30 дней"
+                value={kpiData.workloadByPeriod.last30Days}
+                suffix="%"
+                prefix={<ClockCircleOutlined />}
+                valueStyle={{ 
+                  color: kpiData.workloadByPeriod.last30Days <= 100 ? '#3f8600' : 
+                         kpiData.workloadByPeriod.last30Days <= 125 ? '#faad14' : '#cf1322' 
+                }}
+              />
+              <Progress
+                percent={Math.min(kpiData.workloadByPeriod.last30Days, 150)}
+                strokeColor={kpiData.workloadByPeriod.last30Days <= 100 ? '#3f8600' : 
+                            kpiData.workloadByPeriod.last30Days <= 125 ? '#faad14' : '#cf1322'}
+                size="small"
+                style={{ marginTop: 8 }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card size="small">
+              <Statistic
+                title="За последние 90 дней"
+                value={kpiData.workloadByPeriod.last90Days}
+                suffix="%"
+                prefix={<ClockCircleOutlined />}
+                valueStyle={{ 
+                  color: kpiData.workloadByPeriod.last90Days <= 100 ? '#3f8600' : 
+                         kpiData.workloadByPeriod.last90Days <= 125 ? '#faad14' : '#cf1322' 
+                }}
+              />
+              <Progress
+                percent={Math.min(kpiData.workloadByPeriod.last90Days, 150)}
+                strokeColor={kpiData.workloadByPeriod.last90Days <= 100 ? '#3f8600' : 
+                            kpiData.workloadByPeriod.last90Days <= 125 ? '#faad14' : '#cf1322'}
+                size="small"
+                style={{ marginTop: 8 }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      </Card>
+      
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic

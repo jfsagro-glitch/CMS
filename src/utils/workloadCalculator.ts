@@ -42,7 +42,7 @@ export function getTaskNormHours(task: TaskDB): number {
   // Загружаем сохраненные настройки нормочасов из localStorage
   let savedNormHours: Record<string, number> | null = null;
   try {
-    const saved = localStorage.getItem('norm_hours_settings');
+    const saved = localStorage.getItem('normHoursSettings');
     if (saved) {
       savedNormHours = JSON.parse(saved);
     }
@@ -108,8 +108,36 @@ export function calculateWorkloadForPeriod(
   workloadPercent: number;
   tasksCount: number;
 } {
-  // Фильтруем задачи по периоду
+  // Фильтруем задачи по периоду и статусу (только задачи в работе)
   const periodTasks = tasks.filter(task => {
+    const status = (task.status || '').toString();
+    
+    // Исключаем завершенные задачи
+    const isCompleted =
+      status === 'completed' ||
+      status === 'Выполнено' ||
+      status === 'done' ||
+      status === 'approved';
+    
+    if (isCompleted) return false;
+    
+    // Исключаем задачи со статусом 'created' - они еще не распределены
+    if (status === 'created') return false;
+    
+    // Включаем только задачи в работе
+    const isInWorkStatus = [
+      'assigned',
+      'in_progress',
+      'in-progress',
+      'review',
+      'rework',
+      'paused',
+      'approval',
+    ].includes(status);
+    
+    if (!isInWorkStatus) return false;
+    
+    // Фильтруем по периоду (задачи, которые были в работе в этот период)
     const taskDate = dayjs(task.createdAt || task.updatedAt);
     return taskDate.isAfter(startDate.subtract(1, 'day')) && taskDate.isBefore(endDate.add(1, 'day'));
   });
@@ -234,10 +262,17 @@ export function calculateRegionCenterWorkload(
   
   // Рассчитываем загрузку на одного работающего сотрудника
   const workingEmployeesCount = workingEmployees.length;
-  const avgNormHoursPerEmployee = workingEmployeesCount > 0 
-    ? totalNormHours / workingEmployeesCount 
-    : 0;
   
+  if (workingEmployeesCount === 0) {
+    return {
+      totalNormHours: 0,
+      workloadPercent: 0,
+      tasksCount: 0,
+      workingEmployeesCount: 0,
+    };
+  }
+  
+  const avgNormHoursPerEmployee = totalNormHours / workingEmployeesCount;
   const workloadPercent = (avgNormHoursPerEmployee / WORK_HOURS_PER_MONTH) * 100;
   
   // Ограничиваем максимум 150%

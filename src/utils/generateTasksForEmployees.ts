@@ -252,12 +252,14 @@ export const generateTasksForEmployees = async (): Promise<void> => {
         
         remainingNormHours -= employeeTargetNormHours;
         
-        // Распределение: 70% выполнено/согласовано, 1% просрочено, 10% в работе, 10% распределено, 9% на согласовании
+        // Распределение: 70% выполнено/согласовано, 1% просрочено, 19% в работе (assigned + in_progress + approval)
+        // В загрузку идут только задачи в работе: assigned, in_progress, approval (не completed/approved)
         const completedNormHours = employeeTargetNormHours * 0.70;
         const overdueNormHours = employeeTargetNormHours * 0.01;
-        const inProgressNormHours = employeeTargetNormHours * 0.10;
+        // Задачи в работе: assigned (10%), in_progress (5%), approval (4%) = 19% от общей загрузки
         const assignedNormHours = employeeTargetNormHours * 0.10;
-        const approvalNormHours = employeeTargetNormHours * 0.09;
+        const inProgressNormHours = employeeTargetNormHours * 0.05;
+        const approvalNormHours = employeeTargetNormHours * 0.04;
         
         const employeeRegion = employee.region;
         const businessUser = BUSINESS_USERS[Math.floor(Math.random() * BUSINESS_USERS.length)];
@@ -512,218 +514,16 @@ export const generateTasksForEmployees = async (): Promise<void> => {
         };
         
         // Генерируем задачи по статусам
+        // Важно: в загрузку идут только задачи со статусами assigned, in_progress, approval
         const completedTasks = generateTasksForStatus(completedNormHours * 0.8, 'completed');
         const approvedTasks = generateTasksForStatus(completedNormHours * 0.2, 'approved');
         const overdueTasks = generateTasksForStatus(overdueNormHours, 'in_progress', true);
-        const inProgressTasks = generateTasksForStatus(inProgressNormHours, 'in_progress');
         const assignedTasks = generateTasksForStatus(assignedNormHours, 'assigned');
+        const inProgressTasks = generateTasksForStatus(inProgressNormHours, 'in_progress');
         const approvalTasks = generateTasksForStatus(approvalNormHours, 'approval');
         
-        tasks.push(...completedTasks, ...approvedTasks, ...overdueTasks, ...inProgressTasks, ...assignedTasks, ...approvalTasks);
+        tasks.push(...completedTasks, ...approvedTasks, ...overdueTasks, ...assignedTasks, ...inProgressTasks, ...approvalTasks);
       });
-    });
-      
-      // Создаем список всех типов задач для равномерного распределения
-      const allTaskTypes = [...TASK_TYPES];
-      const taskTypesPool: string[] = [];
-      
-      // Заполняем пул типами задач, чтобы каждый тип встречался примерно одинаково
-      const tasksPerType = Math.ceil(tasksCount / allTaskTypes.length);
-      for (let i = 0; i < tasksPerType; i++) {
-        taskTypesPool.push(...allTaskTypes);
-      }
-      
-      // Перемешиваем пул для случайного распределения
-      for (let i = taskTypesPool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [taskTypesPool[i], taskTypesPool[j]] = [taskTypesPool[j], taskTypesPool[i]];
-      }
-      
-      let taskTypeIndex = 0;
-      
-      // Определяем регион сотрудника
-      const employeeRegion = employee.region;
-      
-      // Выбираем случайного бизнес-пользователя
-      const businessUser = BUSINESS_USERS[Math.floor(Math.random() * BUSINESS_USERS.length)];
-      
-      // Полное имя сотрудника
-      const employeeFullName = `${employee.lastName} ${employee.firstName} ${employee.middleName || ''}`.trim();
-      
-      // Генерируем выполненные задачи
-      for (let i = 0; i < completedCount; i++) {
-        const daysAgo = Math.floor(Math.random() * 90); // выполнены в последние 90 дней
-        const createdAt = now.subtract(daysAgo + 30, 'day');
-        const completedAt = createdAt.add(Math.floor(Math.random() * 20), 'day');
-        const dueDate = completedAt.add(Math.floor(Math.random() * 10), 'day');
-        
-        // Используем тип задачи из пула для равномерного распределения
-        const taskType = taskTypesPool[taskTypeIndex % taskTypesPool.length];
-        taskTypeIndex++;
-        const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'];
-        const title = titles[Math.floor(Math.random() * titles.length)];
-        const description = getTaskDescription(taskType, title, employeeRegion);
-        
-        const taskId = `T-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const createdAtISO = createdAt.toISOString();
-        const completedAtISO = completedAt.toISOString();
-        
-        tasks.push({
-          id: taskId,
-          region: employeeRegion,
-          type: taskType,
-          title,
-          description,
-          priority: Math.random() > 0.7 ? 'high' : Math.random() > 0.4 ? 'medium' : 'low',
-          dueDate: dueDate.format('YYYY-MM-DD'),
-          status: 'completed',
-          businessUser: businessUser.email,
-          businessUserName: businessUser.name,
-          assignedTo: employee.email ? [employee.email] : [],
-          currentAssignee: employee.email || null,
-          currentAssigneeName: employeeFullName,
-          employeeId: employee.id,
-          documents: [],
-          comments: [],
-          createdAt: createdAtISO,
-          updatedAt: completedAtISO,
-          completedAt: completedAtISO,
-          history: [
-            {
-              date: createdAtISO,
-              user: businessUser.name,
-              userRole: 'business',
-              action: 'Создана',
-              comment: `Задача создана для сотрудника ${employeeFullName}`,
-              status: 'created',
-            },
-            {
-              date: completedAtISO,
-              user: employeeFullName,
-              userRole: employee.isManager ? 'manager' : 'employee',
-              action: 'Выполнена',
-              comment: 'Задача выполнена',
-              status: 'completed',
-            },
-          ],
-        });
-      }
-      
-      // Генерируем просроченные задачи
-      for (let i = 0; i < overdueCount; i++) {
-        const daysOverdue = 1 + Math.floor(Math.random() * 30); // просрочены на 1-30 дней
-        const createdAt = now.subtract(60 + daysOverdue, 'day');
-        const dueDate = now.subtract(daysOverdue, 'day');
-        
-        // Используем тип задачи из пула для равномерного распределения
-        const taskType = taskTypesPool[taskTypeIndex % taskTypesPool.length];
-        taskTypeIndex++;
-        const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'];
-        const title = titles[Math.floor(Math.random() * titles.length)];
-        const description = getTaskDescription(taskType, title, employeeRegion);
-        
-        const taskId = `T-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const createdAtISO = createdAt.toISOString();
-        
-        tasks.push({
-          id: taskId,
-          region: employeeRegion,
-          type: taskType,
-          category: taskType, // Добавляем category для совместимости
-          title,
-          description,
-          priority: Math.random() > 0.5 ? 'high' : 'medium',
-          dueDate: dueDate.format('YYYY-MM-DD'),
-          status: 'in_progress',
-          businessUser: businessUser.email,
-          businessUserName: businessUser.name,
-          assignedTo: employee.email ? [employee.email] : [],
-          currentAssignee: employee.email || null,
-          currentAssigneeName: employeeFullName,
-          employeeId: employee.id,
-          documents: [],
-          comments: [],
-          createdAt: createdAtISO,
-          updatedAt: now.toISOString(),
-          history: [
-            {
-              date: createdAtISO,
-              user: businessUser.name,
-              userRole: 'business',
-              action: 'Создана',
-              comment: `Задача создана для сотрудника ${employeeFullName}`,
-              status: 'created',
-            },
-            {
-              date: createdAt.toISOString(),
-              user: employeeFullName,
-              userRole: employee.isManager ? 'manager' : 'employee',
-              action: 'Взята в работу',
-              comment: 'Задача взята в работу',
-              status: 'in_progress',
-            },
-          ],
-        });
-      }
-      
-      // Генерируем задачи в работе
-      for (let i = 0; i < pendingCount; i++) {
-        const daysAgo = Math.floor(Math.random() * 30); // созданы в последние 30 дней
-        const createdAt = now.subtract(daysAgo, 'day');
-        const daysUntilDue = Math.floor(Math.random() * 30) + 1; // срок выполнения через 1-30 дней
-        const dueDate = now.add(daysUntilDue, 'day');
-        
-        // Используем тип задачи из пула для равномерного распределения
-        const taskType = taskTypesPool[taskTypeIndex % taskTypesPool.length];
-        taskTypeIndex++;
-        const titles = TASK_TITLES_BY_TYPE[taskType] || TASK_TITLES_BY_TYPE['Прочее'];
-        const title = titles[Math.floor(Math.random() * titles.length)];
-        const description = getTaskDescription(taskType, title, employeeRegion);
-        
-        const taskId = `T-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const createdAtISO = createdAt.toISOString();
-        const status = daysAgo < 7 ? 'created' : 'in_progress';
-        
-        tasks.push({
-          id: taskId,
-          region: employeeRegion,
-          type: taskType,
-          category: taskType, // Добавляем category для совместимости
-          title,
-          description,
-          priority: Math.random() > 0.6 ? 'high' : Math.random() > 0.3 ? 'medium' : 'low',
-          dueDate: dueDate.format('YYYY-MM-DD'),
-          status,
-          businessUser: businessUser.email,
-          businessUserName: businessUser.name,
-          assignedTo: employee.email ? [employee.email] : [],
-          currentAssignee: employee.email || null,
-          currentAssigneeName: employeeFullName,
-          employeeId: employee.id,
-          documents: [],
-          comments: [],
-          createdAt: createdAtISO,
-          updatedAt: now.toISOString(),
-          history: [
-            {
-              date: createdAtISO,
-              user: businessUser.name,
-              userRole: 'business',
-              action: 'Создана',
-              comment: `Задача создана для сотрудника ${employeeFullName}`,
-              status: 'created',
-            },
-            ...(status === 'in_progress' ? [{
-              date: createdAt.add(1, 'day').toISOString(),
-              user: employeeFullName,
-              userRole: employee.isManager ? 'manager' : 'employee',
-              action: 'Взята в работу',
-              comment: 'Задача взята в работу',
-              status: 'in_progress',
-            }] : []),
-          ],
-        });
-      }
     });
     
     // Сохраняем задачи в IndexedDB (не в localStorage, так как данные слишком большие)
