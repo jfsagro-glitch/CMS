@@ -51,17 +51,15 @@ class ZadachnikApp {
         this.tasks = this.storage.getTasks();
         let usersData = this.storage.getUsers();
         
-        // ВАЖНО: Проверяем, есть ли сотрудники в сохраненных данных
-        // Если нет или их мало - принудительно перезагружаем демо-данные
-        if (!usersData || !usersData.employee || usersData.employee.length < 100) {
-            console.warn('Users data is outdated or incomplete, reloading demo data...');
-            if (window.DemoData) {
-                this.users = DemoData.users;
-                this.storage.saveUsers(this.users);
-                console.log('Demo users reloaded:', this.users);
-            }
-        } else {
+        // Приоритет: используем сотрудников, синхронизированных из CMS (zadachnik_users)
+        if (usersData && usersData.employee && Array.isArray(usersData.employee) && usersData.employee.length > 0) {
             this.users = usersData;
+        } else if (window.DemoData) {
+            // Фоллбэк: если данных из CMS ещё нет, используем встроенные демо-данные
+            this.users = DemoData.users;
+            this.storage.saveUsers(this.users);
+        } else {
+            this.users = { employee: [] };
         }
         
         console.log('Loaded data:');
@@ -78,6 +76,7 @@ class ZadachnikApp {
     
     setupUI() {
         this.updateUserInfo();
+        this.populateRegionSelects();
         this.populateFilters();
         this.updateUIForRole();
     }
@@ -136,6 +135,20 @@ class ZadachnikApp {
             filterRegion.innerHTML += `<option value="${region}">${region}</option>`;
         });
     }
+
+    populateRegionSelects() {
+        const regions = this.auth.getAllRegions();
+
+        const headerRegionSelect = document.getElementById('region-select');
+        if (headerRegionSelect) {
+            headerRegionSelect.innerHTML = regions.map(r => `<option value="${r}">${r}</option>`).join('');
+        }
+
+        const taskRegionSelect = document.getElementById('task-region');
+        if (taskRegionSelect) {
+            taskRegionSelect.innerHTML = regions.map(r => `<option value="${r}">${r}</option>`).join('');
+        }
+    }
     
     switchRole() {
         const role = document.getElementById('role-select').value;
@@ -166,8 +179,8 @@ class ZadachnikApp {
             employeesList = this.users.employee;
         }
         
-        // Группируем по регионам
-        const regions = ['Москва', 'Санкт-Петербург', 'Новосибирск', 'Екатеринбург'];
+        // Группируем по регионам (используем регионы, синхронизированные из CMS)
+        const regions = this.auth.getAllRegions();
         
         let html = '<option value="">Выберите сотрудника...</option>';
         
@@ -675,15 +688,9 @@ class ZadachnikApp {
     }
     
     showAnalytics() {
-        const user = this.auth.getCurrentUser();
-        
-        if (user.role === 'superuser') {
-            // Суперпользователь видит аналитику по регионам
-            this.showRegionAnalytics();
-        } else {
-            // Руководитель видит аналитику по сотрудникам своего региона
-            this.showEmployeeAnalytics(user.region);
-        }
+        // Аналитика задач перенесена в основной модуль KPI CMS.
+        // Здесь оставляем заглушку, чтобы не ломать существующие вызовы.
+        alert('Аналитика задач доступна в разделе KPI основной системы (страница /kpi).');
     }
     
     showRegionAnalytics() {
@@ -1114,33 +1121,10 @@ class ZadachnikApp {
     }
     
     reloadDemoData() {
-        if (confirm('Перезагрузить демо-данные? Все текущие данные будут заменены.')) {
-            console.log('Reloading demo data...');
-            
-            // Очищаем localStorage
-            localStorage.removeItem('zadachnik_tasks');
-            localStorage.removeItem('zadachnik_users');
-            
-            // Загружаем свежие демо-данные
-            if (window.DemoData) {
-                this.tasks = DemoData.tasks;
-                this.users = DemoData.users;
-                this.storage.saveTasks(this.tasks);
-                this.storage.saveUsers(this.users);
-                
-                console.log('Demo data reloaded:');
-                console.log('Tasks:', this.tasks.length);
-                console.log('Users.employee:', this.users.employee ? this.users.employee.length : 'undefined');
-                
-                // Перезагружаем UI
-                this.setupUI();
-                this.applyFilters();
-                
-                alert('✅ Демо-данные успешно перезагружены! Теперь доступно 120 сотрудников.');
-            } else {
-                alert('❌ Ошибка: DemoData не найден');
-            }
-        }
+        // Перезагрузка демо-данных отключена.
+        // Данные по сотрудникам и задачам теперь управляются через раздел
+        // "Настройки → Сотрудники" в основной системе CMS.
+        alert('Обновление демо-данных отключено. Используйте раздел "Настройки → Сотрудники" в CMS для обновления данных.');
     }
     
     // Автопилот для руководителя

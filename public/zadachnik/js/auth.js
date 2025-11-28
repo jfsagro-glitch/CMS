@@ -80,6 +80,39 @@ class AuthManager {
             // Демо-режим: роль Бизнес по умолчанию
             this.setDemoUser('business', 'Москва', 'demo.business@company.com');
         }
+
+        // Пытаемся загрузить регионы из синхронизированных данных CMS (zadachnik_users)
+        try {
+            const usersDataRaw = localStorage.getItem('zadachnik_users');
+            if (usersDataRaw) {
+                const usersData = JSON.parse(usersDataRaw);
+                let regionsSet = new Set();
+
+                // Приоритет: регионы берём из сотрудников, синхронизированных из CMS
+                if (usersData && Array.isArray(usersData.employee) && usersData.employee.length > 0) {
+                    usersData.employee.forEach((emp) => {
+                        if (emp.region) {
+                            regionsSet.add(emp.region);
+                        }
+                    });
+                }
+
+                // Фоллбэк: если есть массив regions из CMS, используем его
+                if (regionsSet.size === 0 && Array.isArray(usersData.regions)) {
+                    usersData.regions.forEach((center) => {
+                        if (Array.isArray(center.cities)) {
+                            center.cities.forEach((city) => regionsSet.add(city));
+                        }
+                    });
+                }
+
+                if (regionsSet.size > 0) {
+                    this.regions = Array.from(regionsSet).sort();
+                }
+            }
+        } catch (e) {
+            console.warn('Не удалось загрузить регионы из zadachnik_users:', e);
+        }
     }
     
     setDemoUser(role, region = null, email = null) {
