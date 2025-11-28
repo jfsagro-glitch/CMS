@@ -39,6 +39,17 @@ export function getTaskNormHours(task: TaskDB): number {
   // Определяем тип задачи
   const taskType = task.type || 'Прочее';
   
+  // Загружаем сохраненные настройки нормочасов из localStorage
+  let savedNormHours: Record<string, number> | null = null;
+  try {
+    const saved = localStorage.getItem('norm_hours_settings');
+    if (saved) {
+      savedNormHours = JSON.parse(saved);
+    }
+  } catch (e) {
+    // Игнорируем ошибки парсинга
+  }
+  
   // Специальная логика для "Подготовка СЗ"
   if (taskType === 'Подготовка СЗ') {
     // Проверяем описание или название на наличие упоминаний АЗС
@@ -46,15 +57,16 @@ export function getTaskNormHours(task: TaskDB): number {
     const description = (task.description || '').toLowerCase();
     
     if (title.includes('азс') || description.includes('азс')) {
-      return TASK_NORM_HOURS['Подготовка СЗ (АЗС)'] || 24;
+      return savedNormHours?.['Подготовка СЗ (АЗС)'] || TASK_NORM_HOURS['Подготовка СЗ (АЗС)'] || 24;
     }
     
     // Проверяем количество объектов (можно добавить в метаданные задачи)
     // Пока используем базовое значение для одного объекта
-    return TASK_NORM_HOURS['Подготовка СЗ'] || 6;
+    return savedNormHours?.['Подготовка СЗ'] || TASK_NORM_HOURS['Подготовка СЗ'] || 6;
   }
   
-  return TASK_NORM_HOURS[taskType] || TASK_NORM_HOURS['Прочее'] || 2;
+  // Используем сохраненные значения или значения по умолчанию
+  return savedNormHours?.[taskType] || TASK_NORM_HOURS[taskType] || TASK_NORM_HOURS['Прочее'] || 2;
 }
 
 /**
@@ -178,9 +190,14 @@ export function calculateRegionCenterWorkload(
     return regionCities.includes(taskRegion) || taskRegion === regionCenterCode;
   });
   
-  // Получаем задачи в работе
+  // Получаем задачи в работе (исключаем 'created' - они еще не распределены)
+  // И учитываем только задачи, назначенные на сотрудников региона
+  const employeeEmails = new Set(workingEmployees.map(emp => emp.email).filter(Boolean));
+  
   const tasksInProgress = regionTasks.filter(task => {
     const status = (task.status || '').toString();
+    
+    // Исключаем завершенные задачи
     const isCompleted =
       status === 'completed' ||
       status === 'Выполнено' ||
@@ -189,16 +206,27 @@ export function calculateRegionCenterWorkload(
     
     if (isCompleted) return false;
     
+    // Исключаем задачи со статусом 'created' - они еще не распределены руководителем
+    if (status === 'created') return false;
+    
+    // Проверяем, что задача назначена на сотрудника региона
+    const isAssignedToEmployee = 
+      (task.currentAssignee && employeeEmails.has(task.currentAssignee)) ||
+      (Array.isArray(task.assignedTo) && task.assignedTo.some(email => employeeEmails.has(email))) ||
+      (task.employeeId && workingEmployees.some(emp => emp.id === task.employeeId));
+    
+    if (!isAssignedToEmployee) return false;
+    
+    // Включаем только задачи, которые реально в работе у сотрудников
     return [
-      'pending',
-      'created',
       'assigned',
       'in_progress',
       'in-progress',
       'review',
-      'approval',
       'rework',
       'paused',
+      // 'approval' - задачи на согласовании тоже считаем в загрузке
+      'approval',
     ].includes(status);
   });
   

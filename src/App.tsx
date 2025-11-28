@@ -31,6 +31,7 @@ import KPIPage from './modules/KPI/KPIPage';
 import AnalyticsPage from './modules/Analytics/AnalyticsPage';
 import EmployeesPage from './modules/Settings/EmployeesPage';
 import ReferenceDataPage from './modules/Settings/ReferenceDataPage';
+import NormHoursPage from './modules/Settings/NormHoursPage';
 import UploadPage from './modules/Upload/UploadPage';
 import ReferencePage from './modules/Reference/ReferencePage';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -215,6 +216,7 @@ const AppContent: React.FC = () => {
                       <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
                       <Route path="settings/employees" element={<EmployeesPage />} />
                       <Route path="settings/reference-data" element={<ReferenceDataPage />} />
+                      <Route path="settings/norm-hours" element={<NormHoursPage />} />
                     </Route>
                   </Routes>
                 </HashRouter>

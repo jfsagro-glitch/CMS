@@ -1,0 +1,19 @@
+.norm-hours-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.norm-hours-page .ant-table {
+  background: #fff;
+}
+
+.norm-hours-page .ant-statistic-title {
+  font-size: 14px;
+  color: #8c8c8c;
+}
+
+.norm-hours-page .ant-statistic-content {
+  font-size: 24px;
+  font-weight: 600;
+}
+
