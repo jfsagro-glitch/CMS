@@ -67,6 +67,10 @@ class ZadachnikApp {
         console.log('Users structure:', this.users);
         console.log('Users.employee:', this.users.employee ? this.users.employee.length : 'undefined');
         
+        // Перепривязываем задачи к актуальным сотрудникам CMS,
+        // чтобы заявки действительно отображались у руководителей и исполнителей
+        this.rebindTasksToEmployees();
+        
         // Если все еще нет сотрудников - критическая ошибка
         if (!this.users.employee || this.users.employee.length === 0) {
             console.error('CRITICAL: No employees loaded!');
@@ -79,6 +83,75 @@ class ZadachnikApp {
         this.populateRegionSelects();
         this.populateFilters();
         this.updateUIForRole();
+    }
+
+    /**
+     * Привязка демо-задач к сотрудникам из CMS
+     * 
+     * Задачи из DemoData используют старые email вида emp1.msk@company.com.
+     * После синхронизации с CMS мы подменяем assignedTo на реальные email
+     * сотрудников соответствующего региона, чтобы:
+     *  - руководители видели заявки своего регионального центра,
+     *  - сотрудники видели назначенные им задачи,
+     *  - workflow (принять в работу, пауза, доработка, согласование) работал корректно.
+     */
+    rebindTasksToEmployees() {
+        try {
+            if (!this.users || !Array.isArray(this.users.employee) || this.users.employee.length === 0) {
+                return;
+            }
+
+            const employees = this.users.employee;
+
+            // Группируем сотрудников по региону (город / название РЦ)
+            const employeesByRegion = {};
+            employees.forEach(emp => {
+                const region = emp.region || 'Без региона';
+                if (!employeesByRegion[region]) {
+                    employeesByRegion[region] = [];
+                }
+                employeesByRegion[region].push(emp);
+            });
+
+            let tasksChanged = false;
+
+            this.tasks.forEach(task => {
+                if (!task.region) return;
+
+                const regionEmployees = employeesByRegion[task.region] || employees;
+                if (!Array.isArray(regionEmployees) || regionEmployees.length === 0) return;
+
+                // Если задача уже имеет корректные email из CMS (совпадают с сотрудниками), пропускаем
+                const allAssigneesValid = Array.isArray(task.assignedTo) && task.assignedTo.every(email =>
+                    employees.some(emp => emp.email === email)
+                );
+                if (allAssigneesValid) return;
+
+                // Перераспределяем исполнителей задачи на реальных сотрудников региона
+                if (Array.isArray(task.assignedTo) && task.assignedTo.length > 0) {
+                    const newAssigned = [];
+                    task.assignedTo.forEach((_, index) => {
+                        const emp = regionEmployees[index % regionEmployees.length];
+                        if (emp && emp.email) {
+                            newAssigned.push(emp.email);
+                        }
+                    });
+
+                    if (newAssigned.length > 0) {
+                        task.assignedTo = newAssigned;
+                        task.currentAssignee = newAssigned[0];
+                        tasksChanged = true;
+                    }
+                }
+            });
+
+            if (tasksChanged) {
+                this.storage.saveTasks(this.tasks);
+                console.log('✅ Tasks re-bound to CMS employees for correct workflow routing');
+            }
+        } catch (e) {
+            console.warn('Ошибка привязки задач к сотрудникам CMS:', e);
+        }
     }
     
     updateUserInfo() {
