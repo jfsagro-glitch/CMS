@@ -15,6 +15,9 @@ export interface MonitoringPlanEntry {
   plannedDate: string;
   timeframe: MonitoringTimeframe;
   owner: string;
+  city?: string | null;
+  regionCenterCode?: string | null;
+  regionCenterName?: string | null;
   priority?: string | null;
   liquidity?: string | null;
   collateralValue?: number | null;
@@ -33,6 +36,9 @@ export interface RevaluationPlanEntry {
   plannedDate: string;
   timeframe: MonitoringTimeframe;
   owner: string;
+  city?: string | null;
+  regionCenterCode?: string | null;
+  regionCenterName?: string | null;
   priority?: string | null;
   collateralValue?: number | null;
   marketValue?: number | null;

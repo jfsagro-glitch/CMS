@@ -6,6 +6,7 @@ import type { ExtendedCollateralCard } from '@/types';
 import type { MonitoringPlanEntry, RevaluationPlanEntry, MonitoringTimeframe } from '@/types/monitoring';
 import dayjs from 'dayjs';
 import { getMonitoringEmployeeForCard, getAppraisalEmployeeForCard } from './autopilotAssignment';
+import { getRegionCenterByCity } from './regionCenters';
 
 /**
  * Определение временного интервала на основе количества дней до даты
@@ -156,6 +157,8 @@ export const generateMonitoringPlan = (cards: ExtendedCollateralCard[]): Monitor
     const lastMonitoringDate = parseDate(card.monitoringDate || card.nextMonitoringDate);
     const daysUntil = dayjs(nextMonitoringDate).diff(now, 'day');
     const timeframe = getTimeframe(daysUntil);
+    const city = card.address?.city || card.address?.region || null;
+    const regionCenter = city ? getRegionCenterByCity(city) : null;
 
     const borrower = card.partners?.find(p => p.role === 'owner');
     const pledger = card.partners?.find(p => p.role === 'pledgor');
@@ -183,6 +186,9 @@ export const generateMonitoringPlan = (cards: ExtendedCollateralCard[]): Monitor
       plannedDate: formatDate(nextMonitoringDate),
       timeframe,
       owner: getOwner(card, 'monitoring'),
+      city,
+      regionCenterCode: regionCenter?.code || null,
+      regionCenterName: regionCenter?.name || null,
       priority: card.characteristics?.PRIORITY as string || null,
       liquidity: card.characteristics?.LIQUIDITY as string || null,
       collateralValue: card.pledgeValue || null,
@@ -213,6 +219,8 @@ export const generateRevaluationPlan = (cards: ExtendedCollateralCard[]): Revalu
     const lastEvaluationDate = parseDate(card.lastEvaluationDate || card.evaluationDate || card.nextEvaluationDate);
     const daysUntil = dayjs(nextEvaluationDate).diff(now, 'day');
     const timeframe = getTimeframe(daysUntil);
+    const city = card.address?.city || card.address?.region || null;
+    const regionCenter = city ? getRegionCenterByCity(city) : null;
 
     const borrower = card.partners?.find(p => p.role === 'owner');
     const pledger = card.partners?.find(p => p.role === 'pledgor');
@@ -241,6 +249,9 @@ export const generateRevaluationPlan = (cards: ExtendedCollateralCard[]): Revalu
       plannedDate: formatDate(nextEvaluationDate),
       timeframe,
       owner: getOwner(card, 'appraisal'),
+      city,
+      regionCenterCode: regionCenter?.code || null,
+      regionCenterName: regionCenter?.name || null,
       priority: card.characteristics?.PRIORITY as string || null,
       collateralValue: card.pledgeValue || null,
       marketValue: card.marketValue || null,
