@@ -1892,7 +1892,7 @@ const ReferencePage: React.FC = () => {
                         onKeyPress={handleKeyPress}
                         placeholder={messages.length === 0 ? "Задайте вопрос о залогах, ипотеке, оценке..." : "Задайте уточняющий вопрос..."}
                         autoSize={{ minRows: 3, maxRows: 6 }}
-                        disabled={loading || indexing}
+                        disabled={loading || initializing}
                         className="reference-page__main-input"
                         style={{
                           fontSize: '16px',
@@ -1944,7 +1944,7 @@ const ReferencePage: React.FC = () => {
                       icon={<SendOutlined />}
                       onClick={handleSend}
                       loading={loading}
-                      disabled={!inputValue.trim() || indexing}
+                      disabled={!inputValue.trim() || initializing}
                       size="large"
                       className="reference-page__send-button"
                       style={{
