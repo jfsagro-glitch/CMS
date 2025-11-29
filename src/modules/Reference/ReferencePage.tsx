@@ -64,6 +64,7 @@ import {
   type ChatMessage 
 } from '@/utils/chatStorage';
 import { getAppraisalGroups } from '@/utils/appraisalTaxonomy';
+import { getAppraisalConfigForType, formatAppraisalAttributes } from '@/utils/appraisalAttributeConfig';
 import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
 import './ReferencePage.css';
 
@@ -202,6 +203,26 @@ const ReferencePage: React.FC = () => {
   const [appraisalEstimate, setAppraisalEstimate] = useState<AppraisalEstimate | null>(null);
   const [appraisalLoading, setAppraisalLoading] = useState(false);
   const [appraisalForm] = Form.useForm();
+  const watchedAssetType = Form.useWatch('assetType', appraisalForm);
+  const attributeConfig = useMemo(() => getAppraisalConfigForType(watchedAssetType), [watchedAssetType]);
+  const attributeFields = attributeConfig?.fields ?? [];
+  const derivedAssetGroup = attributeConfig?.assetGroup;
+  const appraisalCategoryOptions = useMemo(() => [
+    { value: 'real_estate', label: 'Недвижимое имущество' },
+    { value: 'land', label: 'Земельные участки' },
+    { value: 'movable', label: 'Движимое имущество' },
+    { value: 'metals_goods', label: 'Товары и материалы' },
+    { value: 'equity', label: 'Доли, акции и ЦБ' },
+    { value: 'rights', label: 'Права требования' },
+  ], []);
+  const appraisalTypeOptions = useMemo(() => {
+    return appraisalGroups.flatMap(group =>
+      group.types.map(type => ({
+        value: type.key,
+        label: type.label,
+      }))
+    );
+  }, [appraisalGroups]);
   const handleToggleAppraisalMode = useCallback(() => {
     setAppraisalMode((prev) => {
       if (prev) {
@@ -215,19 +236,24 @@ const ReferencePage: React.FC = () => {
     if (!values || !values.assetGroup || !values.assetType) return '';
 
     const parts: string[] = [];
-    const groupMeta = appraisalGroups.find(group => group.key === values.assetGroup);
-    const typeMeta = groupMeta?.types.find(type => type.key === values.assetType);
-    parts.push(`Категория: ${groupMeta?.label || values.assetGroup}`);
-    parts.push(`Тип актива: ${typeMeta?.label || values.assetType}`);
-    if (values.location) parts.push(`Локация: ${values.location}`);
-    if (values.area) parts.push(`Площадь/объем: ${values.area}${values.areaUnit || ' м²'}`);
-    if (values.condition) parts.push(`Состояние: ${values.condition}`);
-    if (values.incomePerYear) parts.push(`Чистый доход: ${values.incomePerYear} ₽/год`);
+    const categoryLabel =
+      appraisalCategoryOptions.find(opt => opt.value === (values.assetGroup || derivedAssetGroup))?.label ||
+      values.assetGroup ||
+      derivedAssetGroup;
+    const typeOption = appraisalTypeOptions.find(opt => opt.value === values.assetType);
+    if (categoryLabel) {
+      parts.push(`Категория: ${categoryLabel}`);
+    }
+    parts.push(`Тип актива: ${typeOption?.label || values.assetType}`);
     if (values.purpose) parts.push(`Цель: ${values.purpose}`);
     if (values.additionalFactors) parts.push(`Особенности: ${values.additionalFactors}`);
+    const attributeSummary = formatAppraisalAttributes(values.attributes, attributeFields);
+    if (attributeSummary) {
+      parts.push(`Ключевые параметры: ${attributeSummary}`);
+    }
 
     return parts.join('\n');
-  }, [appraisalForm, appraisalGroups]);
+  }, [appraisalForm, appraisalCategoryOptions, derivedAssetGroup, attributeFields, appraisalTypeOptions]);
   // Загружаем состояние сворачивания из localStorage
   const [chatsVisible, setChatsVisible] = useState(() => {
     const saved = localStorage.getItem('reference_chats_visible');
@@ -510,14 +536,21 @@ const ReferencePage: React.FC = () => {
   useEffect(() => {
     if (!appraisalMode) return;
     const currentValues = appraisalForm.getFieldsValue();
-    if (!currentValues.assetGroup && appraisalGroups.length > 0) {
-      const firstGroup = appraisalGroups.find(group => group.types.length > 0) || appraisalGroups[0];
+    if (!currentValues.assetType && appraisalTypeOptions.length > 0) {
       appraisalForm.setFieldsValue({
-        assetGroup: firstGroup?.key,
-        assetType: firstGroup?.types[0]?.key,
+        assetType: appraisalTypeOptions[0].value,
       });
     }
-  }, [appraisalMode, appraisalGroups, appraisalForm]);
+  }, [appraisalMode, appraisalForm, appraisalTypeOptions]);
+
+  useEffect(() => {
+    if (derivedAssetGroup) {
+      const currentValue = appraisalForm.getFieldValue('assetGroup');
+      if (currentValue !== derivedAssetGroup) {
+        appraisalForm.setFieldsValue({ assetGroup: derivedAssetGroup });
+      }
+    }
+  }, [derivedAssetGroup, appraisalForm]);
 
   // Загрузка чатов при монтировании
   useEffect(() => {
@@ -1050,21 +1083,33 @@ const ReferencePage: React.FC = () => {
     try {
       const values = await appraisalForm.validateFields();
       setAppraisalLoading(true);
-      const groupMeta = appraisalGroups.find(group => group.key === values.assetGroup);
-      const typeMeta = groupMeta?.types.find(type => type.key === values.assetType);
+      const typeOption = appraisalTypeOptions.find(opt => opt.value === values.assetType);
+      const attributes = values.attributes || {};
+      const attributeSummary = formatAppraisalAttributes(attributes, attributeFields);
+      const combinedAdditionalFactors = [values.additionalFactors, attributeSummary].filter(Boolean).join('. ');
+      const locationHint =
+        attributes.location ||
+        attributes.baseLocation ||
+        attributes.storageLocation ||
+        undefined;
+      const areaHint =
+        (typeof attributes.areaSqm === 'number' ? attributes.areaSqm : undefined) ??
+        (typeof attributes.areaHa === 'number' ? attributes.areaHa : undefined) ??
+        (typeof attributes.quantity === 'number' ? attributes.quantity : undefined);
+      const conditionHint = attributes.condition || attributes.quality;
 
       const estimate = await AppraisalAIService.generateEstimate({
-        objectName: values.objectName || typeMeta?.label || groupMeta?.label || 'Объект оценки',
+        objectName: values.objectName || typeOption?.label || 'Объект оценки',
         assetGroup: values.assetGroup,
         assetType: values.assetType,
-        location: values.location,
-        area: values.area ? Number(values.area) : undefined,
-        areaUnit: values.areaUnit,
-        condition: values.condition,
-        incomePerYear: values.incomePerYear ? Number(values.incomePerYear) : undefined,
-        occupancy: values.occupancy,
+        location: locationHint,
+        area: areaHint,
+        areaUnit: undefined,
+        condition: conditionHint,
+        incomePerYear: undefined,
+        occupancy: undefined,
         purpose: values.purpose,
-        additionalFactors: values.additionalFactors,
+        additionalFactors: combinedAdditionalFactors,
         card: null,
       });
 
@@ -1080,7 +1125,7 @@ const ReferencePage: React.FC = () => {
     } finally {
       setAppraisalLoading(false);
     }
-  }, [appraisalForm, appraisalGroups]);
+  }, [appraisalForm, appraisalTypeOptions, attributeFields]);
 
   // Обработчик принудительной переиндексации всех документов
   const handleReindexAll = useCallback(async () => {
@@ -1520,18 +1565,11 @@ const ReferencePage: React.FC = () => {
           <Form layout="vertical" form={appraisalForm}>
             <Space direction="vertical" style={{ width: '100%' }} size="middle">
               <Space size="middle" wrap>
-                <Form.Item
-                  label="Категория"
-                  name="assetGroup"
-                  rules={[{ required: true, message: 'Выберите категорию' }]}
-                >
+                <Form.Item label="Категория" name="assetGroup">
                   <Select
                     style={{ minWidth: 220 }}
-                    options={appraisalGroups.map(group => ({
-                      value: group.key,
-                      label: group.label,
-                    }))}
-                    onChange={() => appraisalForm.setFieldsValue({ assetType: undefined })}
+                    options={appraisalCategoryOptions}
+                    disabled
                   />
                 </Form.Item>
                 <Form.Item
@@ -1543,51 +1581,35 @@ const ReferencePage: React.FC = () => {
                   <Select
                     style={{ minWidth: 260 }}
                     placeholder="Выберите тип"
-                    options={appraisalGroups
-                      .find(group => group.key === appraisalForm.getFieldValue('assetGroup'))?.types.map(type => ({
-                        value: type.key,
-                        label: type.label,
-                      })) || []}
+                    options={appraisalTypeOptions}
                   />
                 </Form.Item>
                 <Form.Item label="Наименование" name="objectName">
                   <Input placeholder="Например, складской комплекс на МКАД" />
                 </Form.Item>
               </Space>
-              <Row gutter={12}>
-                <Col xs={24} md={8}>
-                  <Form.Item label="Локация" name="location">
-                    <Input placeholder="Регион, город, адрес" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={8}>
-                  <Form.Item label="Площадь / объем" name="area">
-                    <InputNumber style={{ width: '100%' }} min={0} placeholder="Например, 1500" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={8}>
-                  <Form.Item label="Единица измерения" name="areaUnit" initialValue="м²">
-                    <Input placeholder="м², га, шт." />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={12}>
-                <Col xs={24} md={8}>
-                  <Form.Item label="Состояние" name="condition">
-                    <Input placeholder="Например, хорошее, требуется ремонт" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={8}>
-                  <Form.Item label="Чистый доход (₽/год)" name="incomePerYear">
-                    <InputNumber style={{ width: '100%' }} min={0} />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={8}>
-                  <Form.Item label="Заполняемость / загрузка" name="occupancy">
-                    <Input placeholder="Например, 90% арендаторов" />
-                  </Form.Item>
-                </Col>
-              </Row>
+              {attributeFields.length > 0 && (
+                <div>
+                  <Text strong>Ключевые атрибуты для оценки</Text>
+                  <Row gutter={12} style={{ marginTop: 8 }}>
+                    {attributeFields.map(field => (
+                      <Col xs={24} md={12} lg={8} key={field.key}>
+                        <Form.Item label={field.label} name={['attributes', field.key]}>
+                          {field.type === 'number' ? (
+                            <InputNumber
+                              style={{ width: '100%' }}
+                              placeholder={field.placeholder}
+                              controls={false}
+                            />
+                          ) : (
+                            <Input placeholder={field.placeholder} />
+                          )}
+                        </Form.Item>
+                      </Col>
+                    ))}
+                  </Row>
+                </div>
+              )}
               <Row gutter={12}>
                 <Col xs={24} md={12}>
                   <Form.Item label="Цель оценки" name="purpose">
