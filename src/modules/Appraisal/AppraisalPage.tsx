@@ -26,12 +26,15 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import type { AppraisalObject, AppraisalResult, AppraisalObjectType } from '@/types/appraisal';
 import dayjs from 'dayjs';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import type { CollateralConclusion } from '@/types/collateralConclusion';
 import type { CollateralPortfolioEntry } from '@/types/portfolio';
+import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
+import appraisalStorage from '@/utils/appraisalStorage';
 import './AppraisalPage.css';
 
 const { Title, Text } = Typography;
@@ -44,6 +47,7 @@ const AppraisalPage: React.FC = () => {
   const [objects, setObjects] = useState<AppraisalObject[]>([]);
   const [loading, setLoading] = useState(false);
   const [appraising, setAppraising] = useState(false);
+  const [aiAppraising, setAiAppraising] = useState(false);
   const [results, setResults] = useState<AppraisalResultRow[]>([]);
   const [searchValue, setSearchValue] = useState('');
   const [selectedResult, setSelectedResult] = useState<AppraisalResultRow | null>(null);
@@ -222,6 +226,68 @@ const AppraisalPage: React.FC = () => {
     }
   };
 
+  const handleAiAppraise = async () => {
+    if (!selectedObject) {
+      message.warning('Выберите объект для оценки');
+      return;
+    }
+
+    setAiAppraising(true);
+    try {
+      const groupKey = mapObjectToAppraisalGroup(selectedObject);
+      const additionalFactors = selectedObject.characteristics
+        ? Object.entries(selectedObject.characteristics)
+            .slice(0, 5)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('; ')
+        : undefined;
+
+      const estimate = await AppraisalAIService.generateEstimate({
+        objectName: selectedObject.name,
+        assetGroup: groupKey,
+        assetType: selectedObject.collateralType || selectedObject.type,
+        location: selectedObject.address,
+        area: selectedObject.area,
+        purpose: 'Экспресс-оценка в модуле "Оценка"',
+        additionalFactors,
+        card: null,
+      });
+
+      const result = convertEstimateToResult(estimate, selectedObject);
+      const stored = localStorage.getItem('appraisalResults');
+      const existingResults: AppraisalResult[] = stored ? JSON.parse(stored) : [];
+      existingResults.push(result);
+      localStorage.setItem('appraisalResults', JSON.stringify(existingResults));
+      setResults(prev => [...prev, { ...result, key: result.id }]);
+
+      if (selectedObject.type === 'collateral') {
+        appraisalStorage.add({
+          cardId: selectedObject.id,
+          objectId: selectedObject.id,
+          objectName: selectedObject.name,
+          estimate,
+          input: {
+            objectName: selectedObject.name,
+            assetGroup: groupKey,
+            assetType: selectedObject.collateralType || selectedObject.type,
+            location: selectedObject.address,
+            area: selectedObject.area,
+            card: null,
+            purpose: 'Экспресс-оценка',
+            additionalFactors,
+          },
+        });
+      }
+
+      message.success('AI помощник выполнил оценку объекта');
+    } catch (error) {
+      console.error('Ошибка AI оценки:', error);
+      message.error('Не удалось выполнить AI оценку');
+    } finally {
+      setAiAppraising(false);
+    }
+  };
+
   const generateAppraisalResult = (object: AppraisalObject): AppraisalResult => {
     // Базовая логика оценки (заглушка)
     // В будущем здесь будет запрос к базе данных аналогичных объектов
@@ -252,6 +318,47 @@ const AppraisalPage: React.FC = () => {
       confidenceLevel: 'medium',
       details: `Автоматическая оценка выполнена на основе характеристик объекта. База данных аналогичных объектов находится в разработке.`,
       notes: 'Оценка выполнена автоматически. Требуется проверка оценщиком.',
+      appraisedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+      status: 'draft',
+    };
+  };
+
+  const mapObjectToAppraisalGroup = (object: AppraisalObject): string => {
+    const type = (object.collateralType || '').toLowerCase();
+    if (type.includes('зем')) return 'land';
+    if (type.includes('недвиж') || type.includes('офис') || type.includes('склад') || type.includes('торгов')) {
+      return 'real_estate';
+    }
+    if (type.includes('акци') || type.includes('дол')) return 'equity';
+    if (type.includes('прав') || type.includes('интеллект')) return 'rights';
+    if (type.includes('товар') || type.includes('урож')) return 'metals_goods';
+    if (type.includes('транспорт') || type.includes('оборуд') || type.includes('техника')) return 'movable';
+    switch (object.type) {
+      case 'collateral':
+        return 'real_estate';
+      case 'conclusion':
+        return 'real_estate';
+      case 'portfolio':
+        return 'real_estate';
+      default:
+        return 'movable';
+    }
+  };
+
+  const convertEstimateToResult = (estimate: AppraisalEstimate, object: AppraisalObject): AppraisalResult => {
+    return {
+      id: `ai-appraisal-${Date.now()}`,
+      requestId: `ai-${Date.now()}`,
+      objectId: object.id,
+      objectType: object.type,
+      marketValue: estimate.marketValue,
+      collateralValue: estimate.collateralValue,
+      fairValue: Math.round(estimate.marketValue * 0.9),
+      appraisalMethod: estimate.methodology,
+      comparableObjectsCount: estimate.comparables?.length || 0,
+      confidenceLevel: estimate.confidence,
+      details: estimate.summary,
+      notes: `Риски: ${estimate.riskFactors.join('; ') || '—'}. Рекомендации: ${estimate.recommendedActions.join('; ') || '—'}`,
       appraisedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
       status: 'draft',
     };
@@ -483,6 +590,15 @@ const AppraisalPage: React.FC = () => {
                 disabled={!selectedObject}
               >
                 Выполнить оценку
+              </Button>
+              <Button
+                type="default"
+                onClick={handleAiAppraise}
+                icon={<RobotOutlined />}
+                loading={aiAppraising}
+                disabled={!selectedObject}
+              >
+                Оценка ИИ
               </Button>
             </Space>
           </Space>

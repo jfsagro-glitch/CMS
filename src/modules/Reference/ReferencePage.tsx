@@ -16,6 +16,9 @@ import {
   Badge,
   Modal,
   Collapse,
+  Form,
+  Select,
+  InputNumber,
 } from 'antd';
 import {
   SendOutlined,
@@ -58,6 +61,8 @@ import {
   type Chat,
   type ChatMessage 
 } from '@/utils/chatStorage';
+import { getAppraisalGroups } from '@/utils/appraisalTaxonomy';
+import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
 import './ReferencePage.css';
 
 const { TextArea } = Input;
@@ -189,6 +194,38 @@ const ReferencePage: React.FC = () => {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
+  const [appraisalSkill, setAppraisalSkill] = useState(0);
+  const appraisalGroups = useMemo(() => getAppraisalGroups(), []);
+  const [appraisalMode, setAppraisalMode] = useState(false);
+  const [appraisalEstimate, setAppraisalEstimate] = useState<AppraisalEstimate | null>(null);
+  const [appraisalLoading, setAppraisalLoading] = useState(false);
+  const [appraisalForm] = Form.useForm();
+  const handleToggleAppraisalMode = useCallback(() => {
+    setAppraisalMode((prev) => {
+      if (prev) {
+        setAppraisalEstimate(null);
+      }
+      return !prev;
+    });
+  }, []);
+  const buildAppraisalContext = useCallback(() => {
+    const values = appraisalForm.getFieldsValue();
+    if (!values || !values.assetGroup || !values.assetType) return '';
+
+    const parts: string[] = [];
+    const groupMeta = appraisalGroups.find(group => group.key === values.assetGroup);
+    const typeMeta = groupMeta?.types.find(type => type.key === values.assetType);
+    parts.push(`Категория: ${groupMeta?.label || values.assetGroup}`);
+    parts.push(`Тип актива: ${typeMeta?.label || values.assetType}`);
+    if (values.location) parts.push(`Локация: ${values.location}`);
+    if (values.area) parts.push(`Площадь/объем: ${values.area}${values.areaUnit || ' м²'}`);
+    if (values.condition) parts.push(`Состояние: ${values.condition}`);
+    if (values.incomePerYear) parts.push(`Чистый доход: ${values.incomePerYear} ₽/год`);
+    if (values.purpose) parts.push(`Цель: ${values.purpose}`);
+    if (values.additionalFactors) parts.push(`Особенности: ${values.additionalFactors}`);
+
+    return parts.join('\n');
+  }, [appraisalForm, appraisalGroups]);
   // Загружаем состояние сворачивания из localStorage
   const [chatsVisible, setChatsVisible] = useState(() => {
     const saved = localStorage.getItem('reference_chats_visible');
@@ -388,6 +425,7 @@ const ReferencePage: React.FC = () => {
           const insightsWeight = Math.min(stats.insightsCount * 2, 10);
           const evolutionBonus = evolutionStats ? Math.min(evolutionStats.level * 2, 20) : 0;
           setLearningIndex(Math.round(patternsWeight + successWeight + usageWeight + insightsWeight + evolutionBonus));
+          setAppraisalSkill(learningService.getCategorySkill('appraisal'));
         }
         
         // Загружаем документы из VND асинхронно (не блокируя UI)
@@ -465,6 +503,18 @@ const ReferencePage: React.FC = () => {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!appraisalMode) return;
+    const currentValues = appraisalForm.getFieldsValue();
+    if (!currentValues.assetGroup && appraisalGroups.length > 0) {
+      const firstGroup = appraisalGroups.find(group => group.types.length > 0) || appraisalGroups[0];
+      appraisalForm.setFieldsValue({
+        assetGroup: firstGroup?.key,
+        assetType: firstGroup?.types[0]?.key,
+      });
+    }
+  }, [appraisalMode, appraisalGroups, appraisalForm]);
 
   // Загрузка чатов при монтировании
   useEffect(() => {
@@ -568,7 +618,7 @@ const ReferencePage: React.FC = () => {
 
   // Генерация ответа с использованием DeepSeek AI (мемоизировано)
   // chatHistory - история сообщений для контекста
-  const generateAIResponse = useCallback(async (userMessage: string, chatHistory: Message[] = []): Promise<{ content: string; sources: KnowledgeTopic[]; context: string }> => {
+  const generateAIResponse = useCallback(async (userMessage: string, chatHistory: Message[] = [], extraContext?: string): Promise<{ content: string; sources: KnowledgeTopic[]; context: string }> => {
     const lowerMessage = userMessage.toLowerCase();
 
     // Поиск по базе знаний для контекста
@@ -586,6 +636,9 @@ const ReferencePage: React.FC = () => {
       }
       knowledgeContext = contextParts.join('\n\n---\n\n');
       sources = topics;
+    }
+    if (extraContext) {
+      knowledgeContext = `${knowledgeContext || ''}\n\n[Дополнительный контекст задания]\n${extraContext}`;
     }
 
     try {
@@ -719,7 +772,12 @@ const ReferencePage: React.FC = () => {
         timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp),
       })) : messages;
       
-      const { content, sources, context } = await generateAIResponse(question, chatHistory);
+      const appraisalExtra = appraisalMode ? buildAppraisalContext() : '';
+      const { content, sources, context } = await generateAIResponse(
+        question,
+        chatHistory,
+        appraisalExtra || undefined
+      );
       
       const aiResponse: Message = {
         id: `ai-${Date.now()}`,
@@ -783,7 +841,7 @@ const ReferencePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [inputValue, loading, generateAIResponse, currentChatId, messages, scrollToBottom]);
+  }, [inputValue, loading, generateAIResponse, currentChatId, messages, scrollToBottom, appraisalMode, buildAppraisalContext]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -854,6 +912,7 @@ const ReferencePage: React.FC = () => {
         return Math.round(patternsWeight + successWeight + usageWeight + insightsWeight + evolutionBonus);
       };
       setLearningIndex(calculateLearningIndex());
+      setAppraisalSkill(learningService.getCategorySkill('appraisal'));
       
       // Проверяем, произошла ли эволюция
       if (currentLevel && evolutionStats && evolutionStats.level > 1) {
@@ -969,6 +1028,42 @@ const ReferencePage: React.FC = () => {
     return false;
   }, []);
 
+  const handleGenerateAppraisalEstimate = useCallback(async () => {
+    try {
+      const values = await appraisalForm.validateFields();
+      setAppraisalLoading(true);
+      const groupMeta = appraisalGroups.find(group => group.key === values.assetGroup);
+      const typeMeta = groupMeta?.types.find(type => type.key === values.assetType);
+
+      const estimate = await AppraisalAIService.generateEstimate({
+        objectName: values.objectName || typeMeta?.label || groupMeta?.label || 'Объект оценки',
+        assetGroup: values.assetGroup,
+        assetType: values.assetType,
+        location: values.location,
+        area: values.area ? Number(values.area) : undefined,
+        areaUnit: values.areaUnit,
+        condition: values.condition,
+        incomePerYear: values.incomePerYear ? Number(values.incomePerYear) : undefined,
+        occupancy: values.occupancy,
+        purpose: values.purpose,
+        additionalFactors: values.additionalFactors,
+        card: null,
+      });
+
+      setAppraisalEstimate(estimate);
+      setAppraisalSkill(learningService.getCategorySkill('appraisal'));
+      message.success('AI помощник подготовил оценку объекта');
+    } catch (error: any) {
+      if (error && error.errorFields) {
+        return;
+      }
+      console.error('Ошибка запроса оценки ИИ:', error);
+      message.error('Не удалось получить оценку. Проверьте заполненные данные.');
+    } finally {
+      setAppraisalLoading(false);
+    }
+  }, [appraisalForm, appraisalGroups]);
+
   // Обработчик принудительной переиндексации всех документов
   const handleReindexAll = useCallback(async () => {
     setIndexing(true);
@@ -1040,7 +1135,7 @@ const ReferencePage: React.FC = () => {
         setInputValue('');
         setLoading(true);
 
-        generateAIResponse(question.trim())
+        generateAIResponse(question.trim(), [], appraisalMode ? buildAppraisalContext() || undefined : undefined)
           .then(({ content, sources, context }) => {
             const aiResponse: Message = {
               id: `ai-${Date.now()}`,
@@ -1069,7 +1164,7 @@ const ReferencePage: React.FC = () => {
           });
       }, 50);
     });
-  }, [loading, generateAIResponse]);
+  }, [loading, generateAIResponse, appraisalMode, buildAppraisalContext]);
 
   const handleCategorySelect = useCallback((categoryId: string | null) => {
     setSelectedCategory(categoryId);
@@ -1148,7 +1243,11 @@ const ReferencePage: React.FC = () => {
       timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp),
     })) : messages;
 
-    generateAIResponse(query.trim(), chatHistory)
+    generateAIResponse(
+      query.trim(),
+      chatHistory,
+      appraisalMode ? buildAppraisalContext() || undefined : undefined
+    )
       .then(({ content, sources, context }) => {
         const aiResponse: Message = {
           id: `ai-${Date.now()}`,
@@ -1199,7 +1298,7 @@ const ReferencePage: React.FC = () => {
       .finally(() => {
         setLoading(false);
       });
-  }, [loading, generateAIResponse, currentChatId, messages, scrollToBottom]);
+  }, [loading, generateAIResponse, currentChatId, messages, scrollToBottom, appraisalMode, buildAppraisalContext]);
 
   // Группировка чатов по датам
   const groupedChats = useMemo(() => {
@@ -1399,6 +1498,142 @@ const ReferencePage: React.FC = () => {
           </>
         )}
       </div>
+
+      <div className="reference-page__appraisal-toolbar">
+        <Tag
+          color={appraisalSkill >= 70 ? 'success' : appraisalSkill >= 40 ? 'processing' : 'default'}
+          icon={<CalculatorOutlined />}
+        >
+          Скилл оценки: {appraisalSkill}%
+        </Tag>
+        <Button
+          size="small"
+          type={appraisalMode ? 'primary' : 'default'}
+          icon={<CalculatorOutlined />}
+          onClick={handleToggleAppraisalMode}
+        >
+          {appraisalMode ? 'Свернуть панель оценки' : 'Режим оценки'}
+        </Button>
+      </div>
+
+      {appraisalMode && (
+        <Card size="small" className="reference-page__appraisal-panel">
+          <Form layout="vertical" form={appraisalForm}>
+            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+              <Space size="middle" wrap>
+                <Form.Item
+                  label="Категория"
+                  name="assetGroup"
+                  rules={[{ required: true, message: 'Выберите категорию' }]}
+                >
+                  <Select
+                    style={{ minWidth: 220 }}
+                    options={appraisalGroups.map(group => ({
+                      value: group.key,
+                      label: group.label,
+                    }))}
+                    onChange={() => appraisalForm.setFieldsValue({ assetType: undefined })}
+                  />
+                </Form.Item>
+                <Form.Item
+                  label="Тип актива"
+                  name="assetType"
+                  dependencies={['assetGroup']}
+                  rules={[{ required: true, message: 'Выберите тип актива' }]}
+                >
+                  <Select
+                    style={{ minWidth: 260 }}
+                    placeholder="Выберите тип"
+                    options={appraisalGroups
+                      .find(group => group.key === appraisalForm.getFieldValue('assetGroup'))?.types.map(type => ({
+                        value: type.key,
+                        label: type.label,
+                      })) || []}
+                  />
+                </Form.Item>
+                <Form.Item label="Наименование" name="objectName">
+                  <Input placeholder="Например, складской комплекс на МКАД" />
+                </Form.Item>
+              </Space>
+              <Row gutter={12}>
+                <Col xs={24} md={8}>
+                  <Form.Item label="Локация" name="location">
+                    <Input placeholder="Регион, город, адрес" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={8}>
+                  <Form.Item label="Площадь / объем" name="area">
+                    <InputNumber style={{ width: '100%' }} min={0} placeholder="Например, 1500" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={8}>
+                  <Form.Item label="Единица измерения" name="areaUnit" initialValue="м²">
+                    <Input placeholder="м², га, шт." />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={12}>
+                <Col xs={24} md={8}>
+                  <Form.Item label="Состояние" name="condition">
+                    <Input placeholder="Например, хорошее, требуется ремонт" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={8}>
+                  <Form.Item label="Чистый доход (₽/год)" name="incomePerYear">
+                    <InputNumber style={{ width: '100%' }} min={0} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={8}>
+                  <Form.Item label="Заполняемость / загрузка" name="occupancy">
+                    <Input placeholder="Например, 90% арендаторов" />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={12}>
+                <Col xs={24} md={12}>
+                  <Form.Item label="Цель оценки" name="purpose">
+                    <Input placeholder="Например, взыскание, кредитование" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item label="Особенности / комментарии" name="additionalFactors">
+                    <Input placeholder="Земля в аренде, есть обременения..." />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Space style={{ justifyContent: 'space-between', width: '100%' }}>
+                <Text type="secondary">
+                  После заполнения полей AI помощник выполнит экспресс-оценку и учтёт данные в самообучении.
+                </Text>
+                <Button
+                  type="primary"
+                  icon={<CalculatorOutlined />}
+                  loading={appraisalLoading}
+                  onClick={handleGenerateAppraisalEstimate}
+                >
+                  Получить оценку ИИ
+                </Button>
+              </Space>
+              {appraisalEstimate && (
+                <Alert
+                  type="success"
+                  showIcon
+                  message={`Рыночная стоимость: ${appraisalEstimate.marketValue.toLocaleString('ru-RU')} ₽ · Залоговая: ${appraisalEstimate.collateralValue.toLocaleString('ru-RU')} ₽`}
+                  description={
+                    <div>
+                      <Text strong>Методология:</Text> {appraisalEstimate.methodology}
+                      <br />
+                      <Text strong>Ключевые риски:</Text> {appraisalEstimate.riskFactors.join('; ') || 'не выявлены'}
+                      <br />
+                      <Text strong>Рекомендации:</Text> {appraisalEstimate.recommendedActions.join('; ') || '—'}
+                    </div>
+                  }
+                />
+              )}
+            </Space>
+          </Form>
+        </Card>
+      )}
 
       {/* Основной контент */}
       <div className={`reference-page__main-content ${chatsVisible ? 'reference-page__main-content--with-sidebar' : ''}`}>

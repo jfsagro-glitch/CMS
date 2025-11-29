@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Card, Descriptions, Tag, Row, Col, Divider, Typography, Space, Statistic, Tabs, Button, List, Empty } from 'antd';
+import { Card, Descriptions, Tag, Row, Col, Divider, Typography, Space, Statistic, Tabs, Button, List, Empty, Form, Input, InputNumber, Modal, message, Alert, Select } from 'antd';
 import {
   HomeOutlined,
   CarOutlined,
@@ -10,6 +10,7 @@ import {
   ExclamationCircleOutlined,
   CameraOutlined,
   FileSearchOutlined,
+  CalculatorOutlined,
 } from '@ant-design/icons';
 import type { ExtendedCollateralCard } from '../../types';
 import { getAttributesForPropertyType, distributeAttributesByTabs } from '@/utils/collateralAttributesFromDict';
@@ -19,6 +20,9 @@ import InspectionCardModal from '@/components/InspectionCardModal/InspectionCard
 import type { Inspection } from '@/types/inspection';
 import { requiresInspection, requiresEgrn } from '@/utils/objectTypeRequirements';
 import dayjs from 'dayjs';
+import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
+import appraisalStorage, { type StoredAIAppraisal } from '@/utils/appraisalStorage';
+import { getAppraisalGroups } from '@/utils/appraisalTaxonomy';
 import './CollateralCardView.css';
 
 const { Title, Text } = Typography;
@@ -33,6 +37,11 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
   const [inspectionsLoading, setInspectionsLoading] = useState(false);
   const [inspectionModalVisible, setInspectionModalVisible] = useState(false);
   const [viewingInspectionId, setViewingInspectionId] = useState<string | null>(null);
+  const [aiAppraisals, setAiAppraisals] = useState<StoredAIAppraisal[]>([]);
+  const [aiAppraisalModalVisible, setAiAppraisalModalVisible] = useState(false);
+  const [aiAppraisalLoading, setAiAppraisalLoading] = useState(false);
+  const [aiAppraisalForm] = Form.useForm();
+  const appraisalGroups = useMemo(() => getAppraisalGroups(), []);
 
   const loadInspections = useCallback(async () => {
     setInspectionsLoading(true);
@@ -50,9 +59,80 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
     loadInspections();
   }, [loadInspections]);
 
+  useEffect(() => {
+    setAiAppraisals(appraisalStorage.getByCard(card.id));
+  }, [card.id]);
+
   const handleViewInspection = (inspectionId: string) => {
     setViewingInspectionId(inspectionId);
     setInspectionModalVisible(true);
+  };
+
+  const openAiAppraisalModal = () => {
+    const defaults = defaultAppraisalSelection;
+    aiAppraisalForm.setFieldsValue({
+      assetGroup: defaults.assetGroup,
+      assetType: defaults.assetType,
+      location: card.address?.fullAddress,
+      area: card.characteristics?.totalAreaSqm || card.characteristics?.totalArea,
+      areaUnit: 'м²',
+      condition: card.characteristics?.STATE || card.characteristics?.CONDITION || card.characteristics?.condition,
+      purpose: 'Обновление карточки обеспечения',
+      additionalFactors: card.notes,
+    });
+    setAiAppraisalModalVisible(true);
+  };
+
+  const handleSaveAiAppraisal = async () => {
+    try {
+      const values = await aiAppraisalForm.validateFields();
+      setAiAppraisalLoading(true);
+      const estimate = await AppraisalAIService.generateEstimate({
+        objectName: card.name || values.assetType || 'Объект обеспечения',
+        assetGroup: values.assetGroup,
+        assetType: values.assetType,
+        location: values.location || card.address?.fullAddress,
+        area: values.area ? Number(values.area) : undefined,
+        areaUnit: values.areaUnit,
+        condition: values.condition,
+        incomePerYear: values.incomePerYear ? Number(values.incomePerYear) : undefined,
+        purpose: values.purpose,
+        additionalFactors: values.additionalFactors,
+        card,
+      });
+
+      const stored = appraisalStorage.add({
+        cardId: card.id,
+        objectId: card.id,
+        objectName: card.name || 'Объект обеспечения',
+        estimate,
+        input: {
+          objectName: card.name || 'Объект обеспечения',
+          assetGroup: values.assetGroup,
+          assetType: values.assetType,
+          location: values.location,
+          area: values.area ? Number(values.area) : undefined,
+          areaUnit: values.areaUnit,
+          condition: values.condition,
+          incomePerYear: values.incomePerYear ? Number(values.incomePerYear) : undefined,
+          purpose: values.purpose,
+          additionalFactors: values.additionalFactors,
+          card,
+        },
+      });
+
+      setAiAppraisals(prev => [stored, ...prev]);
+      message.success('AI оценка сохранена для карточки');
+      setAiAppraisalModalVisible(false);
+    } catch (error: any) {
+      if (error?.errorFields) {
+        return;
+      }
+      console.error('Ошибка выполнения AI оценки карточки:', error);
+      message.error('Не удалось выполнить оценку ИИ');
+    } finally {
+      setAiAppraisalLoading(false);
+    }
   };
   
   // Функции для определения цвета статуса
@@ -77,6 +157,43 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
         return status;
     }
   };
+
+  const mapMainCategoryToGroup = (category?: string) => {
+    switch (category) {
+      case 'real_estate':
+        return 'real_estate';
+      case 'movable':
+        return 'movable';
+      case 'property_rights':
+        return 'rights';
+      default:
+        return 'real_estate';
+    }
+  };
+
+  const defaultAppraisalSelection = useMemo(() => {
+    if (appraisalGroups.length === 0) {
+      return { assetGroup: undefined, assetType: undefined };
+    }
+    const groupKey = mapMainCategoryToGroup(card.mainCategory);
+    let group = appraisalGroups.find(item => item.key === groupKey);
+    if (!group) {
+      group = appraisalGroups[0];
+    }
+    let type = group?.types.find(t => t.label === card.propertyType || t.label === card.classification?.level2);
+    if (!type && group?.types.length) {
+      type = group.types[0];
+    }
+    return {
+      assetGroup: group?.key,
+      assetType: type?.key,
+    };
+  }, [card.classification, card.mainCategory, card.propertyType, appraisalGroups]);
+
+  const latestAiAppraisal = useMemo(() => {
+    if (aiAppraisals.length === 0) return null;
+    return [...aiAppraisals].sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1))[0];
+  }, [aiAppraisals]);
 
   const getCategoryIcon = () => {
     switch (card.mainCategory) {
@@ -411,6 +528,74 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
         </div>
       ),
     },
+    {
+      key: '9',
+      label: (
+        <Space>
+          <CalculatorOutlined />
+          Оценка ИИ
+        </Space>
+      ),
+      children: (
+        <div>
+          {latestAiAppraisal ? (
+            <>
+              <Alert
+                type="info"
+                showIcon
+                message={`Рыночная стоимость: ${formatCurrency(latestAiAppraisal.estimate.marketValue)} · Залоговая: ${formatCurrency(latestAiAppraisal.estimate.collateralValue)}`}
+                description={
+                  <div>
+                    <Text strong>Методология:</Text> {latestAiAppraisal.estimate.methodology}
+                    <br />
+                    <Text strong>Уровень уверенности:</Text> {latestAiAppraisal.estimate.confidence}
+                    <br />
+                    <Text strong>Риски:</Text> {latestAiAppraisal.estimate.riskFactors.join('; ') || 'не выявлены'}
+                    <br />
+                    <Text strong>Рекомендации:</Text> {latestAiAppraisal.estimate.recommendedActions.join('; ') || '—'}
+                  </div>
+                }
+                style={{ marginBottom: 16 }}
+              />
+              {latestAiAppraisal.estimate.summary && (
+                <Typography.Paragraph>
+                  <Text strong>Краткие выводы:</Text> {latestAiAppraisal.estimate.summary}
+                </Typography.Paragraph>
+              )}
+            </>
+          ) : (
+            <Empty description="Оценка ИИ ещё не выполнялась" />
+          )}
+          <Divider />
+          <Space wrap>
+            <Button type="primary" icon={<CalculatorOutlined />} onClick={openAiAppraisalModal}>
+              Запросить новую оценку
+            </Button>
+          </Space>
+          {aiAppraisals.length > 0 && (
+            <>
+              <Divider />
+              <List
+                header="История AI оценок"
+                dataSource={aiAppraisals}
+                renderItem={(item) => (
+                  <List.Item>
+                    <Space direction="vertical" size="small">
+                      <Text strong>{dayjs(item.createdAt).format('DD.MM.YYYY HH:mm')}</Text>
+                      <Text>
+                        Рыночная: {formatCurrency(item.estimate.marketValue)} · Залоговая:{' '}
+                        {formatCurrency(item.estimate.collateralValue)}
+                      </Text>
+                      <Text type="secondary">{item.estimate.summary}</Text>
+                    </Space>
+                  </List.Item>
+                )}
+              />
+            </>
+          )}
+        </div>
+      ),
+    },
     // Вкладка "Осмотры" показывается только для типов объектов, где требуется осмотр
     ...(needsInspection ? [{
       key: '7',
@@ -422,6 +607,16 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
       ),
       children: (
         <div>
+          <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+            <Text strong>Осмотры объекта</Text>
+            <Button
+              size="small"
+              icon={<CalculatorOutlined />}
+              onClick={openAiAppraisalModal}
+            >
+              Оценка ИИ
+            </Button>
+          </Space>
           {inspectionsLoading ? (
             <Empty description="Загрузка осмотров..." />
           ) : inspections.length === 0 ? (
@@ -588,6 +783,64 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
           loadInspections();
         }}
       />
+      <Modal
+        title="AI-оценка объекта"
+        open={aiAppraisalModalVisible}
+        onOk={handleSaveAiAppraisal}
+        onCancel={() => setAiAppraisalModalVisible(false)}
+        confirmLoading={aiAppraisalLoading}
+        okText="Запросить оценку"
+        cancelText="Отмена"
+      >
+        <Form layout="vertical" form={aiAppraisalForm}>
+          <Form.Item
+            label="Категория"
+            name="assetGroup"
+            rules={[{ required: true, message: 'Выберите категорию' }]}
+          >
+            <Select
+              options={appraisalGroups.map(group => ({ label: group.label, value: group.key }))}
+              onChange={() => aiAppraisalForm.setFieldsValue({ assetType: undefined })}
+            />
+          </Form.Item>
+          <Form.Item
+            label="Тип актива"
+            name="assetType"
+            dependencies={['assetGroup']}
+            rules={[{ required: true, message: 'Выберите тип актива' }]}
+          >
+            <Select
+              placeholder="Выберите тип"
+              options={
+                appraisalGroups
+                  .find(group => group.key === aiAppraisalForm.getFieldValue('assetGroup'))
+                  ?.types.map(type => ({ label: type.label, value: type.key })) || []
+              }
+            />
+          </Form.Item>
+          <Form.Item label="Локация" name="location">
+            <Input placeholder="Адрес или регион" />
+          </Form.Item>
+          <Form.Item label="Площадь / объем" name="area">
+            <InputNumber style={{ width: '100%' }} min={0} placeholder="Например, 1200" />
+          </Form.Item>
+          <Form.Item label="Единица измерения" name="areaUnit" initialValue="м²">
+            <Input placeholder="м², га, шт." />
+          </Form.Item>
+          <Form.Item label="Состояние" name="condition">
+            <Input placeholder="Например, требует ремонта" />
+          </Form.Item>
+          <Form.Item label="Чистый доход (₽/год)" name="incomePerYear">
+            <InputNumber style={{ width: '100%' }} min={0} />
+          </Form.Item>
+          <Form.Item label="Цель оценки" name="purpose">
+            <Input placeholder="Например, актуализация стоимости" />
+          </Form.Item>
+          <Form.Item label="Дополнительные факторы" name="additionalFactors">
+            <Input.TextArea rows={3} placeholder="Обременения, особенности участка, условия эксплуатации..." />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

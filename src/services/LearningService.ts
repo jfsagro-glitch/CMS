@@ -27,8 +27,10 @@ interface DocumentInsight {
 class LearningService {
   private readonly STORAGE_KEY = 'ai_learning_patterns';
   private readonly INSIGHTS_KEY = 'ai_document_insights';
+  private readonly CATEGORY_EXPERIENCE_KEY = 'ai_category_experience';
   private patterns: Map<string, LearningPattern> = new Map();
   private documentInsights: Map<string, DocumentInsight> = new Map();
+  private categoryExperience: Record<string, number> = {};
 
   /**
    * Инициализация - загрузка сохраненных паттернов
@@ -36,6 +38,7 @@ class LearningService {
   initialize(): void {
     this.loadPatterns();
     this.loadDocumentInsights();
+    this.loadCategoryExperience();
   }
 
   /**
@@ -464,6 +467,49 @@ class LearningService {
    * Загружает инсайты документов
    */
   private loadDocumentInsights(): void {
+  private saveCategoryExperience(): void {
+    try {
+      localStorage.setItem(this.CATEGORY_EXPERIENCE_KEY, JSON.stringify(this.categoryExperience));
+    } catch (error) {
+      console.error('Ошибка сохранения опыта по категориям:', error);
+    }
+  }
+
+  private loadCategoryExperience(): void {
+    try {
+      const data = localStorage.getItem(this.CATEGORY_EXPERIENCE_KEY);
+      if (data) {
+        this.categoryExperience = JSON.parse(data);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки опыта по категориям:', error);
+      this.categoryExperience = {};
+    }
+  }
+
+  addCategoryExperience(category: string, amount: number = 2): number {
+    const current = this.categoryExperience[category] || 0;
+    const updated = Math.max(0, Math.min(100, current + amount));
+    this.categoryExperience[category] = updated;
+    this.saveCategoryExperience();
+    return updated;
+  }
+
+  getCategorySkill(category: string): number {
+    const xp = this.categoryExperience[category] ?? 0;
+    const patterns = Array.from(this.patterns.values()).filter(p => p.category === category);
+    if (patterns.length === 0) {
+      return xp;
+    }
+
+    const avgSuccess =
+      patterns.reduce((sum, p) => sum + p.successRate, 0) / patterns.length;
+    const usageScore = Math.min(patterns.reduce((sum, p) => sum + p.usageCount, 0) / 10, 20);
+    const successScore = avgSuccess * 60; // 0..60
+    const base = xp * 0.4; // 0..40
+
+    return Math.min(100, Math.round(base + successScore + usageScore));
+  }
     try {
       const stored = localStorage.getItem(this.INSIGHTS_KEY);
       if (stored) {

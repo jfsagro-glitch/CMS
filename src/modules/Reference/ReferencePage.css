@@ -159,6 +159,23 @@
   justify-content: flex-end;
 }
 
+.reference-page__appraisal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+}
+
+.reference-page__appraisal-panel {
+  margin: 0 24px 12px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.reference-page__appraisal-panel .ant-form-item {
+  margin-bottom: 8px;
+}
+
 /* Card занимает всю оставшуюся высоту после header */
 .reference-page__card {
   flex: 1 1 auto;
