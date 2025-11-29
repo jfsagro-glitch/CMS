@@ -185,6 +185,7 @@ const ReferencePage: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [indexing, setIndexing] = useState(false);
+  const [loadingCountdown, setLoadingCountdown] = useState<number | null>(null);
   const [indexedDocuments, setIndexedDocuments] = useState<DocumentIndex[]>([]);
   const [categories, setCategories] = useState<KnowledgeCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -417,9 +418,11 @@ const ReferencePage: React.FC = () => {
         learningService.initialize();
         evolutionService.initialize();
         
-        // Загружаем индексы из IndexedDB (асинхронно)
-        await documentIndexer.loadFromStorage();
-        await knowledgeBase.loadFromStorage();
+        // Загружаем индексы из IndexedDB (асинхронно, параллельно)
+        await Promise.all([
+          documentIndexer.loadFromStorage(),
+          knowledgeBase.loadFromStorage(),
+        ]);
         
         // Загружаем категории из базы знаний (быстро)
         const loadedCategories = knowledgeBase.getCategories();
@@ -611,6 +614,28 @@ const ReferencePage: React.FC = () => {
       }, 100);
     }
   }, [messages.length, scrollToBottom]);
+
+  // Обратный отсчёт при инициализации справочной
+  useEffect(() => {
+    if (!indexing) {
+      setLoadingCountdown(null);
+      return;
+    }
+
+    setLoadingCountdown(10);
+    const intervalId = window.setInterval(() => {
+      setLoadingCountdown(prev => {
+        if (prev === null) return null;
+        if (prev <= 0) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+      setLoadingCountdown(null);
+    };
+  }, [indexing]);
 
   const cachedKnowledgeSearch = useCallback((query: string, limit: number) => {
     const normalized = query.trim().toLowerCase();
@@ -1555,6 +1580,12 @@ const ReferencePage: React.FC = () => {
         <Card size="small" className="reference-page__appraisal-panel">
           <Form layout="vertical" form={appraisalForm}>
             <Space direction="vertical" style={{ width: '100%' }} size="middle">
+              <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                <Text strong>Режим оценки активен</Text>
+                <Button size="small" onClick={handleToggleAppraisalMode}>
+                  Выйти из режима оценки
+                </Button>
+              </Space>
               <Space size="middle" wrap>
                 <Form.Item label="Категория" name="assetGroup">
                   <Select
@@ -1750,8 +1781,19 @@ const ReferencePage: React.FC = () => {
 
       {indexing && (
         <Alert
-          message="Индексация документов и построение базы знаний..."
-          description="Пожалуйста, подождите, идет обработка документов"
+          message="Инициализация ИИ-справочной..."
+          description={
+            <div>
+              <span className="reference-page__loading-text">
+                Справочная загружается, подождите пожалуйста...
+              </span>
+              {typeof loadingCountdown === 'number' && (
+                <div style={{ marginTop: 4 }}>
+                  Осталось примерно {loadingCountdown} сек.
+                </div>
+              )}
+            </div>
+          }
           type="info"
           showIcon
           style={{ marginBottom: 16 }}

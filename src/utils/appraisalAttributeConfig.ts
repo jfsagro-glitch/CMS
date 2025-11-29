@@ -32,7 +32,7 @@ const REAL_ESTATE_FIELDS: AppraisalAttributeField[] = [
 
 const LAND_FIELDS: AppraisalAttributeField[] = [
   { key: 'location', label: 'Местоположение', placeholder: 'Регион, населённый пункт' },
-  { key: 'areaHa', label: 'Площадь, га', type: 'number', placeholder: 'Общая площадь' },
+  { key: 'areaSqm', label: 'Площадь, м²', type: 'number', placeholder: 'Общая площадь в кв. метрах' },
   { key: 'landUse', label: 'Назначение', placeholder: 'С/х, коммерческое, ИЖС и т.д.' },
   { key: 'ownershipType', label: 'Тип права', placeholder: 'Собственность / аренда' },
 ];

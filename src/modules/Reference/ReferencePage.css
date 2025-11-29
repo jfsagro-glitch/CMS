@@ -194,6 +194,21 @@
   overflow: hidden;
 }
 
+.reference-page__loading-text {
+  font-weight: 600;
+  color: #faad14;
+  animation: reference-page-blink 1s infinite;
+}
+
+@keyframes reference-page-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
 .reference-page__chat {
   display: flex;
   flex-direction: column;
