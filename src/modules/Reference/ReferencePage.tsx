@@ -1501,23 +1501,6 @@ const ReferencePage: React.FC = () => {
         )}
       </div>
 
-      <div className="reference-page__appraisal-toolbar">
-        <Tag
-          color={appraisalSkill >= 70 ? 'success' : appraisalSkill >= 40 ? 'processing' : 'default'}
-          icon={<CalculatorOutlined />}
-        >
-          Скилл оценки: {appraisalSkill}%
-        </Tag>
-        <Button
-          size="small"
-          type={appraisalMode ? 'primary' : 'default'}
-          icon={<CalculatorOutlined />}
-          onClick={handleToggleAppraisalMode}
-        >
-          {appraisalMode ? 'Свернуть панель оценки' : 'Режим оценки'}
-        </Button>
-      </div>
-
       {appraisalMode && (
         <Card size="small" className="reference-page__appraisal-panel">
           <Form layout="vertical" form={appraisalForm}>
@@ -1688,9 +1671,28 @@ const ReferencePage: React.FC = () => {
                 </Space>
               </div>
             )}
-            <Text type="secondary" style={{ fontSize: '11px', lineHeight: '1.3' }}>
-              База знаний на основе справочной литературы по банковским залогам
-            </Text>
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <Text type="secondary" style={{ fontSize: '11px', lineHeight: '1.3' }}>
+                База знаний на основе справочной литературы по банковским залогам
+              </Text>
+              <Space align="center" wrap size="small">
+                <Tag
+                  color={appraisalSkill >= 70 ? 'success' : appraisalSkill >= 40 ? 'processing' : 'default'}
+                  icon={<CalculatorOutlined />}
+                  style={{ margin: 0 }}
+                >
+                  Скилл оценки: {appraisalSkill}%
+                </Tag>
+                <Button
+                  size="small"
+                  type={appraisalMode ? 'primary' : 'default'}
+                  icon={<CalculatorOutlined />}
+                  onClick={handleToggleAppraisalMode}
+                >
+                  Режим оценки
+                </Button>
+              </Space>
+            </Space>
           </div>
         </div>
         <div className="reference-page__header-right">
