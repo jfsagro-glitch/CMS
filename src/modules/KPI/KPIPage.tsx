@@ -30,7 +30,12 @@ import {
 } from '@/utils/workloadCalculator';
 import { generateMonitoringPlan, generateRevaluationPlan } from '@/utils/monitoringPlanGenerator';
 import type { MonitoringPlanEntry, RevaluationPlanEntry } from '@/types/monitoring';
-import { applyKpiOverrides, cloneKpiData, saveLatestKpiMetrics } from '@/utils/kpiMetricsStorage';
+import {
+  applyKpiOverrides,
+  cloneKpiData,
+  loadCenterMboOverrides,
+  saveLatestKpiMetrics,
+} from '@/utils/kpiMetricsStorage';
 import './KPIPage.css';
 
 const { Title, Text } = Typography;
@@ -207,7 +212,11 @@ const mapPlanEntriesToTasks = (
   });
 };
 
-const buildCenterStats = (tasks: TaskDB[], employees: Employee[]): CenterStats[] => {
+const buildCenterStats = (
+  tasks: TaskDB[],
+  employees: Employee[],
+  mboOverrides: Record<string, number>
+): CenterStats[] => {
   return REGION_CENTERS.map((center) => {
     const centerTasks = tasks.filter(
       (task) => center.cities.includes(task.region) || task.region === center.code || center.name.includes(task.region)
@@ -260,8 +269,10 @@ const buildCenterStats = (tasks: TaskDB[], employees: Employee[]): CenterStats[]
     const centerOverdueTasks = centerTasks.filter((task) => isTaskOverdue(task)).length;
     const centerCompletionRate =
       centerTotalTasks > 0 ? Math.round((centerCompletedTasks / centerTotalTasks) * 100) : 0;
-    const centerMboCompletion =
+    const calculatedMbo =
       centerTotalTasks > 0 ? Math.round((centerCompletedTasks / centerTotalTasks) * 100) : 0;
+    const centerMboCompletion =
+      typeof mboOverrides[center.code] === 'number' ? mboOverrides[center.code] : calculatedMbo;
 
     return {
       code: center.code,
@@ -629,7 +640,8 @@ const KPIPage: React.FC = () => {
         const last30Days = last30DaysRaw.tasksCount === 0 ? randomLoadAround(currentWorkload) : clampLoad(last30DaysRaw.workloadPercent);
         const last90Days = last90DaysRaw.tasksCount === 0 ? randomLoadAround(currentWorkload) : clampLoad(last90DaysRaw.workloadPercent);
 
-        setCenterStats(buildCenterStats(combinedTasks, employees));
+        const centerMboOverrides = loadCenterMboOverrides();
+        setCenterStats(buildCenterStats(combinedTasks, employees, centerMboOverrides));
         setEmployeeAwards(computeEmployeeAwards(combinedTasks, employees));
 
         const baseKpiData: KPIData = {

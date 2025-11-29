@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Result, Button, Card, Row, Col, message } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserOutlined, DatabaseOutlined, FilePdfOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { UserOutlined, DatabaseOutlined, FilePdfOutlined, ClockCircleOutlined, LineChartOutlined } from '@ant-design/icons';
 // import { downloadPdfFromMarkdownFile } from '@/utils/pdfGenerator';
 
 interface PlaceholderPageProps {
@@ -85,6 +85,19 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
                 <ClockCircleOutlined style={{ fontSize: '48px', color: '#fa8c16', marginBottom: '16px' }} />
                 <h3>Нормочасы по функциям</h3>
                 <p style={{ color: '#8c8c8c' }}>Управление нормочасами для расчета загрузки сотрудников</p>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card
+              hoverable
+              style={{ height: '100%' }}
+              onClick={() => navigate('/settings/metrics')}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <LineChartOutlined style={{ fontSize: '48px', color: '#722ed1', marginBottom: '16px' }} />
+                <h3>Метрики KPI и MBO</h3>
+                <p style={{ color: '#8c8c8c' }}>Корректировка ключевых показателей и целевых значений MBO</p>
               </div>
             </Card>
           </Col>

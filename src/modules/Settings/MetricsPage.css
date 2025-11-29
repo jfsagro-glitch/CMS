@@ -1,0 +1,38 @@
+.metrics-page {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+.metrics-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.metrics-card {
+  margin-bottom: 16px;
+}
+
+.metrics-page__loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .metrics-page {
+    padding: 16px;
+  }
+
+  .metrics-page__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+

@@ -2,6 +2,7 @@ import type { KPIData } from '@/types/kpi';
 
 export const KPI_OVERRIDES_STORAGE_KEY = 'kpiMetricsOverrides';
 export const KPI_LATEST_STORAGE_KEY = 'kpiMetricsLatest';
+export const KPI_CENTER_MBO_KEY = 'kpiCenterMboOverrides';
 
 export type KPIOverrides = Partial<KPIData> & {
   workloadByPeriod?: Partial<KPIData['workloadByPeriod']>;
@@ -60,6 +61,37 @@ export const clearKpiOverrides = (): void => {
     localStorage.removeItem(KPI_OVERRIDES_STORAGE_KEY);
   } catch (error) {
     console.warn('Не удалось удалить корректировки KPI:', error);
+  }
+};
+
+export const loadCenterMboOverrides = (): Record<string, number> => {
+  try {
+    const raw = localStorage.getItem(KPI_CENTER_MBO_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      return parsed;
+    }
+    return {};
+  } catch (error) {
+    console.warn('Не удалось загрузить корректировки MBO по центрам:', error);
+    return {};
+  }
+};
+
+export const saveCenterMboOverrides = (overrides: Record<string, number>): void => {
+  try {
+    localStorage.setItem(KPI_CENTER_MBO_KEY, JSON.stringify(overrides));
+  } catch (error) {
+    console.error('Не удалось сохранить корректировки MBO по центрам:', error);
+  }
+};
+
+export const clearCenterMboOverrides = (): void => {
+  try {
+    localStorage.removeItem(KPI_CENTER_MBO_KEY);
+  } catch (error) {
+    console.warn('Не удалось удалить корректировки MBO по центрам:', error);
   }
 };
 
