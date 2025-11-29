@@ -20,7 +20,7 @@ import InspectionCardModal from '@/components/InspectionCardModal/InspectionCard
 import type { Inspection } from '@/types/inspection';
 import { requiresInspection, requiresEgrn } from '@/utils/objectTypeRequirements';
 import dayjs from 'dayjs';
-import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
+import AppraisalAIService from '@/services/AppraisalAIService';
 import appraisalStorage, { type StoredAIAppraisal } from '@/utils/appraisalStorage';
 import { getAppraisalGroups } from '@/utils/appraisalTaxonomy';
 import './CollateralCardView.css';

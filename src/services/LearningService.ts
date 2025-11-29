@@ -467,6 +467,26 @@ class LearningService {
    * Загружает инсайты документов
    */
   private loadDocumentInsights(): void {
+    try {
+      const stored = localStorage.getItem(this.INSIGHTS_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        this.documentInsights.clear();
+        data.forEach((i: any) => {
+          this.documentInsights.set(i.documentName, {
+            ...i,
+            lastAnalyzed: new Date(i.lastAnalyzed),
+          });
+        });
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки инсайтов документов:', error);
+    }
+  }
+
+  /**
+   * Сохраняет накопленный опыт по категориям
+   */
   private saveCategoryExperience(): void {
     try {
       localStorage.setItem(this.CATEGORY_EXPERIENCE_KEY, JSON.stringify(this.categoryExperience));
@@ -495,6 +515,9 @@ class LearningService {
     return updated;
   }
 
+  /**
+   * Возвращает текущий прогресс навыка по категории
+   */
   getCategorySkill(category: string): number {
     const xp = this.categoryExperience[category] ?? 0;
     const patterns = Array.from(this.patterns.values()).filter(p => p.category === category);
@@ -509,22 +532,6 @@ class LearningService {
     const base = xp * 0.4; // 0..40
 
     return Math.min(100, Math.round(base + successScore + usageScore));
-  }
-    try {
-      const stored = localStorage.getItem(this.INSIGHTS_KEY);
-      if (stored) {
-        const data = JSON.parse(stored);
-        this.documentInsights.clear();
-        data.forEach((i: any) => {
-          this.documentInsights.set(i.documentName, {
-            ...i,
-            lastAnalyzed: new Date(i.lastAnalyzed),
-          });
-        });
-      }
-    } catch (error) {
-      console.error('Ошибка загрузки инсайтов документов:', error);
-    }
   }
 
   /**
