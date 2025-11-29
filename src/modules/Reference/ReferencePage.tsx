@@ -44,6 +44,7 @@ import {
   MenuUnfoldOutlined,
   MoreOutlined,
   HistoryOutlined,
+  SyncOutlined,
 } from '@ant-design/icons';
 import { documentIndexer } from '@/utils/documentIndexer';
 import { loadVNDDocuments, loadDocumentManually, reindexAllDocuments } from '@/utils/documentLoader';
@@ -199,6 +200,13 @@ const ReferencePage: React.FC = () => {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
   const [appraisalSkill, setAppraisalSkill] = useState(0);
+  const [trainingMode, setTrainingMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('reference_training_mode') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [appraisalMode, setAppraisalMode] = useState(false);
   const [appraisalEstimate, setAppraisalEstimate] = useState<AppraisalEstimate | null>(null);
   const [appraisalLoading, setAppraisalLoading] = useState(false);
@@ -216,6 +224,17 @@ const ReferencePage: React.FC = () => {
     { value: 'rights', label: 'Права требования' },
   ], []);
   const appraisalTypeOptions = APPRAISAL_TYPE_OPTIONS;
+  const handleToggleTrainingMode = useCallback(() => {
+    setTrainingMode(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('reference_training_mode', String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, []);
   const handleToggleAppraisalMode = useCallback(() => {
     setAppraisalMode((prev) => {
       if (prev) {
@@ -247,6 +266,60 @@ const ReferencePage: React.FC = () => {
 
     return parts.join('\n');
   }, [appraisalForm, appraisalCategoryOptions, derivedAssetGroup, attributeFields, appraisalTypeOptions]);
+
+  // Фоновый режим интенсивного обучения
+  useEffect(() => {
+    if (!trainingMode) return;
+
+    let cancelled = false;
+    const cycleDelay = 60_000; // 60 секунд между циклами обучения
+
+    const runTrainingCycle = async () => {
+      if (cancelled) return;
+      try {
+        // Усиленное обучение на документах и обратной связи
+        learningService.analyzeDocuments();
+        learningService.analyzeFeedback();
+        evolutionService.addExperienceFromDocuments();
+        evolutionService.updateExperienceFromCurrentData();
+
+        const stats = learningService.getLearningStats();
+        const evolutionStats = evolutionService.getEvolutionStats();
+        const progress = evolutionService.getProgressToNextLevel();
+
+        if (!cancelled && evolutionStats) {
+          setEvolutionLevel(evolutionStats.level);
+          setEvolutionProgress(progress);
+        }
+
+        if (!cancelled) {
+          const patternsWeight = Math.min(stats.patternsCount * 5, 30);
+          const successWeight = stats.averageSuccessRate * 25;
+          const usageWeight = Math.min(stats.totalUsage / 10, 15);
+          const insightsWeight = Math.min(stats.insightsCount * 2, 10);
+          const evolutionBonus = evolutionStats ? Math.min(evolutionStats.level * 2, 20) : 0;
+          setLearningIndex(Math.round(patternsWeight + successWeight + usageWeight + insightsWeight + evolutionBonus));
+          setAppraisalSkill(learningService.getCategorySkill('appraisal'));
+        }
+      } catch (error) {
+        if (import.meta.env.MODE === 'development') {
+          console.error('Ошибка цикла обучения:', error);
+        }
+      } finally {
+        if (!cancelled) {
+          window.setTimeout(runTrainingCycle, cycleDelay);
+        }
+      }
+    };
+
+    // Стартуем первый цикл с небольшой задержкой, чтобы не блокировать UI
+    const initialTimeout = window.setTimeout(runTrainingCycle, 2_000);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(initialTimeout);
+    };
+  }, [trainingMode]);
   // Загружаем состояние сворачивания из localStorage
   const [chatsVisible, setChatsVisible] = useState(() => {
     const saved = localStorage.getItem('reference_chats_visible');
@@ -1746,6 +1819,13 @@ const ReferencePage: React.FC = () => {
                 >
                   Скилл оценки: {appraisalSkill}%
                 </Tag>
+                <Tag
+                  color={trainingMode ? 'processing' : 'default'}
+                  icon={<SyncOutlined spin={trainingMode} />}
+                  style={{ margin: 0 }}
+                >
+                  Режим обучения
+                </Tag>
                 <Button
                   size="small"
                   type={appraisalMode ? 'primary' : 'default'}
@@ -1753,6 +1833,14 @@ const ReferencePage: React.FC = () => {
                   onClick={handleToggleAppraisalMode}
                 >
                   Режим оценки
+                </Button>
+                <Button
+                  size="small"
+                  type={trainingMode ? 'primary' : 'default'}
+                  icon={<SyncOutlined spin={trainingMode} />}
+                  onClick={handleToggleTrainingMode}
+                >
+                  {trainingMode ? 'Остановить обучение' : 'Режим обучения'}
                 </Button>
               </Space>
             </Space>

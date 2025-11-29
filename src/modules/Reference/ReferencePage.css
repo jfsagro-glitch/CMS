@@ -122,7 +122,7 @@
 
 /* Header - уменьшенная высота для большего пространства для сообщений */
 .reference-page__header {
-  padding: 16px 24px;
+  padding: 10px 20px;
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border-bottom: 1px solid #e8e8e8;
   display: flex;
@@ -133,7 +133,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   flex: 0 0 auto; /* Автоматическая высота */
   min-height: auto;
-  max-height: 180px; /* Максимальная высота */
+  max-height: 160px; /* Максимальная высота */
   overflow: visible; /* Убираем прокрутку из header полностью */
 }
 
@@ -261,7 +261,7 @@
   flex: 1 1 auto;
   overflow-y: auto !important; /* Автоматическая прокрутка при необходимости */
   overflow-x: hidden;
-  padding: 24px 32px;
+  padding: 12px 32px 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
