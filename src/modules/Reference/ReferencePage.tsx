@@ -235,6 +235,7 @@ const ReferencePage: React.FC = () => {
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<any>(null);
+  const searchCacheRef = useRef<Map<string, { result: KnowledgeTopic[]; timestamp: number }>>(new Map());
 
   // Сохраняем состояние сворачивания в localStorage
   useEffect(() => {
@@ -587,6 +588,24 @@ const ReferencePage: React.FC = () => {
     }
   }, [messages.length, scrollToBottom]);
 
+  const cachedKnowledgeSearch = useCallback((query: string, limit: number) => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) {
+      return [];
+    }
+    const cacheKey = `${normalized}::${limit}`;
+    const cached = searchCacheRef.current.get(cacheKey);
+    const now = Date.now();
+
+    if (cached && now - cached.timestamp < 5 * 60 * 1000) {
+      return cached.result;
+    }
+
+    const results = knowledgeBase.search(query, limit);
+    searchCacheRef.current.set(cacheKey, { result: results, timestamp: now });
+    return results;
+  }, []);
+
   // Поиск по базе знаний с debounce (оптимизировано)
   useEffect(() => {
     const trimmedQuery = searchQuery.trim();
@@ -599,8 +618,7 @@ const ReferencePage: React.FC = () => {
     // Увеличиваем debounce для лучшей производительности
     const timeoutId = setTimeout(() => {
       try {
-        // Ограничиваем количество результатов для производительности
-        const results = knowledgeBase.search(trimmedQuery, 10);
+        const results = cachedKnowledgeSearch(trimmedQuery, 10);
         setSearchResults(results);
       } catch (error) {
         if (import.meta.env.MODE === 'development') {
@@ -611,7 +629,7 @@ const ReferencePage: React.FC = () => {
     }, 400); // Debounce 400ms для лучшей производительности
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  }, [searchQuery, cachedKnowledgeSearch]);
 
   // Мемоизируем список названий категорий
   const categoryNames = useMemo(() => {
@@ -624,7 +642,7 @@ const ReferencePage: React.FC = () => {
     const lowerMessage = userMessage.toLowerCase();
 
     // Поиск по базе знаний для контекста
-    const topics = knowledgeBase.search(userMessage, 5);
+    const topics = cachedKnowledgeSearch(userMessage, 5);
     
     let response = '';
     let sources: KnowledgeTopic[] = [];
@@ -732,7 +750,7 @@ const ReferencePage: React.FC = () => {
     }
 
     return { content: response, sources, context: knowledgeContext };
-  }, [categoryNames, categories]);
+  }, [categoryNames, categories, cachedKnowledgeSearch]);
 
   const handleSend = useCallback(async () => {
     if (!inputValue.trim() || loading) return;
@@ -765,14 +783,12 @@ const ReferencePage: React.FC = () => {
 
     // Генерация ответа с использованием DeepSeek AI (передаем полную историю чата)
     try {
-      // Получаем полную историю чата из хранилища
-      const chat = chatId ? getChatById(chatId) : null;
-      const chatHistory = chat ? chat.messages.map(msg => ({
+      const chatHistory = messages.map(msg => ({
         id: msg.id,
         role: msg.role,
         content: msg.content,
         timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp),
-      })) : messages;
+      }));
       
       const appraisalExtra = appraisalMode ? buildAppraisalContext() : '';
       const { content, sources, context } = await generateAIResponse(
@@ -1236,14 +1252,12 @@ const ReferencePage: React.FC = () => {
     setInputValue('');
     setLoading(true);
 
-    // Получаем полную историю чата из хранилища
-    const chat = chatId ? getChatById(chatId) : null;
-    const chatHistory = chat ? chat.messages.map(msg => ({
+    const chatHistory = messages.map(msg => ({
       id: msg.id,
       role: msg.role,
       content: msg.content,
       timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp),
-    })) : messages;
+    }));
 
     generateAIResponse(
       query.trim(),
