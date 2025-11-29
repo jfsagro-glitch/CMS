@@ -26,7 +26,6 @@ import {
   calculateRegionCenterWorkload,
   calculateWorkloadPercent,
   WORK_HOURS_PER_MONTH,
-  TASK_NORM_HOURS,
 } from '@/utils/workloadCalculator';
 import { generateMonitoringPlan, generateRevaluationPlan } from '@/utils/monitoringPlanGenerator';
 import type { MonitoringPlanEntry, RevaluationPlanEntry } from '@/types/monitoring';
