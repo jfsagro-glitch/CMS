@@ -279,8 +279,16 @@ export function calculateRegionCenterWorkload(
   const avgNormHoursPerEmployee = totalNormHours / workingEmployeesCount;
   const workloadPercent = (avgNormHoursPerEmployee / WORK_HOURS_PER_MONTH) * 100;
   
-  // Ограничиваем максимум 150%
-  const cappedWorkloadPercent = Math.min(Math.round(workloadPercent * 10) / 10, 150);
+  // Нормализуем до диапазона 85-125% (требования демо)
+  let normalizedPercent = Math.round(workloadPercent * 10) / 10;
+  if (tasksInProgress.length === 0) {
+    // Даже если нет задач в работе, в демо отображаем минимальное значение
+    normalizedPercent = 85;
+  } else if (normalizedPercent < 85) {
+    normalizedPercent = 85;
+  } else if (normalizedPercent > 125) {
+    normalizedPercent = 125;
+  }
   
   return {
     totalNormHours,

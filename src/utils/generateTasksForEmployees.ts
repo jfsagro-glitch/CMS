@@ -229,17 +229,18 @@ export const generateTasksForEmployees = async (): Promise<void> => {
         const employeeWorkloadPercent = 85 + Math.random() * 40; // 85-125%
         const employeeTargetNormHoursInWork = (employeeWorkloadPercent / 100) * WORK_HOURS_PER_MONTH;
         
-        // Распределение задач в работе: assigned (10%), in_progress (5%), approval (4%) = 19% от общей загрузки
-        // Но мы хотим, чтобы загрузка по задачам в работе была 85-125%
-        // Поэтому генерируем задачи в работе с нормочасами, которые дают загрузку 85-125%
-        const assignedNormHours = employeeTargetNormHoursInWork * (10 / 19); // ~52.6%
-        const inProgressNormHours = employeeTargetNormHoursInWork * (5 / 19); // ~26.3%
-        const approvalNormHours = employeeTargetNormHoursInWork * (4 / 19); // ~21.1%
+        // Распределение задач в работе: assigned (10), in_progress (5), approval (4) частей
+        const assignedNormHours = employeeTargetNormHoursInWork * (10 / 19);
+        const inProgressNormHours = employeeTargetNormHoursInWork * (5 / 19);
+        const approvalNormHours = Math.max(
+          2,
+          employeeTargetNormHoursInWork - assignedNormHours - inProgressNormHours
+        );
         
-        // Для истории генерируем выполненные задачи (примерно в 3.7 раза больше, чем задачи в работе)
-        // Это нужно для реалистичности данных
-        const completedNormHours = employeeTargetNormHoursInWork * 3.7;
-        const overdueNormHours = employeeTargetNormHoursInWork * 0.05; // 5% от задач в работе
+        // Для истории генерируем выполненные/согласованные задачи (примерно в 3.2 раза больше, чем задачи в работе)
+        const completedNormHours = employeeTargetNormHoursInWork * 3.2;
+        // Немного просроченных задач (5% от задач в работе, но минимум 2 нормочаса)
+        const overdueNormHours = Math.max(employeeTargetNormHoursInWork * 0.05, 2);
         
         const employeeRegion = employee.region;
         const businessUser = BUSINESS_USERS[Math.floor(Math.random() * BUSINESS_USERS.length)];

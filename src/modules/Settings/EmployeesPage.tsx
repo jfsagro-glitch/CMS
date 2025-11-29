@@ -19,6 +19,7 @@ import {
   DatePicker,
   Upload,
   Avatar,
+  List,
 } from 'antd';
 import {
   PlusOutlined,
@@ -184,6 +185,33 @@ const EmployeesPage: React.FC = () => {
 
     return stats;
   }, [tasks, employees]);
+
+  // Демо задачи для каждого регионального центра (для отображения под блоком загрузки)
+  const demoTasksByRegionCenter = useMemo(() => {
+    const grouped: Record<string, TaskDB[]> = {};
+
+    REGION_CENTERS.forEach(center => {
+      const centerTasks = tasks
+        .filter(task => {
+          const taskRegion = (task.region || '').toString();
+          return center.cities.includes(taskRegion) || taskRegion === center.code;
+        })
+        .sort((a, b) => {
+          const dateA = dayjs(
+            a.updatedAt || a.createdAt || a.dueDate || dayjs().toISOString()
+          ).valueOf();
+          const dateB = dayjs(
+            b.updatedAt || b.createdAt || b.dueDate || dayjs().toISOString()
+          ).valueOf();
+          return dateB - dateA;
+        })
+        .slice(0, 5);
+
+      grouped[center.code] = centerTasks;
+    });
+
+    return grouped;
+  }, [tasks]);
 
   const handleAdd = () => {
     setEditingEmployee(null);
@@ -578,6 +606,7 @@ const EmployeesPage: React.FC = () => {
             workingEmployeesCount: 0,
           };
           const loadPercent = workload.workloadPercent;
+          const centerDemoTasks = demoTasksByRegionCenter[center.code] || [];
 
           return (
             <Panel
@@ -602,6 +631,43 @@ const EmployeesPage: React.FC = () => {
                 </Space>
               }
             >
+              <Card
+                size="small"
+                type="inner"
+                title="Демо задачи (нагрузка)"
+                style={{ marginBottom: 8 }}
+                bodyStyle={{ padding: 8, maxHeight: 220, overflowY: 'auto' }}
+              >
+                <List
+                  size="small"
+                  dataSource={centerDemoTasks}
+                  locale={{ emptyText: 'Демо задачи формируются автоматически' }}
+                  renderItem={task => (
+                    <List.Item key={task.id} style={{ padding: '6px 0' }}>
+                      <Space direction="vertical" size={2} style={{ width: '100%' }}>
+                        <Space size={4} wrap>
+                          <Tag color="geekblue" style={{ margin: 0 }}>
+                            {task.type || 'Задача'}
+                          </Tag>
+                          <Tag color="gold" style={{ margin: 0 }}>
+                            {(task.status || '').toString()}
+                          </Tag>
+                        </Space>
+                        <div style={{ fontSize: 12, fontWeight: 500 }}>{task.title}</div>
+                        <Space size={4} wrap style={{ fontSize: 11, color: 'rgba(0,0,0,0.65)' }}>
+                          {task.currentAssigneeName && (
+                            <span>Исполнитель: {task.currentAssigneeName}</span>
+                          )}
+                          {task.dueDate && (
+                            <span>Срок: {dayjs(task.dueDate).format('DD.MM.YYYY')}</span>
+                          )}
+                        </Space>
+                      </Space>
+                    </List.Item>
+                  )}
+                />
+              </Card>
+
               {center.cities.map(city => {
                 const cityEmployees = employeesByRegion[center.code]?.[city] || [];
                 if (cityEmployees.length === 0) return null;
