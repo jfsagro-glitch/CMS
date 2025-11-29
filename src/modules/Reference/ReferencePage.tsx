@@ -198,7 +198,6 @@ const ReferencePage: React.FC = () => {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
   const [appraisalSkill, setAppraisalSkill] = useState(0);
-  const appraisalGroups = useMemo(() => getAppraisalGroups(), []);
   const [appraisalMode, setAppraisalMode] = useState(false);
   const [appraisalEstimate, setAppraisalEstimate] = useState<AppraisalEstimate | null>(null);
   const [appraisalLoading, setAppraisalLoading] = useState(false);
