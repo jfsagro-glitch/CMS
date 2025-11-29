@@ -19,6 +19,8 @@ import {
   Form,
   Select,
   InputNumber,
+  Row,
+  Col,
 } from 'antd';
 import {
   SendOutlined,
