@@ -185,6 +185,7 @@ const ReferencePage: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [indexing, setIndexing] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const [loadingCountdown, setLoadingCountdown] = useState<number | null>(null);
   const [indexedDocuments, setIndexedDocuments] = useState<DocumentIndex[]>([]);
   const [categories, setCategories] = useState<KnowledgeCategory[]>([]);
@@ -412,7 +413,7 @@ const ReferencePage: React.FC = () => {
     let isMounted = true;
     
     const loadDocuments = async () => {
-      setIndexing(true);
+      setInitializing(true);
       try {
         // Инициализируем систему самообучения и эволюции (синхронно, быстро)
         learningService.initialize();
@@ -431,17 +432,17 @@ const ReferencePage: React.FC = () => {
         }
         
         // Обновляем статистику сразу (быстро)
-        const stats = learningService.getLearningStats();
-        const evolutionStats = evolutionService.getEvolutionStats();
-        const progress = evolutionService.getProgressToNextLevel();
-        
-        if (isMounted && evolutionStats) {
-          setEvolutionLevel(evolutionStats.level);
-          setEvolutionProgress(progress);
-        }
-        
-        // Вычисляем индекс самообучаемости
         if (isMounted) {
+          const stats = learningService.getLearningStats();
+          const evolutionStats = evolutionService.getEvolutionStats();
+          const progress = evolutionService.getProgressToNextLevel();
+
+          if (evolutionStats) {
+            setEvolutionLevel(evolutionStats.level);
+            setEvolutionProgress(progress);
+          }
+
+          // Вычисляем индекс самообучаемости
           const patternsWeight = Math.min(stats.patternsCount * 5, 30);
           const successWeight = stats.averageSuccessRate * 25;
           const usageWeight = Math.min(stats.totalUsage / 10, 15);
@@ -449,11 +450,15 @@ const ReferencePage: React.FC = () => {
           const evolutionBonus = evolutionStats ? Math.min(evolutionStats.level * 2, 20) : 0;
           setLearningIndex(Math.round(patternsWeight + successWeight + usageWeight + insightsWeight + evolutionBonus));
           setAppraisalSkill(learningService.getCategorySkill('appraisal'));
+
+          // Базовая инициализация завершена — справочная готова к работе
+          setInitializing(false);
         }
         
         // Загружаем документы из VND асинхронно (не блокируя UI)
         const loadDocumentsAsync = async () => {
           try {
+            setIndexing(true);
             console.log('🔄 Загружаю документы из VND...');
             const documents = await loadVNDDocuments(false);
             
@@ -515,7 +520,7 @@ const ReferencePage: React.FC = () => {
           if (import.meta.env.MODE === 'development') {
             console.error('Ошибка инициализации:', error);
           }
-          setIndexing(false);
+          setInitializing(false);
         }
       }
     };
@@ -617,7 +622,7 @@ const ReferencePage: React.FC = () => {
 
   // Обратный отсчёт при инициализации справочной
   useEffect(() => {
-    if (!indexing) {
+    if (!initializing) {
       setLoadingCountdown(null);
       return;
     }
@@ -635,7 +640,7 @@ const ReferencePage: React.FC = () => {
       window.clearInterval(intervalId);
       setLoadingCountdown(null);
     };
-  }, [indexing]);
+  }, [initializing]);
 
   const cachedKnowledgeSearch = useCallback((query: string, limit: number) => {
     const normalized = query.trim().toLowerCase();
@@ -1779,7 +1784,7 @@ const ReferencePage: React.FC = () => {
         </div>
       </div>
 
-      {indexing && (
+      {initializing && (
         <Alert
           message="Инициализация ИИ-справочной..."
           description={
