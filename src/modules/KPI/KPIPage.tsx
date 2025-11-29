@@ -20,6 +20,7 @@ import employeeService from '@/services/EmployeeService';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import type { Employee, EmployeeTaskStats } from '@/types/employee';
 import type { TaskDB } from '@/services/ExtendedStorageService';
+import type { KPIData } from '@/types/kpi';
 import { REGION_CENTERS } from '@/utils/regionCenters';
 import {
   calculateWorkloadForPeriod,
@@ -29,6 +30,7 @@ import {
 } from '@/utils/workloadCalculator';
 import { generateMonitoringPlan, generateRevaluationPlan } from '@/utils/monitoringPlanGenerator';
 import type { MonitoringPlanEntry, RevaluationPlanEntry } from '@/types/monitoring';
+import { applyKpiOverrides, cloneKpiData, saveLatestKpiMetrics } from '@/utils/kpiMetricsStorage';
 import './KPIPage.css';
 
 const { Title, Text } = Typography;
@@ -258,6 +260,8 @@ const buildCenterStats = (tasks: TaskDB[], employees: Employee[]): CenterStats[]
     const centerOverdueTasks = centerTasks.filter((task) => isTaskOverdue(task)).length;
     const centerCompletionRate =
       centerTotalTasks > 0 ? Math.round((centerCompletedTasks / centerTotalTasks) * 100) : 0;
+    const centerMboCompletion =
+      centerTotalTasks > 0 ? Math.round((centerCompletedTasks / centerTotalTasks) * 100) : 0;
 
     return {
       code: center.code,
@@ -267,6 +271,7 @@ const buildCenterStats = (tasks: TaskDB[], employees: Employee[]): CenterStats[]
       inProgressTasks: centerInProgressTasks,
       overdueTasks: centerOverdueTasks,
       completionRate: centerCompletionRate,
+      mboCompletion: centerMboCompletion,
       cities,
     };
   });
@@ -351,28 +356,73 @@ const computeEmployeeAwards = (tasks: TaskDB[], employees: Employee[]): AwardSet
   return awards;
 };
 
-interface KPIData {
-  totalPortfolioValue: number;
-  totalContracts: number;
-  activeContracts: number;
-  completedTasks: number;
-  pendingTasks: number;
-  overdueTasks: number;
-  totalConclusions: number;
-  approvedConclusions: number;
-  pendingConclusions: number;
-  totalObjects: number;
-  totalInsurance: number;
-  activeInsurance: number;
-  averageConclusionDays: number; // Средний срок подготовки залогового заключения в рабочих днях
-  slaCompliance: number; // Процент соответствия SLA (<= 7 рабочих дней)
-  currentWorkload: number; // Текущая загрузка (%)
-  workloadByPeriod: {
-    last7Days: number;
-    last30Days: number;
-    last90Days: number;
-  };
-}
+const buildEmployeeRanking = (tasks: TaskDB[], employees: Employee[]): EmployeeRankingItem[] => {
+  if (!tasks.length || !employees.length) return [];
+
+  const ranking = employees
+    .filter((emp) => emp.isActive && (!emp.status || emp.status === 'working'))
+    .map((emp) => {
+      const fullName = getEmployeeFullName(emp);
+      const employeeTasks = tasks.filter(
+        (task) =>
+          task.employeeId === emp.id ||
+          task.currentAssigneeName === fullName ||
+          (emp.email &&
+            (task.currentAssignee === emp.email ||
+              (Array.isArray(task.assignedTo) && task.assignedTo.includes(emp.email))))
+      );
+
+      if (employeeTasks.length === 0) {
+        return null;
+      }
+
+      const tasksInWork = employeeTasks.filter((task) => {
+        const status = (task.status || '').toString();
+        if (!isTaskInProgressStatus(status)) return false;
+        if (status === 'created') return false;
+        return true;
+      });
+
+      const workload = clampLoad(calculateWorkloadPercent(tasksInWork));
+      const completed = employeeTasks.filter((task) => isTaskCompletedStatus(task.status)).length;
+      const inProgress = employeeTasks.filter((task) => isTaskPending(task)).length;
+      const overdue = employeeTasks.filter((task) => isTaskOverdue(task)).length;
+
+      const completedSlaTasks = employeeTasks.filter(
+        (task) => isTaskCompletedStatus(task.status) && task.createdAt && (task.completedAt || task.updatedAt)
+      );
+
+      const slaWorkingDays = completedSlaTasks.map((task) =>
+        calculateWorkingDays(dayjs(task.createdAt), dayjs(task.completedAt || task.updatedAt))
+      );
+
+      const slaSuccess =
+        slaWorkingDays.length > 0
+          ? Math.round((slaWorkingDays.filter((days) => days <= 7).length / slaWorkingDays.length) * 100)
+          : 100;
+
+      return {
+        key: emp.id,
+        name: fullName,
+        region: emp.region,
+        workload,
+        slaSuccess: Math.min(slaSuccess, 100),
+        completed,
+        inProgress,
+        overdue,
+      } as EmployeeRankingItem;
+    })
+    .filter(Boolean) as EmployeeRankingItem[];
+
+  return ranking
+    .sort((a, b) => {
+      if (b.workload !== a.workload) return b.workload - a.workload;
+      if (b.slaSuccess !== a.slaSuccess) return b.slaSuccess - a.slaSuccess;
+      if (b.completed !== a.completed) return b.completed - a.completed;
+      return a.overdue - b.overdue;
+    })
+    .slice(0, 10);
+};
 
 interface TaskStatistic {
   key: string;
@@ -402,33 +452,24 @@ interface CenterStats {
   inProgressTasks: number;
   overdueTasks: number;
   completionRate: number;
+  mboCompletion: number;
   cities: CityStats[];
+}
+
+interface EmployeeRankingItem {
+  key: string;
+  name: string;
+  region: string;
+  workload: number;
+  slaSuccess: number;
+  completed: number;
+  inProgress: number;
+  overdue: number;
 }
 
 const KPIPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [kpiData, setKpiData] = useState<KPIData>({
-    totalPortfolioValue: 0,
-    totalContracts: 0,
-    activeContracts: 0,
-    completedTasks: 0,
-    pendingTasks: 0,
-    overdueTasks: 0,
-    totalConclusions: 0,
-    approvedConclusions: 0,
-    pendingConclusions: 0,
-    totalObjects: 0,
-    totalInsurance: 0,
-    activeInsurance: 0,
-          averageConclusionDays: 0,
-          slaCompliance: 0,
-          currentWorkload: 0,
-          workloadByPeriod: {
-            last7Days: 0,
-            last30Days: 0,
-            last90Days: 0,
-          },
-        });
+  const [kpiData, setKpiData] = useState<KPIData>(() => cloneKpiData());
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([
     dayjs().subtract(30, 'day'),
     dayjs(),
@@ -439,6 +480,7 @@ const KPIPage: React.FC = () => {
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [centerModalVisible, setCenterModalVisible] = useState(false);
   const [allTasks, setAllTasks] = useState<TaskDB[]>([]);
+  const [employeesState, setEmployeesState] = useState<Employee[]>([]);
   const [employeeAwards, setEmployeeAwards] = useState<AwardSet>({
     month: null,
     quarter: null,
@@ -482,6 +524,7 @@ const KPIPage: React.FC = () => {
         if (!employees || employees.length === 0) {
           employees = employeeService.getEmployees();
         }
+        setEmployeesState(employees);
 
         const activeEmployees = employees.filter(emp => emp.isActive);
         const minTasksPerEmployee = 60;
@@ -515,6 +558,7 @@ const KPIPage: React.FC = () => {
         ).length;
 
         // Статусы задач с учетом планов мониторинга/переоценки
+        const totalTasksCount = combinedTasks.length;
         const completedTasks = combinedTasks.filter((task) => isTaskCompletedStatus(task.status)).length;
         const pendingTasks = combinedTasks.filter((task) => isTaskPending(task)).length;
         const overdueTasks = combinedTasks.filter((task) => isTaskOverdue(task)).length;
@@ -588,7 +632,7 @@ const KPIPage: React.FC = () => {
         setCenterStats(buildCenterStats(combinedTasks, employees));
         setEmployeeAwards(computeEmployeeAwards(combinedTasks, employees));
 
-        setKpiData({
+        const baseKpiData: KPIData = {
           totalPortfolioValue,
           totalContracts,
           activeContracts,
@@ -604,12 +648,17 @@ const KPIPage: React.FC = () => {
           averageConclusionDays,
           slaCompliance,
           currentWorkload,
+          mboCompletionOverall: totalTasksCount > 0 ? Math.round((completedTasks / totalTasksCount) * 100) : 0,
           workloadByPeriod: {
             last7Days,
             last30Days,
             last90Days,
           },
-        });
+        };
+
+        saveLatestKpiMetrics(baseKpiData);
+        const appliedData = applyKpiOverrides(baseKpiData);
+        setKpiData(appliedData);
       } catch (error) {
         console.error('Ошибка загрузки KPI данных:', error);
       } finally {
@@ -652,6 +701,67 @@ const KPIPage: React.FC = () => {
       completionRate: stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0,
     }));
   }, [allTasks]);
+
+  const employeeRanking = React.useMemo(
+    () => buildEmployeeRanking(allTasks, employeesState),
+    [allTasks, employeesState]
+  );
+
+  const employeeRankingColumns: ColumnsType<EmployeeRankingItem> = [
+    {
+      title: '№',
+      key: 'rank',
+      width: 60,
+      align: 'center',
+      render: (_: unknown, __: EmployeeRankingItem, index: number) => index + 1,
+    },
+    {
+      title: 'Сотрудник',
+      dataIndex: 'name',
+      key: 'name',
+      render: (value: string, record) => (
+        <Space direction="vertical" size={0}>
+          <Text strong>{value}</Text>
+          <Text type="secondary" style={{ fontSize: 11 }}>
+            {record.region}
+          </Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'Загрузка',
+      dataIndex: 'workload',
+      key: 'workload',
+      align: 'center',
+      render: (value: number) => `${value}%`,
+    },
+    {
+      title: 'SLA ≤ 7 дн.',
+      dataIndex: 'slaSuccess',
+      key: 'slaSuccess',
+      align: 'center',
+      render: (value: number) => `${value}%`,
+    },
+    {
+      title: 'Выполнено',
+      dataIndex: 'completed',
+      key: 'completed',
+      align: 'center',
+    },
+    {
+      title: 'В работе',
+      dataIndex: 'inProgress',
+      key: 'inProgress',
+      align: 'center',
+    },
+    {
+      title: 'Просрочено',
+      dataIndex: 'overdue',
+      key: 'overdue',
+      align: 'center',
+      render: (value: number) => <Text type={value > 0 ? 'danger' : 'success'}>{value}</Text>,
+    },
+  ];
 
   const taskColumns: ColumnsType<TaskStatistic> = [
     {
@@ -737,147 +847,134 @@ const KPIPage: React.FC = () => {
       </div>
 
       {/* Основные KPI */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Общая стоимость портфеля"
-              value={kpiData.totalPortfolioValue}
-              prefix={<DollarOutlined />}
-              formatter={(value) => formatCurrency(Number(value))}
-              valueStyle={{ color: '#3f8600' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Активных договоров"
-              value={kpiData.activeContracts}
-              prefix={<FileTextOutlined />}
-              suffix={`/ ${kpiData.totalContracts}`}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Выполнено задач"
-              value={kpiData.completedTasks}
-              prefix={<CheckCircleOutlined />}
-              suffix={`/ ${kpiData.completedTasks + kpiData.pendingTasks}`}
-              valueStyle={{ color: '#3f8600' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Просрочено задач"
-              value={kpiData.overdueTasks}
-              prefix={<WarningOutlined />}
-              valueStyle={{ color: '#cf1322' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="kpi-compact-grid">
+        <Card size="small" className="kpi-card--compact">
+          <Statistic
+            title="Общая стоимость портфеля"
+            value={kpiData.totalPortfolioValue}
+            prefix={<DollarOutlined />}
+            formatter={(value) => formatCurrency(Number(value))}
+            valueStyle={{ color: '#3f8600' }}
+          />
+        </Card>
+        <Card size="small" className="kpi-card--compact">
+          <Statistic
+            title="Активных договоров"
+            value={kpiData.activeContracts}
+            prefix={<FileTextOutlined />}
+            suffix={`/ ${kpiData.totalContracts}`}
+            valueStyle={{ color: '#1890ff' }}
+          />
+        </Card>
+        <Card size="small" className="kpi-card--compact">
+          <Statistic
+            title="Выполнено задач"
+            value={kpiData.completedTasks}
+            prefix={<CheckCircleOutlined />}
+            suffix={`/ ${kpiData.completedTasks + kpiData.pendingTasks}`}
+            valueStyle={{ color: '#3f8600' }}
+          />
+        </Card>
+        <Card size="small" className="kpi-card--compact">
+          <Statistic
+            title="Просрочено задач"
+            value={kpiData.overdueTasks}
+            prefix={<WarningOutlined />}
+            valueStyle={{ color: '#cf1322' }}
+          />
+        </Card>
+        <Card size="small" className="kpi-card--compact">
+          <Statistic
+            title="MBO выполнение (департамент)"
+            value={kpiData.mboCompletionOverall}
+            suffix="%"
+            prefix={<TrophyOutlined />}
+            valueStyle={{
+              color: kpiData.mboCompletionOverall >= 95 ? '#3f8600' : kpiData.mboCompletionOverall >= 80 ? '#faad14' : '#cf1322',
+            }}
+          />
+          <Progress
+            percent={kpiData.mboCompletionOverall}
+            size="small"
+            strokeColor={kpiData.mboCompletionOverall >= 95 ? '#3f8600' : kpiData.mboCompletionOverall >= 80 ? '#faad14' : '#cf1322'}
+            style={{ marginTop: 8 }}
+          />
+        </Card>
+      </div>
 
       {/* Дополнительная статистика */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Залоговых заключений"
-              value={kpiData.totalConclusions}
-              prefix={<FileTextOutlined />}
-              valueStyle={{ color: '#1890ff' }}
+      <div className="kpi-compact-grid kpi-compact-grid--wide">
+        <Card size="small" className="kpi-card--compact">
+          <Statistic
+            title="Залоговых заключений"
+            value={kpiData.totalConclusions}
+            prefix={<FileTextOutlined />}
+            valueStyle={{ color: '#1890ff' }}
+          />
+          <div style={{ marginTop: 8 }}>
+            <Text type="success">Согласовано: {kpiData.approvedConclusions}</Text>
+            <br />
+            <Text type="warning">На согласовании: {kpiData.pendingConclusions}</Text>
+          </div>
+        </Card>
+        <Card size="small" className="kpi-card--compact">
+          <Statistic
+            title="Средний срок подготовки СЗ"
+            value={kpiData.averageConclusionDays}
+            suffix="раб. дней"
+            prefix={<ClockCircleOutlined />}
+            valueStyle={{
+              color: kpiData.averageConclusionDays <= 7 ? '#3f8600' : '#cf1322',
+            }}
+          />
+          <div style={{ marginTop: 8 }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              SLA: не более 7 рабочих дней
+            </Text>
+            <Progress
+              percent={kpiData.averageConclusionDays > 0 ? Math.min((7 / kpiData.averageConclusionDays) * 100, 100) : 0}
+              strokeColor={kpiData.averageConclusionDays <= 7 ? '#3f8600' : '#faad14'}
+              size="small"
+              showInfo={false}
+              style={{ marginTop: 8 }}
             />
-            <div style={{ marginTop: 8 }}>
-              <Text type="success">Согласовано: {kpiData.approvedConclusions}</Text>
-              <br />
-              <Text type="warning">На согласовании: {kpiData.pendingConclusions}</Text>
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Средний срок подготовки СЗ"
-              value={kpiData.averageConclusionDays}
-              suffix="раб. дней"
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{ 
-                color: kpiData.averageConclusionDays <= 7 ? '#3f8600' : '#cf1322' 
-              }}
-            />
-            <div style={{ marginTop: 8 }}>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                SLA: не более 7 рабочих дней
-              </Text>
-              <br />
-              <Progress
-                percent={kpiData.averageConclusionDays > 0 ? Math.min((7 / kpiData.averageConclusionDays) * 100, 100) : 0}
-                strokeColor={kpiData.averageConclusionDays <= 7 ? '#3f8600' : '#faad14'}
-                size="small"
-                format={() => `${kpiData.averageConclusionDays.toFixed(1)} дн.`}
-              />
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Выполнение SLA"
-              value={kpiData.slaCompliance}
-              suffix="%"
-              prefix={<CheckCircleOutlined />}
-              valueStyle={{ 
-                color: kpiData.slaCompliance >= 90 ? '#3f8600' : 
-                       kpiData.slaCompliance >= 70 ? '#faad14' : '#cf1322' 
-              }}
-            />
-            <div style={{ marginTop: 8 }}>
-              <Progress
-                percent={kpiData.slaCompliance}
-                strokeColor={kpiData.slaCompliance >= 90 ? '#3f8600' : 
-                            kpiData.slaCompliance >= 70 ? '#faad14' : '#cf1322'}
-                size="small"
-              />
-              <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
-                {kpiData.slaCompliance >= 90 ? '✅ Отлично' : 
-                 kpiData.slaCompliance >= 70 ? '⚠️ Требует внимания' : '❌ Не соответствует'}
-              </Text>
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Текущая загрузка"
-              value={kpiData.currentWorkload}
-              suffix="%"
-              prefix={<UserOutlined />}
-              valueStyle={{ 
-                color: kpiData.currentWorkload <= 100 ? '#3f8600' : 
-                       kpiData.currentWorkload <= 125 ? '#faad14' : '#cf1322' 
-              }}
-            />
-            <div style={{ marginTop: 8 }}>
-              <Progress
-                percent={Math.min(kpiData.currentWorkload, 150)}
-                strokeColor={kpiData.currentWorkload <= 100 ? '#3f8600' : 
-                            kpiData.currentWorkload <= 125 ? '#faad14' : '#cf1322'}
-                size="small"
-              />
-              <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
-                {kpiData.currentWorkload <= 100 ? '✅ Нормальная' : 
-                 kpiData.currentWorkload <= 125 ? '⚠️ Повышенная' : '❌ Перегрузка'}
-              </Text>
-            </div>
-          </Card>
-        </Col>
-      </Row>
+          </div>
+        </Card>
+        <Card size="small" className="kpi-card--compact">
+          <Statistic
+            title="Выполнение SLA"
+            value={kpiData.slaCompliance}
+            suffix="%"
+            prefix={<CheckCircleOutlined />}
+            valueStyle={{
+              color: kpiData.slaCompliance >= 90 ? '#3f8600' : kpiData.slaCompliance >= 70 ? '#faad14' : '#cf1322',
+            }}
+          />
+          <Progress
+            percent={kpiData.slaCompliance}
+            strokeColor={kpiData.slaCompliance >= 90 ? '#3f8600' : kpiData.slaCompliance >= 70 ? '#faad14' : '#cf1322'}
+            size="small"
+            style={{ marginTop: 8 }}
+          />
+        </Card>
+        <Card size="small" className="kpi-card--compact">
+          <Statistic
+            title="Текущая загрузка"
+            value={kpiData.currentWorkload}
+            suffix="%"
+            prefix={<UserOutlined />}
+            valueStyle={{
+              color: kpiData.currentWorkload <= 100 ? '#3f8600' : kpiData.currentWorkload <= 125 ? '#faad14' : '#cf1322',
+            }}
+          />
+          <Progress
+            percent={Math.min(kpiData.currentWorkload, 150)}
+            strokeColor={kpiData.currentWorkload <= 100 ? '#3f8600' : kpiData.currentWorkload <= 125 ? '#faad14' : '#cf1322'}
+            size="small"
+            style={{ marginTop: 8 }}
+          />
+        </Card>
+      </div>
       
       {/* Загрузка за периоды */}
       <Card
@@ -1116,6 +1213,7 @@ const KPIPage: React.FC = () => {
           {centerStats.map((stat) => (
             <Col xs={24} sm={12} lg={6} key={stat.code}>
               <Card
+                className="kpi-center-card"
                 hoverable
                 onClick={() => {
                   setSelectedCenterCode(stat.code);
@@ -1127,17 +1225,30 @@ const KPIPage: React.FC = () => {
                 <Typography.Title level={4} style={{ marginTop: 0 }}>
                   {stat.name}
                 </Typography.Title>
-                <div style={{ marginBottom: 12 }}>
-                  <Text strong style={{ color: '#3f8600', fontSize: 18 }}>
-                    {stat.completionRate}%
-                  </Text>
+                <div className="kpi-center-card__metrics">
+                  <div>
+                    <Text type="secondary">Выполнение:</Text>
+                    <Text strong style={{ marginLeft: 4 }}>{stat.completionRate}%</Text>
+                    <Progress
+                      percent={stat.completionRate}
+                      strokeColor="#3f8600"
+                      showInfo={false}
+                      size="small"
+                      style={{ marginTop: 6 }}
+                    />
+                  </div>
+                  <div>
+                    <Text type="secondary">MBO:</Text>
+                    <Text strong style={{ marginLeft: 4 }}>{stat.mboCompletion}%</Text>
+                    <Progress
+                      percent={stat.mboCompletion}
+                      strokeColor="#1890ff"
+                      showInfo={false}
+                      size="small"
+                      style={{ marginTop: 6 }}
+                    />
+                  </div>
                 </div>
-                <Progress
-                  percent={stat.completionRate}
-                  strokeColor="#3f8600"
-                  showInfo={false}
-                  style={{ marginBottom: 12 }}
-                />
                 <Space direction="vertical" size="small" style={{ width: '100%' }}>
                   <div>
                     <Text type="secondary">Всего задач:</Text> <Text strong>{stat.totalTasks}</Text>
@@ -1173,6 +1284,26 @@ const KPIPage: React.FC = () => {
           dataSource={taskStatistics}
           pagination={false}
           size="small"
+        />
+      </Card>
+
+      {/* Рейтинг сотрудников */}
+      <Card
+        title={
+          <Space>
+            <TrophyOutlined />
+            <span>Рейтинг сотрудников</span>
+          </Space>
+        }
+        style={{ marginBottom: 24 }}
+      >
+        <Table
+          columns={employeeRankingColumns}
+          dataSource={employeeRanking}
+          pagination={false}
+          size="small"
+          rowKey="key"
+          locale={{ emptyText: 'Недостаточно данных для формирования рейтинга' }}
         />
       </Card>
 
