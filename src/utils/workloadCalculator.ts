@@ -292,7 +292,7 @@ export function calculateRegionCenterWorkload(
   
   return {
     totalNormHours,
-    workloadPercent: cappedWorkloadPercent,
+    workloadPercent: normalizedPercent,
     tasksCount: tasksInProgress.length,
     workingEmployeesCount,
   };
