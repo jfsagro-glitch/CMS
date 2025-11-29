@@ -64,7 +64,7 @@ import {
   type ChatMessage 
 } from '@/utils/chatStorage';
 import { getAppraisalGroups } from '@/utils/appraisalTaxonomy';
-import { getAppraisalConfigForType, formatAppraisalAttributes } from '@/utils/appraisalAttributeConfig';
+import { getAppraisalConfigForType, formatAppraisalAttributes, APPRAISAL_TYPE_OPTIONS } from '@/utils/appraisalAttributeConfig';
 import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
 import './ReferencePage.css';
 
@@ -205,7 +205,7 @@ const ReferencePage: React.FC = () => {
   const [appraisalForm] = Form.useForm();
   const watchedAssetType = Form.useWatch('assetType', appraisalForm);
   const attributeConfig = useMemo(() => getAppraisalConfigForType(watchedAssetType), [watchedAssetType]);
-  const attributeFields = attributeConfig?.fields ?? [];
+  const attributeFields = useMemo(() => attributeConfig?.fields ?? [], [attributeConfig]);
   const derivedAssetGroup = attributeConfig?.assetGroup;
   const appraisalCategoryOptions = useMemo(() => [
     { value: 'real_estate', label: 'Недвижимое имущество' },
@@ -215,14 +215,7 @@ const ReferencePage: React.FC = () => {
     { value: 'equity', label: 'Доли, акции и ЦБ' },
     { value: 'rights', label: 'Права требования' },
   ], []);
-  const appraisalTypeOptions = useMemo(() => {
-    return appraisalGroups.flatMap(group =>
-      group.types.map(type => ({
-        value: type.key,
-        label: type.label,
-      }))
-    );
-  }, [appraisalGroups]);
+  const appraisalTypeOptions = APPRAISAL_TYPE_OPTIONS;
   const handleToggleAppraisalMode = useCallback(() => {
     setAppraisalMode((prev) => {
       if (prev) {

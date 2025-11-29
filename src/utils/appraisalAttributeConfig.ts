@@ -71,38 +71,51 @@ const DEFAULT_FIELDS_BY_GROUP: Record<AppraisalAssetGroup, AppraisalAttributeFie
   rights: RIGHTS_FIELDS,
 };
 
-const TYPE_CATEGORY_MAP: Record<string, AppraisalAssetGroup> = {
-  'воздушные суда': 'real_estate',
-  'все имущество залогодателя': 'real_estate',
-  'доли в уставных капиталах обществ с ограниченной ответственностью': 'equity',
-  'единый недвижимый комплекс': 'real_estate',
-  'железнодорожный подвижной состав': 'movable',
-  'здание': 'real_estate',
-  'земельный участок': 'land',
-  'имущественный комплекс': 'real_estate',
-  'космические объекты': 'real_estate',
-  'машино-место': 'real_estate',
-  'машины и оборудование': 'movable',
-  'наземные безрельсовые механические транспортные средства, прицепы': 'movable',
-  'недвижимое имущество и права аренды недвижимого имущества': 'real_estate',
-  'объект незавершенного строительства': 'real_estate',
-  'плавучие сооружения': 'movable',
-  'плавучие сооружения, не являющиеся судами': 'movable',
-  'помещение': 'real_estate',
-  'прочие движимые вещи': 'movable',
-  'прочие имущественные права требования': 'rights',
-  'прочие ценные бумаги': 'equity',
-  'сооружение': 'real_estate',
-  'суда, используемые для иных целей': 'real_estate',
-  'суда, используемые для перевозки грузов, и (или) буксировки, а также хранения грузов': 'real_estate',
-  'суда, используемые для перевозки пассажиров и их багажа': 'real_estate',
-  'суда, используемые для рыболовства': 'real_estate',
-  'товары в обороте': 'movable',
-  'эмиссионные ценные бумаги': 'equity',
-};
+const TYPE_CATEGORY_LIST: Array<{ label: string; group: AppraisalAssetGroup }> = [
+  { label: 'Воздушные суда', group: 'real_estate' },
+  { label: 'Все имущество залогодателя', group: 'real_estate' },
+  { label: 'Доли в уставных капиталах обществ с ограниченной ответственностью', group: 'equity' },
+  { label: 'Единый недвижимый комплекс', group: 'real_estate' },
+  { label: 'Железнодорожный подвижной состав', group: 'movable' },
+  { label: 'Здание', group: 'real_estate' },
+  { label: 'Земельный участок', group: 'land' },
+  { label: 'Имущественный комплекс', group: 'real_estate' },
+  { label: 'Космические объекты', group: 'real_estate' },
+  { label: 'Машино-место', group: 'real_estate' },
+  { label: 'Машины и оборудование', group: 'movable' },
+  { label: 'Наземные безрельсовые механические транспортные средства, прицепы', group: 'movable' },
+  { label: 'Недвижимое имущество и права аренды недвижимого имущества', group: 'real_estate' },
+  { label: 'Объект незавершенного строительства', group: 'real_estate' },
+  { label: 'Плавучие сооружения', group: 'movable' },
+  { label: 'Плавучие сооружения, не являющиеся судами', group: 'movable' },
+  { label: 'Помещение', group: 'real_estate' },
+  { label: 'Прочие движимые вещи', group: 'movable' },
+  { label: 'Прочие имущественные Права требования', group: 'rights' },
+  { label: 'Прочие ценные бумаги', group: 'equity' },
+  { label: 'Сооружение', group: 'real_estate' },
+  { label: 'Суда, используемые для иных целей', group: 'real_estate' },
+  { label: 'Суда, используемые для перевозки грузов, и (или) буксировки, а также хранения грузов', group: 'real_estate' },
+  { label: 'Суда, используемые для перевозки пассажиров и их багажа', group: 'real_estate' },
+  { label: 'Суда, используемые для рыболовства', group: 'real_estate' },
+  { label: 'Товары в обороте', group: 'movable' },
+  { label: 'Эмиссионные ценные бумаги', group: 'equity' },
+];
+
+const TYPE_CATEGORY_MAP: Record<string, AppraisalAssetGroup> = TYPE_CATEGORY_LIST.reduce(
+  (acc, item) => {
+    acc[NORMALIZE(item.label)] = item.group;
+    return acc;
+  },
+  {} as Record<string, AppraisalAssetGroup>
+);
 
 const NORMALIZE = (value?: string) =>
   (value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+export const APPRAISAL_TYPE_OPTIONS = TYPE_CATEGORY_LIST.map(item => ({
+  value: item.label,
+  label: item.label,
+}));
 
 export const getAppraisalConfigForType = (typeName?: string | null): AppraisalTypeConfig | null => {
   if (!typeName) {
