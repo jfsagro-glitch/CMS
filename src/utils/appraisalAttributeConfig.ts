@@ -20,6 +20,9 @@ export interface AppraisalTypeConfig {
   fields: AppraisalAttributeField[];
 }
 
+const NORMALIZE = (value?: string) =>
+  (value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
 const REAL_ESTATE_FIELDS: AppraisalAttributeField[] = [
   { key: 'location', label: 'Адрес/локация', placeholder: 'Регион, город, улица' },
   { key: 'areaSqm', label: 'Площадь, м²', type: 'number', placeholder: 'Общая площадь' },
@@ -108,9 +111,6 @@ const TYPE_CATEGORY_MAP: Record<string, AppraisalAssetGroup> = TYPE_CATEGORY_LIS
   },
   {} as Record<string, AppraisalAssetGroup>
 );
-
-const NORMALIZE = (value?: string) =>
-  (value || '').trim().toLowerCase().replace(/\s+/g, ' ');
 
 export const APPRAISAL_TYPE_OPTIONS = TYPE_CATEGORY_LIST.map(item => ({
   value: item.label,
