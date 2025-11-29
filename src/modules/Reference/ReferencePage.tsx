@@ -63,7 +63,6 @@ import {
   type Chat,
   type ChatMessage 
 } from '@/utils/chatStorage';
-import { getAppraisalGroups } from '@/utils/appraisalTaxonomy';
 import { getAppraisalConfigForType, formatAppraisalAttributes, APPRAISAL_TYPE_OPTIONS } from '@/utils/appraisalAttributeConfig';
 import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
 import './ReferencePage.css';
