@@ -1383,22 +1383,49 @@ const ReferencePage: React.FC = () => {
 
       const container = document.createElement('div');
       container.style.position = 'fixed';
-      container.style.left = '0';
+      container.style.left = '-9999px';
       container.style.top = '0';
-      container.style.zIndex = '9999';
-      container.style.opacity = '0'; // невидимо, но участвует в разметке
+      container.style.width = '750px';
+      container.style.zIndex = '-1';
+      container.style.visibility = 'hidden';
       container.style.pointerEvents = 'none';
       container.innerHTML = html;
       document.body.appendChild(container);
+
+      // Ждем, чтобы браузер успел отрендерить контент
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Ждем загрузки изображений, если они есть
+      if (appraisalImageData) {
+        const img = container.querySelector('img');
+        if (img) {
+          await new Promise((resolve) => {
+            if (img.complete) {
+              resolve(undefined);
+            } else {
+              img.onload = () => resolve(undefined);
+              img.onerror = () => resolve(undefined);
+              setTimeout(() => resolve(undefined), 1000);
+            }
+          });
+        }
+      }
 
       const canvas = await html2canvas(container, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
+        width: 750,
+        height: container.scrollHeight || 1000,
       });
 
       document.body.removeChild(container);
+
+      // Проверяем, что canvas не пустой
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error('Canvas is empty');
+      }
 
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
