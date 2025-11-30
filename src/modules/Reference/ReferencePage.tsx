@@ -1407,32 +1407,28 @@ const ReferencePage: React.FC = () => {
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 10;
-      const availableWidth = pageWidth - margin * 2;
-      const imgHeight = (canvas.height * availableWidth) / canvas.width;
+      const maxWidth = pageWidth - margin * 2;
+      const maxHeight = pageHeight - margin * 2;
 
-      let position = margin;
-      let remainingHeight = imgHeight;
-
-      // Простейшая разбивка на страницы, если контент высокий
-      while (remainingHeight > 0) {
-        const renderHeight = Math.min(remainingHeight, pageHeight - margin * 2);
-        const renderY = position;
-
-        pdf.addImage(
-          imgData,
-          'PNG',
-          margin,
-          renderY,
-          availableWidth,
-          imgHeight
-        );
-
-        remainingHeight -= pageHeight - margin * 2;
-        if (remainingHeight > 0) {
-          pdf.addPage();
-          position = margin;
-        }
+      // Масштабируем изображение под страницу, сохраняя пропорции
+      let renderWidth = maxWidth;
+      let renderHeight = (canvas.height * renderWidth) / canvas.width;
+      if (renderHeight > maxHeight) {
+        renderHeight = maxHeight;
+        renderWidth = (canvas.width * renderHeight) / canvas.height;
       }
+
+      const offsetX = (pageWidth - renderWidth) / 2;
+      const offsetY = (pageHeight - renderHeight) / 2;
+
+      pdf.addImage(
+        imgData,
+        'PNG',
+        offsetX,
+        offsetY,
+        renderWidth,
+        renderHeight
+      );
 
       const fileNameSafe =
         (values.objectName as string | undefined)?.trim() || 'ai_appraisal_report';
@@ -1446,7 +1442,7 @@ const ReferencePage: React.FC = () => {
       }
       message.error('Не удалось сформировать PDF отчет.');
     }
-  }, [appraisalEstimate, appraisalForm, buildAppraisalContext, appraisalImageData]);
+  }, [appraisalEstimate, appraisalForm, buildAppraisalContext, appraisalImageData, appraisalTypeOptions]);
 
   // Обработчик принудительной переиндексации всех документов
   const handleReindexAll = useCallback(async () => {
