@@ -1377,15 +1377,15 @@ const ReferencePage: React.FC = () => {
       `;
 
       const container = document.createElement('div');
-      // Размещаем контейнер в видимой области, но делаем его невидимым,
-      // чтобы html2canvas корректно отрисовал содержимое.
+      // Контейнер должен участвовать в раскладке (visibility: hidden, а не display: none),
+      // чтобы html2canvas «видел» реальный контент.
       container.style.position = 'fixed';
       container.style.left = '0';
       container.style.top = '0';
-      container.style.opacity = '0';
-      container.style.pointerEvents = 'none';
-      container.style.zIndex = '-1';
       container.style.width = '800px';
+      container.style.backgroundColor = '#ffffff';
+      container.style.visibility = 'hidden';
+      container.style.zIndex = '9999';
       container.innerHTML = html;
       document.body.appendChild(container);
 
@@ -1407,7 +1407,6 @@ const ReferencePage: React.FC = () => {
         autoPaging: 'text',
         html2canvas: {
           scale: 1,
-          windowWidth: 800,
           useCORS: true,
         },
       });
