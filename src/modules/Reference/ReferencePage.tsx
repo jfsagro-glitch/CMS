@@ -66,6 +66,7 @@ import {
 } from '@/utils/chatStorage';
 import { getAppraisalConfigForType, formatAppraisalAttributes, APPRAISAL_TYPE_OPTIONS } from '@/utils/appraisalAttributeConfig';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
 import './ReferencePage.css';
 
