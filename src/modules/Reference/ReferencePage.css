@@ -160,13 +160,25 @@
 }
 
 .reference-page__appraisal-panel {
-  margin: 0 24px 12px 24px;
+  margin: 12px 24px 24px 24px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .reference-page__appraisal-panel .ant-form-item {
   margin-bottom: 8px;
+}
+
+.reference-page__appraisal-panel .ant-card-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* Card занимает всю оставшуюся высоту после header */

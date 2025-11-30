@@ -112,6 +112,17 @@ const TYPE_CATEGORY_MAP: Record<string, AppraisalAssetGroup> = TYPE_CATEGORY_LIS
   {} as Record<string, AppraisalAssetGroup>
 );
 
+// Переопределения набора атрибутов для отдельных типов,
+// чтобы не показывать нерелевантные поля (например, площадь и этажность для воздушных судов).
+const TYPE_FIELDS_MAP: Record<string, AppraisalAttributeField[]> = {
+  // Воздушные суда — используем типовой набор для сложного движимого имущества
+  [NORMALIZE('Воздушные суда')]: MOVABLE_FIELDS,
+  // Железнодорожный подвижной состав — тоже как движимое
+  [NORMALIZE('Железнодорожный подвижной состав')]: MOVABLE_FIELDS,
+  // Товары в обороте — используем набор для товарных запасов
+  [NORMALIZE('Товары в обороте')]: GOODS_FIELDS,
+};
+
 export const APPRAISAL_TYPE_OPTIONS = TYPE_CATEGORY_LIST.map(item => ({
   value: item.label,
   label: item.label,
@@ -133,7 +144,7 @@ export const getAppraisalConfigForType = (typeName?: string | null): AppraisalTy
 
   return {
     assetGroup,
-    fields: DEFAULT_FIELDS_BY_GROUP[assetGroup],
+    fields: TYPE_FIELDS_MAP[normalized] || DEFAULT_FIELDS_BY_GROUP[assetGroup],
   };
 };
 

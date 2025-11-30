@@ -1377,9 +1377,15 @@ const ReferencePage: React.FC = () => {
       `;
 
       const container = document.createElement('div');
+      // Размещаем контейнер в видимой области, но делаем его невидимым,
+      // чтобы html2canvas корректно отрисовал содержимое.
       container.style.position = 'fixed';
-      container.style.left = '-99999px';
+      container.style.left = '0';
       container.style.top = '0';
+      container.style.opacity = '0';
+      container.style.pointerEvents = 'none';
+      container.style.zIndex = '-1';
+      container.style.width = '800px';
       container.innerHTML = html;
       document.body.appendChild(container);
 
@@ -1400,7 +1406,8 @@ const ReferencePage: React.FC = () => {
         margin: [10, 10, 10, 10],
         autoPaging: 'text',
         html2canvas: {
-          scale: 0.9,
+          scale: 1,
+          windowWidth: 800,
           useCORS: true,
         },
       });
@@ -1845,7 +1852,123 @@ const ReferencePage: React.FC = () => {
         )}
       </div>
 
-      {appraisalMode && (
+      {/* Основной контент */}
+      <div className={`reference-page__main-content ${chatsVisible ? 'reference-page__main-content--with-sidebar' : ''}`}>
+      <div className="reference-page__header">
+        <div className="reference-page__header-left">
+          <RobotIcon size={robotSize} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Space align="center" style={{ marginBottom: 4 }} size="small">
+              <Title level={2} style={{ margin: 0, fontSize: '22px', lineHeight: '1.2' }}>
+                Справочная с ИИ
+              </Title>
+              <Tag
+                color={learningIndex >= 70 ? 'success' : learningIndex >= 40 ? 'processing' : 'default'}
+                icon={<ThunderboltOutlined />}
+                style={{
+                  fontSize: '12px',
+                  padding: '4px 12px',
+                  borderRadius: '16px',
+                  fontWeight: 600,
+                  height: 'auto',
+                  lineHeight: '1.5',
+                }}
+              >
+                Индекс самообучаемости: {learningIndex}%
+              </Tag>
+            </Space>
+            {evolutionProgress && (
+              <div style={{ marginBottom: 4, maxWidth: 500 }}>
+                <Space direction="vertical" size={2} style={{ width: '100%' }}>
+                  <Space size="small">
+                    <Text strong style={{ fontSize: '12px' }}>
+                      Уровень: {evolutionService.getCurrentLevel()?.name || 'Новичок'} ({evolutionLevel})
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: '11px' }}>
+                      Опыт: {evolutionService.getEvolutionStats()?.totalExperience || 0}
+                    </Text>
+                  </Space>
+                  <Progress
+                    percent={evolutionProgress.percentage}
+                    status={evolutionProgress.percentage >= 90 ? 'active' : 'normal'}
+                    strokeColor={{
+                      '0%': '#108ee9',
+                      '100%': '#87d068',
+                    }}
+                    format={() => `${evolutionProgress.current}/${evolutionProgress.required} опыта`}
+                    size="small"
+                    style={{ marginTop: 2 }}
+                    showInfo={false}
+                  />
+                </Space>
+              </div>
+            )}
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <Text type="secondary" style={{ fontSize: '11px', lineHeight: '1.3' }}>
+                База знаний на основе справочной литературы по банковским залогам
+              </Text>
+              <Space align="center" wrap size="small">
+                <Tag
+                  color={appraisalSkill >= 70 ? 'success' : appraisalSkill >= 40 ? 'processing' : 'default'}
+                  icon={<CalculatorOutlined />}
+                  style={{ margin: 0 }}
+                >
+                  Скилл оценки: {appraisalSkill}%
+                </Tag>
+                <Tag
+                  color={trainingMode ? 'processing' : 'default'}
+                  icon={<SyncOutlined spin={trainingMode} />}
+                  style={{ margin: 0 }}
+                >
+                  Режим обучения
+                </Tag>
+                <Button
+                  size="small"
+                  type={appraisalMode ? 'primary' : 'default'}
+                  icon={<CalculatorOutlined />}
+                  onClick={handleToggleAppraisalMode}
+                >
+                  Режим оценки
+                </Button>
+                <Button
+                  size="small"
+                  type={trainingMode ? 'primary' : 'default'}
+                  icon={<SyncOutlined spin={trainingMode} />}
+                  onClick={handleToggleTrainingMode}
+                >
+                  {trainingMode ? 'Остановить обучение' : 'Режим обучения'}
+                </Button>
+              </Space>
+            </Space>
+          </div>
+        </div>
+        <div className="reference-page__header-right">
+          {indexedDocuments.length > 0 && (
+            <Tag icon={<BookOutlined />} color="blue" style={{ margin: 0, padding: '4px 12px' }}>
+              Документов: {indexedDocuments.length}
+            </Tag>
+          )}
+          <Button 
+            icon={<HistoryOutlined />} 
+            onClick={() => setChatsVisible(!chatsVisible)}
+            size="middle"
+            type={chatsVisible ? 'primary' : 'default'}
+            style={{ marginRight: 8 }}
+            title={chatsVisible ? 'Скрыть историю чатов' : 'Показать историю чатов'}
+          >
+            Чаты {chats.length > 0 && <Badge count={chats.length} size="small" style={{ marginLeft: 4 }} />}
+          </Button>
+          <Button 
+            icon={<SettingOutlined />} 
+            onClick={() => setSettingsVisible(true)}
+            size="middle"
+          >
+            Настройки
+          </Button>
+        </div>
+      </div>
+
+      {appraisalMode ? (
         <Card size="small" className="reference-page__appraisal-panel">
           <Form layout="vertical" form={appraisalForm}>
             <Space direction="vertical" style={{ width: '100%' }} size="middle">
@@ -1977,146 +2100,30 @@ const ReferencePage: React.FC = () => {
             </Space>
           </Form>
         </Card>
-      )}
-
-      {/* Основной контент */}
-      <div className={`reference-page__main-content ${chatsVisible ? 'reference-page__main-content--with-sidebar' : ''}`}>
-      <div className="reference-page__header">
-        <div className="reference-page__header-left">
-          <RobotIcon size={robotSize} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Space align="center" style={{ marginBottom: 4 }} size="small">
-              <Title level={2} style={{ margin: 0, fontSize: '22px', lineHeight: '1.2' }}>
-                Справочная с ИИ
-              </Title>
-              <Tag
-                color={learningIndex >= 70 ? 'success' : learningIndex >= 40 ? 'processing' : 'default'}
-                icon={<ThunderboltOutlined />}
-                style={{
-                  fontSize: '12px',
-                  padding: '4px 12px',
-                  borderRadius: '16px',
-                  fontWeight: 600,
-                  height: 'auto',
-                  lineHeight: '1.5',
-                }}
-              >
-                Индекс самообучаемости: {learningIndex}%
-              </Tag>
-            </Space>
-            {evolutionProgress && (
-              <div style={{ marginBottom: 4, maxWidth: 500 }}>
-                <Space direction="vertical" size={2} style={{ width: '100%' }}>
-                  <Space size="small">
-                    <Text strong style={{ fontSize: '12px' }}>
-                      Уровень: {evolutionService.getCurrentLevel()?.name || 'Новичок'} ({evolutionLevel})
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: '11px' }}>
-                      Опыт: {evolutionService.getEvolutionStats()?.totalExperience || 0}
-                    </Text>
-                  </Space>
-                  <Progress
-                    percent={evolutionProgress.percentage}
-                    status={evolutionProgress.percentage >= 90 ? 'active' : 'normal'}
-                    strokeColor={{
-                      '0%': '#108ee9',
-                      '100%': '#87d068',
-                    }}
-                    format={() => `${evolutionProgress.current}/${evolutionProgress.required} опыта`}
-                    size="small"
-                    style={{ marginTop: 2 }}
-                    showInfo={false}
-                  />
-                </Space>
-              </div>
-            )}
-            <Space direction="vertical" size={4} style={{ width: '100%' }}>
-              <Text type="secondary" style={{ fontSize: '11px', lineHeight: '1.3' }}>
-                База знаний на основе справочной литературы по банковским залогам
-              </Text>
-              <Space align="center" wrap size="small">
-                <Tag
-                  color={appraisalSkill >= 70 ? 'success' : appraisalSkill >= 40 ? 'processing' : 'default'}
-                  icon={<CalculatorOutlined />}
-                  style={{ margin: 0 }}
-                >
-                  Скилл оценки: {appraisalSkill}%
-                </Tag>
-                <Tag
-                  color={trainingMode ? 'processing' : 'default'}
-                  icon={<SyncOutlined spin={trainingMode} />}
-                  style={{ margin: 0 }}
-                >
-                  Режим обучения
-                </Tag>
-                <Button
-                  size="small"
-                  type={appraisalMode ? 'primary' : 'default'}
-                  icon={<CalculatorOutlined />}
-                  onClick={handleToggleAppraisalMode}
-                >
-                  Режим оценки
-                </Button>
-                <Button
-                  size="small"
-                  type={trainingMode ? 'primary' : 'default'}
-                  icon={<SyncOutlined spin={trainingMode} />}
-                  onClick={handleToggleTrainingMode}
-                >
-                  {trainingMode ? 'Остановить обучение' : 'Режим обучения'}
-                </Button>
-              </Space>
-            </Space>
-          </div>
-        </div>
-        <div className="reference-page__header-right">
-          {indexedDocuments.length > 0 && (
-            <Tag icon={<BookOutlined />} color="blue" style={{ margin: 0, padding: '4px 12px' }}>
-              Документов: {indexedDocuments.length}
-            </Tag>
-          )}
-          <Button 
-            icon={<HistoryOutlined />} 
-            onClick={() => setChatsVisible(!chatsVisible)}
-            size="middle"
-            type={chatsVisible ? 'primary' : 'default'}
-            style={{ marginRight: 8 }}
-            title={chatsVisible ? 'Скрыть историю чатов' : 'Показать историю чатов'}
-          >
-            Чаты {chats.length > 0 && <Badge count={chats.length} size="small" style={{ marginLeft: 4 }} />}
-          </Button>
-          <Button 
-            icon={<SettingOutlined />} 
-            onClick={() => setSettingsVisible(true)}
-            size="middle"
-          >
-            Настройки
-          </Button>
-        </div>
-      </div>
-
-      {initializing && (
-        <Alert
-          message="Инициализация ИИ-справочной..."
-          description={
-            <div>
-              <span className="reference-page__loading-text">
-                Справочная загружается, подождите пожалуйста...
-              </span>
-              {typeof loadingCountdown === 'number' && (
-                <div style={{ marginTop: 4 }}>
-                  Осталось примерно {loadingCountdown} сек.
+      ) : (
+        <>
+          {initializing && (
+            <Alert
+              message="Инициализация ИИ-справочной..."
+              description={
+                <div>
+                  <span className="reference-page__loading-text">
+                    Справочная загружается, подождите пожалуйста...
+                  </span>
+                  {typeof loadingCountdown === 'number' && (
+                    <div style={{ marginTop: 4 }}>
+                      Осталось примерно {loadingCountdown} сек.
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          }
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
-      )}
+              }
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+          )}
 
-      <Card className="reference-page__card">
+          <Card className="reference-page__card">
             <div className="reference-page__chat">
               <div className="reference-page__messages">
                 {messages.length === 0 ? (
@@ -2273,6 +2280,8 @@ const ReferencePage: React.FC = () => {
               </div>
             </div>
           </Card>
+        </>
+      )}
 
         {/* Модальное окно настроек */}
         <Modal
