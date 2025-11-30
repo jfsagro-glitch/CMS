@@ -65,6 +65,7 @@ import {
   type ChatMessage 
 } from '@/utils/chatStorage';
 import { getAppraisalConfigForType, formatAppraisalAttributes, APPRAISAL_TYPE_OPTIONS } from '@/utils/appraisalAttributeConfig';
+import jsPDF from 'jspdf';
 import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
 import './ReferencePage.css';
 
@@ -1221,6 +1222,138 @@ const ReferencePage: React.FC = () => {
     }
   }, [appraisalForm, appraisalTypeOptions, attributeFields]);
 
+  const handleExportAppraisalPdf = useCallback(() => {
+    if (!appraisalEstimate) {
+      message.warning('Сначала выполните оценку ИИ, затем можно выгрузить PDF.');
+      return;
+    }
+
+    try {
+      const values = appraisalForm.getFieldsValue();
+      const doc = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      let y = 15;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.text('Отчет об экспресс-оценке залогового актива (ИИ)', 10, y);
+      y += 8;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Дата формирования: ${new Date().toLocaleString('ru-RU')}`, 10, y);
+      y += 6;
+
+      // Описание объекта
+      const contextText = buildAppraisalContext();
+      doc.setFont('helvetica', 'bold');
+      doc.text('1. Описание объекта и исходные данные', 10, y);
+      y += 6;
+      doc.setFont('helvetica', 'normal');
+      const contextLines = doc.splitTextToSize(contextText || 'Нет данных', 190);
+      doc.text(contextLines, 10, y);
+      y += contextLines.length * 5 + 4;
+
+      // Результаты оценки
+      doc.setFont('helvetica', 'bold');
+      doc.text('2. Итоги экспресс-оценки', 10, y);
+      y += 6;
+      doc.setFont('helvetica', 'normal');
+      const results: string[] = [
+        `Рыночная стоимость (ориентировочно): ${appraisalEstimate.marketValue.toLocaleString('ru-RU')} ₽`,
+        `Залоговая стоимость (ориентировочно): ${appraisalEstimate.collateralValue.toLocaleString('ru-RU')} ₽`,
+        `Рекомендуемый LTV: ${appraisalEstimate.recommendedLtv}%`,
+        `Уровень уверенности модели: ${appraisalEstimate.confidence}`,
+      ];
+      results.forEach(line => {
+        doc.text(line, 10, y);
+        y += 5;
+      });
+      y += 2;
+
+      // Методология
+      doc.setFont('helvetica', 'bold');
+      doc.text('3. Методология расчета', 10, y);
+      y += 6;
+      doc.setFont('helvetica', 'normal');
+      const methodLines = doc.splitTextToSize(
+        appraisalEstimate.methodology || 'Методология не указана',
+        190
+      );
+      doc.text(methodLines, 10, y);
+      y += methodLines.length * 5 + 4;
+
+      // Аналоги
+      doc.setFont('helvetica', 'bold');
+      doc.text('4. Использованные аналоги (если применимо)', 10, y);
+      y += 6;
+      doc.setFont('helvetica', 'normal');
+      if (appraisalEstimate.comparables && appraisalEstimate.comparables.length > 0) {
+        appraisalEstimate.comparables.forEach((c, index) => {
+          const comparableHeader = `Аналог ${index + 1}:`;
+          const lines = doc.splitTextToSize(c, 190);
+          doc.text(comparableHeader, 10, y);
+          y += 5;
+          doc.text(lines, 10, y);
+          y += lines.length * 5 + 3;
+        });
+      } else {
+        doc.text('Аналоги не были явно указаны в результате ИИ.', 10, y);
+        y += 6;
+      }
+
+      // Риски и корректировки
+      doc.setFont('helvetica', 'bold');
+      doc.text('5. Риски и корректировки', 10, y);
+      y += 6;
+      doc.setFont('helvetica', 'normal');
+      if (appraisalEstimate.riskFactors && appraisalEstimate.riskFactors.length > 0) {
+        const riskLines = doc.splitTextToSize(
+          `Идентифицированные риски: ${appraisalEstimate.riskFactors.join('; ')}`,
+          190
+        );
+        doc.text(riskLines, 10, y);
+        y += riskLines.length * 5 + 3;
+      }
+      if (appraisalEstimate.recommendedActions && appraisalEstimate.recommendedActions.length > 0) {
+        const recLines = doc.splitTextToSize(
+          `Рекомендации по учету рисков и корректировкам: ${appraisalEstimate.recommendedActions.join('; ')}`,
+          190
+        );
+        doc.text(recLines, 10, y);
+        y += recLines.length * 5 + 3;
+      }
+
+      // Допущения
+      doc.setFont('helvetica', 'bold');
+      doc.text('6. Основные допущения', 10, y);
+      y += 6;
+      doc.setFont('helvetica', 'normal');
+      const assumptions = appraisalEstimate.assumptions && appraisalEstimate.assumptions.length > 0
+        ? appraisalEstimate.assumptions
+        : ['Допущения явно не указаны моделью. Рекомендуется дополнительная экспертная проверка.'];
+      const assumptionLines = doc.splitTextToSize(
+        assumptions.join('; '),
+        190
+      );
+      doc.text(assumptionLines, 10, y);
+
+      const fileNameSafe =
+        (values.objectName as string | undefined)?.trim() ||
+        'ai_appraisal_report';
+      const ts = new Date().toISOString().slice(0, 10);
+      doc.save(`Оценка_ИИ_${fileNameSafe}_${ts}.pdf`);
+    } catch (error) {
+      if (import.meta.env.MODE === 'development') {
+        console.error('Ошибка выгрузки PDF отчета:', error);
+      }
+      message.error('Не удалось сформировать PDF отчет.');
+    }
+  }, [appraisalEstimate, appraisalForm, buildAppraisalContext]);
+
   // Обработчик принудительной переиндексации всех документов
   const handleReindexAll = useCallback(async () => {
     setIndexing(true);
@@ -1726,14 +1859,24 @@ const ReferencePage: React.FC = () => {
                 <Text type="secondary">
                   После заполнения полей AI помощник выполнит экспресс-оценку и учтёт данные в самообучении.
                 </Text>
-                <Button
-                  type="primary"
-                  icon={<CalculatorOutlined />}
-                  loading={appraisalLoading}
-                  onClick={handleGenerateAppraisalEstimate}
-                >
-                  Получить оценку ИИ
-                </Button>
+                <Space>
+                  <Button
+                    type="default"
+                    icon={<FileTextOutlined />}
+                    disabled={!appraisalEstimate}
+                    onClick={handleExportAppraisalPdf}
+                  >
+                    Выгрузить PDF
+                  </Button>
+                  <Button
+                    type="primary"
+                    icon={<CalculatorOutlined />}
+                    loading={appraisalLoading}
+                    onClick={handleGenerateAppraisalEstimate}
+                  >
+                    Получить оценку ИИ
+                  </Button>
+                </Space>
               </Space>
               {appraisalEstimate && (
                 <Alert
