@@ -66,7 +66,6 @@ import {
 } from '@/utils/chatStorage';
 import { getAppraisalConfigForType, formatAppraisalAttributes, APPRAISAL_TYPE_OPTIONS } from '@/utils/appraisalAttributeConfig';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
 import './ReferencePage.css';
 
@@ -1262,7 +1261,7 @@ const ReferencePage: React.FC = () => {
     }
   }, [appraisalForm, appraisalTypeOptions, attributeFields]);
 
-  const handleExportAppraisalPdf = useCallback(async () => {
+  const handleExportAppraisalPdf = useCallback(() => {
     if (!appraisalEstimate) {
       message.warning('Сначала выполните оценку ИИ, затем можно выгрузить PDF.');
       return;
@@ -1284,120 +1283,6 @@ const ReferencePage: React.FC = () => {
         attributes.storageLocation ||
         '';
 
-      const html = `
-        <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 16px; font-size: 11px; line-height: 1.4;">
-          <h2 style="margin: 0 0 8px 0;">Отчет об экспресс-оценке залогового актива (ИИ)</h2>
-          <div style="margin-bottom: 8px;">Дата формирования: ${dateText}</div>
-
-          <!-- Изображение оцениваемого объекта (если загружено), иначе схематичный блок -->
-          <div style="display: flex; align-items: center; margin: 8px 0 12px 0;">
-            ${
-              appraisalImageData
-                ? `<img src="${appraisalImageData}" alt="Объект оценки" style="width: 80px; height: 80px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 6px rgba(0,0,0,0.2);" />`
-                : `<div style="
-                    width: 80px;
-                    height: 80px;
-                    border-radius: 8px;
-                    background: linear-gradient(135deg, #1890ff 0%, #40a9ff 50%, #bae7ff 100%);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: #ffffff;
-                    font-size: 8px;
-                    text-align: center;
-                    padding: 4px;
-                    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-                  ">
-                    <div>
-                      <div style="font-weight: 600; margin-bottom: 2px;">ОБЪЕКТ</div>
-                      <div style="word-break: break-word;">${objectName}</div>
-                    </div>
-                  </div>`
-            }
-            <div style="margin-left: 10px; font-size: 10px;">
-              <div><strong>Тип актива:</strong> ${typeOption?.label || '-'}</div>
-              ${
-                location
-                  ? `<div><strong>Локация:</strong> ${location}</div>`
-                  : ''
-              }
-            </div>
-          </div>
-
-          <h3 style="margin: 12px 0 4px 0;">1. Описание объекта и исходные данные</h3>
-          <pre style="white-space: pre-wrap; margin: 0 0 8px 0;">${contextText || 'Нет данных'}</pre>
-
-          <h3 style="margin: 12px 0 4px 0;">2. Итоги экспресс-оценки</h3>
-          <ul style="margin: 0 0 8px 20px; padding: 0;">
-            <li>Рыночная стоимость (ориентировочно): ${appraisalEstimate.marketValue.toLocaleString('ru-RU')} ₽</li>
-            <li>Залоговая стоимость (ориентировочно): ${appraisalEstimate.collateralValue.toLocaleString('ru-RU')} ₽</li>
-            <li>Рекомендуемый LTV: ${appraisalEstimate.recommendedLtv}%</li>
-            <li>Уровень уверенности модели: ${appraisalEstimate.confidence}</li>
-          </ul>
-
-          <h3 style="margin: 12px 0 4px 0;">3. Методология расчета</h3>
-          <p style="margin: 0 0 8px 0;">${appraisalEstimate.methodology || 'Методология не указана'}</p>
-
-          <h3 style="margin: 12px 0 4px 0;">4. Использованные аналоги (если применимо)</h3>
-          ${
-            appraisalEstimate.comparables && appraisalEstimate.comparables.length > 0
-              ? appraisalEstimate.comparables
-                  .map(
-                    (c, idx) =>
-                      `<p style="margin: 0 0 4px 0;"><strong>Аналог ${idx + 1}:</strong> ${c}</p>`
-                  )
-                  .join('')
-              : '<p style="margin: 0 0 8px 0;">Аналоги не были явно указаны в результате ИИ.</p>'
-          }
-
-          <h3 style="margin: 12px 0 4px 0;">5. Риски и корректировки</h3>
-          ${
-            appraisalEstimate.riskFactors && appraisalEstimate.riskFactors.length > 0
-              ? `<p style="margin: 0 0 4px 0;">Идентифицированные риски: ${appraisalEstimate.riskFactors.join(
-                  '; '
-                )}</p>`
-              : ''
-          }
-          ${
-            appraisalEstimate.recommendedActions && appraisalEstimate.recommendedActions.length > 0
-              ? `<p style="margin: 0 0 8px 0;">Рекомендации по учету рисков и корректировкам: ${appraisalEstimate.recommendedActions.join(
-                  '; '
-                )}</p>`
-              : ''
-          }
-
-          <h3 style="margin: 12px 0 4px 0;">6. Основные допущения</h3>
-          <p style="margin: 0;">
-            ${
-              appraisalEstimate.assumptions && appraisalEstimate.assumptions.length > 0
-                ? appraisalEstimate.assumptions.join('; ')
-                : 'Допущения явно не указаны моделью. Рекомендуется дополнительная экспертная проверка.'
-            }
-          </p>
-        </div>
-      `;
-
-      const container = document.createElement('div');
-      // Контейнер должен участвовать в раскладке (visibility: hidden, а не display: none),
-      // чтобы html2canvas «видел» реальный контент.
-      container.style.position = 'fixed';
-      container.style.left = '0';
-      container.style.top = '0';
-      container.style.width = '800px';
-      container.style.backgroundColor = '#ffffff';
-      container.style.visibility = 'hidden';
-      container.style.zIndex = '9999';
-      container.innerHTML = html;
-      document.body.appendChild(container);
-
-      // Рендерим HTML в canvas вручную, затем вставляем изображение в PDF.
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
-
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'p',
         unit: 'mm',
@@ -1407,35 +1292,131 @@ const ReferencePage: React.FC = () => {
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 10;
-      const maxWidth = pageWidth - margin * 2;
-      const maxHeight = pageHeight - margin * 2;
+      const contentWidth = pageWidth - margin * 2;
+      let cursorY = margin;
 
-      // Масштабируем изображение под страницу, сохраняя пропорции
-      let renderWidth = maxWidth;
-      let renderHeight = (canvas.height * renderWidth) / canvas.width;
-      if (renderHeight > maxHeight) {
-        renderHeight = maxHeight;
-        renderWidth = (canvas.width * renderHeight) / canvas.height;
+      const ensureSpace = (lineHeight: number) => {
+        if (cursorY + lineHeight > pageHeight - margin) {
+          pdf.addPage();
+          cursorY = margin;
+        }
+      };
+
+      const addTitle = (text: string) => {
+        pdf.setFontSize(14);
+        ensureSpace(8);
+        pdf.text(text, margin, cursorY);
+        cursorY += 8;
+      };
+
+      const addSubTitle = (text: string) => {
+        pdf.setFontSize(12);
+        ensureSpace(7);
+        pdf.text(text, margin, cursorY);
+        cursorY += 7;
+      };
+
+      const addParagraph = (text: string) => {
+        if (!text) return;
+        pdf.setFontSize(11);
+        const lines = pdf.splitTextToSize(text, contentWidth);
+        (lines as string[]).forEach((line) => {
+          ensureSpace(6);
+          pdf.text(line, margin, cursorY);
+          cursorY += 6;
+        });
+        cursorY += 2;
+      };
+
+      // Заголовок и дата
+      addTitle('Отчет об экспресс-оценке залогового актива (ИИ)');
+      addParagraph(`Дата формирования: ${dateText}`);
+
+      // Общая информация об объекте
+      addSubTitle('1. Описание объекта и исходные данные');
+      addParagraph(`Наименование: ${objectName}`);
+      addParagraph(`Тип актива: ${typeOption?.label || values.assetType || '-'}`);
+      if (location) {
+        addParagraph(`Локация: ${location}`);
+      }
+      if (contextText) {
+        addParagraph(`Исходные данные:\n${contextText}`);
       }
 
-      const offsetX = (pageWidth - renderWidth) / 2;
-      const offsetY = (pageHeight - renderHeight) / 2;
+      // Если есть картинка объекта — пытаемся добавить
+      if (appraisalImageData) {
+        try {
+          const imgWidthMm = Math.min(contentWidth, 60);
+          const imgHeightMm = 40;
+          ensureSpace(imgHeightMm + 4);
+          pdf.addImage(
+            appraisalImageData,
+            'PNG',
+            margin,
+            cursorY,
+            imgWidthMm,
+            imgHeightMm
+          );
+          cursorY += imgHeightMm + 4;
+        } catch {
+          // Если картинку не удалось добавить, продолжаем без нее
+        }
+      }
 
-      pdf.addImage(
-        imgData,
-        'PNG',
-        offsetX,
-        offsetY,
-        renderWidth,
-        renderHeight
+      // 2. Итоги экспресс-оценки
+      addSubTitle('2. Итоги экспресс-оценки');
+      addParagraph(
+        `Рыночная стоимость (ориентировочно): ${appraisalEstimate.marketValue.toLocaleString('ru-RU')} ₽`
       );
+      addParagraph(
+        `Залоговая стоимость (ориентировочно): ${appraisalEstimate.collateralValue.toLocaleString('ru-RU')} ₽`
+      );
+      if (typeof appraisalEstimate.recommendedLtv === 'number') {
+        addParagraph(`Рекомендуемый LTV: ${appraisalEstimate.recommendedLtv}%`);
+      }
+      addParagraph(`Уровень уверенности модели: ${appraisalEstimate.confidence}`);
+
+      // 3. Методология расчета
+      addSubTitle('3. Методология расчета');
+      addParagraph(appraisalEstimate.methodology || 'Методология не указана');
+
+      // 4. Использованные аналоги
+      addSubTitle('4. Использованные аналоги');
+      if (appraisalEstimate.comparables && appraisalEstimate.comparables.length > 0) {
+        appraisalEstimate.comparables.forEach((c, idx) => {
+          addParagraph(`Аналог ${idx + 1}: ${c}`);
+        });
+      } else {
+        addParagraph('Аналоги не были явно указаны в результате ИИ.');
+      }
+
+      // 5. Риски и корректировки
+      addSubTitle('5. Риски и корректировки');
+      if (appraisalEstimate.riskFactors && appraisalEstimate.riskFactors.length > 0) {
+        addParagraph(`Идентифицированные риски: ${appraisalEstimate.riskFactors.join('; ')}`);
+      }
+      if (appraisalEstimate.recommendedActions && appraisalEstimate.recommendedActions.length > 0) {
+        addParagraph(
+          `Рекомендации по учету рисков и корректировкам: ${appraisalEstimate.recommendedActions.join(
+            '; '
+          )}`
+        );
+      }
+
+      // 6. Основные допущения
+      addSubTitle('6. Основные допущения');
+      if (appraisalEstimate.assumptions && appraisalEstimate.assumptions.length > 0) {
+        addParagraph(appraisalEstimate.assumptions.join('; '));
+      } else {
+        addParagraph(
+          'Допущения явно не указаны моделью. Рекомендуется дополнительная экспертная проверка.'
+        );
+      }
 
       const fileNameSafe =
         (values.objectName as string | undefined)?.trim() || 'ai_appraisal_report';
       const ts = new Date().toISOString().slice(0, 10);
       pdf.save(`Оценка_ИИ_${fileNameSafe}_${ts}.pdf`);
-
-      document.body.removeChild(container);
     } catch (error) {
       if (import.meta.env.MODE === 'development') {
         console.error('Ошибка выгрузки PDF отчета:', error);
