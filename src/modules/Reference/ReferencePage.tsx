@@ -66,6 +66,7 @@ import {
 } from '@/utils/chatStorage';
 import { getAppraisalConfigForType, formatAppraisalAttributes, APPRAISAL_TYPE_OPTIONS } from '@/utils/appraisalAttributeConfig';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
 import './ReferencePage.css';
 
@@ -1261,7 +1262,7 @@ const ReferencePage: React.FC = () => {
     }
   }, [appraisalForm, appraisalTypeOptions, attributeFields]);
 
-  const handleExportAppraisalPdf = useCallback(() => {
+  const handleExportAppraisalPdf = useCallback(async () => {
     if (!appraisalEstimate) {
       message.warning('Сначала выполните оценку ИИ, затем можно выгрузить PDF.');
       return;
@@ -1389,34 +1390,63 @@ const ReferencePage: React.FC = () => {
       container.innerHTML = html;
       document.body.appendChild(container);
 
-      const doc = new jsPDF({
+      // Рендерим HTML в canvas вручную, затем вставляем изображение в PDF.
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
         orientation: 'p',
         unit: 'mm',
         format: 'a4',
       });
 
-      (doc as any).html(container, {
-        callback: (pdf: jsPDF) => {
-          const fileNameSafe =
-            (values.objectName as string | undefined)?.trim() || 'ai_appraisal_report';
-          const ts = new Date().toISOString().slice(0, 10);
-          pdf.save(`Оценка_ИИ_${fileNameSafe}_${ts}.pdf`);
-          document.body.removeChild(container);
-        },
-        margin: [10, 10, 10, 10],
-        autoPaging: 'text',
-        html2canvas: {
-          scale: 1,
-          useCORS: true,
-        },
-      });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const availableWidth = pageWidth - margin * 2;
+      const imgHeight = (canvas.height * availableWidth) / canvas.width;
+
+      let position = margin;
+      let remainingHeight = imgHeight;
+
+      // Простейшая разбивка на страницы, если контент высокий
+      while (remainingHeight > 0) {
+        const renderHeight = Math.min(remainingHeight, pageHeight - margin * 2);
+        const renderY = position;
+
+        pdf.addImage(
+          imgData,
+          'PNG',
+          margin,
+          renderY,
+          availableWidth,
+          imgHeight
+        );
+
+        remainingHeight -= pageHeight - margin * 2;
+        if (remainingHeight > 0) {
+          pdf.addPage();
+          position = margin;
+        }
+      }
+
+      const fileNameSafe =
+        (values.objectName as string | undefined)?.trim() || 'ai_appraisal_report';
+      const ts = new Date().toISOString().slice(0, 10);
+      pdf.save(`Оценка_ИИ_${fileNameSafe}_${ts}.pdf`);
+
+      document.body.removeChild(container);
     } catch (error) {
       if (import.meta.env.MODE === 'development') {
         console.error('Ошибка выгрузки PDF отчета:', error);
       }
       message.error('Не удалось сформировать PDF отчет.');
     }
-  }, [appraisalEstimate, appraisalForm, buildAppraisalContext]);
+  }, [appraisalEstimate, appraisalForm, buildAppraisalContext, appraisalImageData]);
 
   // Обработчик принудительной переиндексации всех документов
   const handleReindexAll = useCallback(async () => {
