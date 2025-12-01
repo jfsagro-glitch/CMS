@@ -64,7 +64,7 @@ const parseJsonFromResponse = (response: string): any | null => {
   }
 };
 
-const normalizeEstimate = (raw: any, input: AppraisalRequestInput): AppraisalEstimate => {
+const normalizeEstimate = (raw: any): AppraisalEstimate => {
   if (!raw || typeof raw !== 'object') {
     throw new Error('ИИ не вернул корректный ответ. Попробуйте повторить запрос.');
   }
@@ -201,7 +201,7 @@ export const AppraisalAIService = {
           throw new Error('ИИ не вернул JSON в ответе');
         }
         
-        const estimate = normalizeEstimate(parsed, input);
+        const estimate = normalizeEstimate(parsed);
         learningService.addCategoryExperience('appraisal', 4);
         return estimate;
       } catch (error) {
