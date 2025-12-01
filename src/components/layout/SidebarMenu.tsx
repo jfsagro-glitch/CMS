@@ -231,15 +231,15 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
           cursor: 'pointer',
         }}
       >
-        <img 
-          src="/logo.png" 
-          alt="CMS Logo" 
-          style={{ 
-            height: collapsed ? '32px' : '40px', 
+        <img
+          src="/logo.png"
+          alt="CMS Logo"
+          style={{
+            height: collapsed ? '32px' : '40px',
             width: 'auto',
             objectFit: 'contain',
             transition: 'all 0.2s',
-          }} 
+          }}
         />
         {!collapsed && <span style={{ marginLeft: '8px' }}>CMS</span>}
       </div>

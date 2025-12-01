@@ -40,6 +40,12 @@ export interface AppraisalRequestInput {
   skills?: AppraisalSkills;
 }
 
+export interface ComparableItem {
+  description: string;
+  url?: string;
+  imageUrl?: string;
+}
+
 export interface AppraisalEstimate {
   summary: string;
   marketValue: number;
@@ -50,7 +56,7 @@ export interface AppraisalEstimate {
   riskFactors: string[];
   recommendedActions: string[];
   assumptions: string[];
-  comparables?: string[];
+  comparables?: (string | ComparableItem)[];
 }
 
 const parseJsonFromResponse = (response: string): any | null => {
@@ -145,6 +151,33 @@ const normalizeEstimate = (raw: any): AppraisalEstimate => {
     throw new Error('ИИ не смог рассчитать стоимость объекта. Убедитесь, что предоставлены все необходимые данные и попробуйте повторить запрос.');
   }
 
+  // Обрабатываем comparables - извлекаем URL из строк или используем объекты
+  const processComparables = (comparables: any): (string | ComparableItem)[] | undefined => {
+    if (!Array.isArray(comparables)) return undefined;
+    
+    return comparables.map((item: any) => {
+      if (typeof item === 'string') {
+        // Пытаемся извлечь URL из строки
+        const urlMatch = item.match(/(https?:\/\/[^\s\)]+)/);
+        if (urlMatch) {
+          return {
+            description: item.replace(urlMatch[0], '').trim(),
+            url: urlMatch[0],
+          } as ComparableItem;
+        }
+        return item;
+      } else if (typeof item === 'object' && item !== null) {
+        // Если это объект, используем его как есть
+        return {
+          description: item.description || item.text || String(item),
+          url: item.url || item.link,
+          imageUrl: item.imageUrl || item.image || item.photo,
+        } as ComparableItem;
+      }
+      return String(item);
+    });
+  };
+
   const result = {
     summary: raw.summary || raw.justification || raw.analysis || 'Проанализируйте объект дополнительными методами.',
     marketValue,
@@ -155,7 +188,7 @@ const normalizeEstimate = (raw: any): AppraisalEstimate => {
     riskFactors: Array.isArray(raw.riskFactors) ? raw.riskFactors : [],
     recommendedActions: Array.isArray(raw.recommendations) ? raw.recommendations : [],
     assumptions: Array.isArray(raw.assumptions) ? raw.assumptions : [],
-    comparables: Array.isArray(raw.comparables) ? raw.comparables : undefined,
+    comparables: processComparables(raw.comparables),
   };
 
   return result;
@@ -210,8 +243,20 @@ export const AppraisalAIService = {
   "riskFactors": ["..."],
   "recommendedActions": ["..."],
   "assumptions": ["..."],
-  "comparables": ["описание аналогов..."]
+  "comparables": [
+    "описание аналога 1 с URL: https://example.com/analog1",
+    {
+      "description": "описание аналога 2",
+      "url": "https://example.com/analog2",
+      "imageUrl": "https://example.com/image2.jpg"
+    }
+  ]
 }
+
+ВАЖНО для comparables:
+- Если используешь строки, включай URL прямо в текст (например: "Nissan Teana 2.4 2004, 140тыс.км - 280 000 руб. https://avito.ru/item123")
+- Если используешь объекты, указывай description, url (ссылка на источник) и imageUrl (ссылка на изображение аналога, если доступна)
+- Старайся находить реальные ссылки на аналоги с сайтов объявлений (Avito, Drom, Циан и т.д.)
 
 Указывай значения в рублях. Если данных недостаточно, делай профессиональные допущения и фиксируй их в assumptions.`;
 

@@ -1477,6 +1477,50 @@ const ReferencePage: React.FC = () => {
         }
       }
 
+      // Обрабатываем аналоги - загружаем изображения и формируем HTML
+      let comparablesHtml = '<p style="margin: 0 0 8px 0;">Аналоги не были явно указаны в результате ИИ.</p>';
+      if (appraisalEstimate.comparables && appraisalEstimate.comparables.length > 0) {
+        const comparablesItems = await Promise.all(
+          appraisalEstimate.comparables.map(async (c, idx) => {
+            const comparable = typeof c === 'string' ? { description: c } : c;
+            const hasUrl = comparable.url;
+            const hasImage = comparable.imageUrl;
+            
+            let imageHtml = '';
+            if (hasImage) {
+              try {
+                // Пытаемся загрузить изображение и конвертировать в base64
+                const imageResponse = await fetch(comparable.imageUrl!);
+                if (imageResponse.ok) {
+                  const blob = await imageResponse.blob();
+                  const reader = new FileReader();
+                  const imageBase64 = await new Promise<string>((resolve, reject) => {
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                  });
+                  imageHtml = `<img src="${imageBase64}" alt="Аналог ${idx + 1}" style="max-width: 200px; max-height: 150px; border-radius: 4px; margin: 4px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" />`;
+                }
+              } catch (error) {
+                console.warn(`Не удалось загрузить изображение аналога ${idx + 1}:`, error);
+              }
+            }
+            
+            const urlLink = hasUrl 
+              ? ` <a href="${comparable.url}" target="_blank" style="color: #1890ff; text-decoration: underline; font-size: 10px;">[Ссылка на источник]</a>`
+              : '';
+            
+            return `
+              <div style="margin: 0 0 12px 0; padding: 8px; background: #f5f5f5; border-radius: 4px; border-left: 3px solid #1890ff;">
+                <p style="margin: 0 0 4px 0;"><strong>Аналог ${idx + 1}:</strong> ${comparable.description}${urlLink}</p>
+                ${imageHtml}
+              </div>
+            `;
+          })
+        );
+        comparablesHtml = comparablesItems.join('');
+      }
+
       const html = `
         <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 16px; font-size: 11px; line-height: 1.4; width: 750px; box-sizing: border-box; background:#ffffff;">
           <h2 style="margin: 0 0 8px 0;">Отчет об экспресс-оценке залогового актива (ИИ)</h2>
@@ -1544,16 +1588,7 @@ const ReferencePage: React.FC = () => {
           <p style="margin: 0 0 8px 0;">${appraisalEstimate.methodology || 'Методология не указана'}</p>
 
           <h3 style="margin: 12px 0 4px 0;">4. Использованные аналоги (если применимо)</h3>
-          ${
-            appraisalEstimate.comparables && appraisalEstimate.comparables.length > 0
-              ? appraisalEstimate.comparables
-                  .map(
-                    (c, idx) =>
-                      `<p style="margin: 0 0 4px 0;"><strong>Аналог ${idx + 1}:</strong> ${c}</p>`
-                  )
-                  .join('')
-              : '<p style="margin: 0 0 8px 0;">Аналоги не были явно указаны в результате ИИ.</p>'
-          }
+          ${comparablesHtml}
 
           <h3 style="margin: 12px 0 4px 0;">5. Риски и корректировки</h3>
           ${
