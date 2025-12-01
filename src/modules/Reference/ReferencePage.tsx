@@ -71,6 +71,7 @@ import { applyPreferredSkills } from '@/utils/appraisalSkillsConfig';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
+import imageGenerationService from '@/services/ImageGenerationService';
 import './ReferencePage.css';
 
 const { TextArea } = Input;
@@ -1406,6 +1407,24 @@ const ReferencePage: React.FC = () => {
 
       setAppraisalEstimate(estimate);
       setAppraisalSkill(learningService.getCategorySkill('appraisal'));
+      
+      // Автоматически генерируем изображение объекта, если оно еще не загружено
+      if (!appraisalImageData) {
+        try {
+          const objectDescription = `${values.objectName || typeOption?.label || 'Объект оценки'}. ${typeOption?.label || ''}. ${locationHint ? `Расположен: ${locationHint}.` : ''} ${conditionHint ? `Состояние: ${conditionHint}.` : ''} ${attributeSummary ? `Характеристики: ${attributeSummary}.` : ''}`;
+          message.info('Генерация изображения объекта через ИИ...');
+          const generatedImage = await imageGenerationService.generateImage(
+            objectDescription,
+            typeOption?.label,
+            locationHint
+          );
+          setAppraisalImageData(generatedImage);
+        } catch (error) {
+          console.warn('Не удалось сгенерировать изображение через ИИ:', error);
+          // Не показываем ошибку пользователю, так как это не критично
+        }
+      }
+      
       message.success('AI помощник подготовил оценку объекта');
     } catch (error: any) {
       if (error && error.errorFields) {
@@ -1439,6 +1458,24 @@ const ReferencePage: React.FC = () => {
         attributes.baseLocation ||
         attributes.storageLocation ||
         '';
+      
+      // Если изображение не загружено, пытаемся сгенерировать его через ИИ
+      let imageDataToUse = appraisalImageData;
+      if (!imageDataToUse) {
+        try {
+          message.info('Генерация изображения объекта для PDF...');
+          const attributeSummary = formatAppraisalAttributes(attributes, attributeFields);
+          const objectDescription = `${objectName}. ${typeOption?.label || ''}. ${location ? `Расположен: ${location}.` : ''} ${attributeSummary ? `Характеристики: ${attributeSummary}.` : ''}`;
+          imageDataToUse = await imageGenerationService.generateImage(
+            objectDescription,
+            typeOption?.label,
+            location
+          );
+        } catch (error) {
+          console.warn('Не удалось сгенерировать изображение для PDF:', error);
+          // Продолжаем без изображения
+        }
+      }
 
       const html = `
         <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 16px; font-size: 11px; line-height: 1.4; width: 750px; box-sizing: border-box; background:#ffffff;">
@@ -1447,8 +1484,8 @@ const ReferencePage: React.FC = () => {
 
           <div style="display: flex; align-items: center; margin: 8px 0 12px 0;">
             ${
-              appraisalImageData
-                ? `<img src="${appraisalImageData}" alt="Объект оценки" style="width: 90px; height: 90px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 6px rgba(0,0,0,0.2); margin-right: 12px;" />`
+              imageDataToUse
+                ? `<img src="${imageDataToUse}" alt="Объект оценки" style="width: 90px; height: 90px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 6px rgba(0,0,0,0.2); margin-right: 12px;" />`
                 : `<div style="
                     width: 90px;
                     height: 90px;
@@ -1481,6 +1518,14 @@ const ReferencePage: React.FC = () => {
           </div>
 
           <h3 style="margin: 12px 0 4px 0;">1. Описание объекта и исходные данные</h3>
+          ${
+            imageDataToUse
+              ? `<div style="margin: 8px 0; text-align: center;">
+                  <img src="${imageDataToUse}" alt="Изображение объекта оценки" style="max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-bottom: 8px;" />
+                  <p style="font-size: 10px; color: #666; margin: 0;">Изображение объекта, сгенерированное ИИ на основе описания</p>
+                </div>`
+              : ''
+          }
           <pre style="white-space: pre-wrap; margin: 0 0 8px 0;">${contextText || 'Нет данных'}</pre>
 
           <h3 style="margin: 12px 0 4px 0;">2. Итоги экспресс-оценки</h3>
@@ -1570,7 +1615,7 @@ const ReferencePage: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // Ждем загрузки изображений, если они есть
-      if (appraisalImageData) {
+      if (imageDataToUse) {
         const img = container.querySelector('img') as HTMLImageElement | null;
         if (img) {
           await new Promise((resolve) => {
@@ -1670,7 +1715,7 @@ const ReferencePage: React.FC = () => {
       }
       message.error('Не удалось сформировать PDF отчет.');
     }
-  }, [appraisalEstimate, appraisalForm, buildAppraisalContext, appraisalImageData, appraisalTypeOptions]);
+  }, [appraisalEstimate, appraisalForm, buildAppraisalContext, appraisalImageData, appraisalTypeOptions, attributeFields]);
 
   // Обратная связь по качеству оценки ИИ (лайк/дизлайк)
   const handleAppraisalFeedback = useCallback(
