@@ -43,36 +43,29 @@ const parseJsonFromResponse = (response: string): any | null => {
   }
 };
 
-const fallbackEstimate = (input: AppraisalRequestInput): AppraisalEstimate => {
-  const baseArea = input.area && input.area > 0 ? input.area : 100;
-  const multipliers: Record<string, number> = {
-    real_estate: 120000,
-    land: 60000,
-    movable: 80000,
-    metals_goods: 50000,
-    equity: 100000,
-    rights: 70000,
-  };
-  const basePrice = multipliers[input.assetGroup as keyof typeof multipliers] || 90000;
-  const marketValue = Math.round(baseArea * basePrice);
-  const collateralValue = Math.round(marketValue * 0.7);
-
+const errorEstimate = (input: AppraisalRequestInput, reason: string): AppraisalEstimate => {
   return {
-    summary: `Оценка выполнена эвристически на основе базовых параметров для группы "${input.assetGroup}".`,
-    marketValue,
-    collateralValue,
-    recommendedLtv: 70,
-    confidence: 'medium',
-    methodology: 'Эвристический расчет (замена при отсутствии ответа ИИ)',
-    riskFactors: ['Необходима проверка данных объекта', 'Эвристический расчет без данных аналогов'],
-    recommendedActions: ['Запросить отчёт от независимого оценщика', 'Уточнить рыночные показатели по региону'],
-    assumptions: ['Использованы средние рыночные показатели', 'Состояние объекта принято удовлетворительным'],
+    summary: `Не удалось выполнить корректную оценку объекта "${input.objectName}" на основе ответа ИИ: ${reason}.`,
+    marketValue: 0,
+    collateralValue: 0,
+    recommendedLtv: 0,
+    confidence: 'low',
+    methodology: 'Оценка не выполнена: требуется повторный запрос к ИИ или экспертная/классическая оценка.',
+    riskFactors: [
+      'Сбой или некорректный ответ сервиса ИИ',
+      'Рекомендуется получить заключение независимого оценщика',
+    ],
+    recommendedActions: [
+      'Повторить запрос к ИИ после проверки исходных данных',
+      'При необходимости привлечь независимого оценщика',
+    ],
+    assumptions: ['Числовые значения оценки не сформированы, так как ответ ИИ не был корректно разобран.'],
   };
 };
 
 const normalizeEstimate = (raw: any, input: AppraisalRequestInput): AppraisalEstimate => {
   if (!raw || typeof raw !== 'object') {
-    return fallbackEstimate(input);
+    return errorEstimate(input, 'пустой или некорректный формат ответа');
   }
 
   const toNumber = (value: any, defaultValue: number) => {
@@ -83,21 +76,29 @@ const normalizeEstimate = (raw: any, input: AppraisalRequestInput): AppraisalEst
   };
 
   const marketValue = toNumber(raw.marketValue ?? raw.market_price, 0);
-  const collateralValue = toNumber(raw.collateralValue ?? raw.secured_value, marketValue * 0.7);
-  const recommendedLtv = toNumber(raw.recommendedLtv ?? raw.ltv ?? (collateralValue / (marketValue || 1)) * 100, 70);
+  const collateralValue = toNumber(raw.collateralValue ?? raw.secured_value, 0);
+  const recommendedLtv = toNumber(
+    raw.recommendedLtv ?? raw.ltv ?? (marketValue > 0 ? (collateralValue / marketValue) * 100 : 0),
+    0
+  );
 
-  const result = {
+  const result: AppraisalEstimate = {
     summary: raw.summary || raw.justification || raw.analysis || 'Проанализируйте объект дополнительными методами.',
-    marketValue: marketValue || fallbackEstimate(input).marketValue,
-    collateralValue: collateralValue || fallbackEstimate(input).collateralValue,
+    marketValue,
+    collateralValue,
     recommendedLtv: Math.min(100, Math.max(0, Math.round(recommendedLtv))),
     confidence: (raw.confidence as AppraisalConfidence) || 'medium',
-    methodology: raw.methodology || raw.method || 'Сравнительный подход',
+    methodology: raw.methodology || raw.method || 'Методология не указана явно в ответе ИИ.',
     riskFactors: Array.isArray(raw.riskFactors) ? raw.riskFactors : [],
     recommendedActions: Array.isArray(raw.recommendations) ? raw.recommendations : [],
     assumptions: Array.isArray(raw.assumptions) ? raw.assumptions : [],
     comparables: Array.isArray(raw.comparables) ? raw.comparables : undefined,
   };
+
+  // Если ИИ не вернул адекватные числовые значения, считаем, что оценка не выполнена
+  if (!result.marketValue && !result.collateralValue) {
+    return errorEstimate(input, 'отсутствуют числовые значения стоимости в ответе ИИ');
+  }
 
   return result;
 };
@@ -167,7 +168,7 @@ export const AppraisalAIService = {
       return estimate;
     } catch (error) {
       console.error('Ошибка генерации оценки через AI:', error);
-      const estimate = fallbackEstimate(input);
+      const estimate = errorEstimate(input, 'ошибка сервиса ИИ при генерации ответа');
       learningService.addCategoryExperience('appraisal', 1);
       return estimate;
     }
