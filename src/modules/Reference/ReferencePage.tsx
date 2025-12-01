@@ -1015,7 +1015,7 @@ const ReferencePage: React.FC = () => {
     }
 
     return { content: response, sources, context: knowledgeContext };
-  }, [categoryNames, categories, cachedKnowledgeSearch]);
+  }, [categoryNames, categories, cachedKnowledgeSearch, expertiseSkills]);
 
   const handleSend = useCallback(async () => {
     if (!inputValue.trim() || loading) return;
@@ -1216,7 +1216,7 @@ const ReferencePage: React.FC = () => {
       }
       message.error('Не удалось сохранить оценку');
     }
-  }, [messages, expertiseSkills]);
+  }, [messages]);
 
   const handleFileUpload = useCallback(async (file: File) => {
     const fileName = file.name.toLowerCase();
