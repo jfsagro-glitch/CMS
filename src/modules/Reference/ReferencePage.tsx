@@ -67,6 +67,7 @@ import {
   type ChatMessage 
 } from '@/utils/chatStorage';
 import { getAppraisalConfigForType, formatAppraisalAttributes, APPRAISAL_TYPE_OPTIONS } from '@/utils/appraisalAttributeConfig';
+import { applyPreferredSkills } from '@/utils/appraisalSkillsConfig';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
@@ -219,7 +220,7 @@ const ReferencePage: React.FC = () => {
   const [skillsEqualizerVisible, setSkillsEqualizerVisible] = useState(false);
   
   // Эквалайзер скилов для режима оценки
-  interface AppraisalSkills {
+  export interface AppraisalSkills {
     incomeApproach: number; // Доходный подход
     incomeMethods: {
       dcf: number; // Дисконтирование денежных потоков
@@ -303,10 +304,29 @@ const ReferencePage: React.FC = () => {
       // ignore
     }
   }, [expertiseSkills]);
+  
   const watchedAssetType = Form.useWatch('assetType', appraisalForm);
   const attributeConfig = useMemo(() => getAppraisalConfigForType(watchedAssetType), [watchedAssetType]);
   const attributeFields = useMemo(() => attributeConfig?.fields ?? [], [attributeConfig]);
   const derivedAssetGroup = attributeConfig?.assetGroup;
+  
+  // Автоматическая настройка эквалайзера при изменении типа актива
+  useEffect(() => {
+    if (watchedAssetType && appraisalMode) {
+      const typeOption = appraisalTypeOptions.find(opt => opt.value === watchedAssetType);
+      if (typeOption) {
+        setAppraisalSkills(prevSkills => {
+          const updatedSkills = applyPreferredSkills(prevSkills, typeOption.label, false);
+          // Обновляем только если настройки действительно изменились
+          if (JSON.stringify(updatedSkills) !== JSON.stringify(prevSkills)) {
+            message.info(`Настройки эквалайзера автоматически применены для типа: ${typeOption.label}`);
+            return updatedSkills;
+          }
+          return prevSkills;
+        });
+      }
+    }
+  }, [watchedAssetType, appraisalMode, appraisalTypeOptions]);
   const appraisalCategoryOptions = useMemo(() => [
     { value: 'real_estate', label: 'Недвижимое имущество' },
     { value: 'land', label: 'Земельные участки' },
