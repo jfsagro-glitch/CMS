@@ -83,11 +83,11 @@ const CollateralDossierPage: React.FC = () => {
       try {
         // Загружаем портфель
         const portfolioUrl = (() => {
-          const base = import.meta.env.BASE_URL ?? '/';
-          const resolvedBase = new URL(base, window.location.origin);
-          const normalizedPath = resolvedBase.pathname.endsWith('/')
-            ? resolvedBase.pathname
-            : `${resolvedBase.pathname}/`;
+        const base = import.meta.env.BASE_URL ?? '/';
+        const resolvedBase = new URL(base, window.location.origin);
+        const normalizedPath = resolvedBase.pathname.endsWith('/')
+          ? resolvedBase.pathname
+          : `${resolvedBase.pathname}/`;
           return `${resolvedBase.origin}${normalizedPath}portfolioData.json`;
         })();
 
@@ -104,7 +104,7 @@ const CollateralDossierPage: React.FC = () => {
         try {
           const payload = await generateDossierDemoData(portfolioData, cards);
 
-          if (!mounted) return;
+        if (!mounted) return;
 
           setPortfolio(portfolioData);
           setDocuments(payload.documents);
@@ -136,7 +136,7 @@ const CollateralDossierPage: React.FC = () => {
             throw fetchError;
           }
         } catch {
-          setError(fetchError instanceof Error ? fetchError.message : 'Неизвестная ошибка');
+        setError(fetchError instanceof Error ? fetchError.message : 'Неизвестная ошибка');
         }
       } finally {
         if (mounted) {
@@ -356,7 +356,7 @@ const CollateralDossierPage: React.FC = () => {
           };
         });
 
-        return {
+    return {
           key: clientKey,
           title: (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -545,15 +545,15 @@ const CollateralDossierPage: React.FC = () => {
       <Card style={{ marginBottom: 16 }}>
         <Space size="middle" wrap style={{ width: '100%' }}>
           <Tooltip title="Поиск по клиенту, договору, залогодателю или документу">
-            <Input
-              allowClear
+          <Input
+            allowClear
               placeholder="Поиск..."
-              prefix={<SearchOutlined />}
-              value={searchValue}
-              onChange={event => setSearchValue(event.target.value)}
+            prefix={<SearchOutlined />}
+            value={searchValue}
+            onChange={event => setSearchValue(event.target.value)}
               style={{ minWidth: 250 }}
-            />
-          </Tooltip>
+          />
+        </Tooltip>
           <Select
             allowClear
             placeholder="Клиент"
@@ -669,17 +669,17 @@ const CollateralDossierPage: React.FC = () => {
 
       <Card>
         {error ? (
-          <Alert
-            type="error"
-            showIcon
-            message="Не удалось загрузить досье"
-            description={error}
-            action={
-              <a onClick={() => window.location.reload()} style={{ fontWeight: 600 }}>
-                Повторить
-              </a>
-            }
-          />
+        <Alert
+          type="error"
+          showIcon
+          message="Не удалось загрузить досье"
+          description={error}
+          action={
+            <a onClick={() => window.location.reload()} style={{ fontWeight: 600 }}>
+              Повторить
+            </a>
+          }
+        />
         ) : loading ? (
           <Empty description="Загрузка..." />
         ) : treeData.length === 0 ? (

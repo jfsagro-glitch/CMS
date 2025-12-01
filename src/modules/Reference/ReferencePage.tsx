@@ -21,6 +21,8 @@ import {
   InputNumber,
   Row,
   Col,
+  Slider,
+  Drawer,
 } from 'antd';
 import {
   SendOutlined,
@@ -214,6 +216,93 @@ const ReferencePage: React.FC = () => {
   const [appraisalEstimate, setAppraisalEstimate] = useState<AppraisalEstimate | null>(null);
   const [appraisalLoading, setAppraisalLoading] = useState(false);
   const [appraisalForm] = Form.useForm();
+  const [skillsEqualizerVisible, setSkillsEqualizerVisible] = useState(false);
+  
+  // Эквалайзер скилов для режима оценки
+  interface AppraisalSkills {
+    incomeApproach: number; // Доходный подход
+    incomeMethods: {
+      dcf: number; // Дисконтирование денежных потоков
+      directCapitalization: number; // Прямая капитализация
+      grossRentMultiplier: number; // Множитель валового дохода
+    };
+    comparativeApproach: number; // Сравнительный подход
+    comparativeMethods: {
+      salesComparison: number; // Сравнение продаж
+      marketExtraction: number; // Извлечение из рынка
+    };
+    costApproach: number; // Затратный подход
+    costMethods: {
+      replacementCost: number; // Стоимость замещения
+      reproductionCost: number; // Стоимость воспроизводства
+      depreciation: number; // Износ
+    };
+  }
+  
+  // Эквалайзер скилов для режима экспертизы
+  interface ExpertiseSkills {
+    expertiseLevel: number; // Уровни экспертизы
+    analysisLevel: number; // Уровни анализа
+    responseBrevity: number; // Краткость ответов (0 = подробно, 100 = кратко)
+    riskAnalysis: number; // Анализ рисков
+    comments: number; // Комментарии
+    detailLevel: number; // Детализация
+  }
+  
+  const [appraisalSkills, setAppraisalSkills] = useState<AppraisalSkills>(() => {
+    try {
+      const saved = localStorage.getItem('ai_appraisal_skills');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // ignore
+    }
+    return {
+      incomeApproach: 50,
+      incomeMethods: { dcf: 50, directCapitalization: 50, grossRentMultiplier: 50 },
+      comparativeApproach: 50,
+      comparativeMethods: { salesComparison: 50, marketExtraction: 50 },
+      costApproach: 50,
+      costMethods: { replacementCost: 50, reproductionCost: 50, depreciation: 50 },
+    };
+  });
+  
+  const [expertiseSkills, setExpertiseSkills] = useState<ExpertiseSkills>(() => {
+    try {
+      const saved = localStorage.getItem('ai_expertise_skills');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // ignore
+    }
+    return {
+      expertiseLevel: 50,
+      analysisLevel: 50,
+      responseBrevity: 50,
+      riskAnalysis: 50,
+      comments: 50,
+      detailLevel: 50,
+    };
+  });
+  
+  // Сохранение настроек эквалайзера
+  useEffect(() => {
+    try {
+      localStorage.setItem('ai_appraisal_skills', JSON.stringify(appraisalSkills));
+    } catch {
+      // ignore
+    }
+  }, [appraisalSkills]);
+  
+  useEffect(() => {
+    try {
+      localStorage.setItem('ai_expertise_skills', JSON.stringify(expertiseSkills));
+    } catch {
+      // ignore
+    }
+  }, [expertiseSkills]);
   const watchedAssetType = Form.useWatch('assetType', appraisalForm);
   const attributeConfig = useMemo(() => getAppraisalConfigForType(watchedAssetType), [watchedAssetType]);
   const attributeFields = useMemo(() => attributeConfig?.fields ?? [], [attributeConfig]);
@@ -808,7 +897,19 @@ const ReferencePage: React.FC = () => {
         });
         
         // Формируем контекст из базы знаний для системного промпта
-        const systemContext = knowledgeContext || `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categoryNames}.`;
+        let systemContext = knowledgeContext || `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categoryNames}.`;
+        
+        // Добавляем настройки эквалайзера для режима экспертизы
+        const expertiseSettings = `\n\nНастройки режима экспертизы:
+- Уровень экспертизы: ${expertiseSkills.expertiseLevel}%
+- Уровень анализа: ${expertiseSkills.analysisLevel}%
+- Краткость ответов: ${expertiseSkills.responseBrevity}% (0% = подробно, 100% = кратко)
+- Анализ рисков: ${expertiseSkills.riskAnalysis}%
+- Комментарии: ${expertiseSkills.comments}%
+- Детализация: ${expertiseSkills.detailLevel}%
+
+Учитывай эти настройки при формировании ответа.`;
+        systemContext += expertiseSettings;
         
         // Используем метод chat() с полной историей для сохранения контекста
         response = await deepSeekService.chat(chatMessages, systemContext);
@@ -819,7 +920,17 @@ const ReferencePage: React.FC = () => {
         }, 0);
       } else if (knowledgeContext) {
         // Если нет истории, но есть контекст из базы знаний, используем его
-        response = await deepSeekService.generateResponse(userMessage, knowledgeContext);
+        // Добавляем настройки эквалайзера для режима экспертизы
+        const expertiseSettings = `\n\nНастройки режима экспертизы:
+- Уровень экспертизы: ${expertiseSkills.expertiseLevel}%
+- Уровень анализа: ${expertiseSkills.analysisLevel}%
+- Краткость ответов: ${expertiseSkills.responseBrevity}% (0% = подробно, 100% = кратко)
+- Анализ рисков: ${expertiseSkills.riskAnalysis}%
+- Комментарии: ${expertiseSkills.comments}%
+- Детализация: ${expertiseSkills.detailLevel}%
+
+Учитывай эти настройки при формировании ответа.`;
+        response = await deepSeekService.generateResponse(userMessage, knowledgeContext + expertiseSettings);
         
         // Добавляем пассивный опыт за использование модели (асинхронно, не блокируя)
         setTimeout(() => {
@@ -828,15 +939,38 @@ const ReferencePage: React.FC = () => {
       } else {
         // Если контекста нет, используем общий запрос
         if (lowerMessage.includes('привет') || lowerMessage.includes('здравствуй')) {
+          const greetingContext = 'Поприветствуй пользователя и расскажи, что ты эксперт по банковским залогам и можешь помочь с вопросами об ипотеке, оценке, LTV, договорах залога и других аспектах залогового кредитования. База знаний основана на справочной литературе "Залоговik. Все о банковских залогах".';
+          const expertiseSettings = `\n\nНастройки режима экспертизы:
+- Уровень экспертизы: ${expertiseSkills.expertiseLevel}%
+- Уровень анализа: ${expertiseSkills.analysisLevel}%
+- Краткость ответов: ${expertiseSkills.responseBrevity}% (0% = подробно, 100% = кратко)
+- Анализ рисков: ${expertiseSkills.riskAnalysis}%
+- Комментарии: ${expertiseSkills.comments}%
+- Детализация: ${expertiseSkills.detailLevel}%
+
+Учитывай эти настройки при формировании ответа.`;
           response = await deepSeekService.chat([
             { 
               role: 'user', 
-              content: 'Поприветствуй пользователя и расскажи, что ты эксперт по банковским залогам и можешь помочь с вопросами об ипотеке, оценке, LTV, договорах залога и других аспектах залогового кредитования. База знаний основана на справочной литературе "Залоговik. Все о банковских залогах".' 
+              content: greetingContext + expertiseSettings
             }
-          ]);
+          ], expertiseSettings);
           knowledgeContext = 'Приветствие';
         } else {
-          const fallbackContext = `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categoryNames}.`;
+          let fallbackContext = `База знаний содержит информацию о банковских залогах, ипотеке, оценке имущества, LTV, договорах залога, нормативных требованиях и регистрации залогов. Доступные категории: ${categoryNames}.`;
+          
+          // Добавляем настройки эквалайзера для режима экспертизы
+          const expertiseSettings = `\n\nНастройки режима экспертизы:
+- Уровень экспертизы: ${expertiseSkills.expertiseLevel}%
+- Уровень анализа: ${expertiseSkills.analysisLevel}%
+- Краткость ответов: ${expertiseSkills.responseBrevity}% (0% = подробно, 100% = кратко)
+- Анализ рисков: ${expertiseSkills.riskAnalysis}%
+- Комментарии: ${expertiseSkills.comments}%
+- Детализация: ${expertiseSkills.detailLevel}%
+
+Учитывай эти настройки при формировании ответа.`;
+          fallbackContext += expertiseSettings;
+          
           response = await deepSeekService.generateResponse(userMessage, fallbackContext);
           knowledgeContext = fallbackContext;
         }
@@ -1082,7 +1216,7 @@ const ReferencePage: React.FC = () => {
       }
       message.error('Не удалось сохранить оценку');
     }
-  }, [messages]);
+  }, [messages, expertiseSkills]);
 
   const handleFileUpload = useCallback(async (file: File) => {
     const fileName = file.name.toLowerCase();
@@ -1246,6 +1380,7 @@ const ReferencePage: React.FC = () => {
         purpose: values.purpose,
         additionalFactors: combinedAdditionalFactors,
         card: null,
+        skills: appraisalSkills,
       });
 
       setAppraisalEstimate(estimate);
@@ -1260,7 +1395,7 @@ const ReferencePage: React.FC = () => {
     } finally {
       setAppraisalLoading(false);
     }
-  }, [appraisalForm, appraisalTypeOptions, attributeFields]);
+  }, [appraisalForm, appraisalTypeOptions, attributeFields, appraisalSkills]);
 
   const handleExportAppraisalPdf = useCallback(async () => {
     if (!appraisalEstimate) {
@@ -1381,43 +1516,58 @@ const ReferencePage: React.FC = () => {
         </div>
       `;
 
+      // Создаем временный контейнер для рендеринга PDF
       const container = document.createElement('div');
-      container.style.position = 'fixed';
-      container.style.left = '-9999px';
+      container.style.position = 'absolute';
+      container.style.left = '0';
       container.style.top = '0';
       container.style.width = '750px';
-      container.style.zIndex = '-1';
-      container.style.visibility = 'hidden';
+      container.style.padding = '16px';
+      container.style.backgroundColor = '#ffffff';
+      container.style.color = '#000000';
+      container.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      container.style.fontSize = '11px';
+      container.style.lineHeight = '1.4';
+      container.style.boxSizing = 'border-box';
+      container.style.opacity = '0';
       container.style.pointerEvents = 'none';
+      container.style.zIndex = '-9999';
+      container.style.overflow = 'hidden';
       container.innerHTML = html;
       document.body.appendChild(container);
 
-      // Ждем, чтобы браузер успел отрендерить контент
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Принудительно ждем рендеринга - увеличиваем задержку
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Ждем загрузки изображений, если они есть
       if (appraisalImageData) {
         const img = container.querySelector('img');
         if (img) {
           await new Promise((resolve) => {
-            if (img.complete) {
+            if (img.complete && img.naturalWidth > 0) {
               resolve(undefined);
             } else {
               img.onload = () => resolve(undefined);
               img.onerror = () => resolve(undefined);
-              setTimeout(() => resolve(undefined), 1000);
+              setTimeout(() => resolve(undefined), 2000);
             }
           });
         }
       }
 
+      // Принудительный reflow для гарантии рендеринга
+      void container.offsetHeight;
+
       const canvas = await html2canvas(container, {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
         width: 750,
         height: container.scrollHeight || 1000,
+        windowWidth: 750,
+        windowHeight: container.scrollHeight || 1000,
       });
 
       document.body.removeChild(container);
@@ -1470,6 +1620,66 @@ const ReferencePage: React.FC = () => {
       message.error('Не удалось сформировать PDF отчет.');
     }
   }, [appraisalEstimate, appraisalForm, buildAppraisalContext, appraisalImageData, appraisalTypeOptions]);
+
+  // Обратная связь по качеству оценки ИИ (лайк/дизлайк)
+  const handleAppraisalFeedback = useCallback(
+    (rating: 'like' | 'dislike') => {
+      if (!appraisalEstimate) {
+        return;
+      }
+
+      try {
+        const values = appraisalForm.getFieldsValue();
+        const typeLabel =
+          appraisalTypeOptions.find(opt => opt.value === values.assetType)?.label ||
+          values.assetType ||
+          'Неизвестный тип';
+
+        const contextParts: string[] = [];
+        contextParts.push(`Объект: ${values.objectName || typeLabel}`);
+        contextParts.push(`Тип актива: ${typeLabel}`);
+        contextParts.push(
+          `Рыночная: ${appraisalEstimate.marketValue.toLocaleString('ru-RU')} ₽, ` +
+          `Залоговая: ${appraisalEstimate.collateralValue.toLocaleString('ru-RU')} ₽`
+        );
+        if (typeof appraisalEstimate.recommendedLtv === 'number') {
+          contextParts.push(`LTV: ${appraisalEstimate.recommendedLtv}%`);
+        }
+        contextParts.push(`Уверенность модели: ${appraisalEstimate.confidence}`);
+
+        const contextSummary = contextParts.join(' | ');
+
+        // Сохраняем фидбек так же, как по сообщениям, но с отдельным messageId
+        feedbackStorage.saveFeedback({
+          messageId: `appraisal-${Date.now()}`,
+          question: `AI-оценка для объекта "${values.objectName || typeLabel}"`,
+          answer: JSON.stringify(appraisalEstimate),
+          rating,
+          timestamp: new Date(),
+          context: contextSummary,
+        });
+
+        // Обновляем обучение/эволюцию специально по скиллу оценки
+        learningService.analyzeFeedback();
+        evolutionService.addExperienceFromFeedback(rating, 'appraisal', contextSummary);
+
+        // Обновляем отображаемый скилл оценки
+        setAppraisalSkill(learningService.getCategorySkill('appraisal'));
+
+        if (rating === 'like') {
+          message.success('Спасибо! Модель учтёт, что оценка была точной.');
+        } else {
+          message.success('Спасибо за замечание. Модель дообучится на этом примере.');
+        }
+      } catch (error) {
+        if (import.meta.env.MODE === 'development') {
+          console.error('Ошибка сохранения обратной связи по оценке:', error);
+        }
+        message.error('Не удалось сохранить обратную связь по оценке.');
+      }
+    },
+    [appraisalEstimate, appraisalForm, appraisalTypeOptions]
+  );
 
   // Обработчик принудительной переиндексации всех документов
   const handleReindexAll = useCallback(async () => {
@@ -1990,6 +2200,14 @@ const ReferencePage: React.FC = () => {
                 >
                   {trainingMode ? 'Остановить обучение' : 'Режим обучения'}
                 </Button>
+                <Button
+                  size="small"
+                  type="default"
+                  icon={<SettingOutlined />}
+                  onClick={() => setSkillsEqualizerVisible(true)}
+                >
+                  Эквалайзер скилов
+                </Button>
               </Space>
             </Space>
           </div>
@@ -2145,6 +2363,23 @@ const ReferencePage: React.FC = () => {
                       <Text strong>Ключевые риски:</Text> {appraisalEstimate.riskFactors.join('; ') || 'не выявлены'}
                       <br />
                       <Text strong>Рекомендации:</Text> {appraisalEstimate.recommendedActions.join('; ') || '—'}
+                      <br />
+                      <Space size="small" style={{ marginTop: 8 }}>
+                        <Button
+                          size="small"
+                          type="text"
+                          icon={<LikeOutlined />}
+                          onClick={() => handleAppraisalFeedback('like')}
+                          title="Оценка точна"
+                        />
+                        <Button
+                          size="small"
+                          type="text"
+                          icon={<DislikeOutlined />}
+                          onClick={() => handleAppraisalFeedback('dislike')}
+                          title="Оценка неточна"
+                        />
+                      </Space>
                     </div>
                   }
                 />
@@ -2465,6 +2700,235 @@ const ReferencePage: React.FC = () => {
             </div>
           </Space>
         </Modal>
+        
+        {/* Эквалайзер скилов и навыков */}
+        <Drawer
+          title="Эквалайзер скилов и навыков Помощника ИИ"
+          placement="right"
+          width={600}
+          open={skillsEqualizerVisible}
+          onClose={() => setSkillsEqualizerVisible(false)}
+        >
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            {/* Режим оценки */}
+            <div>
+              <Title level={4}>Режим оценки</Title>
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <div>
+                  <Text strong>Доходный подход</Text>
+                  <Slider
+                    value={appraisalSkills.incomeApproach}
+                    onChange={(value) => setAppraisalSkills(prev => ({ ...prev, incomeApproach: value }))}
+                    min={0}
+                    max={100}
+                    marks={{ 0: '0%', 50: '50%', 100: '100%' }}
+                  />
+                  <Space direction="vertical" size="small" style={{ marginTop: 8, marginLeft: 12 }}>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Дисконтирование денежных потоков (DCF)</Text>
+                      <Slider
+                        value={appraisalSkills.incomeMethods.dcf}
+                        onChange={(value) => setAppraisalSkills(prev => ({
+                          ...prev,
+                          incomeMethods: { ...prev.incomeMethods, dcf: value }
+                        }))}
+                        min={0}
+                        max={100}
+                        style={{ marginTop: 4 }}
+                      />
+                    </div>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Прямая капитализация</Text>
+                      <Slider
+                        value={appraisalSkills.incomeMethods.directCapitalization}
+                        onChange={(value) => setAppraisalSkills(prev => ({
+                          ...prev,
+                          incomeMethods: { ...prev.incomeMethods, directCapitalization: value }
+                        }))}
+                        min={0}
+                        max={100}
+                        style={{ marginTop: 4 }}
+                      />
+                    </div>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Множитель валового дохода</Text>
+                      <Slider
+                        value={appraisalSkills.incomeMethods.grossRentMultiplier}
+                        onChange={(value) => setAppraisalSkills(prev => ({
+                          ...prev,
+                          incomeMethods: { ...prev.incomeMethods, grossRentMultiplier: value }
+                        }))}
+                        min={0}
+                        max={100}
+                        style={{ marginTop: 4 }}
+                      />
+                    </div>
+                  </Space>
+                </div>
+                
+                <div>
+                  <Text strong>Сравнительный подход</Text>
+                  <Slider
+                    value={appraisalSkills.comparativeApproach}
+                    onChange={(value) => setAppraisalSkills(prev => ({ ...prev, comparativeApproach: value }))}
+                    min={0}
+                    max={100}
+                    marks={{ 0: '0%', 50: '50%', 100: '100%' }}
+                  />
+                  <Space direction="vertical" size="small" style={{ marginTop: 8, marginLeft: 12 }}>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Сравнение продаж</Text>
+                      <Slider
+                        value={appraisalSkills.comparativeMethods.salesComparison}
+                        onChange={(value) => setAppraisalSkills(prev => ({
+                          ...prev,
+                          comparativeMethods: { ...prev.comparativeMethods, salesComparison: value }
+                        }))}
+                        min={0}
+                        max={100}
+                        style={{ marginTop: 4 }}
+                      />
+                    </div>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Извлечение из рынка</Text>
+                      <Slider
+                        value={appraisalSkills.comparativeMethods.marketExtraction}
+                        onChange={(value) => setAppraisalSkills(prev => ({
+                          ...prev,
+                          comparativeMethods: { ...prev.comparativeMethods, marketExtraction: value }
+                        }))}
+                        min={0}
+                        max={100}
+                        style={{ marginTop: 4 }}
+                      />
+                    </div>
+                  </Space>
+                </div>
+                
+                <div>
+                  <Text strong>Затратный подход</Text>
+                  <Slider
+                    value={appraisalSkills.costApproach}
+                    onChange={(value) => setAppraisalSkills(prev => ({ ...prev, costApproach: value }))}
+                    min={0}
+                    max={100}
+                    marks={{ 0: '0%', 50: '50%', 100: '100%' }}
+                  />
+                  <Space direction="vertical" size="small" style={{ marginTop: 8, marginLeft: 12 }}>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Стоимость замещения</Text>
+                      <Slider
+                        value={appraisalSkills.costMethods.replacementCost}
+                        onChange={(value) => setAppraisalSkills(prev => ({
+                          ...prev,
+                          costMethods: { ...prev.costMethods, replacementCost: value }
+                        }))}
+                        min={0}
+                        max={100}
+                        style={{ marginTop: 4 }}
+                      />
+                    </div>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Стоимость воспроизводства</Text>
+                      <Slider
+                        value={appraisalSkills.costMethods.reproductionCost}
+                        onChange={(value) => setAppraisalSkills(prev => ({
+                          ...prev,
+                          costMethods: { ...prev.costMethods, reproductionCost: value }
+                        }))}
+                        min={0}
+                        max={100}
+                        style={{ marginTop: 4 }}
+                      />
+                    </div>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Износ</Text>
+                      <Slider
+                        value={appraisalSkills.costMethods.depreciation}
+                        onChange={(value) => setAppraisalSkills(prev => ({
+                          ...prev,
+                          costMethods: { ...prev.costMethods, depreciation: value }
+                        }))}
+                        min={0}
+                        max={100}
+                        style={{ marginTop: 4 }}
+                      />
+                    </div>
+                  </Space>
+                </div>
+              </Space>
+            </div>
+            
+            <Divider />
+            
+            {/* Режим экспертизы */}
+            <div>
+              <Title level={4}>Режим экспертизы</Title>
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <div>
+                  <Text strong>Уровни экспертизы</Text>
+                  <Slider
+                    value={expertiseSkills.expertiseLevel}
+                    onChange={(value) => setExpertiseSkills(prev => ({ ...prev, expertiseLevel: value }))}
+                    min={0}
+                    max={100}
+                    marks={{ 0: '0%', 50: '50%', 100: '100%' }}
+                  />
+                </div>
+                <div>
+                  <Text strong>Уровни анализа</Text>
+                  <Slider
+                    value={expertiseSkills.analysisLevel}
+                    onChange={(value) => setExpertiseSkills(prev => ({ ...prev, analysisLevel: value }))}
+                    min={0}
+                    max={100}
+                    marks={{ 0: '0%', 50: '50%', 100: '100%' }}
+                  />
+                </div>
+                <div>
+                  <Text strong>Краткость ответов</Text>
+                  <Slider
+                    value={expertiseSkills.responseBrevity}
+                    onChange={(value) => setExpertiseSkills(prev => ({ ...prev, responseBrevity: value }))}
+                    min={0}
+                    max={100}
+                    marks={{ 0: 'Подробно', 50: '50%', 100: 'Кратко' }}
+                  />
+                </div>
+                <div>
+                  <Text strong>Анализ рисков</Text>
+                  <Slider
+                    value={expertiseSkills.riskAnalysis}
+                    onChange={(value) => setExpertiseSkills(prev => ({ ...prev, riskAnalysis: value }))}
+                    min={0}
+                    max={100}
+                    marks={{ 0: '0%', 50: '50%', 100: '100%' }}
+                  />
+                </div>
+                <div>
+                  <Text strong>Комментарии</Text>
+                  <Slider
+                    value={expertiseSkills.comments}
+                    onChange={(value) => setExpertiseSkills(prev => ({ ...prev, comments: value }))}
+                    min={0}
+                    max={100}
+                    marks={{ 0: '0%', 50: '50%', 100: '100%' }}
+                  />
+                </div>
+                <div>
+                  <Text strong>Детализация</Text>
+                  <Slider
+                    value={expertiseSkills.detailLevel}
+                    onChange={(value) => setExpertiseSkills(prev => ({ ...prev, detailLevel: value }))}
+                    min={0}
+                    max={100}
+                    marks={{ 0: '0%', 50: '50%', 100: '100%' }}
+                  />
+                </div>
+              </Space>
+            </div>
+          </Space>
+        </Drawer>
       </div>
     </div>
   );
