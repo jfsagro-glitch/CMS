@@ -159,7 +159,7 @@ const normalizeEstimate = (raw: any): AppraisalEstimate => {
       if (typeof item === 'string') {
         // Пытаемся извлечь URL из строки (улучшенное регулярное выражение)
         // Ищем URL, который может заканчиваться на различные символы
-        const urlMatch = item.match(/(https?:\/\/[^\s\)\]\}>"]+)/);
+        const urlMatch = item.match(/(https?:\/\/[^\s)\]}>"]+)/);
         if (urlMatch) {
           const url = urlMatch[0].replace(/[.,;:!?]+$/, ''); // Убираем пунктуацию в конце URL
           return {

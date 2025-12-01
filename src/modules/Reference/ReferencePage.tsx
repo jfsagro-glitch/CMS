@@ -1435,7 +1435,7 @@ const ReferencePage: React.FC = () => {
     } finally {
       setAppraisalLoading(false);
     }
-  }, [appraisalForm, appraisalTypeOptions, attributeFields, appraisalSkills]);
+  }, [appraisalForm, appraisalTypeOptions, attributeFields, appraisalSkills, appraisalImageData]);
 
   const handleExportAppraisalPdf = useCallback(async () => {
     if (!appraisalEstimate) {
@@ -1510,7 +1510,7 @@ const ReferencePage: React.FC = () => {
             let description = comparable.description;
             let extractedUrl: string | null = null;
             if (!hasUrl) {
-              const urlMatch = description.match(/(https?:\/\/[^\s\)\]\}>"]+)/);
+              const urlMatch = description.match(/(https?:\/\/[^\s)\]}>"]+)/);
               if (urlMatch) {
                 extractedUrl = urlMatch[0].replace(/[.,;:!?]+$/, '');
                 description = description.replace(urlMatch[0], '').trim();
@@ -1762,7 +1762,7 @@ const ReferencePage: React.FC = () => {
       }
       message.error('Не удалось сформировать PDF отчет.');
     }
-  }, [appraisalEstimate, appraisalForm, buildAppraisalContext, appraisalImageData, appraisalTypeOptions, attributeFields, formatAppraisalAttributes]);
+  }, [appraisalEstimate, appraisalForm, buildAppraisalContext, appraisalImageData, appraisalTypeOptions, attributeFields]);
 
   // Обратная связь по качеству оценки ИИ (лайк/дизлайк)
   const handleAppraisalFeedback = useCallback(
