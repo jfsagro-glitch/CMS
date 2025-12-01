@@ -216,6 +216,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
     >
       <div
         className="sidebar-logo"
+        onClick={() => navigate('/')}
         style={{
           height: '64px',
           display: 'flex',
@@ -226,10 +227,21 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
           fontWeight: 'bold',
           transition: 'all 0.2s',
           gap: '8px',
+          padding: collapsed ? '8px' : '12px',
+          cursor: 'pointer',
         }}
       >
-        <DatabaseOutlined style={{ fontSize: collapsed ? '20px' : '28px' }} />
-        {!collapsed && <span>CMS</span>}
+        <img 
+          src="/logo.png" 
+          alt="CMS Logo" 
+          style={{ 
+            height: collapsed ? '32px' : '40px', 
+            width: 'auto',
+            objectFit: 'contain',
+            transition: 'all 0.2s',
+          }} 
+        />
+        {!collapsed && <span style={{ marginLeft: '8px' }}>CMS</span>}
       </div>
       <Menu
         theme="dark"
