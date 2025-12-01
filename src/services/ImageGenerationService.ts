@@ -2,12 +2,15 @@
  * Сервис для генерации изображений объектов оценки через ИИ
  */
 
-// Используем OpenAI DALL-E API для генерации изображений
-// Можно заменить на другой сервис при необходимости
+// DeepAI API (основной сервис)
+const DEEPAI_API_KEY = import.meta.env.VITE_DEEPAI_API_KEY || '9eea4a27-e364-4888-9f9f-b8fe79761974';
+const DEEPAI_API_URL = 'https://api.deepai.org/api/text2img';
+
+// OpenAI DALL-E API (альтернатива)
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY || '';
 const OPENAI_API_URL = 'https://api.openai.com/v1/images/generations';
 
-// Альтернативный сервис через Hugging Face (бесплатный, но требует регистрации)
+// Hugging Face API (альтернатива)
 const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0';
 const HUGGINGFACE_API_KEY = import.meta.env.VITE_HUGGINGFACE_API_KEY || '';
 
@@ -20,22 +23,38 @@ class ImageGenerationService {
       // Формируем детальный промпт для генерации изображения
       const prompt = this.buildImagePrompt(description, objectType, location);
       
+      // Пробуем использовать DeepAI (основной сервис)
+      if (DEEPAI_API_KEY) {
+        try {
+          return await this.generateWithDeepAI(prompt);
+        } catch (error) {
+          console.warn('Ошибка генерации через DeepAI, пробуем альтернативы:', error);
+        }
+      }
+      
       // Пробуем использовать OpenAI DALL-E, если доступен ключ
       if (OPENAI_API_KEY) {
-        return await this.generateWithOpenAI(prompt);
+        try {
+          return await this.generateWithOpenAI(prompt);
+        } catch (error) {
+          console.warn('Ошибка генерации через OpenAI, пробуем альтернативы:', error);
+        }
       }
       
       // Если OpenAI недоступен, пробуем Hugging Face
       if (HUGGINGFACE_API_KEY) {
-        return await this.generateWithHuggingFace(prompt);
+        try {
+          return await this.generateWithHuggingFace(prompt);
+        } catch (error) {
+          console.warn('Ошибка генерации через Hugging Face:', error);
+        }
       }
       
       // Если нет API ключей, используем fallback - возвращаем placeholder
       if (import.meta.env.MODE === 'development') {
         console.warn('API ключи для генерации изображений не настроены. Используется placeholder.');
-        console.info('Для настройки генерации изображений создайте файл .env и добавьте:');
+        console.info('DeepAI API используется по умолчанию. Для других сервисов создайте файл .env:');
         console.info('  VITE_OPENAI_API_KEY=your-key (для OpenAI DALL-E)');
-        console.info('  или');
         console.info('  VITE_HUGGINGFACE_API_KEY=your-token (для Hugging Face)');
       }
       return this.generatePlaceholderImage(description, objectType);
@@ -43,6 +62,51 @@ class ImageGenerationService {
       console.error('Ошибка генерации изображения:', error);
       // Возвращаем placeholder при ошибке
       return this.generatePlaceholderImage(description, objectType);
+    }
+  }
+
+  /**
+   * Генерирует изображение через DeepAI API
+   */
+  private async generateWithDeepAI(prompt: string): Promise<string> {
+    try {
+      // DeepAI использует form-data для отправки запроса
+      const formData = new FormData();
+      formData.append('text', prompt);
+
+      const response = await fetch(DEEPAI_API_URL, {
+        method: 'POST',
+        headers: {
+          'api-key': DEEPAI_API_KEY,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Unknown error');
+        throw new Error(`DeepAI API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      // DeepAI возвращает объект с полем output_url или url
+      const imageUrl = data.output_url || data.url;
+      
+      if (!imageUrl) {
+        throw new Error('DeepAI не вернул URL изображения');
+      }
+
+      // Загружаем изображение и конвертируем в base64
+      const imageResponse = await fetch(imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(`Не удалось загрузить изображение: ${imageResponse.status}`);
+      }
+      
+      const blob = await imageResponse.blob();
+      return await this.blobToBase64(blob);
+    } catch (error) {
+      console.error('Ошибка генерации через DeepAI:', error);
+      throw error;
     }
   }
 
