@@ -220,7 +220,7 @@ const ReferencePage: React.FC = () => {
   const [skillsEqualizerVisible, setSkillsEqualizerVisible] = useState(false);
   
   // Эквалайзер скилов для режима оценки
-  export interface AppraisalSkills {
+  interface AppraisalSkills {
     incomeApproach: number; // Доходный подход
     incomeMethods: {
       dcf: number; // Дисконтирование денежных потоков
@@ -305,6 +305,16 @@ const ReferencePage: React.FC = () => {
     }
   }, [expertiseSkills]);
   
+  const appraisalCategoryOptions = useMemo(() => [
+    { value: 'real_estate', label: 'Недвижимое имущество' },
+    { value: 'land', label: 'Земельные участки' },
+    { value: 'movable', label: 'Движимое имущество' },
+    { value: 'metals_goods', label: 'Товары и материалы' },
+    { value: 'equity', label: 'Доли, акции и ЦБ' },
+    { value: 'rights', label: 'Права требования' },
+  ], []);
+  const appraisalTypeOptions = APPRAISAL_TYPE_OPTIONS;
+  
   const watchedAssetType = Form.useWatch('assetType', appraisalForm);
   const attributeConfig = useMemo(() => getAppraisalConfigForType(watchedAssetType), [watchedAssetType]);
   const attributeFields = useMemo(() => attributeConfig?.fields ?? [], [attributeConfig]);
@@ -327,15 +337,6 @@ const ReferencePage: React.FC = () => {
       }
     }
   }, [watchedAssetType, appraisalMode, appraisalTypeOptions]);
-  const appraisalCategoryOptions = useMemo(() => [
-    { value: 'real_estate', label: 'Недвижимое имущество' },
-    { value: 'land', label: 'Земельные участки' },
-    { value: 'movable', label: 'Движимое имущество' },
-    { value: 'metals_goods', label: 'Товары и материалы' },
-    { value: 'equity', label: 'Доли, акции и ЦБ' },
-    { value: 'rights', label: 'Права требования' },
-  ], []);
-  const appraisalTypeOptions = APPRAISAL_TYPE_OPTIONS;
   const handleToggleTrainingMode = useCallback(() => {
     setTrainingMode(prev => {
       const next = !prev;
