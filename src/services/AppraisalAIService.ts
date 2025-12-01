@@ -64,36 +64,9 @@ const parseJsonFromResponse = (response: string): any | null => {
   }
 };
 
-const fallbackEstimate = (input: AppraisalRequestInput): AppraisalEstimate => {
-  const baseArea = input.area && input.area > 0 ? input.area : 100;
-  const multipliers: Record<string, number> = {
-    real_estate: 120000,
-    land: 60000,
-    movable: 80000,
-    metals_goods: 50000,
-    equity: 100000,
-    rights: 70000,
-  };
-  const basePrice = multipliers[input.assetGroup as keyof typeof multipliers] || 90000;
-  const marketValue = Math.round(baseArea * basePrice);
-  const collateralValue = Math.round(marketValue * 0.7);
-
-  return {
-    summary: `Оценка выполнена эвристически на основе базовых параметров для группы "${input.assetGroup}".`,
-    marketValue,
-    collateralValue,
-    recommendedLtv: 70,
-    confidence: 'medium',
-    methodology: 'Эвристический расчет (замена при отсутствии ответа ИИ)',
-    riskFactors: ['Необходима проверка данных объекта', 'Эвристический расчет без данных аналогов'],
-    recommendedActions: ['Запросить отчёт от независимого оценщика', 'Уточнить рыночные показатели по региону'],
-    assumptions: ['Использованы средние рыночные показатели', 'Состояние объекта принято удовлетворительным'],
-  };
-};
-
 const normalizeEstimate = (raw: any, input: AppraisalRequestInput): AppraisalEstimate => {
   if (!raw || typeof raw !== 'object') {
-    return fallbackEstimate(input);
+    throw new Error('ИИ не вернул корректный ответ. Попробуйте повторить запрос.');
   }
 
   const toNumber = (value: any, defaultValue: number) => {
@@ -107,13 +80,18 @@ const normalizeEstimate = (raw: any, input: AppraisalRequestInput): AppraisalEst
   const collateralValue = toNumber(raw.collateralValue ?? raw.secured_value, marketValue * 0.7);
   const recommendedLtv = toNumber(raw.recommendedLtv ?? raw.ltv ?? (collateralValue / (marketValue || 1)) * 100, 70);
 
+  // Проверяем, что ИИ вернул валидные значения
+  if (marketValue === 0 || collateralValue === 0) {
+    throw new Error('ИИ не смог рассчитать стоимость объекта. Убедитесь, что предоставлены все необходимые данные и попробуйте повторить запрос.');
+  }
+
   const result = {
     summary: raw.summary || raw.justification || raw.analysis || 'Проанализируйте объект дополнительными методами.',
-    marketValue: marketValue || fallbackEstimate(input).marketValue,
-    collateralValue: collateralValue || fallbackEstimate(input).collateralValue,
+    marketValue,
+    collateralValue,
     recommendedLtv: Math.min(100, Math.max(0, Math.round(recommendedLtv))),
     confidence: (raw.confidence as AppraisalConfidence) || 'medium',
-    methodology: raw.methodology || raw.method || 'Сравнительный подход',
+    methodology: raw.methodology || raw.method || 'Комплексный анализ с использованием доступных методов оценки',
     riskFactors: Array.isArray(raw.riskFactors) ? raw.riskFactors : [],
     recommendedActions: Array.isArray(raw.recommendations) ? raw.recommendations : [],
     assumptions: Array.isArray(raw.assumptions) ? raw.assumptions : [],
@@ -202,27 +180,47 @@ export const AppraisalAIService = {
       }
     }
 
-    try {
-      const response = await deepSeekService.chat(
-        [
-          {
-            role: 'user',
-            content: `Оцени объект "${input.objectName}" и верни JSON в соответствии с инструкцией.\n\nДанные:\n${contextParts.join('\n')}`,
-          },
-        ],
-        instruction
-      );
+    // Делаем несколько попыток получения ответа от ИИ
+    let lastError: Error | null = null;
+    const maxRetries = 3;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await deepSeekService.chat(
+          [
+            {
+              role: 'user',
+              content: `Оцени объект "${input.objectName}" и верни JSON в соответствии с инструкцией. ОБЯЗАТЕЛЬНО используй все доступные методы оценки (доходный, сравнительный, затратный подходы) и проведи комплексный анализ. Не используй эвристические расчеты.\n\nДанные:\n${contextParts.join('\n')}`,
+            },
+          ],
+          instruction + '\n\nВАЖНО: Всегда используй профессиональные методы оценки (доходный, сравнительный, затратный подходы). Никогда не используй эвристические расчеты. Если данных недостаточно, сделай профессиональные допущения и четко укажи их в assumptions.'
+        );
 
-      const parsed = parseJsonFromResponse(response);
-      const estimate = normalizeEstimate(parsed, input);
-      learningService.addCategoryExperience('appraisal', 4);
-      return estimate;
-    } catch (error) {
-      console.error('Ошибка генерации оценки через AI:', error);
-      const estimate = fallbackEstimate(input);
-      learningService.addCategoryExperience('appraisal', 1);
-      return estimate;
+        const parsed = parseJsonFromResponse(response);
+        if (!parsed) {
+          throw new Error('ИИ не вернул JSON в ответе');
+        }
+        
+        const estimate = normalizeEstimate(parsed, input);
+        learningService.addCategoryExperience('appraisal', 4);
+        return estimate;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.error(`Ошибка генерации оценки через AI (попытка ${attempt}/${maxRetries}):`, error);
+        
+        // Если это последняя попытка, выбрасываем ошибку
+        if (attempt === maxRetries) {
+          learningService.addCategoryExperience('appraisal', 1);
+          throw new Error(`Не удалось получить оценку от ИИ после ${maxRetries} попыток. ${lastError.message}. Пожалуйста, проверьте данные и попробуйте еще раз.`);
+        }
+        
+        // Ждем перед следующей попыткой
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
     }
+    
+    // Этот код не должен выполниться, но на всякий случай
+    throw lastError || new Error('Неизвестная ошибка при генерации оценки');
   },
 };
 

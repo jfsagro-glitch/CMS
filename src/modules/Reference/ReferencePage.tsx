@@ -1517,11 +1517,13 @@ const ReferencePage: React.FC = () => {
       `;
 
       // Создаем временный контейнер для рендеринга PDF
+      // Используем видимый контейнер, но перемещаем его за пределы экрана
       const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '0';
+      container.style.position = 'fixed';
+      container.style.left = '-10000px';
       container.style.top = '0';
       container.style.width = '750px';
+      container.style.minHeight = '100px';
       container.style.padding = '16px';
       container.style.backgroundColor = '#ffffff';
       container.style.color = '#000000';
@@ -1529,34 +1531,54 @@ const ReferencePage: React.FC = () => {
       container.style.fontSize = '11px';
       container.style.lineHeight = '1.4';
       container.style.boxSizing = 'border-box';
-      container.style.opacity = '0';
+      container.style.visibility = 'visible';
+      container.style.opacity = '1';
       container.style.pointerEvents = 'none';
-      container.style.zIndex = '-9999';
-      container.style.overflow = 'hidden';
+      container.style.zIndex = '999999';
+      container.style.overflow = 'visible';
       container.innerHTML = html;
       document.body.appendChild(container);
 
-      // Принудительно ждем рендеринга - увеличиваем задержку
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Принудительный reflow для гарантии рендеринга
+      void container.offsetHeight;
+      void container.scrollHeight;
+      
+      // Ждем рендеринга через requestAnimationFrame
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Ждем загрузки изображений, если они есть
       if (appraisalImageData) {
-        const img = container.querySelector('img');
+        const img = container.querySelector('img') as HTMLImageElement | null;
         if (img) {
           await new Promise((resolve) => {
-            if (img.complete && img.naturalWidth > 0) {
+            if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
               resolve(undefined);
             } else {
-              img.onload = () => resolve(undefined);
-              img.onerror = () => resolve(undefined);
-              setTimeout(() => resolve(undefined), 2000);
+              const timeout = setTimeout(() => resolve(undefined), 3000);
+              img.onload = () => {
+                clearTimeout(timeout);
+                resolve(undefined);
+              };
+              img.onerror = () => {
+                clearTimeout(timeout);
+                resolve(undefined);
+              };
             }
           });
         }
       }
 
-      // Принудительный reflow для гарантии рендеринга
+      // Еще один reflow после загрузки изображений
       void container.offsetHeight;
+      const containerHeight = container.scrollHeight || 1000;
+
+      // Проверяем, что контейнер имеет контент
+      if (containerHeight < 50) {
+        document.body.removeChild(container);
+        throw new Error('Контейнер PDF пуст или не отрендерился');
+      }
 
       const canvas = await html2canvas(container, {
         scale: 2,
@@ -1565,9 +1587,17 @@ const ReferencePage: React.FC = () => {
         backgroundColor: '#ffffff',
         logging: false,
         width: 750,
-        height: container.scrollHeight || 1000,
+        height: containerHeight,
         windowWidth: 750,
-        windowHeight: container.scrollHeight || 1000,
+        windowHeight: containerHeight,
+        onclone: (clonedDoc) => {
+          // Убеждаемся, что клонированный документ тоже видим
+          const clonedContainer = clonedDoc.querySelector('div') as HTMLElement;
+          if (clonedContainer) {
+            clonedContainer.style.visibility = 'visible';
+            clonedContainer.style.opacity = '1';
+          }
+        },
       });
 
       document.body.removeChild(container);
