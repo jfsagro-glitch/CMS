@@ -157,12 +157,14 @@ const normalizeEstimate = (raw: any): AppraisalEstimate => {
     
     return comparables.map((item: any) => {
       if (typeof item === 'string') {
-        // Пытаемся извлечь URL из строки
-        const urlMatch = item.match(/(https?:\/\/[^\s\)]+)/);
+        // Пытаемся извлечь URL из строки (улучшенное регулярное выражение)
+        // Ищем URL, который может заканчиваться на различные символы
+        const urlMatch = item.match(/(https?:\/\/[^\s\)\]\}>"]+)/);
         if (urlMatch) {
+          const url = urlMatch[0].replace(/[.,;:!?]+$/, ''); // Убираем пунктуацию в конце URL
           return {
-            description: item.replace(urlMatch[0], '').trim(),
-            url: urlMatch[0],
+            description: item.replace(urlMatch[0], '').trim().replace(/\s*-\s*$/, '').trim(),
+            url: url,
           } as ComparableItem;
         }
         return item;
@@ -227,10 +229,24 @@ export const AppraisalAIService = {
       }
     }
 
+    // Получаем актуальную дату для инструкции
+    const currentDate = new Date();
+    const currentDateStr = currentDate.toLocaleDateString('ru-RU', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+
     // Формируем инструкцию с учетом настроек эквалайзера
     let instruction = `Ты действуешь как главный банковский оценщик. На основе предоставленных данных оцени объект и верни ТОЛЬКО валидный JSON без дополнительного текста, комментариев или markdown разметки.
 
 КРИТИЧЕСКИ ВАЖНО: Верни ТОЛЬКО JSON объект, без markdown блоков, без пояснений до или после JSON. Начни ответ сразу с открывающей фигурной скобки { и закончи закрывающей }.
+
+ВАЖНО - АКТУАЛЬНАЯ ДАТА ОЦЕНКИ:
+Текущая дата: ${currentDateStr} (${currentYear} год, ${currentMonth} месяц).
+Все расчеты и оценки должны быть выполнены на эту дату. Используй актуальные рыночные данные на ${currentYear} год. При указании аналогов используй актуальные цены на ${currentDateStr}. Не используй устаревшие данные из прошлых периодов.
 
 Структура JSON:
 {

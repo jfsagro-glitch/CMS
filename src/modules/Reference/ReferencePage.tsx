@@ -1506,13 +1506,25 @@ const ReferencePage: React.FC = () => {
               }
             }
             
-            const urlLink = hasUrl 
-              ? ` <a href="${comparable.url}" target="_blank" style="color: #1890ff; text-decoration: underline; font-size: 10px;">[Ссылка на источник]</a>`
+            // Также пытаемся извлечь URL из описания, если его нет в отдельном поле
+            let description = comparable.description;
+            let extractedUrl: string | null = null;
+            if (!hasUrl) {
+              const urlMatch = description.match(/(https?:\/\/[^\s\)\]\}>"]+)/);
+              if (urlMatch) {
+                extractedUrl = urlMatch[0].replace(/[.,;:!?]+$/, '');
+                description = description.replace(urlMatch[0], '').trim();
+              }
+            }
+            
+            const finalUrl = hasUrl ? comparable.url : extractedUrl;
+            const finalUrlLink = finalUrl 
+              ? ` <br/><a href="${finalUrl}" target="_blank" style="color: #1890ff; text-decoration: underline; font-size: 10px; word-break: break-all;">🔗 ${finalUrl}</a>`
               : '';
             
             return `
               <div style="margin: 0 0 12px 0; padding: 8px; background: #f5f5f5; border-radius: 4px; border-left: 3px solid #1890ff;">
-                <p style="margin: 0 0 4px 0;"><strong>Аналог ${idx + 1}:</strong> ${comparable.description}${urlLink}</p>
+                <p style="margin: 0 0 4px 0;"><strong>Аналог ${idx + 1}:</strong> ${description}${finalUrlLink}</p>
                 ${imageHtml}
               </div>
             `;
