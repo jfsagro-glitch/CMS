@@ -54,14 +54,74 @@ export interface AppraisalEstimate {
 }
 
 const parseJsonFromResponse = (response: string): any | null => {
-  try {
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return null;
-    return JSON.parse(jsonMatch[0]);
-  } catch (error) {
-    console.warn('Не удалось разобрать JSON из ответа AI:', error);
+  if (!response || typeof response !== 'string') {
+    console.warn('Ответ ИИ пуст или не является строкой');
     return null;
   }
+
+  // Логируем ответ для отладки (только в development)
+  if (import.meta.env.MODE === 'development') {
+    console.log('Ответ ИИ для парсинга:', response.substring(0, 500));
+  }
+
+  // Стратегия 1: Ищем JSON в markdown код-блоках (```json ... ``` или ``` ... ```)
+  const markdownJsonMatch = response.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+  if (markdownJsonMatch && markdownJsonMatch[1]) {
+    try {
+      return JSON.parse(markdownJsonMatch[1]);
+    } catch (error) {
+      console.warn('Не удалось распарсить JSON из markdown блока:', error);
+    }
+  }
+
+  // Стратегия 2: Ищем JSON объект с правильным балансом скобок
+  let braceCount = 0;
+  let startIndex = -1;
+  let endIndex = -1;
+
+  for (let i = 0; i < response.length; i++) {
+    if (response[i] === '{') {
+      if (startIndex === -1) {
+        startIndex = i;
+      }
+      braceCount++;
+    } else if (response[i] === '}') {
+      braceCount--;
+      if (braceCount === 0 && startIndex !== -1) {
+        endIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+    try {
+      const jsonStr = response.substring(startIndex, endIndex + 1);
+      return JSON.parse(jsonStr);
+    } catch (error) {
+      console.warn('Не удалось распарсить JSON с балансом скобок:', error);
+    }
+  }
+
+  // Стратегия 3: Простой regex (как было раньше, но с более точным паттерном)
+  const simpleJsonMatch = response.match(/\{[\s\S]*\}/);
+  if (simpleJsonMatch) {
+    try {
+      return JSON.parse(simpleJsonMatch[0]);
+    } catch (error) {
+      console.warn('Не удалось распарсить JSON простым regex:', error);
+    }
+  }
+
+  // Стратегия 4: Пробуем распарсить весь ответ как JSON (на случай если ИИ вернул чистый JSON)
+  try {
+    return JSON.parse(response.trim());
+  } catch (error) {
+    // Игнорируем, это нормально
+  }
+
+  console.warn('Не удалось извлечь JSON из ответа ИИ. Ответ:', response.substring(0, 200));
+  return null;
 };
 
 const normalizeEstimate = (raw: any): AppraisalEstimate => {
@@ -135,7 +195,11 @@ export const AppraisalAIService = {
     }
 
     // Формируем инструкцию с учетом настроек эквалайзера
-    let instruction = `Ты действуешь как главный банковский оценщик. На основе предоставленных данных оцени объект и верни JSON со следующей структурой:
+    let instruction = `Ты действуешь как главный банковский оценщик. На основе предоставленных данных оцени объект и верни ТОЛЬКО валидный JSON без дополнительного текста, комментариев или markdown разметки.
+
+КРИТИЧЕСКИ ВАЖНО: Верни ТОЛЬКО JSON объект, без markdown блоков, без пояснений до или после JSON. Начни ответ сразу с открывающей фигурной скобки { и закончи закрывающей }.
+
+Структура JSON:
 {
   "summary": "краткое обоснование оценки",
   "marketValue": 0,
@@ -148,6 +212,7 @@ export const AppraisalAIService = {
   "assumptions": ["..."],
   "comparables": ["описание аналогов..."]
 }
+
 Указывай значения в рублях. Если данных недостаточно, делай профессиональные допущения и фиксируй их в assumptions.`;
 
     // Добавляем настройки эквалайзера в инструкцию, если они предоставлены
@@ -190,10 +255,15 @@ export const AppraisalAIService = {
           [
             {
               role: 'user',
-              content: `Оцени объект "${input.objectName}" и верни JSON в соответствии с инструкцией. ОБЯЗАТЕЛЬНО используй все доступные методы оценки (доходный, сравнительный, затратный подходы) и проведи комплексный анализ. Не используй эвристические расчеты.\n\nДанные:\n${contextParts.join('\n')}`,
+              content: `Оцени объект "${input.objectName}" и верни ТОЛЬКО валидный JSON без дополнительного текста. ОБЯЗАТЕЛЬНО используй все доступные методы оценки (доходный, сравнительный, затратный подходы) и проведи комплексный анализ. Не используй эвристические расчеты.
+
+Данные:
+${contextParts.join('\n')}
+
+Верни ответ в формате чистого JSON, начиная с { и заканчивая }. Без markdown блоков, без пояснений.`,
             },
           ],
-          instruction + '\n\nВАЖНО: Всегда используй профессиональные методы оценки (доходный, сравнительный, затратный подходы). Никогда не используй эвристические расчеты. Если данных недостаточно, сделай профессиональные допущения и четко укажи их в assumptions.'
+          instruction + '\n\nВАЖНО: Всегда используй профессиональные методы оценки (доходный, сравнительный, затратный подходы). Никогда не используй эвристические расчеты. Если данных недостаточно, сделай профессиональные допущения и четко укажи их в assumptions.\n\nКРИТИЧЕСКИ ВАЖНО: Верни ТОЛЬКО JSON объект, без markdown разметки (```json), без пояснений до или после JSON. Начни ответ сразу с { и закончи }.'
         );
 
         const parsed = parseJsonFromResponse(response);
