@@ -1656,7 +1656,7 @@ const ReferencePage: React.FC = () => {
         height: containerHeight,
         windowWidth: 750,
         windowHeight: containerHeight,
-        onclone: (clonedDoc) => {
+        onclone: (clonedDoc: Document) => {
           // Убеждаемся, что клонированный документ тоже видим
           const clonedContainer = clonedDoc.querySelector('div') as HTMLElement;
           if (clonedContainer) {
@@ -1664,7 +1664,7 @@ const ReferencePage: React.FC = () => {
             clonedContainer.style.opacity = '1';
           }
         },
-      });
+      } as any);
 
       document.body.removeChild(container);
 
@@ -1715,7 +1715,7 @@ const ReferencePage: React.FC = () => {
       }
       message.error('Не удалось сформировать PDF отчет.');
     }
-  }, [appraisalEstimate, appraisalForm, buildAppraisalContext, appraisalImageData, appraisalTypeOptions, attributeFields]);
+  }, [appraisalEstimate, appraisalForm, buildAppraisalContext, appraisalImageData, appraisalTypeOptions, attributeFields, formatAppraisalAttributes]);
 
   // Обратная связь по качеству оценки ИИ (лайк/дизлайк)
   const handleAppraisalFeedback = useCallback(

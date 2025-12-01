@@ -11,12 +11,6 @@ const OPENAI_API_URL = 'https://api.openai.com/v1/images/generations';
 const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0';
 const HUGGINGFACE_API_KEY = import.meta.env.VITE_HUGGINGFACE_API_KEY || '';
 
-interface ImageGenerationOptions {
-  prompt: string;
-  size?: '256x256' | '512x512' | '1024x1024';
-  quality?: 'standard' | 'hd';
-}
-
 class ImageGenerationService {
   /**
    * Генерирует изображение объекта на основе описания
@@ -37,7 +31,13 @@ class ImageGenerationService {
       }
       
       // Если нет API ключей, используем fallback - возвращаем placeholder
-      console.warn('API ключи для генерации изображений не настроены. Используется placeholder.');
+      if (import.meta.env.MODE === 'development') {
+        console.warn('API ключи для генерации изображений не настроены. Используется placeholder.');
+        console.info('Для настройки генерации изображений создайте файл .env и добавьте:');
+        console.info('  VITE_OPENAI_API_KEY=your-key (для OpenAI DALL-E)');
+        console.info('  или');
+        console.info('  VITE_HUGGINGFACE_API_KEY=your-token (для Hugging Face)');
+      }
       return this.generatePlaceholderImage(description, objectType);
     } catch (error) {
       console.error('Ошибка генерации изображения:', error);

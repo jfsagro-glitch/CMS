@@ -417,7 +417,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
         height: containerHeight,
         windowWidth: 800,
         windowHeight: containerHeight,
-      });
+      } as any);
 
       document.body.removeChild(container);
 
