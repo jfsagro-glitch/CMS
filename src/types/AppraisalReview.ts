@@ -49,5 +49,9 @@ export interface AppraisalReview {
   reviewDate: string | null;
   reviewerName: string;
   reviewerPosition: string;
+
+  // Report Document
+  reportDocumentId?: string | null; // ID прикрепленного файла отчета об оценке
+  reportDocumentName?: string | null; // Название файла отчета
 }
 

@@ -21,6 +21,7 @@ import {
   CloseOutlined,
   SearchOutlined,
   EyeOutlined,
+  FileOutlined,
 } from '@ant-design/icons';
 import { AppraisalReview, AppraisalReviewStatus } from '@/types/AppraisalReview';
 import { appraisalReviewService } from '@/services/AppraisalReviewService';
@@ -124,6 +125,15 @@ export const AppraisalReviewsList: React.FC = () => {
 
   const columns = [
     {
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 100,
+      render: (id: string) => (
+        <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{id.substring(0, 8)}...</span>
+      ),
+    },
+    {
       title: 'Дата оценки',
       dataIndex: 'appraisalDate',
       key: 'appraisalDate',
@@ -141,6 +151,12 @@ export const AppraisalReviewsList: React.FC = () => {
         <div>
           <div>{record.reportName}</div>
           <small style={{ color: '#888' }}>{record.reportNumber}</small>
+          {record.reportDocumentName && (
+            <div style={{ marginTop: 4 }}>
+              <FileOutlined style={{ color: '#1890ff' }} />{' '}
+              <span style={{ fontSize: '12px', color: '#1890ff' }}>{record.reportDocumentName}</span>
+            </div>
+          )}
         </div>
       ),
     },

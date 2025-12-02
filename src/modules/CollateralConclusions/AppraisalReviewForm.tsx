@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react';
-import { Form, Input, DatePicker, Select, InputNumber, Button, Card, Row, Col, Checkbox, Table } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Form, Input, DatePicker, Select, InputNumber, Button, Card, Row, Col, Checkbox, Table, Upload, message } from 'antd';
+import { UploadOutlined, FileOutlined } from '@ant-design/icons';
+import type { UploadFile } from 'antd';
 import { AppraisalReview } from '@/types/AppraisalReview';
 import dayjs from 'dayjs';
 
@@ -19,6 +21,7 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
   loading
 }) => {
   const [form] = Form.useForm();
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   useEffect(() => {
     if (initialValues) {
@@ -27,8 +30,22 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
         appraisalDate: initialValues.appraisalDate ? dayjs(initialValues.appraisalDate) : null,
         reviewDate: initialValues.reviewDate ? dayjs(initialValues.reviewDate) : null,
       });
+      
+      // Устанавливаем файл, если он есть
+      if (initialValues.reportDocumentId && initialValues.reportDocumentName) {
+        setFileList([
+          {
+            uid: initialValues.reportDocumentId,
+            name: initialValues.reportDocumentName,
+            status: 'done',
+          } as UploadFile,
+        ]);
+      } else {
+        setFileList([]);
+      }
     } else {
       form.resetFields();
+      setFileList([]);
       // Set defaults
       form.setFieldsValue({
         valueType: 'Рыночная стоимость',
@@ -38,13 +55,83 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
     }
   }, [initialValues, form]);
 
-  const handleFinish = (values: any) => {
+  const handleFinish = async (values: any) => {
+    let reportDocumentId = initialValues?.reportDocumentId || null;
+    let reportDocumentName = initialValues?.reportDocumentName || null;
+
+    // Обрабатываем загруженный файл
+    if (fileList.length > 0 && fileList[0].originFileObj) {
+      const file = fileList[0].originFileObj;
+      try {
+        // Конвертируем файл в base64
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            resolve(result);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        // Сохраняем в localStorage (можно улучшить, используя IndexedDB)
+        const documentId = crypto.randomUUID();
+        const documentData = {
+          id: documentId,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          data: base64,
+          uploadedAt: new Date().toISOString(),
+        };
+        localStorage.setItem(`appraisal_report_${documentId}`, JSON.stringify(documentData));
+        
+        reportDocumentId = documentId;
+        reportDocumentName = file.name;
+      } catch (error) {
+        message.error('Ошибка при загрузке файла');
+        return;
+      }
+    } else if (fileList.length === 0 && initialValues?.reportDocumentId) {
+      // Файл был удален
+      reportDocumentId = null;
+      reportDocumentName = null;
+    }
+
     const formattedValues = {
       ...values,
       appraisalDate: values.appraisalDate ? values.appraisalDate.toISOString() : null,
       reviewDate: values.reviewDate ? values.reviewDate.toISOString() : null,
+      reportDocumentId,
+      reportDocumentName,
     };
     onSubmit(formattedValues);
+  };
+
+  const uploadProps = {
+    beforeUpload: (file: File) => {
+      const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
+      const isDoc = file.type.includes('wordprocessingml') || file.name.endsWith('.doc') || file.name.endsWith('.docx');
+      if (!isPdf && !isDoc) {
+        message.error('Можно загружать только PDF или DOC/DOCX файлы!');
+        return Upload.LIST_IGNORE;
+      }
+      const isLt10M = file.size / 1024 / 1024 < 10;
+      if (!isLt10M) {
+        message.error('Файл должен быть меньше 10MB!');
+        return Upload.LIST_IGNORE;
+      }
+      return false; // Предотвращаем автоматическую загрузку
+    },
+    fileList,
+    onChange: ({ fileList: newFileList }: { fileList: UploadFile[] }) => {
+      setFileList(newFileList);
+    },
+    onRemove: () => {
+      setFileList([]);
+      form.setFieldsValue({ reportDocumentId: null, reportDocumentName: null });
+    },
+    maxCount: 1,
   };
 
   return (
@@ -55,6 +142,15 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
       disabled={loading}
     >
       <Card title="Общие сведения" size="small" style={{ marginBottom: 16 }}>
+        {initialValues?.id && (
+          <Row gutter={16} style={{ marginBottom: 16 }}>
+            <Col span={24}>
+              <Form.Item label="ID рецензии">
+                <Input value={initialValues.id} disabled style={{ fontFamily: 'monospace' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+        )}
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item name="appraiserName" label="Наименование оценщика" rules={[{ required: true }]}>
@@ -107,6 +203,19 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
         </Row>
         <Form.Item name="objectDescription" label="Описание оцениваемого объекта">
           <TextArea rows={3} />
+        </Form.Item>
+        <Form.Item label="Отчет об оценке (файл)">
+          <Upload {...uploadProps}>
+            <Button icon={<UploadOutlined />}>Загрузить отчет</Button>
+          </Upload>
+          <div style={{ marginTop: 8, fontSize: 12, color: '#888' }}>
+            Поддерживаются файлы PDF, DOC, DOCX (макс. 10MB)
+          </div>
+          {fileList.length > 0 && fileList[0].status === 'done' && (
+            <div style={{ marginTop: 8 }}>
+              <FileOutlined /> {fileList[0].name}
+            </div>
+          )}
         </Form.Item>
       </Card>
 
@@ -275,4 +384,3 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
     </Form>
   );
 };
-
