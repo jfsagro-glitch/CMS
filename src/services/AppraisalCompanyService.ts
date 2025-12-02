@@ -98,7 +98,7 @@ class AppraisalCompanyService {
         try {
           // Получаем все ключи строки для отладки
           const rowKeys = Object.keys(row);
-          
+
           // Пробуем найти название компании - ищем первую колонку с текстом
           let name = '';
           for (const key of rowKeys) {
@@ -111,17 +111,25 @@ class AppraisalCompanyService {
               }
             }
           }
-          
+
           // Если не нашли, пробуем стандартные названия колонок
           if (!name) {
-            name = this.findFieldValue(row, [
-              'Наименование', 'наименование',
-              'Название', 'название',
-              'Компания', 'компания',
-              'Организация', 'организация'
-            ], '');
+            name = this.findFieldValue(
+              row,
+              [
+                'Наименование',
+                'наименование',
+                'Название',
+                'название',
+                'Компания',
+                'компания',
+                'Организация',
+                'организация',
+              ],
+              ''
+            );
           }
-          
+
           if (!name || name.trim().length === 0) {
             console.warn('Пропущена строка без названия:', rowKeys);
             skipped++;
@@ -133,24 +141,77 @@ class AppraisalCompanyService {
             name: String(name).trim(),
             inn: this.findFieldValue(row, ['ИНН', 'инн', 'ИНН/КПП', 'инн/кпп'], ''),
             ogrn: this.findFieldValue(row, ['ОГРН', 'огрн'], ''),
-            address: this.findFieldValue(row, ['Адрес', 'адрес', 'Адрес регистрации', 'адрес регистрации'], ''),
+            address: this.findFieldValue(
+              row,
+              ['Адрес', 'адрес', 'Адрес регистрации', 'адрес регистрации'],
+              ''
+            ),
             phone: this.findFieldValue(row, ['Телефон', 'телефон', 'Тел', 'тел'], ''),
             email: this.findFieldValue(row, ['Email', 'email', 'E-mail', 'e-mail'], ''),
-            director: this.findFieldValue(row, ['Руководитель', 'руководитель', 'Директор', 'директор', 'Генеральный директор', 'генеральный директор'], ''),
-            accreditationDate: this.findFieldValue(row, ['Дата аккредитации', 'дата аккредитации']) 
+            director: this.findFieldValue(
+              row,
+              [
+                'Руководитель',
+                'руководитель',
+                'Директор',
+                'директор',
+                'Генеральный директор',
+                'генеральный директор',
+              ],
+              ''
+            ),
+            accreditationDate: this.findFieldValue(row, ['Дата аккредитации', 'дата аккредитации'])
               ? this.parseDate(this.findFieldValue(row, ['Дата аккредитации', 'дата аккредитации']))
               : undefined,
-            certificateExpiryDate: this.findFieldValue(row, ['Срок действия сертификатов', 'срок действия сертификатов', 'Сертификаты до', 'сертификаты до'])
-              ? this.parseDate(this.findFieldValue(row, ['Срок действия сертификатов', 'срок действия сертификатов', 'Сертификаты до', 'сертификаты до']))
+            certificateExpiryDate: this.findFieldValue(row, [
+              'Срок действия сертификатов',
+              'срок действия сертификатов',
+              'Сертификаты до',
+              'сертификаты до',
+            ])
+              ? this.parseDate(
+                  this.findFieldValue(row, [
+                    'Срок действия сертификатов',
+                    'срок действия сертификатов',
+                    'Сертификаты до',
+                    'сертификаты до',
+                  ])
+                )
               : undefined,
-            insuranceExpiryDate: this.findFieldValue(row, ['Срок действия страхования', 'срок действия страхования', 'Страхование до', 'страхование до'])
-              ? this.parseDate(this.findFieldValue(row, ['Срок действия страхования', 'срок действия страхования', 'Страхование до', 'страхование до']))
+            insuranceExpiryDate: this.findFieldValue(row, [
+              'Срок действия страхования',
+              'срок действия страхования',
+              'Страхование до',
+              'страхование до',
+            ])
+              ? this.parseDate(
+                  this.findFieldValue(row, [
+                    'Срок действия страхования',
+                    'срок действия страхования',
+                    'Страхование до',
+                    'страхование до',
+                  ])
+                )
               : undefined,
             sroMembership: this.parseBoolean(
-              this.findFieldValue(row, ['Членство в СРО', 'членство в сро', 'СРО', 'сро', 'Член СРО', 'член сро'], false)
+              this.findFieldValue(
+                row,
+                ['Членство в СРО', 'членство в сро', 'СРО', 'сро', 'Член СРО', 'член сро'],
+                false
+              )
             ),
-            status: this.parseStatus(this.findFieldValue(row, ['Статус', 'статус', 'Статус аккредитации', 'статус аккредитации'], 'active')),
-            notes: this.findFieldValue(row, ['Примечания', 'примечания', 'Комментарий', 'комментарий'], ''),
+            status: this.parseStatus(
+              this.findFieldValue(
+                row,
+                ['Статус', 'статус', 'Статус аккредитации', 'статус аккредитации'],
+                'active'
+              )
+            ),
+            notes: this.findFieldValue(
+              row,
+              ['Примечания', 'примечания', 'Комментарий', 'комментарий'],
+              ''
+            ),
           };
 
           // Очищаем пустые строки и обрабатываем ИНН
@@ -170,7 +231,7 @@ class AppraisalCompanyService {
               (c.inn && companyData.inn && c.inn === companyData.inn) ||
               (companyData.name && c.name.toLowerCase() === companyData.name.toLowerCase())
           );
-          
+
           if (!exists) {
             const newCompany: AppraisalCompany = {
               ...companyData,
@@ -269,6 +330,409 @@ class AppraisalCompanyService {
     return false;
   }
 
+  // Создание демо-компаний напрямую
+  private createDemoCompanies(count: number = 20): number {
+    const existingCompanies = this.getCompanies();
+    const demoCompanies: AppraisalCompany[] = [
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценка-Профи"',
+        inn: '7701234567',
+        ogrn: '1027701234567',
+        address: 'г. Москва, ул. Тверская, д. 10, офис 101',
+        phone: '+7 (495) 123-45-67',
+        email: 'info@ocenka-profi.ru',
+        director: 'Иванов Иван Иванович',
+        accreditationDate: '2020-01-15T00:00:00.000Z',
+        certificateExpiryDate: '2025-12-31T00:00:00.000Z',
+        insuranceExpiryDate: '2025-12-31T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Эксперт-Оценка"',
+        inn: '7702345678',
+        ogrn: '1027702345678',
+        address: 'г. Москва, ул. Ленинградская, д. 25, офис 205',
+        phone: '+7 (495) 234-56-78',
+        email: 'contact@expert-ocenka.ru',
+        director: 'Петрова Мария Сергеевна',
+        accreditationDate: '2019-03-20T00:00:00.000Z',
+        certificateExpiryDate: '2025-06-30T00:00:00.000Z',
+        insuranceExpiryDate: '2025-06-30T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Независимая оценка"',
+        inn: '7703456789',
+        ogrn: '1027703456789',
+        address: 'г. Санкт-Петербург, Невский пр., д. 50, офис 301',
+        phone: '+7 (812) 345-67-89',
+        email: 'info@nezavisimaya-ocenka.ru',
+        director: 'Сидоров Петр Александрович',
+        accreditationDate: '2021-05-10T00:00:00.000Z',
+        certificateExpiryDate: '2026-05-10T00:00:00.000Z',
+        insuranceExpiryDate: '2026-05-10T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Центр оценки недвижимости"',
+        inn: '7704567890',
+        ogrn: '1027704567890',
+        address: 'г. Москва, ул. Арбат, д. 15, офис 402',
+        phone: '+7 (495) 456-78-90',
+        email: 'office@centr-ocenki.ru',
+        director: 'Козлова Анна Владимировна',
+        accreditationDate: '2018-07-15T00:00:00.000Z',
+        certificateExpiryDate: '2024-12-31T00:00:00.000Z',
+        insuranceExpiryDate: '2024-12-31T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценочная компания Альфа"',
+        inn: '7705678901',
+        ogrn: '1027705678901',
+        address: 'г. Екатеринбург, ул. Ленина, д. 30, офис 501',
+        phone: '+7 (343) 567-89-01',
+        email: 'info@alfa-ocenka.ru',
+        director: 'Морозов Дмитрий Николаевич',
+        accreditationDate: '2020-09-01T00:00:00.000Z',
+        certificateExpiryDate: '2025-09-01T00:00:00.000Z',
+        insuranceExpiryDate: '2025-09-01T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Профессиональная оценка"',
+        inn: '7706789012',
+        ogrn: '1027706789012',
+        address: 'г. Новосибирск, ул. Красный проспект, д. 20, офис 102',
+        phone: '+7 (383) 678-90-12',
+        email: 'contact@prof-ocenka.ru',
+        director: 'Волкова Елена Игоревна',
+        accreditationDate: '2019-11-20T00:00:00.000Z',
+        certificateExpiryDate: '2025-11-20T00:00:00.000Z',
+        insuranceExpiryDate: '2025-11-20T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценка-Сервис"',
+        inn: '7707890123',
+        ogrn: '1027707890123',
+        address: 'г. Казань, ул. Баумана, д. 40, офис 203',
+        phone: '+7 (843) 789-01-23',
+        email: 'info@ocenka-service.ru',
+        director: 'Новиков Сергей Викторович',
+        accreditationDate: '2021-02-14T00:00:00.000Z',
+        certificateExpiryDate: '2026-02-14T00:00:00.000Z',
+        insuranceExpiryDate: '2026-02-14T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Экспертиза и оценка"',
+        inn: '7708901234',
+        ogrn: '1027708901234',
+        address: 'г. Нижний Новгород, ул. Покровка, д. 12, офис 304',
+        phone: '+7 (831) 890-12-34',
+        email: 'office@expertiza-ocenka.ru',
+        director: 'Смирнова Ольга Петровна',
+        accreditationDate: '2020-06-25T00:00:00.000Z',
+        certificateExpiryDate: '2025-06-25T00:00:00.000Z',
+        insuranceExpiryDate: '2025-06-25T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценочное агентство Бета"',
+        inn: '7709012345',
+        ogrn: '1027709012345',
+        address: 'г. Челябинск, ул. Кирова, д. 100, офис 405',
+        phone: '+7 (351) 901-23-45',
+        email: 'info@beta-ocenka.ru',
+        director: 'Лебедев Андрей Михайлович',
+        accreditationDate: '2019-08-10T00:00:00.000Z',
+        certificateExpiryDate: '2025-08-10T00:00:00.000Z',
+        insuranceExpiryDate: '2025-08-10T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценка-Консалт"',
+        inn: '7710123456',
+        ogrn: '1027710123456',
+        address: 'г. Ростов-на-Дону, ул. Большая Садовая, д. 55, офис 506',
+        phone: '+7 (863) 012-34-56',
+        email: 'contact@ocenka-konsult.ru',
+        director: 'Федорова Татьяна Алексеевна',
+        accreditationDate: '2021-04-05T00:00:00.000Z',
+        certificateExpiryDate: '2026-04-05T00:00:00.000Z',
+        insuranceExpiryDate: '2026-04-05T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Стандарт-Оценка"',
+        inn: '7711234567',
+        ogrn: '1027711234567',
+        address: 'г. Уфа, ул. Ленина, д. 70, офис 107',
+        phone: '+7 (347) 123-45-67',
+        email: 'info@standart-ocenka.ru',
+        director: 'Кузнецов Игорь Сергеевич',
+        accreditationDate: '2020-10-12T00:00:00.000Z',
+        certificateExpiryDate: '2025-10-12T00:00:00.000Z',
+        insuranceExpiryDate: '2025-10-12T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценочная группа Гамма"',
+        inn: '7712345678',
+        ogrn: '1027712345678',
+        address: 'г. Воронеж, пр. Революции, д. 33, офис 208',
+        phone: '+7 (473) 234-56-78',
+        email: 'office@gamma-ocenka.ru',
+        director: 'Орлова Наталья Дмитриевна',
+        accreditationDate: '2019-12-18T00:00:00.000Z',
+        certificateExpiryDate: '2025-12-18T00:00:00.000Z',
+        insuranceExpiryDate: '2025-12-18T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценка-Трейд"',
+        inn: '7713456789',
+        ogrn: '1027713456789',
+        address: 'г. Краснодар, ул. Красная, д. 22, офис 309',
+        phone: '+7 (861) 345-67-89',
+        email: 'info@ocenka-trade.ru',
+        director: 'Соколов Владимир Анатольевич',
+        accreditationDate: '2021-01-30T00:00:00.000Z',
+        certificateExpiryDate: '2026-01-30T00:00:00.000Z',
+        insuranceExpiryDate: '2026-01-30T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценочное бюро Дельта"',
+        inn: '7714567890',
+        ogrn: '1027714567890',
+        address: 'г. Самара, ул. Московское шоссе, д. 18, офис 410',
+        phone: '+7 (846) 456-78-90',
+        email: 'contact@delta-ocenka.ru',
+        director: 'Попова Светлана Валерьевна',
+        accreditationDate: '2020-03-22T00:00:00.000Z',
+        certificateExpiryDate: '2025-03-22T00:00:00.000Z',
+        insuranceExpiryDate: '2025-03-22T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Профессиональная экспертиза"',
+        inn: '7715678901',
+        ogrn: '1027715678901',
+        address: 'г. Омск, ул. Ленина, д. 45, офис 511',
+        phone: '+7 (381) 567-89-01',
+        email: 'info@prof-expertiza.ru',
+        director: 'Васильев Роман Олегович',
+        accreditationDate: '2019-07-08T00:00:00.000Z',
+        certificateExpiryDate: '2025-07-08T00:00:00.000Z',
+        insuranceExpiryDate: '2025-07-08T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценка-Инвест"',
+        inn: '7716789012',
+        ogrn: '1027716789012',
+        address: 'г. Пермь, ул. Ленина, д. 60, офис 112',
+        phone: '+7 (342) 678-90-12',
+        email: 'office@ocenka-invest.ru',
+        director: 'Михайлова Екатерина Сергеевна',
+        accreditationDate: '2021-06-15T00:00:00.000Z',
+        certificateExpiryDate: '2026-06-15T00:00:00.000Z',
+        insuranceExpiryDate: '2026-06-15T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценочная компания Эпсилон"',
+        inn: '7717890123',
+        ogrn: '1027717890123',
+        address: 'г. Волгоград, пр. Ленина, д. 28, офис 213',
+        phone: '+7 (844) 789-01-23',
+        email: 'info@epsilon-ocenka.ru',
+        director: 'Тарасов Алексей Владимирович',
+        accreditationDate: '2020-08-20T00:00:00.000Z',
+        certificateExpiryDate: '2025-08-20T00:00:00.000Z',
+        insuranceExpiryDate: '2025-08-20T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценка-Плюс"',
+        inn: '7718901234',
+        ogrn: '1027718901234',
+        address: 'г. Красноярск, ул. Мира, д. 35, офис 314',
+        phone: '+7 (391) 890-12-34',
+        email: 'contact@ocenka-plus.ru',
+        director: 'Романова Ирина Николаевна',
+        accreditationDate: '2019-09-25T00:00:00.000Z',
+        certificateExpiryDate: '2025-09-25T00:00:00.000Z',
+        insuranceExpiryDate: '2025-09-25T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценочное агентство Зета"',
+        inn: '7719012345',
+        ogrn: '1027719012345',
+        address: 'г. Саратов, ул. Московская, д. 50, офис 415',
+        phone: '+7 (845) 901-23-45',
+        email: 'info@zeta-ocenka.ru',
+        director: 'Борисов Денис Игоревич',
+        accreditationDate: '2021-03-10T00:00:00.000Z',
+        certificateExpiryDate: '2026-03-10T00:00:00.000Z',
+        insuranceExpiryDate: '2026-03-10T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценка-Менеджмент"',
+        inn: '7720123456',
+        ogrn: '1027720123456',
+        address: 'г. Тюмень, ул. Республики, д. 40, офис 516',
+        phone: '+7 (345) 012-34-56',
+        email: 'office@ocenka-management.ru',
+        director: 'Григорьева Марина Александровна',
+        accreditationDate: '2020-11-05T00:00:00.000Z',
+        certificateExpiryDate: '2025-11-05T00:00:00.000Z',
+        insuranceExpiryDate: '2025-11-05T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'ООО "Оценочная компания Эта"',
+        inn: '7721234567',
+        ogrn: '1027721234567',
+        address: 'г. Ижевск, ул. Пушкинская, д. 25, офис 117',
+        phone: '+7 (341) 123-45-67',
+        email: 'info@eta-ocenka.ru',
+        director: 'Комаров Павел Викторович',
+        accreditationDate: '2019-05-14T00:00:00.000Z',
+        certificateExpiryDate: '2025-05-14T00:00:00.000Z',
+        insuranceExpiryDate: '2025-05-14T00:00:00.000Z',
+        sroMembership: true,
+        status: 'active',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+
+    // Берем только нужное количество
+    const companiesToAdd = demoCompanies.slice(0, count);
+    
+    // Фильтруем, чтобы не добавлять дубликаты
+    const newCompanies = companiesToAdd.filter(
+      demo => !existingCompanies.some(
+        existing => existing.inn === demo.inn || existing.name.toLowerCase() === demo.name.toLowerCase()
+      )
+    );
+
+    if (newCompanies.length > 0) {
+      const allCompanies = [...existingCompanies, ...newCompanies];
+      this.saveCompanies(allCompanies);
+      console.log(`Создано ${newCompanies.length} демо-компаний`);
+    }
+
+    return newCompanies.length;
+  }
+
   // Загрузка начальных данных из файла reestr_otsenschikov.xls
   async loadInitialData(forceReload: boolean = false, limit: number = 20): Promise<number> {
     const alreadyLoaded = localStorage.getItem('cms_appraisal_companies_initial_data_loaded');
@@ -278,24 +742,37 @@ class AppraisalCompanyService {
     }
 
     try {
-      console.log('Начинаем загрузку начальных данных из reestr_otsenschikov.xls (лимит:', limit, ')...');
+      console.log(
+        'Начинаем загрузку начальных данных из reestr_otsenschikov.xls (лимит:',
+        limit,
+        ')...'
+      );
       // Пытаемся загрузить файл из public
       const response = await fetch('/reestr_apr/reestr_otsenschikov.xls');
       if (!response.ok) {
-        console.error(
-          'Файл reestr_otsenschikov.xls не найден:',
+        console.warn(
+          'Файл reestr_otsenschikov.xls не найден, создаем демо-данные:',
           response.status,
           response.statusText
         );
-        return 0;
+        // Создаем демо-компании, если файл недоступен
+        const created = this.createDemoCompanies(limit);
+        if (created > 0) {
+          localStorage.setItem('cms_appraisal_companies_initial_data_loaded', 'true');
+        }
+        return created;
       }
 
       const blob = await response.blob();
       console.log('Файл загружен, размер:', blob.size, 'байт');
 
       if (blob.size === 0) {
-        console.error('Файл пуст');
-        return 0;
+        console.warn('Файл пуст, создаем демо-данные');
+        const created = this.createDemoCompanies(limit);
+        if (created > 0) {
+          localStorage.setItem('cms_appraisal_companies_initial_data_loaded', 'true');
+        }
+        return created;
       }
 
       const file = new File([blob], 'reestr_otsenschikov.xls', {
@@ -305,6 +782,16 @@ class AppraisalCompanyService {
       const imported = await this.loadFromExcelFile(file, limit);
       console.log('Импортировано компаний:', imported);
 
+      // Если из файла ничего не импортировалось, создаем демо-данные
+      if (imported === 0) {
+        console.warn('Из файла ничего не импортировано, создаем демо-данные');
+        const created = this.createDemoCompanies(limit);
+        if (created > 0) {
+          localStorage.setItem('cms_appraisal_companies_initial_data_loaded', 'true');
+        }
+        return created;
+      }
+
       if (imported > 0) {
         localStorage.setItem('cms_appraisal_companies_initial_data_loaded', 'true');
       }
@@ -312,7 +799,13 @@ class AppraisalCompanyService {
     } catch (error: any) {
       console.error('Ошибка загрузки начальных данных:', error);
       console.error('Детали ошибки:', error.message, error.stack);
-      return 0;
+      // При ошибке создаем демо-данные
+      console.warn('Создаем демо-данные из-за ошибки загрузки файла');
+      const created = this.createDemoCompanies(limit);
+      if (created > 0) {
+        localStorage.setItem('cms_appraisal_companies_initial_data_loaded', 'true');
+      }
+      return created;
     }
   }
 }
