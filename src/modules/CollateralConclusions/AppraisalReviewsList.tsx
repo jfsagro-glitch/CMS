@@ -154,7 +154,9 @@ export const AppraisalReviewsList: React.FC = () => {
           {record.reportDocumentName && (
             <div style={{ marginTop: 4 }}>
               <FileOutlined style={{ color: '#1890ff' }} />{' '}
-              <span style={{ fontSize: '12px', color: '#1890ff' }}>{record.reportDocumentName}</span>
+              <span style={{ fontSize: '12px', color: '#1890ff' }}>
+                {record.reportDocumentName}
+              </span>
             </div>
           )}
         </div>

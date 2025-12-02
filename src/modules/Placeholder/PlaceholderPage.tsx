@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Result, Button, Card, Row, Col, message } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserOutlined, DatabaseOutlined, FilePdfOutlined, ClockCircleOutlined, LineChartOutlined } from '@ant-design/icons';
+import { UserOutlined, DatabaseOutlined, FilePdfOutlined, ClockCircleOutlined, LineChartOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -566,6 +566,19 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
                 <LineChartOutlined style={{ fontSize: '48px', color: '#722ed1', marginBottom: '16px' }} />
                 <h3>Метрики KPI и MBO</h3>
                 <p style={{ color: '#8c8c8c' }}>Корректировка ключевых показателей и целевых значений MBO</p>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card
+              hoverable
+              style={{ height: '100%' }}
+              onClick={() => navigate('/settings/appraisal-companies')}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <SafetyCertificateOutlined style={{ fontSize: '48px', color: '#13c2c2', marginBottom: '16px' }} />
+                <h3>Аккредитация оценочных компаний</h3>
+                <p style={{ color: '#8c8c8c' }}>Реестр оценочных компаний и управление их аккредитацией</p>
               </div>
             </Card>
           </Col>

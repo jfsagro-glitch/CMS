@@ -1,5 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, DatePicker, Select, InputNumber, Button, Card, Row, Col, Checkbox, Table, Upload, message } from 'antd';
+import {
+  Form,
+  Input,
+  DatePicker,
+  Select,
+  InputNumber,
+  Button,
+  Card,
+  Row,
+  Col,
+  Checkbox,
+  Table,
+  Upload,
+  message,
+} from 'antd';
 import { UploadOutlined, FileOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd';
 import { AppraisalReview } from '@/types/AppraisalReview';
@@ -18,7 +32,7 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
   initialValues,
   onSubmit,
   onCancel,
-  loading
+  loading,
 }) => {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -30,7 +44,7 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
         appraisalDate: initialValues.appraisalDate ? dayjs(initialValues.appraisalDate) : null,
         reviewDate: initialValues.reviewDate ? dayjs(initialValues.reviewDate) : null,
       });
-      
+
       // Устанавливаем файл, если он есть
       if (initialValues.reportDocumentId && initialValues.reportDocumentName) {
         setFileList([
@@ -50,7 +64,7 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
       form.setFieldsValue({
         valueType: 'Рыночная стоимость',
         marketCorrespondence: true,
-        compliance135FZ: 'compliant'
+        compliance135FZ: 'compliant',
       });
     }
   }, [initialValues, form]);
@@ -85,7 +99,7 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
           uploadedAt: new Date().toISOString(),
         };
         localStorage.setItem(`appraisal_report_${documentId}`, JSON.stringify(documentData));
-        
+
         reportDocumentId = documentId;
         reportDocumentName = file.name;
       } catch (error) {
@@ -111,7 +125,10 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
   const uploadProps = {
     beforeUpload: (file: File) => {
       const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
-      const isDoc = file.type.includes('wordprocessingml') || file.name.endsWith('.doc') || file.name.endsWith('.docx');
+      const isDoc =
+        file.type.includes('wordprocessingml') ||
+        file.name.endsWith('.doc') ||
+        file.name.endsWith('.docx');
       if (!isPdf && !isDoc) {
         message.error('Можно загружать только PDF или DOC/DOCX файлы!');
         return Upload.LIST_IGNORE;
@@ -135,12 +152,7 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
   };
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      onFinish={handleFinish}
-      disabled={loading}
-    >
+    <Form form={form} layout="vertical" onFinish={handleFinish} disabled={loading}>
       <Card title="Общие сведения" size="small" style={{ marginBottom: 16 }}>
         {initialValues?.id && (
           <Row gutter={16} style={{ marginBottom: 16 }}>
@@ -153,12 +165,20 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
         )}
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="appraiserName" label="Наименование оценщика" rules={[{ required: true }]}>
+            <Form.Item
+              name="appraiserName"
+              label="Наименование оценщика"
+              rules={[{ required: true }]}
+            >
               <Input />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="hasRecommendation" label="Наличие рекомендации" valuePropName="checked">
+            <Form.Item
+              name="hasRecommendation"
+              label="Наличие рекомендации"
+              valuePropName="checked"
+            >
               <Checkbox>Рекомендован банком</Checkbox>
             </Form.Item>
           </Col>
@@ -193,8 +213,8 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
           </Col>
           <Col span={8}>
             <Form.Item name="marketValueWithVat" label="Итоговая рыночная стоимость (с НДС)">
-              <InputNumber 
-                style={{ width: '100%' }} 
+              <InputNumber
+                style={{ width: '100%' }}
                 formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}
                 parser={value => value!.replace(/\s?|(,*)/g, '')}
               />
@@ -226,7 +246,8 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
           dataSource={[
             {
               key: '1',
-              requirement: 'Отчет об оценке соответствует требованиям Федерального закона от 29.07.98 г. №135-ФЗ «Об оценочной деятельности в Российской Федерации» (со всеми изменениями на дату оценки), Федеральным стандартам оценки',
+              requirement:
+                'Отчет об оценке соответствует требованиям Федерального закона от 29.07.98 г. №135-ФЗ «Об оценочной деятельности в Российской Федерации» (со всеми изменениями на дату оценки), Федеральным стандартам оценки',
               compliance: 'compliance135FZ',
               note: 'complianceNote',
             },
@@ -303,7 +324,8 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
               width: '20%',
             },
             {
-              title: 'Правильность и обоснованность выбора метода в рамках подхода/Корректность обоснования отказа от использования подхода',
+              title:
+                'Правильность и обоснованность выбора метода в рамках подхода/Корректность обоснования отказа от использования подхода',
               dataIndex: 'methodology',
               key: 'methodology',
               width: '30%',
@@ -314,7 +336,8 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
               ),
             },
             {
-              title: 'Наличие ошибок в расчетах, корректность подобранных аналогов, обоснованность принятых корректировок, прочие нарушения',
+              title:
+                'Наличие ошибок в расчетах, корректность подобранных аналогов, обоснованность принятых корректировок, прочие нарушения',
               dataIndex: 'errors',
               key: 'errors',
               width: '30%',
@@ -340,17 +363,34 @@ export const AppraisalReviewForm: React.FC<AppraisalReviewFormProps> = ({
       </Card>
 
       <Card title="Согласование результатов" size="small" style={{ marginBottom: 16 }}>
-        <Form.Item name="reconciliationWeightsJustification" label="Обоснование выбора использованных весов, присвоенных каждому из подходов">
+        <Form.Item
+          name="reconciliationWeightsJustification"
+          label="Обоснование выбора использованных весов, присвоенных каждому из подходов"
+        >
           <TextArea rows={3} placeholder="Опишите обоснование выбора весов для каждого подхода" />
         </Form.Item>
       </Card>
 
-      <Card title="Вывод о корректности определения рыночной стоимости" size="small" style={{ marginBottom: 16 }}>
-        <Form.Item name="marketValueCorrectness" label="Вывод о корректности определения рыночной стоимости">
-          <TextArea rows={3} placeholder="Сформулируйте вывод о корректности определения рыночной стоимости" />
+      <Card
+        title="Вывод о корректности определения рыночной стоимости"
+        size="small"
+        style={{ marginBottom: 16 }}
+      >
+        <Form.Item
+          name="marketValueCorrectness"
+          label="Вывод о корректности определения рыночной стоимости"
+        >
+          <TextArea
+            rows={3}
+            placeholder="Сформулируйте вывод о корректности определения рыночной стоимости"
+          />
         </Form.Item>
 
-        <Form.Item name="marketCorrespondence" label="Стоимость соответствует рынку" valuePropName="checked">
+        <Form.Item
+          name="marketCorrespondence"
+          label="Стоимость соответствует рынку"
+          valuePropName="checked"
+        >
           <Checkbox>Да, стоимость соответствует рынку</Checkbox>
         </Form.Item>
       </Card>
