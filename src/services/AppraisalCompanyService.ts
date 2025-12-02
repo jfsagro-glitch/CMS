@@ -55,103 +55,157 @@ class AppraisalCompanyService {
   }
 
   // Загрузка данных из Excel файла
-  async loadFromExcelFile(file: File): Promise<number> {
+  async loadFromExcelFile(file: File, limit: number = 20): Promise<number> {
     try {
       console.log('Парсинг Excel файла:', file.name, file.size);
       const data = await file.arrayBuffer();
       console.log('Размер данных:', data.byteLength);
-      
+
       const workbook = XLSX.read(data, { type: 'array' });
       console.log('Листы в файле:', workbook.SheetNames);
-      
+
       if (workbook.SheetNames.length === 0) {
         console.error('В файле нет листов');
         return 0;
       }
-      
+
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
       console.log('Всего строк в файле:', jsonData.length);
-      
+
       if (jsonData.length === 0) {
         console.warn('Файл не содержит данных');
         return 0;
       }
-      
+
       // Выводим первую строку для отладки
       if (jsonData.length > 0) {
-        console.log('Пример первой строки:', Object.keys(jsonData[0] as any));
-        console.log('Первая строка:', jsonData[0]);
+        const firstRow = jsonData[0] as any;
+        console.log('Ключи первой строки:', Object.keys(firstRow));
+        console.log('Первая строка (первые 5 полей):', Object.entries(firstRow).slice(0, 5));
       }
 
-      const companies = this.getCompanies();
+      // Ограничиваем количество строк
+      const rowsToProcess = jsonData.slice(0, limit);
+      console.log(`Обрабатываем первые ${rowsToProcess.length} строк из ${jsonData.length}`);
+
+      const existingCompanies = this.getCompanies();
+      const newCompanies: AppraisalCompany[] = [];
       let imported = 0;
       let skipped = 0;
 
-      for (const row of jsonData as any[]) {
+      for (const row of rowsToProcess as any[]) {
         try {
-          // Пробуем найти название компании в разных вариантах колонок
-          const name = 
-            row['Наименование'] || 
-            row['наименование'] ||
-            row['Название'] || 
-            row['название'] ||
-            row['Компания'] || 
-            row['компания'] ||
-            row['Организация'] ||
-            row['организация'] ||
-            Object.values(row).find((v: any) => typeof v === 'string' && v.trim().length > 0) as string || 
-            '';
+          // Получаем все ключи строки для отладки
+          const rowKeys = Object.keys(row);
+          
+          // Пробуем найти название компании - ищем первую колонку с текстом
+          let name = '';
+          for (const key of rowKeys) {
+            const value = row[key];
+            if (value && typeof value === 'string' && value.trim().length > 3) {
+              // Проверяем, не является ли это числом (ИНН, ОГРН и т.д.)
+              if (!/^\d+$/.test(value.trim())) {
+                name = value.trim();
+                break;
+              }
+            }
+          }
+          
+          // Если не нашли, пробуем стандартные названия колонок
+          if (!name) {
+            name = this.findFieldValue(row, [
+              'Наименование', 'наименование',
+              'Название', 'название',
+              'Компания', 'компания',
+              'Организация', 'организация'
+            ], '');
+          }
           
           if (!name || name.trim().length === 0) {
+            console.warn('Пропущена строка без названия:', rowKeys);
             skipped++;
             continue;
           }
 
-          // Маппинг полей из Excel на структуру AppraisalCompany
+          // Маппинг полей из Excel - используем все возможные варианты названий колонок
           const companyData: Partial<AppraisalCompany> = {
             name: String(name).trim(),
-            inn: String(row['ИНН'] || row['инн'] || row['ИНН/КПП'] || row['инн/кпп'] || '')
-              .split('/')[0]
-              .trim(),
-            ogrn: String(row['ОГРН'] || row['огрн'] || '').trim(),
-            address: String(row['Адрес'] || row['адрес'] || row['Адрес регистрации'] || row['адрес регистрации'] || '').trim(),
-            phone: String(row['Телефон'] || row['телефон'] || row['Тел'] || row['тел'] || '').trim(),
-            email: String(row['Email'] || row['email'] || row['E-mail'] || row['e-mail'] || '').trim(),
-            director: String(row['Руководитель'] || row['руководитель'] || row['Директор'] || row['директор'] || row['Генеральный директор'] || row['генеральный директор'] || '').trim(),
-            accreditationDate: (row['Дата аккредитации'] || row['дата аккредитации'])
-              ? this.parseDate(row['Дата аккредитации'] || row['дата аккредитации'])
+            inn: this.findFieldValue(row, ['ИНН', 'инн', 'ИНН/КПП', 'инн/кпп'], ''),
+            ogrn: this.findFieldValue(row, ['ОГРН', 'огрн'], ''),
+            address: this.findFieldValue(row, ['Адрес', 'адрес', 'Адрес регистрации', 'адрес регистрации'], ''),
+            phone: this.findFieldValue(row, ['Телефон', 'телефон', 'Тел', 'тел'], ''),
+            email: this.findFieldValue(row, ['Email', 'email', 'E-mail', 'e-mail'], ''),
+            director: this.findFieldValue(row, ['Руководитель', 'руководитель', 'Директор', 'директор', 'Генеральный директор', 'генеральный директор'], ''),
+            accreditationDate: this.findFieldValue(row, ['Дата аккредитации', 'дата аккредитации']) 
+              ? this.parseDate(this.findFieldValue(row, ['Дата аккредитации', 'дата аккредитации']))
               : undefined,
-            certificateExpiryDate:
-              (row['Срок действия сертификатов'] || row['срок действия сертификатов'] || row['Сертификаты до'] || row['сертификаты до'])
-                ? this.parseDate(row['Срок действия сертификатов'] || row['срок действия сертификатов'] || row['Сертификаты до'] || row['сертификаты до'])
-                : undefined,
-            insuranceExpiryDate:
-              (row['Срок действия страхования'] || row['срок действия страхования'] || row['Страхование до'] || row['страхование до'])
-                ? this.parseDate(row['Срок действия страхования'] || row['срок действия страхования'] || row['Страхование до'] || row['страхование до'])
-                : undefined,
+            certificateExpiryDate: this.findFieldValue(row, ['Срок действия сертификатов', 'срок действия сертификатов', 'Сертификаты до', 'сертификаты до'])
+              ? this.parseDate(this.findFieldValue(row, ['Срок действия сертификатов', 'срок действия сертификатов', 'Сертификаты до', 'сертификаты до']))
+              : undefined,
+            insuranceExpiryDate: this.findFieldValue(row, ['Срок действия страхования', 'срок действия страхования', 'Страхование до', 'страхование до'])
+              ? this.parseDate(this.findFieldValue(row, ['Срок действия страхования', 'срок действия страхования', 'Страхование до', 'страхование до']))
+              : undefined,
             sroMembership: this.parseBoolean(
-              row['Членство в СРО'] || row['членство в сро'] || row['СРО'] || row['сро'] || row['Член СРО'] || row['член сро'] || false
+              this.findFieldValue(row, ['Членство в СРО', 'членство в сро', 'СРО', 'сро', 'Член СРО', 'член сро'], false)
             ),
-            status: this.parseStatus(row['Статус'] || row['статус'] || row['Статус аккредитации'] || row['статус аккредитации'] || 'active'),
-            notes: String(row['Примечания'] || row['примечания'] || row['Комментарий'] || row['комментарий'] || '').trim(),
+            status: this.parseStatus(this.findFieldValue(row, ['Статус', 'статус', 'Статус аккредитации', 'статус аккредитации'], 'active')),
+            notes: this.findFieldValue(row, ['Примечания', 'примечания', 'Комментарий', 'комментарий'], ''),
           };
 
+          // Очищаем пустые строки и обрабатываем ИНН
+          if (companyData.inn) {
+            companyData.inn = String(companyData.inn).split('/')[0].trim();
+          }
+          if (companyData.ogrn) companyData.ogrn = String(companyData.ogrn).trim();
+          if (companyData.address) companyData.address = String(companyData.address).trim();
+          if (companyData.phone) companyData.phone = String(companyData.phone).trim();
+          if (companyData.email) companyData.email = String(companyData.email).trim();
+          if (companyData.director) companyData.director = String(companyData.director).trim();
+          if (companyData.notes) companyData.notes = String(companyData.notes).trim();
+
           // Проверяем, не существует ли уже компания с таким ИНН или названием
-          const exists = companies.some(
+          const exists = existingCompanies.some(
             c =>
               (c.inn && companyData.inn && c.inn === companyData.inn) ||
               (companyData.name && c.name.toLowerCase() === companyData.name.toLowerCase())
           );
+          
           if (!exists) {
-            this.create(companyData as Omit<AppraisalCompany, 'id' | 'createdAt' | 'updatedAt'>);
+            const newCompany: AppraisalCompany = {
+              ...companyData,
+              id: crypto.randomUUID(),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            } as AppraisalCompany;
+            newCompanies.push(newCompany);
+            existingCompanies.push(newCompany);
             imported++;
           } else {
             skipped++;
           }
         } catch (error: any) {
-          console.warn('Ошибка обработки строки:', row, error?.message);
+          console.warn('Ошибка обработки строки:', error?.message);
           skipped++;
+        }
+      }
+
+      // Сохраняем все компании одним батчем
+      if (newCompanies.length > 0) {
+        try {
+          this.saveCompanies(existingCompanies);
+          console.log(`Сохранено ${newCompanies.length} компаний в localStorage`);
+        } catch (error: any) {
+          console.error('Ошибка сохранения в localStorage:', error);
+          // Если не хватает места, очищаем и сохраняем только новые
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+            this.saveCompanies(newCompanies);
+            console.log('Очищен localStorage, сохранены только новые компании');
+          } catch (e) {
+            console.error('Критическая ошибка сохранения:', e);
+            throw e;
+          }
         }
       }
 
@@ -182,6 +236,16 @@ class AppraisalCompanyService {
     return undefined;
   }
 
+  // Вспомогательная функция для поиска значения поля по разным вариантам названий
+  private findFieldValue(row: any, fieldNames: string[], defaultValue: any = ''): any {
+    for (const fieldName of fieldNames) {
+      if (row[fieldName] !== undefined && row[fieldName] !== null && row[fieldName] !== '') {
+        return row[fieldName];
+      }
+    }
+    return defaultValue;
+  }
+
   // Парсинг статуса
   private parseStatus(value: string): 'active' | 'suspended' | 'revoked' {
     if (!value) return 'active';
@@ -206,7 +270,7 @@ class AppraisalCompanyService {
   }
 
   // Загрузка начальных данных из файла reestr_otsenschikov.xls
-  async loadInitialData(forceReload: boolean = false): Promise<number> {
+  async loadInitialData(forceReload: boolean = false, limit: number = 20): Promise<number> {
     const alreadyLoaded = localStorage.getItem('cms_appraisal_companies_initial_data_loaded');
     if (alreadyLoaded === 'true' && !forceReload) {
       console.log('Начальные данные уже загружены, пропускаем');
@@ -214,17 +278,21 @@ class AppraisalCompanyService {
     }
 
     try {
-      console.log('Начинаем загрузку начальных данных из reestr_otsenschikov.xls...');
+      console.log('Начинаем загрузку начальных данных из reestr_otsenschikov.xls (лимит:', limit, ')...');
       // Пытаемся загрузить файл из public
       const response = await fetch('/reestr_apr/reestr_otsenschikov.xls');
       if (!response.ok) {
-        console.error('Файл reestr_otsenschikov.xls не найден:', response.status, response.statusText);
+        console.error(
+          'Файл reestr_otsenschikov.xls не найден:',
+          response.status,
+          response.statusText
+        );
         return 0;
       }
 
       const blob = await response.blob();
       console.log('Файл загружен, размер:', blob.size, 'байт');
-      
+
       if (blob.size === 0) {
         console.error('Файл пуст');
         return 0;
@@ -233,8 +301,8 @@ class AppraisalCompanyService {
       const file = new File([blob], 'reestr_otsenschikov.xls', {
         type: 'application/vnd.ms-excel',
       });
-      
-      const imported = await this.loadFromExcelFile(file);
+
+      const imported = await this.loadFromExcelFile(file, limit);
       console.log('Импортировано компаний:', imported);
 
       if (imported > 0) {
