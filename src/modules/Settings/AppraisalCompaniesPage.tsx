@@ -73,11 +73,22 @@ export const AppraisalCompaniesPage: React.FC = () => {
   const handleImportFile = async (file: File) => {
     setImportLoading(true);
     try {
+      let imported = 0;
+
+      if (file.name.endsWith('.xls') || file.name.endsWith('.xlsx')) {
+        // Excel формат
+        imported = await appraisalCompanyService.loadFromExcelFile(file);
+        message.success(`Импортировано компаний: ${imported}`);
+        loadCompanies();
+        setImportLoading(false);
+        return false;
+      }
+
       const text = await file.text();
       // Парсинг файла - предполагаем, что это может быть CSV, TSV или JSON
       // Попробуем определить формат
       let companies: Partial<AppraisalCompany>[] = [];
-      
+
       if (file.name.endsWith('.json')) {
         // JSON формат
         companies = JSON.parse(text);
@@ -85,14 +96,17 @@ export const AppraisalCompaniesPage: React.FC = () => {
         // CSV/TSV формат
         const lines = text.split('\n').filter(line => line.trim());
         const headers = lines[0].split(/\t|,/).map(h => h.trim());
-        
+
         for (let i = 1; i < lines.length; i++) {
           const values = lines[i].split(/\t|,/).map(v => v.trim());
           const company: any = {};
           headers.forEach((header, index) => {
             const value = values[index] || '';
             // Маппинг заголовков на поля
-            if (header.toLowerCase().includes('наименование') || header.toLowerCase().includes('название')) {
+            if (
+              header.toLowerCase().includes('наименование') ||
+              header.toLowerCase().includes('название')
+            ) {
               company.name = value;
             } else if (header.toLowerCase().includes('инн')) {
               company.inn = value;
@@ -104,7 +118,10 @@ export const AppraisalCompaniesPage: React.FC = () => {
               company.phone = value;
             } else if (header.toLowerCase().includes('email')) {
               company.email = value;
-            } else if (header.toLowerCase().includes('руководитель') || header.toLowerCase().includes('директор')) {
+            } else if (
+              header.toLowerCase().includes('руководитель') ||
+              header.toLowerCase().includes('директор')
+            ) {
               company.director = value;
             } else if (header.toLowerCase().includes('лицензия')) {
               company.licenseNumber = value;
@@ -120,16 +137,17 @@ export const AppraisalCompaniesPage: React.FC = () => {
           }
         }
       }
-      
+
       // Сохраняем компании
-      let imported = 0;
       for (const companyData of companies) {
         if (companyData.name) {
-          appraisalCompanyService.create(companyData as Omit<AppraisalCompany, 'id' | 'createdAt' | 'updatedAt'>);
+          appraisalCompanyService.create(
+            companyData as Omit<AppraisalCompany, 'id' | 'createdAt' | 'updatedAt'>
+          );
           imported++;
         }
       }
-      
+
       message.success(`Импортировано компаний: ${imported}`);
       loadCompanies();
     } catch (error: any) {
@@ -142,12 +160,12 @@ export const AppraisalCompaniesPage: React.FC = () => {
   };
 
   const uploadProps: UploadProps = {
-    beforeUpload: (file) => {
+    beforeUpload: file => {
       handleImportFile(file);
       return false;
     },
     showUploadList: false,
-    accept: '.csv,.tsv,.txt,.json',
+    accept: '.csv,.tsv,.txt,.json,.xls,.xlsx',
   };
 
   const handleSubmit = (values: any) => {
@@ -238,9 +256,7 @@ export const AppraisalCompaniesPage: React.FC = () => {
       width: 150,
       render: (_: any, record: AppraisalCompany) => (
         <div>
-          {record.licenseNumber && (
-            <div style={{ fontSize: '12px' }}>№ {record.licenseNumber}</div>
-          )}
+          {record.licenseNumber && <div style={{ fontSize: '12px' }}>№ {record.licenseNumber}</div>}
           {record.licenseExpiryDate && (
             <div style={{ fontSize: '11px', color: '#888' }}>
               до {new Date(record.licenseExpiryDate).toLocaleDateString('ru-RU')}
@@ -402,4 +418,3 @@ export const AppraisalCompaniesPage: React.FC = () => {
     </div>
   );
 };
-
