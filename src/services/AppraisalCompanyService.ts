@@ -10,7 +10,30 @@ class AppraisalCompanyService {
   }
 
   private saveCompanies(companies: AppraisalCompany[]): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(companies));
+    try {
+      // Сначала удаляем старый ключ, чтобы освободить место
+      localStorage.removeItem(STORAGE_KEY);
+      // Теперь сохраняем новые данные
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(companies));
+    } catch (error: any) {
+      // Если все еще ошибка, пробуем очистить все связанные ключи
+      if (error.name === 'QuotaExceededError') {
+        console.warn('Очищаем localStorage для освобождения места...');
+        // Удаляем все ключи, связанные с appraisal companies
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes('appraisal') || key.includes('cms_'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        // Пробуем снова
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(companies));
+      } else {
+        throw error;
+      }
+    }
   }
 
   getAll(): AppraisalCompany[] {
@@ -55,7 +78,11 @@ class AppraisalCompanyService {
   }
 
   // Загрузка данных из Excel файла
-  async loadFromExcelFile(file: File, limit: number = 20, clearExisting: boolean = false): Promise<number> {
+  async loadFromExcelFile(
+    file: File,
+    limit: number = 20,
+    clearExisting: boolean = false
+  ): Promise<number> {
     try {
       console.log('Парсинг Excel файла:', file.name, file.size);
       const data = await file.arrayBuffer();
@@ -70,11 +97,11 @@ class AppraisalCompanyService {
       }
 
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      
+
       // Пробуем найти строку с заголовками (ищем строку с текстом "Наименование" или похожим)
       let headerRow = 0;
       const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-      
+
       // Ищем строку заголовка (первые 10 строк)
       for (let row = 0; row < Math.min(10, range.e.r + 1); row++) {
         const rowData: any[] = [];
@@ -101,7 +128,7 @@ class AppraisalCompanyService {
         // Создаем новый диапазон, начиная с найденной строки заголовка
         const newRange = XLSX.utils.encode_range({
           s: { r: headerRow, c: 0 },
-          e: range.e
+          e: range.e,
         });
         worksheet['!ref'] = newRange;
         jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
@@ -129,6 +156,10 @@ class AppraisalCompanyService {
       console.log(`Обрабатываем первые ${rowsToProcess.length} строк из ${jsonData.length}`);
 
       // Если нужно очистить существующие данные, делаем это перед импортом
+      if (clearExisting) {
+        console.log('Очищаем существующие данные перед импортом...');
+        localStorage.removeItem(STORAGE_KEY);
+      }
       const existingCompanies = clearExisting ? [] : this.getCompanies();
       const newCompanies: AppraisalCompany[] = [];
       let imported = 0;
@@ -296,35 +327,62 @@ class AppraisalCompanyService {
         try {
           // Сохраняем только новые компании, если не очищаем существующие
           const companiesToSave = clearExisting ? newCompanies : existingCompanies;
-          
+
           // Проверяем размер данных перед сохранением
           const dataToSave = JSON.stringify(companiesToSave);
           const dataSize = new Blob([dataToSave]).size;
           console.log(`Размер данных для сохранения: ${(dataSize / 1024).toFixed(2)} KB`);
-          
-          // Если данные слишком большие, сохраняем только новые
-          if (dataSize > 4 * 1024 * 1024) { // 4MB лимит
-            console.warn('Данные слишком большие, сохраняем только новые компании');
-            this.saveCompanies(newCompanies);
-          } else {
-            this.saveCompanies(companiesToSave);
-          }
+
+          // Всегда сохраняем через saveCompanies, который сам обработает очистку
+          this.saveCompanies(companiesToSave);
           console.log(`Сохранено ${companiesToSave.length} компаний в localStorage`);
         } catch (error: any) {
           console.error('Ошибка сохранения в localStorage:', error);
-          // Если не хватает места, очищаем и сохраняем только новые
+          // Если не хватает места, пробуем очистить все связанные ключи и сохранить только новые
           try {
-            localStorage.removeItem(STORAGE_KEY);
+            console.warn('Пробуем очистить localStorage и сохранить только новые компании...');
+            // Очищаем все ключи, связанные с appraisal
+            const keysToRemove: string[] = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.includes('appraisal')) {
+                keysToRemove.push(key);
+              }
+            }
+            keysToRemove.forEach(key => {
+              console.log(`Удаляем ключ: ${key}`);
+              localStorage.removeItem(key);
+            });
+            
+            // Пробуем сохранить только новые компании
             this.saveCompanies(newCompanies);
             console.log('Очищен localStorage, сохранены только новые компании');
-          } catch (e) {
+          } catch (e: any) {
             console.error('Критическая ошибка сохранения:', e);
             // Последняя попытка - сохраняем только первые 10 компаний
             try {
+              console.warn('Пробуем сохранить только первые 10 компаний...');
+              // Полная очистка всех ключей с appraisal
+              for (let i = localStorage.length - 1; i >= 0; i--) {
+                const key = localStorage.key(i);
+                if (key && key.includes('appraisal')) {
+                  localStorage.removeItem(key);
+                }
+              }
               this.saveCompanies(newCompanies.slice(0, 10));
               console.log('Сохранены только первые 10 компаний из-за ограничений localStorage');
             } catch (finalError) {
               console.error('Невозможно сохранить данные:', finalError);
+              // Показываем информацию о занятом месте
+              let totalSize = 0;
+              for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key) {
+                  const value = localStorage.getItem(key) || '';
+                  totalSize += key.length + value.length;
+                }
+              }
+              console.error(`Общий размер localStorage: ${(totalSize / 1024).toFixed(2)} KB`);
               throw finalError;
             }
           }
