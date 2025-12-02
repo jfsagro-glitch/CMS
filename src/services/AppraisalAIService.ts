@@ -136,35 +136,44 @@ const normalizeEstimate = (raw: any): AppraisalEstimate => {
   }
 
   const toNumber = (value: any, defaultValue: number) => {
-    const num = Number(
-      typeof value === 'string' ? value.replace(/[^0-9.-]+/g, '') : value
-    );
+    const num = Number(typeof value === 'string' ? value.replace(/[^0-9.-]+/g, '') : value);
     return Number.isFinite(num) && num > 0 ? num : defaultValue;
   };
 
   const marketValue = toNumber(raw.marketValue ?? raw.market_price, 0);
   const collateralValue = toNumber(raw.collateralValue ?? raw.secured_value, marketValue * 0.7);
-  const recommendedLtv = toNumber(raw.recommendedLtv ?? raw.ltv ?? (collateralValue / (marketValue || 1)) * 100, 70);
+  const recommendedLtv = toNumber(
+    raw.recommendedLtv ?? raw.ltv ?? (collateralValue / (marketValue || 1)) * 100,
+    70
+  );
 
   // Проверяем, что ИИ вернул валидные значения
   if (marketValue === 0 || collateralValue === 0) {
-    throw new Error('ИИ не смог рассчитать стоимость объекта. Убедитесь, что предоставлены все необходимые данные и попробуйте повторить запрос.');
+    throw new Error(
+      'ИИ не смог рассчитать стоимость объекта. Убедитесь, что предоставлены все необходимые данные и попробуйте повторить запрос.'
+    );
   }
 
   // Обрабатываем comparables - извлекаем URL из строк или используем объекты
   const processComparables = (comparables: any): (string | ComparableItem)[] | undefined => {
     if (!Array.isArray(comparables)) return undefined;
-    
+
     return comparables.map((item: any) => {
       if (typeof item === 'string') {
         // Пытаемся извлечь URL из строки (улучшенное регулярное выражение)
         // Ищем URL, который может заканчиваться на различные символы
         // Внутри символьного класса [] не нужно экранировать скобки
-        const urlMatch = item.match(/(https?:\/\/[^\s)\]}>"]+)/);
+        // Используем RegExp для избежания проблем с экранированием
+        const urlPattern = /https?:\/\/[^\s)\]}>"]+/;
+        const urlMatch = item.match(urlPattern);
         if (urlMatch) {
           const url = urlMatch[0].replace(/[.,;:!?]+$/, ''); // Убираем пунктуацию в конце URL
           return {
-            description: item.replace(urlMatch[0], '').trim().replace(/\s*-\s*$/, '').trim(),
+            description: item
+              .replace(urlMatch[0], '')
+              .trim()
+              .replace(/\s*-\s*$/, '')
+              .trim(),
             url: url,
           } as ComparableItem;
         }
@@ -182,12 +191,19 @@ const normalizeEstimate = (raw: any): AppraisalEstimate => {
   };
 
   const result = {
-    summary: raw.summary || raw.justification || raw.analysis || 'Проанализируйте объект дополнительными методами.',
+    summary:
+      raw.summary ||
+      raw.justification ||
+      raw.analysis ||
+      'Проанализируйте объект дополнительными методами.',
     marketValue,
     collateralValue,
     recommendedLtv: Math.min(100, Math.max(0, Math.round(recommendedLtv))),
     confidence: (raw.confidence as AppraisalConfidence) || 'medium',
-    methodology: raw.methodology || raw.method || 'Комплексный анализ с использованием доступных методов оценки',
+    methodology:
+      raw.methodology ||
+      raw.method ||
+      'Комплексный анализ с использованием доступных методов оценки',
     riskFactors: Array.isArray(raw.riskFactors) ? raw.riskFactors : [],
     recommendedActions: Array.isArray(raw.recommendations) ? raw.recommendations : [],
     assumptions: Array.isArray(raw.assumptions) ? raw.assumptions : [],
@@ -199,10 +215,7 @@ const normalizeEstimate = (raw: any): AppraisalEstimate => {
 
 export const AppraisalAIService = {
   async generateEstimate(input: AppraisalRequestInput): Promise<AppraisalEstimate> {
-    const contextParts: string[] = [
-      `Категория: ${input.assetGroup}`,
-      `Тип: ${input.assetType}`,
-    ];
+    const contextParts: string[] = [`Категория: ${input.assetGroup}`, `Тип: ${input.assetType}`];
 
     if (input.location) contextParts.push(`Локация: ${input.location}`);
     if (input.area) contextParts.push(`Площадь/объём: ${input.area}${input.areaUnit || 'м²'}`);
@@ -215,7 +228,9 @@ export const AppraisalAIService = {
     if (input.card) {
       const card = input.card;
       contextParts.push(
-        `Данные карточки: статус ${card.status}, категория ${card.mainCategory}, оценка ${card.marketValue || '—'}, залоговая ${card.pledgeValue || '—'}`
+        `Данные карточки: статус ${card.status}, категория ${card.mainCategory}, оценка ${
+          card.marketValue || '—'
+        }, залоговая ${card.pledgeValue || '—'}`
       );
       if (card.address?.fullAddress) {
         contextParts.push(`Адрес из карточки: ${card.address.fullAddress}`);
@@ -232,10 +247,10 @@ export const AppraisalAIService = {
 
     // Получаем актуальную дату для инструкции
     const currentDate = new Date();
-    const currentDateStr = currentDate.toLocaleDateString('ru-RU', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const currentDateStr = currentDate.toLocaleDateString('ru-RU', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth() + 1;
@@ -281,43 +296,69 @@ export const AppraisalAIService = {
     if (input.skills) {
       const skills = input.skills;
       const approachParts: string[] = [];
-      
+
       if (skills.incomeApproach > 0) {
         approachParts.push(`Доходный подход (приоритет: ${skills.incomeApproach}%):`);
-        if (skills.incomeMethods.dcf > 50) approachParts.push(`- Дисконтирование денежных потоков (DCF) - приоритет ${skills.incomeMethods.dcf}%`);
-        if (skills.incomeMethods.directCapitalization > 50) approachParts.push(`- Прямая капитализация - приоритет ${skills.incomeMethods.directCapitalization}%`);
-        if (skills.incomeMethods.grossRentMultiplier > 50) approachParts.push(`- Множитель валового дохода - приоритет ${skills.incomeMethods.grossRentMultiplier}%`);
+        if (skills.incomeMethods.dcf > 50)
+          approachParts.push(
+            `- Дисконтирование денежных потоков (DCF) - приоритет ${skills.incomeMethods.dcf}%`
+          );
+        if (skills.incomeMethods.directCapitalization > 50)
+          approachParts.push(
+            `- Прямая капитализация - приоритет ${skills.incomeMethods.directCapitalization}%`
+          );
+        if (skills.incomeMethods.grossRentMultiplier > 50)
+          approachParts.push(
+            `- Множитель валового дохода - приоритет ${skills.incomeMethods.grossRentMultiplier}%`
+          );
       }
-      
+
       if (skills.comparativeApproach > 0) {
         approachParts.push(`Сравнительный подход (приоритет: ${skills.comparativeApproach}%):`);
-        if (skills.comparativeMethods.salesComparison > 50) approachParts.push(`- Сравнение продаж - приоритет ${skills.comparativeMethods.salesComparison}%`);
-        if (skills.comparativeMethods.marketExtraction > 50) approachParts.push(`- Извлечение из рынка - приоритет ${skills.comparativeMethods.marketExtraction}%`);
+        if (skills.comparativeMethods.salesComparison > 50)
+          approachParts.push(
+            `- Сравнение продаж - приоритет ${skills.comparativeMethods.salesComparison}%`
+          );
+        if (skills.comparativeMethods.marketExtraction > 50)
+          approachParts.push(
+            `- Извлечение из рынка - приоритет ${skills.comparativeMethods.marketExtraction}%`
+          );
       }
-      
+
       if (skills.costApproach > 0) {
         approachParts.push(`Затратный подход (приоритет: ${skills.costApproach}%):`);
-        if (skills.costMethods.replacementCost > 50) approachParts.push(`- Стоимость замещения - приоритет ${skills.costMethods.replacementCost}%`);
-        if (skills.costMethods.reproductionCost > 50) approachParts.push(`- Стоимость воспроизводства - приоритет ${skills.costMethods.reproductionCost}%`);
-        if (skills.costMethods.depreciation > 50) approachParts.push(`- Учет износа - приоритет ${skills.costMethods.depreciation}%`);
+        if (skills.costMethods.replacementCost > 50)
+          approachParts.push(
+            `- Стоимость замещения - приоритет ${skills.costMethods.replacementCost}%`
+          );
+        if (skills.costMethods.reproductionCost > 50)
+          approachParts.push(
+            `- Стоимость воспроизводства - приоритет ${skills.costMethods.reproductionCost}%`
+          );
+        if (skills.costMethods.depreciation > 50)
+          approachParts.push(`- Учет износа - приоритет ${skills.costMethods.depreciation}%`);
       }
-      
+
       if (approachParts.length > 0) {
-        instruction += `\n\nНастройки приоритетов методов оценки:\n${approachParts.join('\n')}\n\nИспользуй указанные методы и приоритеты при расчете оценки.`;
+        instruction += `\n\nНастройки приоритетов методов оценки:\n${approachParts.join(
+          '\n'
+        )}\n\nИспользуй указанные методы и приоритеты при расчете оценки.`;
       }
     }
 
     // Делаем несколько попыток получения ответа от ИИ
     let lastError: Error | null = null;
     const maxRetries = 3;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const response = await deepSeekService.chat(
           [
             {
               role: 'user',
-              content: `Оцени объект "${input.objectName}" и верни ТОЛЬКО валидный JSON без дополнительного текста. ОБЯЗАТЕЛЬНО используй все доступные методы оценки (доходный, сравнительный, затратный подходы) и проведи комплексный анализ. Не используй эвристические расчеты.
+              content: `Оцени объект "${
+                input.objectName
+              }" и верни ТОЛЬКО валидный JSON без дополнительного текста. ОБЯЗАТЕЛЬНО используй все доступные методы оценки (доходный, сравнительный, затратный подходы) и проведи комплексный анализ. Не используй эвристические расчеты.
 
 Данные:
 ${contextParts.join('\n')}
@@ -325,36 +366,41 @@ ${contextParts.join('\n')}
 Верни ответ в формате чистого JSON, начиная с { и заканчивая }. Без markdown блоков, без пояснений.`,
             },
           ],
-          instruction + '\n\nВАЖНО: Всегда используй профессиональные методы оценки (доходный, сравнительный, затратный подходы). Никогда не используй эвристические расчеты. Если данных недостаточно, сделай профессиональные допущения и четко укажи их в assumptions.\n\nКРИТИЧЕСКИ ВАЖНО: Верни ТОЛЬКО JSON объект, без markdown разметки (```json), без пояснений до или после JSON. Начни ответ сразу с { и закончи }.'
+          instruction +
+            '\n\nВАЖНО: Всегда используй профессиональные методы оценки (доходный, сравнительный, затратный подходы). Никогда не используй эвристические расчеты. Если данных недостаточно, сделай профессиональные допущения и четко укажи их в assumptions.\n\nКРИТИЧЕСКИ ВАЖНО: Верни ТОЛЬКО JSON объект, без markdown разметки (```json), без пояснений до или после JSON. Начни ответ сразу с { и закончи }.'
         );
 
         const parsed = parseJsonFromResponse(response);
         if (!parsed) {
           throw new Error('ИИ не вернул JSON в ответе');
         }
-        
+
         const estimate = normalizeEstimate(parsed);
         learningService.addCategoryExperience('appraisal', 4);
         return estimate;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        console.error(`Ошибка генерации оценки через AI (попытка ${attempt}/${maxRetries}):`, error);
-        
+        console.error(
+          `Ошибка генерации оценки через AI (попытка ${attempt}/${maxRetries}):`,
+          error
+        );
+
         // Если это последняя попытка, выбрасываем ошибку
         if (attempt === maxRetries) {
           learningService.addCategoryExperience('appraisal', 1);
-          throw new Error(`Не удалось получить оценку от ИИ после ${maxRetries} попыток. ${lastError.message}. Пожалуйста, проверьте данные и попробуйте еще раз.`);
+          throw new Error(
+            `Не удалось получить оценку от ИИ после ${maxRetries} попыток. ${lastError.message}. Пожалуйста, проверьте данные и попробуйте еще раз.`
+          );
         }
-        
+
         // Ждем перед следующей попыткой
         await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
       }
     }
-    
+
     // Этот код не должен выполниться, но на всякий случай
     throw lastError || new Error('Неизвестная ошибка при генерации оценки');
   },
 };
 
 export default AppraisalAIService;
-

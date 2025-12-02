@@ -16,6 +16,7 @@ import {
   Tooltip,
   Typography,
   message,
+  Tabs,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -30,6 +31,7 @@ import type { CollateralConclusion } from '@/types/collateralConclusion';
 import { useNavigate } from 'react-router-dom';
 import CreateConclusionModal from './CreateConclusionModal';
 import CollateralConclusionCard from '@/components/CollateralConclusionCard/CollateralConclusionCard';
+import { AppraisalReviewsList } from './AppraisalReviewsList';
 import './CollateralConclusionsPage.css';
 
 type ConclusionRow = CollateralConclusion & { key: string };
@@ -251,201 +253,219 @@ const CollateralConclusionsPage: React.FC = () => {
 
   return (
     <div className="collateral-conclusions-page">
-      <div className="conclusions-header">
-        <div>
-          <Typography.Title level={2} className="conclusions-title">
-            Залоговые заключения
-          </Typography.Title>
-          <Typography.Paragraph className="conclusions-subtitle">
-            Реестр залоговых заключений по сделкам
-          </Typography.Paragraph>
-        </div>
-        <Space size="middle">
-          <Input
-            allowClear
-            size="large"
-            placeholder="Поиск по номеру, REFERENCE, залогодателю..."
-            prefix={<SearchOutlined />}
-            value={searchValue}
-            onChange={e => setSearchValue(e.target.value)}
-            style={{ width: 400 }}
-          />
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            size="large"
-            onClick={() => setCreateModalVisible(true)}
-          >
-            Создать заключение
-          </Button>
-        </Space>
-      </div>
+      <Tabs
+        defaultActiveKey="conclusions"
+        items={[
+          {
+            key: 'conclusions',
+            label: 'Залоговые заключения',
+            children: (
+              <>
+                <div className="conclusions-header">
+                  <div>
+                    <Typography.Title level={2} className="conclusions-title">
+                      Залоговые заключения
+                    </Typography.Title>
+                    <Typography.Paragraph className="conclusions-subtitle">
+                      Реестр залоговых заключений по сделкам
+                    </Typography.Paragraph>
+                  </div>
+                  <Space size="middle">
+                    <Input
+                      allowClear
+                      size="large"
+                      placeholder="Поиск по номеру, REFERENCE, залогодателю..."
+                      prefix={<SearchOutlined />}
+                      value={searchValue}
+                      onChange={e => setSearchValue(e.target.value)}
+                      style={{ width: 400 }}
+                    />
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      size="large"
+                      onClick={() => setCreateModalVisible(true)}
+                    >
+                      Создать заключение
+                    </Button>
+                  </Space>
+                </div>
 
-      <Card>
-        <div className="conclusions-filters">
-          <Select
-            allowClear
-            placeholder="Статус"
-            style={{ width: 200 }}
-            options={[
-              { label: 'Черновик', value: 'Черновик' },
-              { label: 'На согласовании', value: 'На согласовании' },
-              { label: 'Согласовано', value: 'Согласовано' },
-              { label: 'Отклонено', value: 'Отклонено' },
-              { label: 'Аннулировано', value: 'Аннулировано' },
-            ]}
-            value={statusFilter ?? undefined}
-            onChange={v => setStatusFilter(v ?? null)}
-          />
-          <Select
-            allowClear
-            placeholder="Тип заключения"
-            style={{ width: 200 }}
-            options={[
-              { label: 'Первичное', value: 'Первичное' },
-              { label: 'Повторное', value: 'Повторное' },
-              { label: 'Дополнительное', value: 'Дополнительное' },
-              { label: 'Переоценка', value: 'Переоценка' },
-            ]}
-            value={typeFilter ?? undefined}
-            onChange={v => setTypeFilter(v ?? null)}
-          />
-        </div>
-      </Card>
+                <Card>
+                  <div className="conclusions-filters">
+                    <Select
+                      allowClear
+                      placeholder="Статус"
+                      style={{ width: 200 }}
+                      options={[
+                        { label: 'Черновик', value: 'Черновик' },
+                        { label: 'На согласовании', value: 'На согласовании' },
+                        { label: 'Согласовано', value: 'Согласовано' },
+                        { label: 'Отклонено', value: 'Отклонено' },
+                        { label: 'Аннулировано', value: 'Аннулировано' },
+                      ]}
+                      value={statusFilter ?? undefined}
+                      onChange={v => setStatusFilter(v ?? null)}
+                    />
+                    <Select
+                      allowClear
+                      placeholder="Тип заключения"
+                      style={{ width: 200 }}
+                      options={[
+                        { label: 'Первичное', value: 'Первичное' },
+                        { label: 'Повторное', value: 'Повторное' },
+                        { label: 'Дополнительное', value: 'Дополнительное' },
+                        { label: 'Переоценка', value: 'Переоценка' },
+                      ]}
+                      value={typeFilter ?? undefined}
+                      onChange={v => setTypeFilter(v ?? null)}
+                    />
+                  </div>
+                </Card>
 
-      <Row gutter={[16, 16]} className="conclusions-stats">
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Всего заключений" value={stats.total} prefix={<FileTextOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Черновики" value={stats.draft} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="На согласовании" value={stats.pending} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Согласовано" value={stats.approved} />
-          </Card>
-        </Col>
-      </Row>
+                <Row gutter={[16, 16]} className="conclusions-stats">
+                  <Col xs={24} sm={12} md={6}>
+                    <Card>
+                      <Statistic title="Всего заключений" value={stats.total} prefix={<FileTextOutlined />} />
+                    </Card>
+                  </Col>
+                  <Col xs={24} sm={12} md={6}>
+                    <Card>
+                      <Statistic title="Черновики" value={stats.draft} />
+                    </Card>
+                  </Col>
+                  <Col xs={24} sm={12} md={6}>
+                    <Card>
+                      <Statistic title="На согласовании" value={stats.pending} />
+                    </Card>
+                  </Col>
+                  <Col xs={24} sm={12} md={6}>
+                    <Card>
+                      <Statistic title="Согласовано" value={stats.approved} />
+                    </Card>
+                  </Col>
+                </Row>
 
-      <Card className="conclusions-table-card" bodyStyle={{ padding: 0 }}>
-        <Table
-          columns={columns}
-          dataSource={filteredConclusions}
-          pagination={{ pageSize: 10, showSizeChanger: true }}
-          scroll={{ x: 1400 }}
-          loading={loading}
-          onRow={record => ({
-            onDoubleClick: () => handleViewConclusion(record),
-          })}
-          locale={{
-            emptyText: (
-              <Empty
-                description="Нет заключений, удовлетворяющих фильтрам"
-                className="conclusions-empty"
-              />
-            ),
-          }}
-        />
-      </Card>
+                <Card className="conclusions-table-card" bodyStyle={{ padding: 0 }}>
+                  <Table
+                    columns={columns}
+                    dataSource={filteredConclusions}
+                    pagination={{ pageSize: 10, showSizeChanger: true }}
+                    scroll={{ x: 1400 }}
+                    loading={loading}
+                    onRow={record => ({
+                      onDoubleClick: () => handleViewConclusion(record),
+                    })}
+                    locale={{
+                      emptyText: (
+                        <Empty
+                          description="Нет заключений, удовлетворяющих фильтрам"
+                          className="conclusions-empty"
+                        />
+                      ),
+                    }}
+                  />
+                </Card>
 
-      {error && (
-        <Alert
-          type="error"
-          showIcon
-          message="Не удалось загрузить данные заключений"
-          description={error}
-          action={
-            <a onClick={() => window.location.reload()} style={{ fontWeight: 600 }}>
-              Повторить
-            </a>
-          }
-        />
-      )}
-
-          <Modal
-            title={
-              <Space>
-                <FileTextOutlined />
-                <span>Залоговое заключение {selectedConclusion?.conclusionNumber}</span>
-                {selectedConclusion && (
-                  <Tag
-                    color={
-                      selectedConclusion.status === 'Согласовано'
-                        ? 'green'
-                        : selectedConclusion.status === 'На согласовании'
-                          ? 'blue'
-                          : selectedConclusion.status === 'Отклонено' || selectedConclusion.status === 'Аннулировано'
-                            ? 'red'
-                            : 'default'
+                {error && (
+                  <Alert
+                    type="error"
+                    showIcon
+                    message="Не удалось загрузить данные заключений"
+                    description={error}
+                    action={
+                      <a onClick={() => window.location.reload()} style={{ fontWeight: 600 }}>
+                        Повторить
+                      </a>
                     }
-                  >
-                    {selectedConclusion.status}
-                  </Tag>
+                  />
                 )}
-              </Space>
-            }
-            open={modalVisible}
-            onCancel={() => setModalVisible(false)}
-            footer={[
-              <Button
-                key="dossier"
-                icon={<FolderOpenOutlined />}
-                onClick={() => {
-                  if (selectedConclusion) {
-                    handleGoToDossier(selectedConclusion.reference, selectedConclusion.pledger);
-                  }
-                }}
-              >
-                Залоговое досье
-              </Button>,
-              <Button
-                key="pledger"
-                icon={<UserOutlined />}
-                onClick={() => {
-                  if (selectedConclusion) {
-                    handleGoToPledger(selectedConclusion.pledger, selectedConclusion.reference);
-                  }
-                }}
-              >
-                Залогодатель
-              </Button>,
-              <Button key="close" type="primary" onClick={() => setModalVisible(false)}>
-                Закрыть
-              </Button>,
-            ]}
-            width="95%"
-            style={{ top: 10 }}
-            styles={{ body: { maxHeight: '80vh', overflowY: 'auto', padding: '16px' } }}
-          >
-            {selectedConclusion && (
-              <CollateralConclusionCard
-                conclusion={selectedConclusion}
-                onEdit={() => {
-                  message.info('Редактирование в разработке');
-                }}
-                onPrint={() => {
-                  window.print();
-                }}
-                onExport={() => {
-                  message.info('Экспорт в разработке');
-                }}
-              />
-            )}
-          </Modal>
 
-      <CreateConclusionModal
-        visible={createModalVisible}
-        onCancel={() => setCreateModalVisible(false)}
-        onSuccess={handleCreateSuccess}
+                <Modal
+                  title={
+                    <Space>
+                      <FileTextOutlined />
+                      <span>Залоговое заключение {selectedConclusion?.conclusionNumber}</span>
+                      {selectedConclusion && (
+                        <Tag
+                          color={
+                            selectedConclusion.status === 'Согласовано'
+                              ? 'green'
+                              : selectedConclusion.status === 'На согласовании'
+                                ? 'blue'
+                                : selectedConclusion.status === 'Отклонено' || selectedConclusion.status === 'Аннулировано'
+                                  ? 'red'
+                                  : 'default'
+                          }
+                        >
+                          {selectedConclusion.status}
+                        </Tag>
+                      )}
+                    </Space>
+                  }
+                  open={modalVisible}
+                  onCancel={() => setModalVisible(false)}
+                  footer={[
+                    <Button
+                      key="dossier"
+                      icon={<FolderOpenOutlined />}
+                      onClick={() => {
+                        if (selectedConclusion) {
+                          handleGoToDossier(selectedConclusion.reference, selectedConclusion.pledger);
+                        }
+                      }}
+                    >
+                      Залоговое досье
+                    </Button>,
+                    <Button
+                      key="pledger"
+                      icon={<UserOutlined />}
+                      onClick={() => {
+                        if (selectedConclusion) {
+                          handleGoToPledger(selectedConclusion.pledger, selectedConclusion.reference);
+                        }
+                      }}
+                    >
+                      Залогодатель
+                    </Button>,
+                    <Button key="close" type="primary" onClick={() => setModalVisible(false)}>
+                      Закрыть
+                    </Button>,
+                  ]}
+                  width="95%"
+                  style={{ top: 10 }}
+                  styles={{ body: { maxHeight: '80vh', overflowY: 'auto', padding: '16px' } }}
+                >
+                  {selectedConclusion && (
+                    <CollateralConclusionCard
+                      conclusion={selectedConclusion}
+                      onEdit={() => {
+                        message.info('Редактирование в разработке');
+                      }}
+                      onPrint={() => {
+                        window.print();
+                      }}
+                      onExport={() => {
+                        message.info('Экспорт в разработке');
+                      }}
+                    />
+                  )}
+                </Modal>
+
+                <CreateConclusionModal
+                  visible={createModalVisible}
+                  onCancel={() => setCreateModalVisible(false)}
+                  onSuccess={handleCreateSuccess}
+                />
+              </>
+            ),
+          },
+          {
+            key: 'reviews',
+            label: 'Рецензии на отчеты об оценке',
+            children: <AppraisalReviewsList />,
+          },
+        ]}
       />
     </div>
   );
