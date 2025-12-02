@@ -219,6 +219,7 @@ class AppraisalCompanyService {
             ),
             phone: this.findFieldValue(row, ['Телефон', 'телефон', 'Тел', 'тел'], ''),
             email: this.findFieldValue(row, ['Email', 'email', 'E-mail', 'e-mail'], ''),
+            website: this.findFieldValue(row, ['Сайт', 'сайт', 'Website', 'website', 'Веб-сайт', 'веб-сайт', 'Адрес сайта', 'адрес сайта'], ''),
             director: this.findFieldValue(
               row,
               [
@@ -293,6 +294,7 @@ class AppraisalCompanyService {
           if (companyData.address) companyData.address = String(companyData.address).trim();
           if (companyData.phone) companyData.phone = String(companyData.phone).trim();
           if (companyData.email) companyData.email = String(companyData.email).trim();
+          if (companyData.website) companyData.website = String(companyData.website).trim();
           if (companyData.director) companyData.director = String(companyData.director).trim();
           if (companyData.notes) companyData.notes = String(companyData.notes).trim();
 
@@ -353,7 +355,7 @@ class AppraisalCompanyService {
               console.log(`Удаляем ключ: ${key}`);
               localStorage.removeItem(key);
             });
-            
+
             // Пробуем сохранить только новые компании
             this.saveCompanies(newCompanies);
             console.log('Очищен localStorage, сохранены только новые компании');

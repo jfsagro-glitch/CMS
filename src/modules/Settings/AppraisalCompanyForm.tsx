@@ -124,8 +124,8 @@ export const AppraisalCompanyForm: React.FC<AppraisalCompanyFormProps> = ({
                 </Form.Item>
               </Col>
             </Row>
-            <Form.Item name="director" label="Руководитель">
-              <Input placeholder="ФИО руководителя" />
+            <Form.Item name="website" label="Сайт">
+              <Input placeholder="https://www.company.ru" />
             </Form.Item>
           </Col>
         </Row>

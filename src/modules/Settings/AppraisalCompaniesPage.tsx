@@ -215,9 +215,9 @@ export const AppraisalCompaniesPage: React.FC = () => {
         [
           company.name,
           company.inn,
-          company.ogrn,
           company.address,
-          company.director,
+          company.phone,
+          company.website,
         ]
           .filter(Boolean)
           .some(val => String(val).toLowerCase().includes(search))
@@ -252,22 +252,31 @@ export const AppraisalCompaniesPage: React.FC = () => {
       width: 120,
     },
     {
-      title: 'ОГРН',
-      dataIndex: 'ogrn',
-      key: 'ogrn',
-      width: 120,
-    },
-    {
       title: 'Адрес',
       dataIndex: 'address',
       key: 'address',
       ellipsis: true,
+      width: 300,
     },
     {
-      title: 'Руководитель',
-      dataIndex: 'director',
-      key: 'director',
+      title: 'Сайт',
+      dataIndex: 'website',
+      key: 'website',
       width: 200,
+      render: (website: string) =>
+        website ? (
+          <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">
+            {website}
+          </a>
+        ) : (
+          <span style={{ color: '#999' }}>—</span>
+        ),
+    },
+    {
+      title: 'Телефон',
+      dataIndex: 'phone',
+      key: 'phone',
+      width: 150,
     },
     {
       title: 'Срок действия сертификатов',
@@ -380,7 +389,7 @@ export const AppraisalCompaniesPage: React.FC = () => {
         <Input
           allowClear
           size="large"
-          placeholder="Поиск по названию, ИНН, ОГРН, адресу..."
+          placeholder="Поиск по названию, ИНН, адресу, телефону, сайту..."
           prefix={<SearchOutlined />}
           value={searchValue}
           onChange={e => setSearchValue(e.target.value)}

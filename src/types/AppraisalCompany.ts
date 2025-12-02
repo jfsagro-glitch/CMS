@@ -6,6 +6,7 @@ export interface AppraisalCompany {
   address?: string; // Адрес
   phone?: string; // Телефон
   email?: string; // Email
+  website?: string; // Сайт
   director?: string; // Руководитель
   status?: 'active' | 'suspended' | 'revoked'; // Статус аккредитации
   accreditationDate?: string; // Дата аккредитации
