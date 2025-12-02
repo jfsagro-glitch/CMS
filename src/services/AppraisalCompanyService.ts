@@ -55,7 +55,7 @@ class AppraisalCompanyService {
   }
 
   // Загрузка данных из Excel файла
-  async loadFromExcelFile(file: File, limit: number = 20): Promise<number> {
+  async loadFromExcelFile(file: File, limit: number = 20, clearExisting: boolean = false): Promise<number> {
     try {
       console.log('Парсинг Excel файла:', file.name, file.size);
       const data = await file.arrayBuffer();
@@ -70,7 +70,46 @@ class AppraisalCompanyService {
       }
 
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+      
+      // Пробуем найти строку с заголовками (ищем строку с текстом "Наименование" или похожим)
+      let headerRow = 0;
+      const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+      
+      // Ищем строку заголовка (первые 10 строк)
+      for (let row = 0; row < Math.min(10, range.e.r + 1); row++) {
+        const rowData: any[] = [];
+        for (let col = 0; col <= Math.min(20, range.e.c); col++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+          const cell = worksheet[cellAddress];
+          if (cell && cell.v) {
+            rowData.push(String(cell.v).toLowerCase());
+          }
+        }
+        // Проверяем, есть ли в строке ключевые слова заголовков
+        const headerKeywords = ['наименование', 'инн', 'огрн', 'адрес', 'руководитель'];
+        if (rowData.some(val => headerKeywords.some(keyword => val.includes(keyword)))) {
+          headerRow = row;
+          console.log(`Найдена строка заголовка: ${row + 1}`);
+          break;
+        }
+      }
+
+      // Парсим с учетом найденной строки заголовка
+      // Если нашли заголовок не в первой строке, создаем новый диапазон
+      let jsonData: any[];
+      if (headerRow > 0) {
+        // Создаем новый диапазон, начиная с найденной строки заголовка
+        const newRange = XLSX.utils.encode_range({
+          s: { r: headerRow, c: 0 },
+          e: range.e
+        });
+        worksheet['!ref'] = newRange;
+        jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+        // Восстанавливаем оригинальный диапазон
+        worksheet['!ref'] = XLSX.utils.encode_range(range);
+      } else {
+        jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+      }
       console.log('Всего строк в файле:', jsonData.length);
 
       if (jsonData.length === 0) {
@@ -89,7 +128,8 @@ class AppraisalCompanyService {
       const rowsToProcess = jsonData.slice(0, limit);
       console.log(`Обрабатываем первые ${rowsToProcess.length} строк из ${jsonData.length}`);
 
-      const existingCompanies = this.getCompanies();
+      // Если нужно очистить существующие данные, делаем это перед импортом
+      const existingCompanies = clearExisting ? [] : this.getCompanies();
       const newCompanies: AppraisalCompany[] = [];
       let imported = 0;
       let skipped = 0;
@@ -252,10 +292,24 @@ class AppraisalCompanyService {
       }
 
       // Сохраняем все компании одним батчем
-      if (newCompanies.length > 0) {
+      if (newCompanies.length > 0 || clearExisting) {
         try {
-          this.saveCompanies(existingCompanies);
-          console.log(`Сохранено ${newCompanies.length} компаний в localStorage`);
+          // Сохраняем только новые компании, если не очищаем существующие
+          const companiesToSave = clearExisting ? newCompanies : existingCompanies;
+          
+          // Проверяем размер данных перед сохранением
+          const dataToSave = JSON.stringify(companiesToSave);
+          const dataSize = new Blob([dataToSave]).size;
+          console.log(`Размер данных для сохранения: ${(dataSize / 1024).toFixed(2)} KB`);
+          
+          // Если данные слишком большие, сохраняем только новые
+          if (dataSize > 4 * 1024 * 1024) { // 4MB лимит
+            console.warn('Данные слишком большие, сохраняем только новые компании');
+            this.saveCompanies(newCompanies);
+          } else {
+            this.saveCompanies(companiesToSave);
+          }
+          console.log(`Сохранено ${companiesToSave.length} компаний в localStorage`);
         } catch (error: any) {
           console.error('Ошибка сохранения в localStorage:', error);
           // Если не хватает места, очищаем и сохраняем только новые
@@ -265,7 +319,14 @@ class AppraisalCompanyService {
             console.log('Очищен localStorage, сохранены только новые компании');
           } catch (e) {
             console.error('Критическая ошибка сохранения:', e);
-            throw e;
+            // Последняя попытка - сохраняем только первые 10 компаний
+            try {
+              this.saveCompanies(newCompanies.slice(0, 10));
+              console.log('Сохранены только первые 10 компаний из-за ограничений localStorage');
+            } catch (finalError) {
+              console.error('Невозможно сохранить данные:', finalError);
+              throw finalError;
+            }
           }
         }
       }
@@ -716,12 +777,14 @@ class AppraisalCompanyService {
 
     // Берем только нужное количество
     const companiesToAdd = demoCompanies.slice(0, count);
-    
+
     // Фильтруем, чтобы не добавлять дубликаты
     const newCompanies = companiesToAdd.filter(
-      demo => !existingCompanies.some(
-        existing => existing.inn === demo.inn || existing.name.toLowerCase() === demo.name.toLowerCase()
-      )
+      demo =>
+        !existingCompanies.some(
+          existing =>
+            existing.inn === demo.inn || existing.name.toLowerCase() === demo.name.toLowerCase()
+        )
     );
 
     if (newCompanies.length > 0) {

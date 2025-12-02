@@ -96,8 +96,8 @@ export const AppraisalCompaniesPage: React.FC = () => {
       let imported = 0;
 
       if (file.name.endsWith('.xls') || file.name.endsWith('.xlsx')) {
-        // Excel формат
-        imported = await appraisalCompanyService.loadFromExcelFile(file);
+        // Excel формат - при ручном импорте очищаем существующие данные
+        imported = await appraisalCompanyService.loadFromExcelFile(file, 20, true);
         message.success(`Импортировано компаний: ${imported}`);
         loadCompanies();
         setImportLoading(false);
