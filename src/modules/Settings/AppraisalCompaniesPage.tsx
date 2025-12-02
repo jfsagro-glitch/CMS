@@ -37,12 +37,24 @@ export const AppraisalCompaniesPage: React.FC = () => {
 
   useEffect(() => {
     const initializeData = async () => {
-      // Загружаем начальные данные из файла, если они еще не загружены
-      const imported = await appraisalCompanyService.loadInitialData();
-      if (imported > 0) {
-        message.success(`Загружено компаний из реестра: ${imported}`);
+      try {
+        // Загружаем начальные данные из файла, если они еще не загружены
+        const imported = await appraisalCompanyService.loadInitialData();
+        if (imported > 0) {
+          message.success(`Загружено компаний из реестра: ${imported}`);
+        } else {
+          // Проверяем, были ли данные загружены ранее
+          const alreadyLoaded = localStorage.getItem('cms_appraisal_companies_initial_data_loaded');
+          if (alreadyLoaded !== 'true') {
+            message.warning('Не удалось загрузить данные из файла. Проверьте консоль для деталей.');
+          }
+        }
+      } catch (error: any) {
+        console.error('Ошибка инициализации данных:', error);
+        message.error(`Ошибка загрузки данных: ${error.message || 'Неизвестная ошибка'}`);
+      } finally {
+        loadCompanies();
       }
-      loadCompanies();
     };
     initializeData();
   }, []);
