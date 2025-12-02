@@ -36,7 +36,15 @@ export const AppraisalCompaniesPage: React.FC = () => {
   const [importLoading, setImportLoading] = useState(false);
 
   useEffect(() => {
-    loadCompanies();
+    const initializeData = async () => {
+      // Загружаем начальные данные из файла, если они еще не загружены
+      const imported = await appraisalCompanyService.loadInitialData();
+      if (imported > 0) {
+        message.success(`Загружено компаний из реестра: ${imported}`);
+      }
+      loadCompanies();
+    };
+    initializeData();
   }, []);
 
   const loadCompanies = () => {
@@ -198,7 +206,6 @@ export const AppraisalCompaniesPage: React.FC = () => {
           company.ogrn,
           company.address,
           company.director,
-          company.licenseNumber,
         ]
           .filter(Boolean)
           .some(val => String(val).toLowerCase().includes(search))
@@ -251,18 +258,36 @@ export const AppraisalCompaniesPage: React.FC = () => {
       width: 200,
     },
     {
-      title: 'Лицензия',
-      key: 'license',
-      width: 150,
-      render: (_: any, record: AppraisalCompany) => (
-        <div>
-          {record.licenseNumber && <div style={{ fontSize: '12px' }}>№ {record.licenseNumber}</div>}
-          {record.licenseExpiryDate && (
-            <div style={{ fontSize: '11px', color: '#888' }}>
-              до {new Date(record.licenseExpiryDate).toLocaleDateString('ru-RU')}
-            </div>
-          )}
-        </div>
+      title: 'Срок действия сертификатов',
+      dataIndex: 'certificateExpiryDate',
+      key: 'certificateExpiryDate',
+      width: 180,
+      render: (date: string) =>
+        date ? (
+          <span>{new Date(date).toLocaleDateString('ru-RU')}</span>
+        ) : (
+          <span style={{ color: '#999' }}>—</span>
+        ),
+    },
+    {
+      title: 'Срок действия страхования',
+      dataIndex: 'insuranceExpiryDate',
+      key: 'insuranceExpiryDate',
+      width: 180,
+      render: (date: string) =>
+        date ? (
+          <span>{new Date(date).toLocaleDateString('ru-RU')}</span>
+        ) : (
+          <span style={{ color: '#999' }}>—</span>
+        ),
+    },
+    {
+      title: 'Членство в СРО',
+      dataIndex: 'sroMembership',
+      key: 'sroMembership',
+      width: 140,
+      render: (value: boolean) => (
+        <Tag color={value ? 'green' : 'default'}>{value ? 'Да' : 'Нет'}</Tag>
       ),
     },
     {

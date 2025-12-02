@@ -8,6 +8,7 @@ import {
   Card,
   Row,
   Col,
+  Checkbox,
 } from 'antd';
 import { AppraisalCompany } from '@/types/AppraisalCompany';
 import dayjs from 'dayjs';
@@ -33,12 +34,14 @@ export const AppraisalCompanyForm: React.FC<AppraisalCompanyFormProps> = ({
     if (initialValues) {
       form.setFieldsValue({
         ...initialValues,
-        licenseDate: initialValues.licenseDate ? dayjs(initialValues.licenseDate) : null,
-        licenseExpiryDate: initialValues.licenseExpiryDate
-          ? dayjs(initialValues.licenseExpiryDate)
-          : null,
         accreditationDate: initialValues.accreditationDate
           ? dayjs(initialValues.accreditationDate)
+          : null,
+        certificateExpiryDate: initialValues.certificateExpiryDate
+          ? dayjs(initialValues.certificateExpiryDate)
+          : null,
+        insuranceExpiryDate: initialValues.insuranceExpiryDate
+          ? dayjs(initialValues.insuranceExpiryDate)
           : null,
       });
     } else {
@@ -52,9 +55,9 @@ export const AppraisalCompanyForm: React.FC<AppraisalCompanyFormProps> = ({
   const handleFinish = (values: any) => {
     const formattedValues = {
       ...values,
-      licenseDate: values.licenseDate ? values.licenseDate.toISOString() : null,
-      licenseExpiryDate: values.licenseExpiryDate ? values.licenseExpiryDate.toISOString() : null,
       accreditationDate: values.accreditationDate ? values.accreditationDate.toISOString() : null,
+      certificateExpiryDate: values.certificateExpiryDate ? values.certificateExpiryDate.toISOString() : null,
+      insuranceExpiryDate: values.insuranceExpiryDate ? values.insuranceExpiryDate.toISOString() : null,
     };
     onSubmit(formattedValues);
   };
@@ -128,21 +131,21 @@ export const AppraisalCompanyForm: React.FC<AppraisalCompanyFormProps> = ({
         </Row>
       </Card>
 
-      <Card title="Лицензия" size="small" style={{ marginBottom: 16 }}>
+      <Card title="Сертификаты и страхование" size="small" style={{ marginBottom: 16 }}>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="licenseNumber" label="Номер лицензии">
-              <Input placeholder="№ лицензии" />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name="licenseDate" label="Дата выдачи">
+            <Form.Item name="certificateExpiryDate" label="Срок действия сертификатов">
               <DatePicker style={{ width: '100%' }} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="licenseExpiryDate" label="Дата окончания">
+            <Form.Item name="insuranceExpiryDate" label="Срок действия страхования">
               <DatePicker style={{ width: '100%' }} />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item name="sroMembership" label="Членство в СРО" valuePropName="checked">
+              <Checkbox>Да, является членом СРО</Checkbox>
             </Form.Item>
           </Col>
         </Row>

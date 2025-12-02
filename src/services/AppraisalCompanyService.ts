@@ -70,16 +70,26 @@ class AppraisalCompanyService {
           // Маппинг полей из Excel на структуру AppraisalCompany
           const companyData: Partial<AppraisalCompany> = {
             name: row['Наименование'] || row['Название'] || row['Компания'] || '',
-            inn: String(row['ИНН'] || row['ИНН/КПП'] || '').split('/')[0].trim(),
+            inn: String(row['ИНН'] || row['ИНН/КПП'] || '')
+              .split('/')[0]
+              .trim(),
             ogrn: String(row['ОГРН'] || ''),
             address: row['Адрес'] || row['Адрес регистрации'] || '',
             phone: row['Телефон'] || row['Тел'] || '',
             email: row['Email'] || row['E-mail'] || '',
             director: row['Руководитель'] || row['Директор'] || row['Генеральный директор'] || '',
-            licenseNumber: row['Лицензия'] || row['Номер лицензии'] || '',
-            licenseDate: row['Дата выдачи лицензии'] ? this.parseDate(row['Дата выдачи лицензии']) : undefined,
-            licenseExpiryDate: row['Дата окончания лицензии'] ? this.parseDate(row['Дата окончания лицензии']) : undefined,
-            accreditationDate: row['Дата аккредитации'] ? this.parseDate(row['Дата аккредитации']) : undefined,
+            accreditationDate: row['Дата аккредитации']
+              ? this.parseDate(row['Дата аккредитации'])
+              : undefined,
+            certificateExpiryDate: row['Срок действия сертификатов'] || row['Сертификаты до']
+              ? this.parseDate(row['Срок действия сертификатов'] || row['Сертификаты до'])
+              : undefined,
+            insuranceExpiryDate: row['Срок действия страхования'] || row['Страхование до']
+              ? this.parseDate(row['Срок действия страхования'] || row['Страхование до'])
+              : undefined,
+            sroMembership: this.parseBoolean(
+              row['Членство в СРО'] || row['СРО'] || row['Член СРО'] || false
+            ),
             status: this.parseStatus(row['Статус'] || row['Статус аккредитации'] || 'active'),
             notes: row['Примечания'] || row['Комментарий'] || '',
           };
@@ -87,7 +97,9 @@ class AppraisalCompanyService {
           if (companyData.name) {
             // Проверяем, не существует ли уже компания с таким ИНН или названием
             const exists = companies.some(
-              c => (c.inn && companyData.inn && c.inn === companyData.inn) || c.name === companyData.name
+              c =>
+                (c.inn && companyData.inn && c.inn === companyData.inn) ||
+                c.name === companyData.name
             );
             if (!exists) {
               this.create(companyData as Omit<AppraisalCompany, 'id' | 'createdAt' | 'updatedAt'>);
@@ -132,6 +144,44 @@ class AppraisalCompanyService {
     if (lower.includes('приостанов') || lower.includes('приост')) return 'suspended';
     if (lower.includes('отозван') || lower.includes('аннул')) return 'revoked';
     return 'active';
+  }
+
+  // Парсинг булевого значения
+  private parseBoolean(value: any): boolean {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+      const lower = value.toLowerCase().trim();
+      return lower === 'да' || lower === 'yes' || lower === 'true' || lower === '1' || lower === '✓';
+    }
+    if (typeof value === 'number') return value === 1;
+    return false;
+  }
+
+  // Загрузка начальных данных из файла reestr_otsenschikov.xls
+  async loadInitialData(): Promise<number> {
+    const alreadyLoaded = localStorage.getItem('cms_appraisal_companies_initial_data_loaded');
+    if (alreadyLoaded === 'true') {
+      return 0;
+    }
+
+    try {
+      // Пытаемся загрузить файл из public
+      const response = await fetch('/reestr_apr/reestr_otsenschikov.xls');
+      if (!response.ok) {
+        console.warn('Файл reestr_otsenschikov.xls не найден, пропускаем начальную загрузку');
+        return 0;
+      }
+
+      const blob = await response.blob();
+      const file = new File([blob], 'reestr_otsenschikov.xls', { type: 'application/vnd.ms-excel' });
+      const imported = await this.loadFromExcelFile(file);
+      
+      localStorage.setItem('cms_appraisal_companies_initial_data_loaded', 'true');
+      return imported;
+    } catch (error) {
+      console.warn('Ошибка загрузки начальных данных:', error);
+      return 0;
+    }
   }
 }
 

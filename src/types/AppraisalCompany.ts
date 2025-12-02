@@ -7,11 +7,11 @@ export interface AppraisalCompany {
   phone?: string; // Телефон
   email?: string; // Email
   director?: string; // Руководитель
-  licenseNumber?: string; // Номер лицензии
-  licenseDate?: string; // Дата выдачи лицензии
-  licenseExpiryDate?: string; // Дата окончания лицензии
   status?: 'active' | 'suspended' | 'revoked'; // Статус аккредитации
   accreditationDate?: string; // Дата аккредитации
+  certificateExpiryDate?: string; // Срок действия сертификатов
+  insuranceExpiryDate?: string; // Срок действия страхования
+  sroMembership?: boolean; // Членство в СРО (да/нет)
   notes?: string; // Примечания
   documents?: string[]; // Список ID документов
   createdAt: string;
