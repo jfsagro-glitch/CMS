@@ -219,7 +219,20 @@ class AppraisalCompanyService {
             ),
             phone: this.findFieldValue(row, ['Телефон', 'телефон', 'Тел', 'тел'], ''),
             email: this.findFieldValue(row, ['Email', 'email', 'E-mail', 'e-mail'], ''),
-            website: this.findFieldValue(row, ['Сайт', 'сайт', 'Website', 'website', 'Веб-сайт', 'веб-сайт', 'Адрес сайта', 'адрес сайта'], ''),
+            website: this.findFieldValue(
+              row,
+              [
+                'Сайт',
+                'сайт',
+                'Website',
+                'website',
+                'Веб-сайт',
+                'веб-сайт',
+                'Адрес сайта',
+                'адрес сайта',
+              ],
+              ''
+            ),
             director: this.findFieldValue(
               row,
               [

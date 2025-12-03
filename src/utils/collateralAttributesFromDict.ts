@@ -19,16 +19,24 @@ export interface CollateralAttributeConfig {
  */
 export const getPropertyTypes = (): string[] => {
   const dict = referenceDataService.getDictionaryByCode('collateral_attributes_zalog');
-  if (!dict) return [];
-  
+  if (!dict) {
+    // Фолбэк: базовые типы имущества
+    return ['Недвижимость', 'Движимое имущество', 'Имущественные права'];
+  }
+
   const groups = new Set<string>();
   dict.items.forEach(item => {
     if (item.metadata?.group) {
       groups.add(item.metadata.group);
     }
   });
-  
-  return Array.from(groups).sort();
+
+  const result = Array.from(groups).sort();
+  if (result.length === 0) {
+    // Фолбэк, если группы не определены в справочнике
+    return ['Недвижимость', 'Движимое имущество', 'Имущественные права'];
+  }
+  return result;
 };
 
 /**
@@ -37,7 +45,7 @@ export const getPropertyTypes = (): string[] => {
  */
 export const getAttributesForPropertyType = (propertyTypeOrGroup: string): CollateralAttributeConfig[] => {
   const dict = referenceDataService.getDictionaryByCode('collateral_attributes_zalog');
-  if (!dict) return [];
+  if (!dict) return getDefaultAttributes(propertyTypeOrGroup);
   
   // Ищем по точному совпадению группы
   let items = dict.items.filter(item => item.metadata?.group === propertyTypeOrGroup);
@@ -60,7 +68,12 @@ export const getAttributesForPropertyType = (propertyTypeOrGroup: string): Colla
              name.toLowerCase().includes(propertyTypeOrGroup.toLowerCase());
     });
   }
-  
+
+  // Если пусто — возвращаем фолбэк-набор обязательных атрибутов
+  if (items.length === 0) {
+    return getDefaultAttributes(propertyTypeOrGroup);
+  }
+
   return items
     .map(item => ({
       code: item.code || '',
@@ -79,6 +92,59 @@ export const getAttributesForPropertyType = (propertyTypeOrGroup: string): Colla
     });
 };
 
+/**
+ * Фолбэк-набор необходимых атрибутов, если справочник пуст/не загружен
+ */
+function getDefaultAttributes(group: string): CollateralAttributeConfig[] {
+  const essentials: CollateralAttributeConfig[] = [
+    {
+      code: 'NAME_OF_PROPERTY',
+      name: 'Наименование объекта',
+      type: 'string',
+      required: true,
+      naturalKey: true,
+      group,
+      section: 'main',
+    },
+    {
+      code: 'OWNER_TIN',
+      name: 'ИНН собственника/залогодателя',
+      type: 'string',
+      required: true,
+      naturalKey: false,
+      group,
+      section: 'main',
+    },
+    {
+      code: 'ADDRESS_BASE',
+      name: 'Адрес объекта',
+      type: 'string',
+      required: true,
+      naturalKey: false,
+      group,
+      section: 'main',
+    },
+    {
+      code: 'TYPE_COLLATERAL',
+      name: 'Тип залога',
+      type: 'string',
+      required: true,
+      naturalKey: false,
+      group,
+      section: 'evaluation',
+    },
+    {
+      code: 'HAVEL_MARKET',
+      name: 'Рыночная стоимость',
+      type: 'number',
+      required: true,
+      naturalKey: false,
+      group,
+      section: 'evaluation',
+    },
+  ];
+  return essentials;
+}
 /**
  * Распределить атрибуты по вкладкам
  */

@@ -26,6 +26,86 @@ export interface ReferenceDictionary {
 
 class ReferenceDataService {
   /**
+   * Синхронизация атрибутов залога из объединенного файла Spravochniki/str/unified-attributes.json
+   * Обновляет/заменяет справочник collateral_attributes_zalog
+   */
+  async syncCollateralAttributesFromUnified(force: boolean = false): Promise<boolean> {
+    try {
+      const SYNC_FLAG = 'cms_refdata_zalog_synced_at';
+      if (!force) {
+        const syncedAt = localStorage.getItem(SYNC_FLAG);
+        if (syncedAt) {
+          // Уже синхронизировано в текущей сессии
+          return false;
+        }
+      }
+
+      // Пытаемся загрузить файл из public-багажа
+      // Поддержим относительную базу (vite gh-pages base)
+      const base = (import.meta as any)?.env?.BASE_URL ?? '/';
+      const resolvedBase = new URL(base, window.location.origin);
+      const normalizedPath = resolvedBase.pathname.endsWith('/') ? resolvedBase.pathname : `${resolvedBase.pathname}/`;
+      const url = `${resolvedBase.origin}${normalizedPath}Spravochniki/str/unified-attributes.json?v=${Date.now()}`;
+
+      const resp = await fetch(url, { cache: 'no-store' });
+      if (!resp.ok) {
+        console.warn('Не удалось загрузить unified-attributes.json:', resp.status, resp.statusText);
+        return false;
+      }
+      const unified = await resp.json();
+
+      // Преобразуем unified.attributes → элементы справочника
+      const items = (unified.attributes || []).map((a: any, index: number) => ({
+        id: a.id || `attr-${index}`,
+        code: a.code || `code_${index}`,
+        name: a.name || a.code || `Атрибут ${index + 1}`,
+        isActive: true,
+        sortOrder: index + 1,
+        metadata: {
+          type: a.type || 'string',
+          group: a.code || '',
+          section: a.level ? `level_${a.level}` : '',
+          sourceFiles: a.sourceFile || '',
+          dependencyHints: a.dependencyHints || [],
+          valuesCount: a.valuesCount || 0,
+        },
+      }));
+
+      // Обновляем/добавляем справочник collateral_attributes_zalog
+      const dictionaries = this.getDictionaries();
+      const idx = dictionaries.findIndex(d => d.code === 'collateral_attributes_zalog');
+      const nowIso = new Date().toISOString();
+      if (idx >= 0) {
+        dictionaries[idx] = {
+          ...dictionaries[idx],
+          name: 'Атрибуты залога (обновлено из Spravochniki)',
+          description: 'Сформировано из Spravochniki/str/unified-attributes.json',
+          items,
+          updatedAt: nowIso,
+        };
+      } else {
+        dictionaries.push({
+          id: 'dict-collateral-attributes-zalog',
+          name: 'Атрибуты залога (обновлено из Spravochniki)',
+          code: 'collateral_attributes_zalog',
+          description: 'Сформировано из Spravochniki/str/unified-attributes.json',
+          items,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+        });
+      }
+
+      this.saveDictionaries(dictionaries);
+      localStorage.setItem(SYNC_FLAG, new Date().toISOString());
+      console.log(`Справочник collateral_attributes_zalog обновлен из unified-attributes.json. Элементов: ${items.length}`);
+      return true;
+    } catch (e) {
+      console.error('Ошибка синхронизации атрибутов залога из unified-attributes.json:', e);
+      return false;
+    }
+  }
+
+  /**
    * Получить все справочники
    */
   getDictionaries(): ReferenceDictionary[] {

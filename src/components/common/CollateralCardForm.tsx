@@ -9,6 +9,7 @@ import PartnerManager from './PartnerManager';
 import AddressInput from './AddressInput';
 import DocumentManager from './DocumentManager';
 import { getObjectTypeKey } from '@/utils/extendedClassification';
+import referenceDataService from '@/services/ReferenceDataService';
 import { generateId } from '@/utils/helpers';
 import { getPropertyTypes, getAttributesForPropertyType, distributeAttributesByTabs } from '@/utils/collateralAttributesFromDict';
 import { useNavigate } from 'react-router-dom';
@@ -33,6 +34,7 @@ const CollateralCardForm: React.FC<CollateralCardFormProps> = ({
   const [cbCode, setCbCode] = useState<number>(initialValues?.cbCode || 0);
   const [objectTypeKey, setObjectTypeKey] = useState<ObjectTypeKey | null>(null);
   const [propertyType, setPropertyType] = useState<string | undefined>(initialValues?.propertyType);
+  const [dictReady, setDictReady] = useState<boolean>(false);
   
   // Состояния для вкладок
   const [partners, setPartners] = useState<Partner[]>(initialValues?.partners || []);
@@ -44,7 +46,7 @@ const CollateralCardForm: React.FC<CollateralCardFormProps> = ({
   const [contractSearchValue, setContractSearchValue] = useState('');
   
   // Получаем типы имущества из справочника
-  const propertyTypes = useMemo(() => getPropertyTypes(), []);
+  const propertyTypes = useMemo(() => (dictReady ? getPropertyTypes() : []), [dictReady]);
   
   // Получаем атрибуты для выбранного типа имущества
   const propertyAttributes = useMemo(() => {
@@ -56,6 +58,23 @@ const CollateralCardForm: React.FC<CollateralCardFormProps> = ({
   const distributedAttributes = useMemo(() => {
     return distributeAttributesByTabs(propertyAttributes);
   }, [propertyAttributes]);
+
+  // Синхронизируем атрибуты с unified-attributes.json при монтировании (однократно)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        await referenceDataService.syncCollateralAttributesFromUnified();
+      } catch (e) {
+        console.warn('Не удалось синхронизировать атрибуты залога из unified-attributes.json', e);
+      } finally {
+        if (mounted) setDictReady(true);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
   
   useEffect(() => {
     if (initialValues) {
@@ -615,6 +634,10 @@ const CollateralCardForm: React.FC<CollateralCardFormProps> = ({
       ),
     },
   ];
+
+  if (!dictReady) {
+    return null;
+  }
 
   return (
     <Form
