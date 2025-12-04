@@ -106,6 +106,67 @@ class ReferenceDataService {
   }
 
   /**
+   * Синхронизация уровней атрибутов из public/attribute-levels.json
+   * Обновляет/заменяет справочник attribute_levels
+   */
+  async syncAttributeLevelsFromPublic(force: boolean = false): Promise<boolean> {
+    try {
+      const SYNC_FLAG = 'cms_refdata_attr_levels_synced_at';
+      if (!force) {
+        const syncedAt = localStorage.getItem(SYNC_FLAG);
+        if (syncedAt) {
+          return false;
+        }
+      }
+
+      const base = (import.meta as any)?.env?.BASE_URL ?? '/';
+      const resolvedBase = new URL(base, window.location.origin);
+      const normalizedPath = resolvedBase.pathname.endsWith('/') ? resolvedBase.pathname : `${resolvedBase.pathname}/`;
+      const url = `${resolvedBase.origin}${normalizedPath}attribute-levels.json?v=${Date.now()}`;
+
+      const resp = await fetch(url, { cache: 'no-store' });
+      if (!resp.ok) {
+        console.warn('Не удалось загрузить attribute-levels.json:', resp.status, resp.statusText);
+        return false;
+      }
+      const json = await resp.json();
+      const items = Array.isArray(json.items) ? json.items : [];
+
+      // Обновляем/добавляем справочник attribute_levels
+      const dictionaries = this.getDictionaries();
+      const idx = dictionaries.findIndex(d => d.code === 'attribute_levels');
+      const nowIso = new Date().toISOString();
+      if (idx >= 0) {
+        dictionaries[idx] = {
+          ...dictionaries[idx],
+          name: 'Уровни атрибутов',
+          description: 'Иерархия уровней для атрибутов обеспечения',
+          items,
+          updatedAt: nowIso,
+        };
+      } else {
+        dictionaries.push({
+          id: 'dict-attribute-levels',
+          name: 'Уровни атрибутов',
+          code: 'attribute_levels',
+          description: 'Иерархия уровней для атрибутов обеспечения',
+          items,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+        });
+      }
+
+      this.saveDictionaries(dictionaries);
+      localStorage.setItem(SYNC_FLAG, new Date().toISOString());
+      console.log(`Справочник attribute_levels обновлен. Элементов: ${items.length}`);
+      return true;
+    } catch (e) {
+      console.error('Ошибка синхронизации уровней атрибутов:', e);
+      return false;
+    }
+  }
+
+  /**
    * Получить все справочники
    */
   getDictionaries(): ReferenceDictionary[] {

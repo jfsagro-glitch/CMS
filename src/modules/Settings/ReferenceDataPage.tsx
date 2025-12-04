@@ -52,7 +52,16 @@ const ReferenceDataPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    loadDictionaries();
+    const syncAndLoad = async () => {
+      try {
+        await Promise.all([
+          referenceDataService.syncCollateralAttributesFromUnified(),
+          referenceDataService.syncAttributeLevelsFromPublic(),
+        ]);
+      } catch {}
+      loadDictionaries();
+    };
+    syncAndLoad();
   }, [loadDictionaries]);
 
   // Проверяем параметр dict в URL для открытия конкретного справочника
@@ -157,72 +166,85 @@ const ReferenceDataPage: React.FC = () => {
     }
   }, [loadDictionaries, selectedDictionary, editingItem, form]);
 
-  const getItemColumns = React.useCallback((dictionary: ReferenceDictionary): ColumnsType<ReferenceItem> => [
-    {
-      title: 'Код',
-      dataIndex: 'code',
-      key: 'code',
-      width: 150,
-    },
-    {
-      title: 'Наименование',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Описание',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
-    },
-    {
-      title: 'Порядок сортировки',
-      dataIndex: 'sortOrder',
-      key: 'sortOrder',
-      align: 'center',
-      width: 120,
-    },
-    {
-      title: 'Статус',
-      dataIndex: 'isActive',
-      key: 'isActive',
-      align: 'center',
-      width: 100,
-      render: (isActive) => (
-        <Tag color={isActive ? 'green' : 'red'} icon={isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}>
-          {isActive ? 'Активен' : 'Неактивен'}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Действия',
-      key: 'actions',
-      width: 150,
-      fixed: 'right',
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEditItem(dictionary, record)}
-            size="small"
-          >
-            Редактировать
-          </Button>
-          <Popconfirm
-            title="Удалить элемент?"
-            onConfirm={() => handleDeleteItem(dictionary, record.id)}
-            okText="Да"
-            cancelText="Нет"
-          >
-            <Button type="link" danger icon={<DeleteOutlined />} size="small">
-              Удалить
+  const getItemColumns = React.useCallback((dictionary: ReferenceDictionary): ColumnsType<ReferenceItem> => {
+    // Специальные колонки для раздела "Уровни атрибутов"
+    if (dictionary.code === 'attribute_levels') {
+      return [
+        { title: 'Код атрибута', dataIndex: 'code', key: 'code', width: 200 },
+        { title: 'Вид обеспечения', key: 'level1', render: (_, r) => r.metadata?.level1 || '', width: 200 },
+        { title: 'Тип обеспечения', key: 'level2', render: (_, r) => r.metadata?.level2 || '', width: 200 },
+        { title: 'Подтип обеспечения', key: 'level3', render: (_, r) => r.metadata?.level3 || '', width: 220 },
+        { title: 'Функциональная группа', key: 'level4', render: (_, r) => r.metadata?.level4 || '', width: 240 },
+        { title: 'Функциональная подгруппа', key: 'level5', render: (_, r) => r.metadata?.level5 || '', width: 260 },
+        {
+          title: 'Действия',
+          key: 'actions',
+          width: 150,
+          fixed: 'right',
+          render: (_, record) => (
+            <Space>
+              <Button type="link" icon={<EditOutlined />} onClick={() => handleEditItem(dictionary, record)} size="small">
+                Редактировать
+              </Button>
+              <Popconfirm
+                title="Удалить элемент?"
+                onConfirm={() => handleDeleteItem(dictionary, record.id)}
+                okText="Да"
+                cancelText="Нет"
+              >
+                <Button type="link" danger icon={<DeleteOutlined />} size="small">
+                  Удалить
+                </Button>
+              </Popconfirm>
+            </Space>
+          ),
+        },
+      ];
+    }
+
+    // Базовые колонки
+    return [
+      { title: 'Код', dataIndex: 'code', key: 'code', width: 150 },
+      { title: 'Наименование', dataIndex: 'name', key: 'name' },
+      { title: 'Описание', dataIndex: 'description', key: 'description', ellipsis: true },
+      { title: 'Порядок сортировки', dataIndex: 'sortOrder', key: 'sortOrder', align: 'center', width: 120 },
+      {
+        title: 'Статус',
+        dataIndex: 'isActive',
+        key: 'isActive',
+        align: 'center',
+        width: 100,
+        render: (isActive) => (
+          <Tag color={isActive ? 'green' : 'red'} icon={isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}>
+            {isActive ? 'Активен' : 'Неактивен'}
+          </Tag>
+        ),
+      },
+      {
+        title: 'Действия',
+        key: 'actions',
+        width: 150,
+        fixed: 'right',
+        render: (_, record) => (
+          <Space>
+            <Button type="link" icon={<EditOutlined />} onClick={() => handleEditItem(dictionary, record)} size="small">
+              Редактировать
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ], [handleEditItem, handleDeleteItem]);
+            <Popconfirm
+              title="Удалить элемент?"
+              onConfirm={() => handleDeleteItem(dictionary, record.id)}
+              okText="Да"
+              cancelText="Нет"
+            >
+              <Button type="link" danger icon={<DeleteOutlined />} size="small">
+                Удалить
+              </Button>
+            </Popconfirm>
+          </Space>
+        ),
+      },
+    ];
+  }, [handleEditItem, handleDeleteItem]);
 
   const tabItems: TabsProps['items'] = useMemo(() => dictionaries.map(dictionary => ({
     key: dictionary.id,
