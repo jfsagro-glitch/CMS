@@ -47,6 +47,14 @@ export interface CollateralCard {
   name: string;
   createdAt: Date;
   updatedAt: Date;
+  attributeLevels?: {
+    level1?: string; // Вид обеспечения
+    level2?: string; // Тип обеспечения
+    level3?: string; // Подтип обеспечения
+    level4?: string; // Функциональная группа обеспечения
+    level5?: string; // Функциональная подгруппа обеспечения
+  };
+  characteristics?: Record<string, any>; // Динамические характеристики
 }
 
 // Параметры фильтрации
@@ -257,7 +265,7 @@ export interface ExtendedCollateralCard extends CollateralCard {
   reserveAmount?: number; // Сумма обеспечения для резерва на возможные потери по ссуде
   reserveAmountInterest?: number; // Сумма обеспечения для резерва по процентным доходам
   reserveAmountContingent?: number; // Сумма обеспечения для резерва по условным обязательствам
-  
+
   // Мониторинг
   monitoringDate?: string; // Дата последнего мониторинга
   nextMonitoringDate?: string; // Дата следующего мониторинга
@@ -287,14 +295,14 @@ export interface ExtendedCollateralCard extends CollateralCard {
   pledgeContractId?: string; // Идентификационный код договора залога
   accountNumber?: string; // Лицевой счет, на котором учитывается принятое обеспечение
   qualityCategory?: string; // Категория качества обеспечения (1-5)
-  
+
   // Тип имущества из справочника атрибутов залога
   propertyType?: string; // Например: "Будущий урожай", "Аффинированные драгоценные металлы в слитках"
-  
+
   // Выписка ЕГРН (для недвижимости)
   egrnStatementDate?: string; // Дата выписки ЕГРН
   egrnStatementId?: string; // ID выписки ЕГРН в модуле ЕГРН
-  
+
   // Отлагательные условия
   suspensiveConditions?: string; // Отлагательные условия по данному имуществу
 }

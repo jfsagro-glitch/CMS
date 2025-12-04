@@ -59,7 +59,7 @@ const cardsSlice = createSlice({
       state.sort = action.payload;
       state.filteredItems = applyFiltersAndSort(state.items, state.filters, action.payload);
     },
-    clearFilters: (state) => {
+    clearFilters: state => {
       state.filters = {};
       state.filteredItems = applyFiltersAndSort(state.items, {}, state.sort);
     },
@@ -91,9 +91,8 @@ function applyFiltersAndSort(
 
   if (filters.searchQuery) {
     const query = filters.searchQuery.toLowerCase();
-    result = result.filter(card =>
-      card.name.toLowerCase().includes(query) ||
-      card.number.toLowerCase().includes(query)
+    result = result.filter(
+      card => card.name.toLowerCase().includes(query) || card.number.toLowerCase().includes(query)
     );
   }
 
@@ -110,6 +109,9 @@ function applyFiltersAndSort(
     result.sort((a, b) => {
       const aValue = a[sort.field];
       const bValue = b[sort.field];
+
+      if (aValue === undefined || aValue === null) return 1;
+      if (bValue === undefined || bValue === null) return -1;
 
       if (aValue < bValue) return sort.order === 'asc' ? -1 : 1;
       if (aValue > bValue) return sort.order === 'asc' ? 1 : -1;
@@ -135,4 +137,3 @@ export const {
 } = cardsSlice.actions;
 
 export default cardsSlice.reducer;
-

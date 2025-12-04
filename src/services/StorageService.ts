@@ -1,6 +1,12 @@
 import Dexie, { Table } from 'dexie';
 import * as XLSX from 'xlsx';
-import type { CollateralCard, FilterParams, AppSettings, ImportResult, ExportResult } from '@/types';
+import type {
+  CollateralCard,
+  FilterParams,
+  AppSettings,
+  ImportResult,
+  ExportResult,
+} from '@/types';
 
 // Определяем схему базы данных
 class CMSDatabase extends Dexie {
@@ -9,10 +15,10 @@ class CMSDatabase extends Dexie {
 
   constructor() {
     super('CMSDatabase');
-    
+
     this.version(1).stores({
       collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
-      settings: 'id'
+      settings: 'id',
     });
   }
 }
@@ -32,7 +38,7 @@ class StorageService {
     try {
       await this.db.open();
       console.log('Database initialized successfully');
-      
+
       // Инициализация настроек по умолчанию
       const existingSettings = await this.db.settings.get('app-settings');
       if (!existingSettings) {
@@ -40,7 +46,7 @@ class StorageService {
           id: 'app-settings',
           theme: 'light',
           language: 'ru',
-          sidebarCollapsed: false
+          sidebarCollapsed: false,
         });
       }
     } catch (error) {
@@ -58,9 +64,9 @@ class StorageService {
       const cardToSave: CollateralCard = {
         ...card,
         updatedAt: now,
-        createdAt: card.createdAt || now
+        createdAt: card.createdAt || now,
       };
-      
+
       await this.db.collateralCards.put(cardToSave);
       return cardToSave.id;
     } catch (error) {
@@ -76,9 +82,7 @@ class StorageService {
 
       if (filters) {
         if (filters.mainCategory) {
-          collection = this.db.collateralCards
-            .where('mainCategory')
-            .equals(filters.mainCategory);
+          collection = this.db.collateralCards.where('mainCategory').equals(filters.mainCategory);
         }
 
         if (filters.status) {
@@ -87,22 +91,18 @@ class StorageService {
 
         if (filters.searchQuery) {
           const query = filters.searchQuery.toLowerCase();
-          collection = collection.filter(card => 
-            card.name.toLowerCase().includes(query) ||
-            card.number.toLowerCase().includes(query)
+          collection = collection.filter(
+            card =>
+              card.name.toLowerCase().includes(query) || card.number.toLowerCase().includes(query)
           );
         }
 
         if (filters.dateFrom) {
-          collection = collection.filter(card => 
-            card.createdAt >= filters.dateFrom!
-          );
+          collection = collection.filter(card => card.createdAt >= filters.dateFrom!);
         }
 
         if (filters.dateTo) {
-          collection = collection.filter(card => 
-            card.createdAt <= filters.dateTo!
-          );
+          collection = collection.filter(card => card.createdAt <= filters.dateTo!);
         }
       }
 
@@ -143,17 +143,29 @@ class StorageService {
     }
   }
 
+  // Очистка всех карточек
+  async clearCollateralCards(): Promise<void> {
+    try {
+      await this.db.collateralCards.clear();
+    } catch (error) {
+      console.error('Failed to clear collateral cards:', error);
+      throw error;
+    }
+  }
+
   // ============ Настройки ============
 
   // Получение настроек
   async getSettings(): Promise<AppSettings> {
     try {
       const settings = await this.db.settings.get('app-settings');
-      return settings || {
-        theme: 'light',
-        language: 'ru',
-        sidebarCollapsed: false
-      };
+      return (
+        settings || {
+          theme: 'light',
+          language: 'ru',
+          sidebarCollapsed: false,
+        }
+      );
     } catch (error) {
       console.error('Failed to get settings:', error);
       throw error;
@@ -167,7 +179,7 @@ class StorageService {
       await this.db.settings.put({
         id: 'app-settings',
         ...currentSettings,
-        ...settings
+        ...settings,
       });
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -182,17 +194,17 @@ class StorageService {
     try {
       // Подготовка данных для экспорта
       const exportData = data.map(card => ({
-        'ID': card.id,
-        'Номер': card.number,
-        'Название': card.name,
-        'Категория': this.translateCategory(card.mainCategory),
+        ID: card.id,
+        Номер: card.number,
+        Название: card.name,
+        Категория: this.translateCategory(card.mainCategory),
         'Уровень 0': card.classification.level0,
         'Уровень 1': card.classification.level1,
         'Уровень 2': card.classification.level2,
         'Код ЦБ': card.cbCode,
-        'Статус': card.status === 'editing' ? 'Редактирование' : 'Утвержден',
+        Статус: card.status === 'editing' ? 'Редактирование' : 'Утвержден',
         'Дата создания': new Date(card.createdAt).toLocaleString('ru-RU'),
-        'Дата обновления': new Date(card.updatedAt).toLocaleString('ru-RU')
+        'Дата обновления': new Date(card.updatedAt).toLocaleString('ru-RU'),
       }));
 
       // Создание рабочей книги
@@ -210,13 +222,13 @@ class StorageService {
       return {
         success: true,
         message: `Экспортировано ${data.length} записей`,
-        filename: `${filename}.xlsx`
+        filename: `${filename}.xlsx`,
       };
     } catch (error) {
       console.error('Failed to export to Excel:', error);
       return {
         success: false,
-        message: 'Ошибка при экспорте данных'
+        message: 'Ошибка при экспорте данных',
       };
     }
   }
@@ -247,14 +259,14 @@ class StorageService {
         success: true,
         message: `Импортировано ${importedCount} из ${jsonData.length} записей`,
         importedCount,
-        errors: errors.length > 0 ? errors : undefined
+        errors: errors.length > 0 ? errors : undefined,
       };
     } catch (error) {
       console.error('Failed to import from Excel:', error);
       return {
         success: false,
         message: 'Ошибка при импорте данных',
-        errors: [String(error)]
+        errors: [String(error)],
       };
     }
   }
@@ -272,8 +284,8 @@ class StorageService {
         timestamp: new Date().toISOString(),
         data: {
           cards,
-          settings
-        }
+          settings,
+        },
       };
 
       return new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -322,9 +334,9 @@ class StorageService {
 
   private translateCategory(category: string): string {
     const translations: Record<string, string> = {
-      'real_estate': 'Недвижимость',
-      'movable': 'Движимое имущество',
-      'property_rights': 'Имущественные права'
+      real_estate: 'Недвижимость',
+      movable: 'Движимое имущество',
+      property_rights: 'Имущественные права',
     };
     return translations[category] || category;
   }
@@ -343,20 +355,20 @@ class StorageService {
       classification: {
         level0: row['Уровень 0'] || '',
         level1: row['Уровень 1'] || '',
-        level2: row['Уровень 2'] || ''
+        level2: row['Уровень 2'] || '',
       },
       cbCode: Number(row['Код ЦБ']) || 0,
       status: row['Статус'] === 'Утвержден' ? 'approved' : 'editing',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
   }
 
   private reverseTranslateCategory(category: string): any {
     const translations: Record<string, string> = {
-      'Недвижимость': 'real_estate',
+      Недвижимость: 'real_estate',
       'Движимое имущество': 'movable',
-      'Имущественные права': 'property_rights'
+      'Имущественные права': 'property_rights',
     };
     return translations[category] || 'real_estate';
   }
@@ -365,18 +377,18 @@ class StorageService {
   async getStatistics() {
     try {
       const allCards = await this.db.collateralCards.toArray();
-      
+
       return {
         total: allCards.length,
         byCategory: {
           real_estate: allCards.filter(c => c.mainCategory === 'real_estate').length,
           movable: allCards.filter(c => c.mainCategory === 'movable').length,
-          property_rights: allCards.filter(c => c.mainCategory === 'property_rights').length
+          property_rights: allCards.filter(c => c.mainCategory === 'property_rights').length,
         },
         byStatus: {
           editing: allCards.filter(c => c.status === 'editing').length,
-          approved: allCards.filter(c => c.status === 'approved').length
-        }
+          approved: allCards.filter(c => c.status === 'approved').length,
+        },
       };
     } catch (error) {
       console.error('Failed to get statistics:', error);
@@ -388,4 +400,3 @@ class StorageService {
 // Экспортируем синглтон
 export const storageService = new StorageService();
 export default storageService;
-

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Space, Modal, message, Breadcrumb } from 'antd';
-import { PlusOutlined, ExportOutlined, ImportOutlined, CloudDownloadOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  ExportOutlined,
+  ImportOutlined,
+  CloudDownloadOutlined,
+} from '@ant-design/icons';
 import BaseTable from '@/components/common/BaseTable';
 import CardForm from '@/components/common/CardForm';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -15,6 +20,7 @@ import {
 import storageService from '@/services/StorageService';
 import { generateId, downloadFile } from '@/utils/helpers';
 import type { CollateralCard } from '@/types';
+import { generateCardsFromAttributeLevels } from '@/utils/generateDemoFromLevels';
 
 const RegistryPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -26,7 +32,14 @@ const RegistryPage: React.FC = () => {
   const loadCards = async () => {
     try {
       dispatch(setLoading(true));
-      const loadedCards = await storageService.getCollateralCards();
+      let loadedCards = await storageService.getCollateralCards();
+      // Если пусто, пробуем сгенерировать из уровней атрибутов (3 карточки на подгруппу)
+      if (!loadedCards || loadedCards.length === 0) {
+        const created = await generateCardsFromAttributeLevels();
+        if (created > 0) {
+          loadedCards = await storageService.getCollateralCards();
+        }
+      }
       dispatch(setCards(loadedCards));
     } catch (error) {
       message.error('Ошибка загрузки данных');
@@ -186,7 +199,7 @@ const RegistryPage: React.FC = () => {
           accept=".json"
           style={{ display: 'none' }}
           id="backup-import"
-          onChange={(e) => {
+          onChange={e => {
             const file = e.target.files?.[0];
             if (file) handleImportBackup(file);
           }}
@@ -236,7 +249,7 @@ const RegistryPage: React.FC = () => {
         <input
           type="file"
           accept=".xlsx,.xls"
-          onChange={(e) => {
+          onChange={e => {
             const file = e.target.files?.[0];
             if (file) handleImport(file);
           }}
@@ -247,4 +260,3 @@ const RegistryPage: React.FC = () => {
 };
 
 export default RegistryPage;
-
