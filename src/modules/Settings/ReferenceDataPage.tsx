@@ -58,7 +58,10 @@ const ReferenceDataPage: React.FC = () => {
           referenceDataService.syncCollateralAttributesFromUnified(),
           referenceDataService.syncAttributeLevelsFromPublic(),
         ]);
-      } catch {}
+      } catch (error) {
+        // Игнорируем ошибки синхронизации, продолжаем загрузку справочников
+        console.warn('Ошибка синхронизации справочников:', error);
+      }
       loadDictionaries();
     };
     syncAndLoad();

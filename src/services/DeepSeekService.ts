@@ -21,17 +21,16 @@ class DeepSeekService {
   
   /**
    * Определяет URL API в зависимости от окружения
-   * В development используем прокси Vite, в production - CORS proxy
+   * В development используем прокси Vite, в production - прямой URL
    */
   private getApiUrl(): string {
     // В development режиме (localhost) используем прокси Vite
     if (import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return '/api/deepseek/chat/completions';
     }
-    // В production используем CORS proxy для обхода CORS
-    // Используем allorigins.win, который поддерживает POST запросы
-    const targetUrl = 'https://api.deepseek.com/v1/chat/completions';
-    return `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+    // В production используем прямой URL
+    // Примечание: CORS блокирует запросы, требуется серверный прокси
+    return 'https://api.deepseek.com/v1/chat/completions';
   }
   
   /**
@@ -154,18 +153,12 @@ class DeepSeekService {
         // Обработка CORS и сетевых ошибок
         const errorMessage = error.message.toLowerCase();
         if (errorMessage.includes('failed to fetch') || errorMessage.includes('networkerror')) {
-          // Проверяем, является ли это CORS ошибкой
-          const isCorsError = 
-            errorMessage.includes('cors') ||
-            errorMessage.includes('access-control-allow-origin') ||
-            errorMessage.includes('blocked by cors policy') ||
-            (!this.shouldUseProxy() && errorMessage.includes('failed to fetch'));
-          
-          if (isCorsError) {
+          // В production всегда считаем это CORS ошибкой, так как прямой запрос блокируется
+          if (!this.shouldUseProxy()) {
             throw new Error(
-              'Ошибка CORS: API DeepSeek блокирует запросы из браузера. ' +
-              'Требуется серверный прокси для обхода ограничений. ' +
-              'Обратитесь к администратору для настройки прокси-сервера.'
+              'Ошибка CORS: API DeepSeek не поддерживает прямые запросы из браузера. ' +
+              'Для работы требуется серверный прокси. ' +
+              'В development режиме (localhost) используется прокси Vite, который обходит эту проблему.'
             );
           }
           

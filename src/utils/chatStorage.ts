@@ -23,7 +23,7 @@ export interface Chat {
 const STORAGE_KEY = 'reference_chats';
 
 /**
- * Сохраняет чаты в localStorage
+ * Сохраняет чаты в localStorage с автоматической очисткой при переполнении
  */
 function saveChats(chats: Chat[]): void {
   try {
@@ -36,9 +36,62 @@ function saveChats(chats: Chat[]): void {
       createdAt: chat.createdAt.toISOString(),
       updatedAt: chat.updatedAt.toISOString(),
     }));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.error('Ошибка сохранения чатов:', error);
+    
+    let dataString = JSON.stringify(data);
+    
+    // Если данные слишком большие, удаляем старые чаты
+    if (dataString.length > 4 * 1024 * 1024) { // 4MB лимит
+      // Сортируем по дате обновления и оставляем только последние 50 чатов
+      const sortedChats = [...chats].sort((a, b) => 
+        b.updatedAt.getTime() - a.updatedAt.getTime()
+      );
+      const limitedChats = sortedChats.slice(0, 50);
+      
+      const limitedData = limitedChats.map(chat => ({
+        ...chat,
+        messages: chat.messages.map(msg => ({
+          ...msg,
+          timestamp: msg.timestamp.toISOString(),
+        })),
+        createdAt: chat.createdAt.toISOString(),
+        updatedAt: chat.updatedAt.toISOString(),
+      }));
+      dataString = JSON.stringify(limitedData);
+      
+      console.warn('localStorage переполнен, удалены старые чаты. Оставлено:', limitedChats.length);
+    }
+    
+    localStorage.setItem(STORAGE_KEY, dataString);
+  } catch (error: any) {
+    // Если все еще ошибка QuotaExceededError, удаляем самые старые чаты
+    if (error.name === 'QuotaExceededError' || error.code === 22) {
+      try {
+        // Оставляем только последние 20 чатов
+        const sortedChats = [...chats].sort((a, b) => 
+          b.updatedAt.getTime() - a.updatedAt.getTime()
+        );
+        const limitedChats = sortedChats.slice(0, 20);
+        
+        const limitedData = limitedChats.map(chat => ({
+          ...chat,
+          messages: chat.messages.map(msg => ({
+            ...msg,
+            timestamp: msg.timestamp.toISOString(),
+          })),
+          createdAt: chat.createdAt.toISOString(),
+          updatedAt: chat.updatedAt.toISOString(),
+        }));
+        
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(limitedData));
+        console.warn('localStorage переполнен, удалены старые чаты. Оставлено:', limitedChats.length);
+      } catch (retryError) {
+        console.error('Критическая ошибка сохранения чатов, очищаем все:', retryError);
+        // В крайнем случае очищаем все
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } else {
+      console.error('Ошибка сохранения чатов:', error);
+    }
   }
 }
 
