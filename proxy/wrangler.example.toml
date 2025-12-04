@@ -1,0 +1,12 @@
+name = "deepseek-proxy"
+main = "cloudflare-worker.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+# Основной API ключ DeepSeek (обязателен)
+DEEPSEEK_API_KEY = "sk-your-secret-key"
+
+# (Опционально) Список доменов, которым разрешены запросы через прокси (через запятую)
+# Если оставить пустым, будет разрешен любой Origin
+ALLOWED_ORIGINS = "https://cmsauto.ru,https://jfsagro-glitch.github.io"
+

@@ -18,27 +18,37 @@ interface FeedbackAnalysis {
 
 class DeepSeekService {
   private readonly MODEL = 'deepseek-chat';
+  private readonly proxyUrl = (import.meta.env.VITE_DEEPSEEK_PROXY_URL || '').trim();
   
   /**
-   * Определяет URL API в зависимости от окружения
-   * В development используем прокси Vite, в production - прямой URL
+   * Проверяет, находимся ли мы в локальном окружении
    */
-  private getApiUrl(): string {
-    // В development режиме (localhost) используем прокси Vite
-    if (import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return '/api/deepseek/chat/completions';
-    }
-    // В production используем прямой URL
-    // Примечание: CORS блокирует запросы, требуется серверный прокси
-    return 'https://api.deepseek.com/v1/chat/completions';
+  private isLocalDev(): boolean {
+    return import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   }
   
   /**
-   * Определяет, нужно ли использовать прокси для обхода CORS
+   * Проверяет, выполняется ли прямой запрос из браузера (без серверного прокси)
    */
-  private shouldUseProxy(): boolean {
-    // В development всегда используем прокси Vite
-    return import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  private isDirectBrowserCall(): boolean {
+    return !this.isLocalDev() && !this.proxyUrl;
+  }
+  
+  /**
+   * Определяет URL API в зависимости от окружения
+   * В development используем прокси Vite, в production — URL серверного прокси или прямой API
+   */
+  private getApiUrl(): string {
+    if (this.isLocalDev()) {
+      return '/api/deepseek/chat/completions';
+    }
+    
+    if (this.proxyUrl) {
+      return this.proxyUrl;
+    }
+    
+    // Фоллбек на прямой запрос (будет заблокирован CORS, но показываем понятное сообщение)
+    return 'https://api.deepseek.com/v1/chat/completions';
   }
   private feedbackCache: {
     data: FeedbackAnalysis;
@@ -89,7 +99,7 @@ class DeepSeekService {
       
       // Определяем режим запроса и URL
       const apiUrl = this.getApiUrl();
-      const fetchMode = this.shouldUseProxy() ? 'same-origin' : 'cors';
+      const fetchMode = this.isLocalDev() ? 'same-origin' : 'cors';
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -153,8 +163,8 @@ class DeepSeekService {
         // Обработка CORS и сетевых ошибок
         const errorMessage = error.message.toLowerCase();
         if (errorMessage.includes('failed to fetch') || errorMessage.includes('networkerror')) {
-          // В production всегда считаем это CORS ошибкой, так как прямой запрос блокируется
-          if (!this.shouldUseProxy()) {
+          // В production всегда считаем это CORS ошибкой, если идем напрямую в DeepSeek
+          if (this.isDirectBrowserCall()) {
             throw new Error(
               'Ошибка CORS: API DeepSeek не поддерживает прямые запросы из браузера. ' +
               'Для работы требуется серверный прокси. ' +
