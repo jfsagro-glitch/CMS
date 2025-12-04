@@ -33,12 +33,14 @@ async function seedFromRegistryDemo(): Promise<number> {
 
     const remoteVersion = json.version || json.generatedAt || `registry-demo-${cards.length}`;
     const storedVersion = localStorage.getItem(DEMO_VERSION_KEY);
-    const currentCards = await storageService.getCollateralCards();
-    const needsSeed = !storedVersion || storedVersion !== remoteVersion || (currentCards?.length || 0) === 0;
+    // Всегда очищаем и перезагружаем, если версия изменилась или данных нет
+    const needsSeed = !storedVersion || storedVersion !== remoteVersion;
     if (!needsSeed) {
+      console.log('Версия демо-данных не изменилась, пропускаем перезагрузку');
       return 0;
     }
 
+    console.log(`Версия изменилась: ${storedVersion} -> ${remoteVersion}, очищаем и перезагружаем...`);
     await storageService.clearCollateralCards();
     for (const card of cards) {
       const cardToSave: CollateralCard = {
@@ -163,9 +165,15 @@ async function seedFromAttributeLevels(): Promise<number> {
   }
 }
 
-export async function generateCardsFromAttributeLevels(): Promise<number> {
+export async function generateCardsFromAttributeLevels(forceReload: boolean = false): Promise<number> {
+  // Если принудительная перезагрузка, очищаем версию
+  if (forceReload) {
+    localStorage.removeItem(DEMO_VERSION_KEY);
+  }
+  
   const seededFromDemo = await seedFromRegistryDemo();
   if (seededFromDemo > 0) return seededFromDemo;
   return seedFromAttributeLevels();
 }
+
 

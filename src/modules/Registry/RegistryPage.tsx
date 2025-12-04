@@ -29,17 +29,17 @@ const RegistryPage: React.FC = () => {
   const [editingCard, setEditingCard] = useState<CollateralCard | null>(null);
   const [importModalVisible, setImportModalVisible] = useState(false);
 
-  const loadCards = async () => {
+  const loadCards = async (forceReload: boolean = false) => {
     try {
       dispatch(setLoading(true));
-      let loadedCards = await storageService.getCollateralCards();
-      // Если пусто, пробуем сгенерировать из уровней атрибутов (3 карточки на подгруппу)
-      if (!loadedCards || loadedCards.length === 0) {
-        const created = await generateCardsFromAttributeLevels();
-        if (created > 0) {
-          loadedCards = await storageService.getCollateralCards();
-        }
+      // Всегда проверяем и обновляем демо-данные при загрузке страницы
+      // При первой загрузке или принудительной перезагрузке очищаем старые данные
+      const created = await generateCardsFromAttributeLevels(forceReload);
+      if (created > 0) {
+        console.log(`Загружено ${created} новых демо-карточек`);
+        message.success(`Загружено ${created} карточек`);
       }
+      const loadedCards = await storageService.getCollateralCards();
       dispatch(setCards(loadedCards));
     } catch (error) {
       message.error('Ошибка загрузки данных');
@@ -51,7 +51,32 @@ const RegistryPage: React.FC = () => {
 
   // Загрузка данных при монтировании
   useEffect(() => {
-    loadCards();
+    // При первой загрузке проверяем версию и при необходимости перезагружаем
+    const checkAndReload = async () => {
+      try {
+        const base = (import.meta as any)?.env?.BASE_URL ?? '/';
+        const resolved = new URL(base, window.location.origin);
+        const normalizedPath = resolved.pathname.endsWith('/') ? resolved.pathname : `${resolved.pathname}/`;
+        const url = `${resolved.origin}${normalizedPath}registry-demo.json?v=${Date.now()}`;
+        const resp = await fetch(url, { cache: 'no-store' });
+        if (resp.ok) {
+          const json = await resp.json();
+          const remoteVersion = json.version || json.generatedAt;
+          const storedVersion = localStorage.getItem('cms_registry_demo_version');
+          // Если версия изменилась или отсутствует, принудительно перезагружаем
+          if (!storedVersion || storedVersion !== remoteVersion) {
+            console.log('Версия демо-данных изменилась, принудительная перезагрузка...');
+            await loadCards(true);
+            return;
+          }
+        }
+      } catch (error) {
+        console.warn('Ошибка проверки версии демо-данных:', error);
+      }
+      // Если версия не изменилась, просто загружаем карточки
+      await loadCards();
+    };
+    checkAndReload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

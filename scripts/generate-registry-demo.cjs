@@ -278,8 +278,10 @@ function main() {
     }
   }
 
+  // Генерируем версию с timestamp для гарантированного обновления
+  const timestamp = Date.now();
   const output = {
-    version: `registry-demo-${Date.now()}`,
+    version: `registry-demo-v2-${timestamp}`,
     generatedAt: new Date().toISOString(),
     count: cards.length,
     cards,

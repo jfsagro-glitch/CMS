@@ -1,10 +1,10 @@
 {
-  "version": "registry-demo-1764833079957",
-  "generatedAt": "2025-12-04T07:24:39.957Z",
+  "version": "registry-demo-v2-1764836497762",
+  "generatedAt": "2025-12-04T08:21:37.762Z",
   "count": 105,
   "cards": [
     {
-      "id": "demo-1764833079953-p7wdfqq7b",
+      "id": "demo-1764836497755-r5iop59s1",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -23,14 +23,14 @@
       "number": "ДЕМО-00001",
       "name": "Организованные рынки, ярмарки (Здание) #1",
       "characteristics": {
-        "marketValue": 30951060,
-        "pledgeValue": 20373905
+        "marketValue": 2131558,
+        "pledgeValue": 1632832
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.756Z",
+      "updatedAt": "2025-12-04T08:21:37.756Z"
     },
     {
-      "id": "demo-1764833079954-il9m48imv",
+      "id": "demo-1764836497756-7auobelqn",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -49,14 +49,14 @@
       "number": "ДЕМО-00002",
       "name": "Организованные рынки, ярмарки (Здание) #2",
       "characteristics": {
-        "marketValue": 43835939,
-        "pledgeValue": 28124907
+        "marketValue": 12415448,
+        "pledgeValue": 7948064
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.756Z",
+      "updatedAt": "2025-12-04T08:21:37.756Z"
     },
     {
-      "id": "demo-1764833079954-pwflmuo07",
+      "id": "demo-1764836497756-72768yuez",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -75,14 +75,14 @@
       "number": "ДЕМО-00003",
       "name": "Организованные рынки, ярмарки (Здание) #3",
       "characteristics": {
-        "marketValue": 48005020,
-        "pledgeValue": 25052846
+        "marketValue": 25057350,
+        "pledgeValue": 13879285
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.756Z",
+      "updatedAt": "2025-12-04T08:21:37.756Z"
     },
     {
-      "id": "demo-1764833079954-kgze0phro",
+      "id": "demo-1764836497756-3szurx8wb",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -101,14 +101,14 @@
       "number": "ДЕМО-00004",
       "name": "Магазины и прочие торговые объекты (Здание) #1",
       "characteristics": {
-        "marketValue": 31965287,
-        "pledgeValue": 23766188
+        "marketValue": 19756839,
+        "pledgeValue": 15173763
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.756Z",
+      "updatedAt": "2025-12-04T08:21:37.756Z"
     },
     {
-      "id": "demo-1764833079954-yvedzs98a",
+      "id": "demo-1764836497756-qtd0hoahk",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -127,14 +127,14 @@
       "number": "ДЕМО-00005",
       "name": "Магазины и прочие торговые объекты (Здание) #2",
       "characteristics": {
-        "marketValue": 25521866,
-        "pledgeValue": 14629925
+        "marketValue": 39498529,
+        "pledgeValue": 25791058
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.756Z",
+      "updatedAt": "2025-12-04T08:21:37.756Z"
     },
     {
-      "id": "demo-1764833079954-wkzckedrn",
+      "id": "demo-1764836497756-9zkhl9stm",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -153,14 +153,14 @@
       "number": "ДЕМО-00006",
       "name": "Магазины и прочие торговые объекты (Здание) #3",
       "characteristics": {
-        "marketValue": 20301994,
-        "pledgeValue": 12644126
+        "marketValue": 33982252,
+        "pledgeValue": 17699492
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.756Z",
+      "updatedAt": "2025-12-04T08:21:37.756Z"
     },
     {
-      "id": "demo-1764833079954-h0r397gvv",
+      "id": "demo-1764836497756-p2p3k9m1g",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -179,14 +179,14 @@
       "number": "ДЕМО-00007",
       "name": "Торговые, торгово-развлекательные центры (Здание) #1",
       "characteristics": {
-        "marketValue": 2759753,
-        "pledgeValue": 1858013
+        "marketValue": 8911581,
+        "pledgeValue": 6563243
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.756Z",
+      "updatedAt": "2025-12-04T08:21:37.756Z"
     },
     {
-      "id": "demo-1764833079954-tiweywkze",
+      "id": "demo-1764836497756-xbvra1xvh",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -201,18 +201,18 @@
         "level5": "Торговые, торгово-развлекательные центры"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00008",
       "name": "Торговые, торгово-развлекательные центры (Здание) #2",
       "characteristics": {
-        "marketValue": 30341588,
-        "pledgeValue": 17267511
+        "marketValue": 2263671,
+        "pledgeValue": 1153974
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.756Z",
+      "updatedAt": "2025-12-04T08:21:37.756Z"
     },
     {
-      "id": "demo-1764833079954-gnbt8y9j5",
+      "id": "demo-1764836497757-hy5s5kk77",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -231,14 +231,14 @@
       "number": "ДЕМО-00009",
       "name": "Торговые, торгово-развлекательные центры (Здание) #3",
       "characteristics": {
-        "marketValue": 30068476,
-        "pledgeValue": 15783249
+        "marketValue": 26077226,
+        "pledgeValue": 19161723
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.757Z",
+      "updatedAt": "2025-12-04T08:21:37.757Z"
     },
     {
-      "id": "demo-1764833079954-64gfgipnq",
+      "id": "demo-1764836497757-b7najkabq",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -257,14 +257,14 @@
       "number": "ДЕМО-00010",
       "name": "Автосалоны (Здание) #1",
       "characteristics": {
-        "marketValue": 42016441,
-        "pledgeValue": 33184555
+        "marketValue": 18083828,
+        "pledgeValue": 11834401
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.757Z",
+      "updatedAt": "2025-12-04T08:21:37.757Z"
     },
     {
-      "id": "demo-1764833079954-evlu4m1xe",
+      "id": "demo-1764836497757-i54t5uoiv",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -283,14 +283,14 @@
       "number": "ДЕМО-00011",
       "name": "Автосалоны (Здание) #2",
       "characteristics": {
-        "marketValue": 8282960,
-        "pledgeValue": 5015069
+        "marketValue": 42058921,
+        "pledgeValue": 22224228
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.757Z",
+      "updatedAt": "2025-12-04T08:21:37.757Z"
     },
     {
-      "id": "demo-1764833079954-8c7i73xd7",
+      "id": "demo-1764836497757-nc67p4ftq",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -309,14 +309,14 @@
       "number": "ДЕМО-00012",
       "name": "Автосалоны (Здание) #3",
       "characteristics": {
-        "marketValue": 16452765,
-        "pledgeValue": 11516834
+        "marketValue": 48433796,
+        "pledgeValue": 33347429
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.757Z",
+      "updatedAt": "2025-12-04T08:21:37.757Z"
     },
     {
-      "id": "demo-1764833079954-1zrgpm6jr",
+      "id": "demo-1764836497757-61fdn6rra",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -331,18 +331,18 @@
         "level5": "Бизнес-центры"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00013",
       "name": "Бизнес-центры (Здание) #1",
       "characteristics": {
-        "marketValue": 12401714,
-        "pledgeValue": 6749739
+        "marketValue": 22877608,
+        "pledgeValue": 13303580
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.757Z",
+      "updatedAt": "2025-12-04T08:21:37.757Z"
     },
     {
-      "id": "demo-1764833079954-vb1d5f68e",
+      "id": "demo-1764836497757-83mjsgo7s",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -361,14 +361,14 @@
       "number": "ДЕМО-00014",
       "name": "Бизнес-центры (Здание) #2",
       "characteristics": {
-        "marketValue": 50370591,
-        "pledgeValue": 32784388
+        "marketValue": 38393004,
+        "pledgeValue": 19629406
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.757Z",
+      "updatedAt": "2025-12-04T08:21:37.757Z"
     },
     {
-      "id": "demo-1764833079954-1953p0tch",
+      "id": "demo-1764836497758-nvoogaaag",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -387,14 +387,14 @@
       "number": "ДЕМО-00015",
       "name": "Бизнес-центры (Здание) #3",
       "characteristics": {
-        "marketValue": 35732959,
-        "pledgeValue": 20119726
+        "marketValue": 3517394,
+        "pledgeValue": 2311023
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079954-lz6fquxk7",
+      "id": "demo-1764836497759-5o0aktsog",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -409,18 +409,18 @@
         "level5": "Административно-офисные здания"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00016",
       "name": "Административно-офисные здания (Здание) #1",
       "characteristics": {
-        "marketValue": 32450854,
-        "pledgeValue": 20670887
+        "marketValue": 11198368,
+        "pledgeValue": 8155153
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079954-uyrzh394v",
+      "id": "demo-1764836497759-pf5cj96zx",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -435,18 +435,18 @@
         "level5": "Административно-офисные здания"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00017",
       "name": "Административно-офисные здания (Здание) #2",
       "characteristics": {
-        "marketValue": 49805354,
-        "pledgeValue": 39421053
+        "marketValue": 7340700,
+        "pledgeValue": 5277451
       },
-      "createdAt": "2025-12-04T07:24:39.954Z",
-      "updatedAt": "2025-12-04T07:24:39.954Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-86l88p0ad",
+      "id": "demo-1764836497759-pgj2q0hgs",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -465,14 +465,14 @@
       "number": "ДЕМО-00018",
       "name": "Административно-офисные здания (Здание) #3",
       "characteristics": {
-        "marketValue": 31262708,
-        "pledgeValue": 20648209
+        "marketValue": 44060485,
+        "pledgeValue": 27775706
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-br2a61pq9",
+      "id": "demo-1764836497759-qc4k6nqdj",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -491,14 +491,14 @@
       "number": "ДЕМО-00019",
       "name": "Иное (Здание) #1",
       "characteristics": {
-        "marketValue": 50121803,
-        "pledgeValue": 32241405
+        "marketValue": 22062536,
+        "pledgeValue": 15803692
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-gwoqvjlnd",
+      "id": "demo-1764836497759-drhwt4m5e",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -513,18 +513,18 @@
         "level5": "Иное"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00020",
       "name": "Иное (Здание) #2",
       "characteristics": {
-        "marketValue": 46476657,
-        "pledgeValue": 25145798
+        "marketValue": 44855202,
+        "pledgeValue": 24149381
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-m1uc8itgj",
+      "id": "demo-1764836497759-qcexeskeq",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -543,14 +543,14 @@
       "number": "ДЕМО-00021",
       "name": "Иное (Здание) #3",
       "characteristics": {
-        "marketValue": 18538984,
-        "pledgeValue": 12059129
+        "marketValue": 6222664,
+        "pledgeValue": 4625208
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-r8oah45aq",
+      "id": "demo-1764836497759-74q710tvl",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -569,14 +569,14 @@
       "number": "ДЕМО-00022",
       "name": "Гостиницы (Здание) #1",
       "characteristics": {
-        "marketValue": 18887212,
-        "pledgeValue": 11653623
+        "marketValue": 30770849,
+        "pledgeValue": 19030179
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-del7n8eki",
+      "id": "demo-1764836497759-ugnkd3rt5",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -595,14 +595,14 @@
       "number": "ДЕМО-00023",
       "name": "Гостиницы (Здание) #2",
       "characteristics": {
-        "marketValue": 27218925,
-        "pledgeValue": 21735845
+        "marketValue": 36699298,
+        "pledgeValue": 25832599
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-ydnby20wl",
+      "id": "demo-1764836497759-f02f37uva",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -621,14 +621,14 @@
       "number": "ДЕМО-00024",
       "name": "Гостиницы (Здание) #3",
       "characteristics": {
-        "marketValue": 5371278,
-        "pledgeValue": 4033249
+        "marketValue": 3510413,
+        "pledgeValue": 1938068
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-tj0wm9boy",
+      "id": "demo-1764836497759-ugc5aoue8",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -647,14 +647,14 @@
       "number": "ДЕМО-00025",
       "name": "Апарт-отели (Здание) #1",
       "characteristics": {
-        "marketValue": 42294762,
-        "pledgeValue": 31487878
+        "marketValue": 25954328,
+        "pledgeValue": 13721147
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-jy7gxqlgo",
+      "id": "demo-1764836497759-xxor5tat6",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -669,18 +669,18 @@
         "level5": "Апарт-отели"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00026",
       "name": "Апарт-отели (Здание) #2",
       "characteristics": {
-        "marketValue": 4097354,
-        "pledgeValue": 2137503
+        "marketValue": 5962020,
+        "pledgeValue": 3023898
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-5boq6f35u",
+      "id": "demo-1764836497759-x5mmughym",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -699,14 +699,14 @@
       "number": "ДЕМО-00027",
       "name": "Апарт-отели (Здание) #3",
       "characteristics": {
-        "marketValue": 9985827,
-        "pledgeValue": 7618640
+        "marketValue": 25041902,
+        "pledgeValue": 19916820
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-yrxatrryy",
+      "id": "demo-1764836497759-n8dq7ek63",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -725,14 +725,14 @@
       "number": "ДЕМО-00028",
       "name": "Мотели (Здание) #1",
       "characteristics": {
-        "marketValue": 18921740,
-        "pledgeValue": 14780624
+        "marketValue": 3751441,
+        "pledgeValue": 2563058
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-4714615df",
+      "id": "demo-1764836497759-0k6jr6pg0",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -751,14 +751,14 @@
       "number": "ДЕМО-00029",
       "name": "Мотели (Здание) #2",
       "characteristics": {
-        "marketValue": 29672236,
-        "pledgeValue": 19791885
+        "marketValue": 15725305,
+        "pledgeValue": 8132014
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-7abr96z3x",
+      "id": "demo-1764836497759-10kkoggxb",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -773,18 +773,18 @@
         "level5": "Мотели"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00030",
       "name": "Мотели (Здание) #3",
       "characteristics": {
-        "marketValue": 27762275,
-        "pledgeValue": 20007581
+        "marketValue": 36809571,
+        "pledgeValue": 25812179
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-qjvbaykq4",
+      "id": "demo-1764836497759-naw1i71j7",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -799,18 +799,18 @@
         "level5": "Объекты рекреационно-оздоровительного значения (пансионаты, санатории)"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00031",
       "name": "Объекты рекреационно-оздоровительного значения (пансионаты, санатории) (Здание) #1",
       "characteristics": {
-        "marketValue": 11373864,
-        "pledgeValue": 8682404
+        "marketValue": 31323490,
+        "pledgeValue": 19172673
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-jqrj771a1",
+      "id": "demo-1764836497759-6d0uk3o3o",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -829,14 +829,14 @@
       "number": "ДЕМО-00032",
       "name": "Объекты рекреационно-оздоровительного значения (пансионаты, санатории) (Здание) #2",
       "characteristics": {
-        "marketValue": 41783649,
-        "pledgeValue": 22199028
+        "marketValue": 26297928,
+        "pledgeValue": 15997866
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-k8k5au3p5",
+      "id": "demo-1764836497759-vvwve4pqa",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -855,14 +855,14 @@
       "number": "ДЕМО-00033",
       "name": "Объекты рекреационно-оздоровительного значения (пансионаты, санатории) (Здание) #3",
       "characteristics": {
-        "marketValue": 45367631,
-        "pledgeValue": 34058246
+        "marketValue": 20640905,
+        "pledgeValue": 14986276
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-ittxt2gmm",
+      "id": "demo-1764836497759-0954xaga2",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -881,14 +881,14 @@
       "number": "ДЕМО-00034",
       "name": "Профессиональные складские комплексы (логистика) (Здание) #1",
       "characteristics": {
-        "marketValue": 12480797,
-        "pledgeValue": 9004735
+        "marketValue": 44938764,
+        "pledgeValue": 24821915
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-rcb4h38de",
+      "id": "demo-1764836497759-pvzb7v7ob",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -907,14 +907,14 @@
       "number": "ДЕМО-00035",
       "name": "Профессиональные складские комплексы (логистика) (Здание) #2",
       "characteristics": {
-        "marketValue": 44306205,
-        "pledgeValue": 28305942
+        "marketValue": 35155136,
+        "pledgeValue": 23066342
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-9wmi0y4gf",
+      "id": "demo-1764836497759-z8ww9jme0",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -933,14 +933,14 @@
       "number": "ДЕМО-00036",
       "name": "Профессиональные складские комплексы (логистика) (Здание) #3",
       "characteristics": {
-        "marketValue": 11718531,
-        "pledgeValue": 8927853
+        "marketValue": 14857353,
+        "pledgeValue": 11717266
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-o2dc3vaum",
+      "id": "demo-1764836497759-e9rha038a",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -955,18 +955,18 @@
         "level5": "Здания сельскохозяйственного производства"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00037",
       "name": "Здания сельскохозяйственного производства (Здание) #1",
       "characteristics": {
-        "marketValue": 9996372,
-        "pledgeValue": 5172868
+        "marketValue": 41014439,
+        "pledgeValue": 30684685
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-o5bg8fkiq",
+      "id": "demo-1764836497759-p9wuspar9",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -985,14 +985,14 @@
       "number": "ДЕМО-00038",
       "name": "Здания сельскохозяйственного производства (Здание) #2",
       "characteristics": {
-        "marketValue": 46706279,
-        "pledgeValue": 35792881
+        "marketValue": 30183374,
+        "pledgeValue": 23171111
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-tf94hfnij",
+      "id": "demo-1764836497759-8y6rd3u8q",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1011,14 +1011,14 @@
       "number": "ДЕМО-00039",
       "name": "Здания сельскохозяйственного производства (Здание) #3",
       "characteristics": {
-        "marketValue": 13486430,
-        "pledgeValue": 8154271
+        "marketValue": 30591028,
+        "pledgeValue": 21912883
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-9euyv7erb",
+      "id": "demo-1764836497759-th3mv9wet",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1033,18 +1033,18 @@
         "level5": "Производственные, производственно-складские и производственно-административные здания"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00040",
       "name": "Производственные, производственно-складские и производственно-административные здания (Здание) #1",
       "characteristics": {
-        "marketValue": 12994868,
-        "pledgeValue": 9518142
+        "marketValue": 35805574,
+        "pledgeValue": 20644994
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-48n6tqgod",
+      "id": "demo-1764836497759-76334laij",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1063,14 +1063,14 @@
       "number": "ДЕМО-00041",
       "name": "Производственные, производственно-складские и производственно-административные здания (Здание) #2",
       "characteristics": {
-        "marketValue": 8681110,
-        "pledgeValue": 6246143
+        "marketValue": 39694531,
+        "pledgeValue": 26790912
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.759Z",
+      "updatedAt": "2025-12-04T08:21:37.759Z"
     },
     {
-      "id": "demo-1764833079955-906m5c18o",
+      "id": "demo-1764836497760-ugwhaiulj",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1085,18 +1085,18 @@
         "level5": "Производственные, производственно-складские и производственно-административные здания"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00042",
       "name": "Производственные, производственно-складские и производственно-административные здания (Здание) #3",
       "characteristics": {
-        "marketValue": 42263154,
-        "pledgeValue": 33344535
+        "marketValue": 19891847,
+        "pledgeValue": 10706062
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.760Z",
+      "updatedAt": "2025-12-04T08:21:37.760Z"
     },
     {
-      "id": "demo-1764833079955-z0pjkw307",
+      "id": "demo-1764836497760-qq1917aak",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1111,18 +1111,18 @@
         "level5": "АЗС, АГЗС"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00043",
       "name": "АЗС, АГЗС (Здание) #1",
       "characteristics": {
-        "marketValue": 9579499,
-        "pledgeValue": 4803917
+        "marketValue": 36183819,
+        "pledgeValue": 28520457
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.760Z",
+      "updatedAt": "2025-12-04T08:21:37.760Z"
     },
     {
-      "id": "demo-1764833079955-sf5dadlfc",
+      "id": "demo-1764836497760-r3mf6nars",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1141,14 +1141,14 @@
       "number": "ДЕМО-00044",
       "name": "АЗС, АГЗС (Здание) #2",
       "characteristics": {
-        "marketValue": 19903944,
-        "pledgeValue": 11225824
+        "marketValue": 24045125,
+        "pledgeValue": 17565627
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.760Z",
+      "updatedAt": "2025-12-04T08:21:37.760Z"
     },
     {
-      "id": "demo-1764833079955-bbwxn1xc9",
+      "id": "demo-1764836497760-g8f6bjrv0",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1167,14 +1167,14 @@
       "number": "ДЕМО-00045",
       "name": "АЗС, АГЗС (Здание) #3",
       "characteristics": {
-        "marketValue": 21344822,
-        "pledgeValue": 16208081
+        "marketValue": 37049155,
+        "pledgeValue": 24660804
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.760Z",
+      "updatedAt": "2025-12-04T08:21:37.760Z"
     },
     {
-      "id": "demo-1764833079955-8y1fph5eo",
+      "id": "demo-1764836497760-gepds63q9",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1193,14 +1193,14 @@
       "number": "ДЕМО-00046",
       "name": "Нефтебазы (Здание) #1",
       "characteristics": {
-        "marketValue": 4134302,
-        "pledgeValue": 3242707
+        "marketValue": 43336214,
+        "pledgeValue": 21946361
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.760Z",
+      "updatedAt": "2025-12-04T08:21:37.760Z"
     },
     {
-      "id": "demo-1764833079955-26xe6tuia",
+      "id": "demo-1764836497761-huoh7oihy",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1219,14 +1219,14 @@
       "number": "ДЕМО-00047",
       "name": "Нефтебазы (Здание) #2",
       "characteristics": {
-        "marketValue": 36484398,
-        "pledgeValue": 25189544
+        "marketValue": 41204020,
+        "pledgeValue": 23780191
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079955-qavpd607g",
+      "id": "demo-1764836497761-g5xx3ktys",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1241,18 +1241,18 @@
         "level5": "Нефтебазы"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00048",
       "name": "Нефтебазы (Здание) #3",
       "characteristics": {
-        "marketValue": 1137883,
-        "pledgeValue": 847683
+        "marketValue": 36505886,
+        "pledgeValue": 24286596
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079955-kqesgjehp",
+      "id": "demo-1764836497761-51rzrw4p4",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1271,14 +1271,14 @@
       "number": "ДЕМО-00049",
       "name": "Автосервисы (Здание) #1",
       "characteristics": {
-        "marketValue": 46751919,
-        "pledgeValue": 29809215
+        "marketValue": 33841337,
+        "pledgeValue": 25500753
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079955-6mxxbp4xk",
+      "id": "demo-1764836497761-devbec326",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1297,14 +1297,14 @@
       "number": "ДЕМО-00050",
       "name": "Автосервисы (Здание) #2",
       "characteristics": {
-        "marketValue": 29831892,
-        "pledgeValue": 23704816
+        "marketValue": 34011026,
+        "pledgeValue": 18611878
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079955-q6mo6pz18",
+      "id": "demo-1764836497761-lhtiwv0zr",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1323,14 +1323,14 @@
       "number": "ДЕМО-00051",
       "name": "Автосервисы (Здание) #3",
       "characteristics": {
-        "marketValue": 45025830,
-        "pledgeValue": 33293784
+        "marketValue": 5515857,
+        "pledgeValue": 3498741
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079955-2qbhvkcnf",
+      "id": "demo-1764836497761-4ec4dd175",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1349,14 +1349,14 @@
       "number": "ДЕМО-00052",
       "name": "Гаражи, гаражные комплексы (Здание) #1",
       "characteristics": {
-        "marketValue": 19169286,
-        "pledgeValue": 12549048
+        "marketValue": 7417911,
+        "pledgeValue": 5088511
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079955-7hmvihy20",
+      "id": "demo-1764836497761-3urenzj27",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1375,14 +1375,14 @@
       "number": "ДЕМО-00053",
       "name": "Гаражи, гаражные комплексы (Здание) #2",
       "characteristics": {
-        "marketValue": 22653364,
-        "pledgeValue": 16347068
+        "marketValue": 34938358,
+        "pledgeValue": 23777036
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079955-mjqtnph19",
+      "id": "demo-1764836497761-7skrdoefi",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1397,18 +1397,18 @@
         "level5": "Гаражи, гаражные комплексы"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00054",
       "name": "Гаражи, гаражные комплексы (Здание) #3",
       "characteristics": {
-        "marketValue": 25588922,
-        "pledgeValue": 15326137
+        "marketValue": 24507177,
+        "pledgeValue": 12622172
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079955-03kj0q78e",
+      "id": "demo-1764836497761-5ijywncla",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1427,14 +1427,14 @@
       "number": "ДЕМО-00055",
       "name": "Многоярусные паркинги (Здание) #1",
       "characteristics": {
-        "marketValue": 25482268,
-        "pledgeValue": 16444492
+        "marketValue": 20241753,
+        "pledgeValue": 10766645
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079955-gv6y1wyso",
+      "id": "demo-1764836497761-b3qyp0vym",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1453,14 +1453,14 @@
       "number": "ДЕМО-00056",
       "name": "Многоярусные паркинги (Здание) #2",
       "characteristics": {
-        "marketValue": 37481272,
-        "pledgeValue": 22239245
+        "marketValue": 23129618,
+        "pledgeValue": 17793605
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079955-cvn1c89mp",
+      "id": "demo-1764836497761-ivw94fs55",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1475,18 +1475,18 @@
         "level5": "Многоярусные паркинги"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00057",
       "name": "Многоярусные паркинги (Здание) #3",
       "characteristics": {
-        "marketValue": 48652682,
-        "pledgeValue": 34745390
+        "marketValue": 22194002,
+        "pledgeValue": 13878050
       },
-      "createdAt": "2025-12-04T07:24:39.955Z",
-      "updatedAt": "2025-12-04T07:24:39.955Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079955-od8v7uz53",
+      "id": "demo-1764836497761-e2tjed3ga",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1501,44 +1501,18 @@
         "level5": "Спортивные комплексы"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00058",
       "name": "Спортивные комплексы (Здание) #1",
       "characteristics": {
-        "marketValue": 4544309,
-        "pledgeValue": 2461937
+        "marketValue": 22819740,
+        "pledgeValue": 17210575
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-37buz8tpt",
-      "mainCategory": "real_estate",
-      "classification": {
-        "level0": "Недвижимое имущество и права аренды недвижимого имущества",
-        "level1": "Здание",
-        "level2": "Нежилое здание"
-      },
-      "attributeLevels": {
-        "level1": "Недвижимое имущество и права аренды недвижимого имущества",
-        "level2": "Здание",
-        "level3": "Нежилое здание",
-        "level4": "Спортивные объекты",
-        "level5": "Спортивные комплексы"
-      },
-      "cbCode": 2010,
-      "status": "editing",
-      "number": "ДЕМО-00059",
-      "name": "Спортивные комплексы (Здание) #2",
-      "characteristics": {
-        "marketValue": 17298702,
-        "pledgeValue": 12458351
-      },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
-    },
-    {
-      "id": "demo-1764833079956-2e2fghhva",
+      "id": "demo-1764836497761-amevbdbph",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1554,17 +1528,43 @@
       },
       "cbCode": 2010,
       "status": "approved",
+      "number": "ДЕМО-00059",
+      "name": "Спортивные комплексы (Здание) #2",
+      "characteristics": {
+        "marketValue": 28861254,
+        "pledgeValue": 18136919
+      },
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
+    },
+    {
+      "id": "demo-1764836497761-d05y5js3l",
+      "mainCategory": "real_estate",
+      "classification": {
+        "level0": "Недвижимое имущество и права аренды недвижимого имущества",
+        "level1": "Здание",
+        "level2": "Нежилое здание"
+      },
+      "attributeLevels": {
+        "level1": "Недвижимое имущество и права аренды недвижимого имущества",
+        "level2": "Здание",
+        "level3": "Нежилое здание",
+        "level4": "Спортивные объекты",
+        "level5": "Спортивные комплексы"
+      },
+      "cbCode": 2010,
+      "status": "editing",
       "number": "ДЕМО-00060",
       "name": "Спортивные комплексы (Здание) #3",
       "characteristics": {
-        "marketValue": 49630880,
-        "pledgeValue": 34653209
+        "marketValue": 27403165,
+        "pledgeValue": 20028933
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-m0yo1kbe6",
+      "id": "demo-1764836497761-rfhhnuujj",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1579,18 +1579,18 @@
         "level5": "Бассейны, аквапарки"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00061",
       "name": "Бассейны, аквапарки (Здание) #1",
       "characteristics": {
-        "marketValue": 14821034,
-        "pledgeValue": 9189778
+        "marketValue": 2950372,
+        "pledgeValue": 2280640
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-4hz36gxp0",
+      "id": "demo-1764836497761-lmm5gfwdi",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1605,18 +1605,18 @@
         "level5": "Бассейны, аквапарки"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00062",
       "name": "Бассейны, аквапарки (Здание) #2",
       "characteristics": {
-        "marketValue": 18587595,
-        "pledgeValue": 11047606
+        "marketValue": 38318265,
+        "pledgeValue": 25599266
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-oz428i2yd",
+      "id": "demo-1764836497761-pf73w0eyp",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1635,14 +1635,14 @@
       "number": "ДЕМО-00063",
       "name": "Бассейны, аквапарки (Здание) #3",
       "characteristics": {
-        "marketValue": 38998192,
-        "pledgeValue": 26080590
+        "marketValue": 23577806,
+        "pledgeValue": 14417934
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-u3vdbde9h",
+      "id": "demo-1764836497761-z1b2v8yhi",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1661,14 +1661,14 @@
       "number": "ДЕМО-00064",
       "name": "Крытые катки, ледовые арены (Здание) #1",
       "characteristics": {
-        "marketValue": 15896018,
-        "pledgeValue": 9918269
+        "marketValue": 32355742,
+        "pledgeValue": 23345133
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-7inxnjw77",
+      "id": "demo-1764836497761-4nxq7tbfr",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1683,18 +1683,18 @@
         "level5": "Крытые катки, ледовые арены"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00065",
       "name": "Крытые катки, ледовые арены (Здание) #2",
       "characteristics": {
-        "marketValue": 26971184,
-        "pledgeValue": 18722138
+        "marketValue": 24873047,
+        "pledgeValue": 19279075
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-l5k9o1qv1",
+      "id": "demo-1764836497761-w2pvm7jst",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1709,18 +1709,18 @@
         "level5": "Крытые катки, ледовые арены"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00066",
       "name": "Крытые катки, ледовые арены (Здание) #3",
       "characteristics": {
-        "marketValue": 8423832,
-        "pledgeValue": 6513765
+        "marketValue": 45215130,
+        "pledgeValue": 31830335
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-ubq5qvf7n",
+      "id": "demo-1764836497761-fxh0f5n95",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1739,40 +1739,14 @@
       "number": "ДЕМО-00067",
       "name": "Крытые стадионы (Здание) #1",
       "characteristics": {
-        "marketValue": 15764435,
-        "pledgeValue": 8719548
+        "marketValue": 16068140,
+        "pledgeValue": 12568579
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-satvamdte",
-      "mainCategory": "real_estate",
-      "classification": {
-        "level0": "Недвижимое имущество и права аренды недвижимого имущества",
-        "level1": "Здание",
-        "level2": "Нежилое здание"
-      },
-      "attributeLevels": {
-        "level1": "Недвижимое имущество и права аренды недвижимого имущества",
-        "level2": "Здание",
-        "level3": "Нежилое здание",
-        "level4": "Спортивные объекты",
-        "level5": "Крытые стадионы"
-      },
-      "cbCode": 2010,
-      "status": "editing",
-      "number": "ДЕМО-00068",
-      "name": "Крытые стадионы (Здание) #2",
-      "characteristics": {
-        "marketValue": 31565770,
-        "pledgeValue": 19465044
-      },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
-    },
-    {
-      "id": "demo-1764833079956-4dqxt6cc7",
+      "id": "demo-1764836497761-85ixf6z8k",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1788,17 +1762,43 @@
       },
       "cbCode": 2010,
       "status": "approved",
+      "number": "ДЕМО-00068",
+      "name": "Крытые стадионы (Здание) #2",
+      "characteristics": {
+        "marketValue": 24204179,
+        "pledgeValue": 16496630
+      },
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
+    },
+    {
+      "id": "demo-1764836497761-5tdas2ifc",
+      "mainCategory": "real_estate",
+      "classification": {
+        "level0": "Недвижимое имущество и права аренды недвижимого имущества",
+        "level1": "Здание",
+        "level2": "Нежилое здание"
+      },
+      "attributeLevels": {
+        "level1": "Недвижимое имущество и права аренды недвижимого имущества",
+        "level2": "Здание",
+        "level3": "Нежилое здание",
+        "level4": "Спортивные объекты",
+        "level5": "Крытые стадионы"
+      },
+      "cbCode": 2010,
+      "status": "editing",
       "number": "ДЕМО-00069",
       "name": "Крытые стадионы (Здание) #3",
       "characteristics": {
-        "marketValue": 34412143,
-        "pledgeValue": 23191776
+        "marketValue": 50778307,
+        "pledgeValue": 31504870
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-oq662irxv",
+      "id": "demo-1764836497761-6r5qqwiwo",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1817,14 +1817,14 @@
       "number": "ДЕМО-00070",
       "name": "Дома культуры (Здание) #1",
       "characteristics": {
-        "marketValue": 14443051,
-        "pledgeValue": 9440073
+        "marketValue": 12624873,
+        "pledgeValue": 8585023
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-f1ops59w2",
+      "id": "demo-1764836497761-sosd3buqe",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1839,18 +1839,18 @@
         "level5": "Дома культуры"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00071",
       "name": "Дома культуры (Здание) #2",
       "characteristics": {
-        "marketValue": 38937645,
-        "pledgeValue": 22492533
+        "marketValue": 43545390,
+        "pledgeValue": 24749269
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-9yls73sh8",
+      "id": "demo-1764836497761-xpnfbkxxw",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1869,14 +1869,14 @@
       "number": "ДЕМО-00072",
       "name": "Дома культуры (Здание) #3",
       "characteristics": {
-        "marketValue": 10988505,
-        "pledgeValue": 6832130
+        "marketValue": 16862206,
+        "pledgeValue": 12360465
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-yl73e1btj",
+      "id": "demo-1764836497761-v4psnh9ym",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1895,14 +1895,14 @@
       "number": "ДЕМО-00073",
       "name": "Музеи (Здание) #1",
       "characteristics": {
-        "marketValue": 21407276,
-        "pledgeValue": 16261809
+        "marketValue": 2665310,
+        "pledgeValue": 1775241
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-xmmtl1mn4",
+      "id": "demo-1764836497761-mlmqly676",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1917,18 +1917,18 @@
         "level5": "Музеи"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00074",
       "name": "Музеи (Здание) #2",
       "characteristics": {
-        "marketValue": 9319051,
-        "pledgeValue": 4840325
+        "marketValue": 13418724,
+        "pledgeValue": 7192140
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-oj1hooey2",
+      "id": "demo-1764836497761-fgqtd3xwj",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1947,14 +1947,14 @@
       "number": "ДЕМО-00075",
       "name": "Музеи (Здание) #3",
       "characteristics": {
-        "marketValue": 32303146,
-        "pledgeValue": 21834997
+        "marketValue": 46257011,
+        "pledgeValue": 27457491
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-tynkg9eyk",
+      "id": "demo-1764836497761-yo7cr169w",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1969,18 +1969,18 @@
         "level5": "Кинотеатры"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00076",
       "name": "Кинотеатры (Здание) #1",
       "characteristics": {
-        "marketValue": 45322019,
-        "pledgeValue": 35726625
+        "marketValue": 15496252,
+        "pledgeValue": 10930511
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-y6zk9uycq",
+      "id": "demo-1764836497761-0tk45zdkn",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -1999,14 +1999,14 @@
       "number": "ДЕМО-00077",
       "name": "Кинотеатры (Здание) #2",
       "characteristics": {
-        "marketValue": 49187895,
-        "pledgeValue": 32001721
+        "marketValue": 29779729,
+        "pledgeValue": 18149579
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-8oylijp68",
+      "id": "demo-1764836497761-52v2quozh",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2021,18 +2021,18 @@
         "level5": "Кинотеатры"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00078",
       "name": "Кинотеатры (Здание) #3",
       "characteristics": {
-        "marketValue": 31532120,
-        "pledgeValue": 24079496
+        "marketValue": 49719599,
+        "pledgeValue": 38029731
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-0l2hshbk2",
+      "id": "demo-1764836497761-21og3c7u2",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2051,14 +2051,14 @@
       "number": "ДЕМО-00079",
       "name": "Концертные залы (Здание) #1",
       "characteristics": {
-        "marketValue": 34536955,
-        "pledgeValue": 20844419
+        "marketValue": 20272146,
+        "pledgeValue": 13661286
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-xc2tyu5ji",
+      "id": "demo-1764836497761-n7taqb9ur",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2073,18 +2073,18 @@
         "level5": "Концертные залы"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00080",
       "name": "Концертные залы (Здание) #2",
       "characteristics": {
-        "marketValue": 41335937,
-        "pledgeValue": 30316340
+        "marketValue": 11079471,
+        "pledgeValue": 6929847
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-d2jcizcft",
+      "id": "demo-1764836497761-uctgnc6y5",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2103,14 +2103,14 @@
       "number": "ДЕМО-00081",
       "name": "Концертные залы (Здание) #3",
       "characteristics": {
-        "marketValue": 20444617,
-        "pledgeValue": 13935037
+        "marketValue": 41717822,
+        "pledgeValue": 23926099
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-lbaficvkh",
+      "id": "demo-1764836497761-de8zt0l0d",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2125,18 +2125,18 @@
         "level5": "Индивидуальные жилые дома"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00082",
       "name": "Индивидуальные жилые дома (Здание) #1",
       "characteristics": {
-        "marketValue": 27902016,
-        "pledgeValue": 19511217
+        "marketValue": 2329250,
+        "pledgeValue": 1278750
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-xdknqen8t",
+      "id": "demo-1764836497761-6o9kbeb23",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2155,14 +2155,14 @@
       "number": "ДЕМО-00083",
       "name": "Индивидуальные жилые дома (Здание) #2",
       "characteristics": {
-        "marketValue": 28619714,
-        "pledgeValue": 20059482
+        "marketValue": 41938763,
+        "pledgeValue": 26467558
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.761Z",
+      "updatedAt": "2025-12-04T08:21:37.761Z"
     },
     {
-      "id": "demo-1764833079956-37xe1bdop",
+      "id": "demo-1764836497762-dz7i4u6s9",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2177,70 +2177,18 @@
         "level5": "Индивидуальные жилые дома"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00084",
       "name": "Индивидуальные жилые дома (Здание) #3",
       "characteristics": {
-        "marketValue": 48915371,
-        "pledgeValue": 25070728
+        "marketValue": 42839462,
+        "pledgeValue": 25613084
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-85l2ys5d0",
-      "mainCategory": "real_estate",
-      "classification": {
-        "level0": "Недвижимое имущество и права аренды недвижимого имущества",
-        "level1": "Здание",
-        "level2": "Жилое здание"
-      },
-      "attributeLevels": {
-        "level1": "Недвижимое имущество и права аренды недвижимого имущества",
-        "level2": "Здание",
-        "level3": "Жилое здание",
-        "level4": "Дома малоэтажной жилой застройки",
-        "level5": "Малоэтажные блокированные (таунхаусы)"
-      },
-      "cbCode": 2010,
-      "status": "approved",
-      "number": "ДЕМО-00085",
-      "name": "Малоэтажные блокированные (таунхаусы) (Здание) #1",
-      "characteristics": {
-        "marketValue": 31899415,
-        "pledgeValue": 22887538
-      },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
-    },
-    {
-      "id": "demo-1764833079956-q7yt67prd",
-      "mainCategory": "real_estate",
-      "classification": {
-        "level0": "Недвижимое имущество и права аренды недвижимого имущества",
-        "level1": "Здание",
-        "level2": "Жилое здание"
-      },
-      "attributeLevels": {
-        "level1": "Недвижимое имущество и права аренды недвижимого имущества",
-        "level2": "Здание",
-        "level3": "Жилое здание",
-        "level4": "Дома малоэтажной жилой застройки",
-        "level5": "Малоэтажные блокированные (таунхаусы)"
-      },
-      "cbCode": 2010,
-      "status": "approved",
-      "number": "ДЕМО-00086",
-      "name": "Малоэтажные блокированные (таунхаусы) (Здание) #2",
-      "characteristics": {
-        "marketValue": 46904464,
-        "pledgeValue": 36551662
-      },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
-    },
-    {
-      "id": "demo-1764833079956-6mnpo3ewh",
+      "id": "demo-1764836497762-do9wu7l31",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2256,17 +2204,69 @@
       },
       "cbCode": 2010,
       "status": "editing",
+      "number": "ДЕМО-00085",
+      "name": "Малоэтажные блокированные (таунхаусы) (Здание) #1",
+      "characteristics": {
+        "marketValue": 15680110,
+        "pledgeValue": 10173183
+      },
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
+    },
+    {
+      "id": "demo-1764836497762-e85p6fmfe",
+      "mainCategory": "real_estate",
+      "classification": {
+        "level0": "Недвижимое имущество и права аренды недвижимого имущества",
+        "level1": "Здание",
+        "level2": "Жилое здание"
+      },
+      "attributeLevels": {
+        "level1": "Недвижимое имущество и права аренды недвижимого имущества",
+        "level2": "Здание",
+        "level3": "Жилое здание",
+        "level4": "Дома малоэтажной жилой застройки",
+        "level5": "Малоэтажные блокированные (таунхаусы)"
+      },
+      "cbCode": 2010,
+      "status": "editing",
+      "number": "ДЕМО-00086",
+      "name": "Малоэтажные блокированные (таунхаусы) (Здание) #2",
+      "characteristics": {
+        "marketValue": 32691990,
+        "pledgeValue": 20687585
+      },
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
+    },
+    {
+      "id": "demo-1764836497762-mpekhku2n",
+      "mainCategory": "real_estate",
+      "classification": {
+        "level0": "Недвижимое имущество и права аренды недвижимого имущества",
+        "level1": "Здание",
+        "level2": "Жилое здание"
+      },
+      "attributeLevels": {
+        "level1": "Недвижимое имущество и права аренды недвижимого имущества",
+        "level2": "Здание",
+        "level3": "Жилое здание",
+        "level4": "Дома малоэтажной жилой застройки",
+        "level5": "Малоэтажные блокированные (таунхаусы)"
+      },
+      "cbCode": 2010,
+      "status": "approved",
       "number": "ДЕМО-00087",
       "name": "Малоэтажные блокированные (таунхаусы) (Здание) #3",
       "characteristics": {
-        "marketValue": 40164750,
-        "pledgeValue": 31611947
+        "marketValue": 49870704,
+        "pledgeValue": 25518885
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-v3x7dr59u",
+      "id": "demo-1764836497762-b53qoe8sr",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2285,14 +2285,14 @@
       "number": "ДЕМО-00088",
       "name": "Апартаменты (Здание) #1",
       "characteristics": {
-        "marketValue": 8275934,
-        "pledgeValue": 4642882
+        "marketValue": 46311198,
+        "pledgeValue": 29546007
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-ol086k2zk",
+      "id": "demo-1764836497762-3qqwoudnw",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2311,14 +2311,14 @@
       "number": "ДЕМО-00089",
       "name": "Апартаменты (Здание) #2",
       "characteristics": {
-        "marketValue": 16488617,
-        "pledgeValue": 9924454
+        "marketValue": 9298951,
+        "pledgeValue": 6238584
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-ekws76ny3",
+      "id": "demo-1764836497762-orb50gs3t",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2333,18 +2333,18 @@
         "level5": "Апартаменты"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00090",
       "name": "Апартаменты (Здание) #3",
       "characteristics": {
-        "marketValue": 45297763,
-        "pledgeValue": 23938110
+        "marketValue": 6209228,
+        "pledgeValue": 3854291
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-b9gyz30c0",
+      "id": "demo-1764836497762-25jrvmx51",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2359,18 +2359,18 @@
         "level5": "Дачи"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00091",
       "name": "Дачи (Здание) #1",
       "characteristics": {
-        "marketValue": 42006008,
-        "pledgeValue": 32655991
+        "marketValue": 46481873,
+        "pledgeValue": 29920733
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-8499dpjen",
+      "id": "demo-1764836497762-3ha5j4flv",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2389,14 +2389,14 @@
       "number": "ДЕМО-00092",
       "name": "Дачи (Здание) #2",
       "characteristics": {
-        "marketValue": 16037339,
-        "pledgeValue": 10796368
+        "marketValue": 46299206,
+        "pledgeValue": 36876591
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-pf5ofluh9",
+      "id": "demo-1764836497762-nc6pf6ezs",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2415,14 +2415,14 @@
       "number": "ДЕМО-00093",
       "name": "Дачи (Здание) #3",
       "characteristics": {
-        "marketValue": 26822011,
-        "pledgeValue": 18802945
+        "marketValue": 25573487,
+        "pledgeValue": 17728508
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-0en8avvt5",
+      "id": "demo-1764836497762-x8abigohi",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2441,14 +2441,14 @@
       "number": "ДЕМО-00094",
       "name": "Садовые дома (Здание) #1",
       "characteristics": {
-        "marketValue": 33104185,
-        "pledgeValue": 25212801
+        "marketValue": 4301571,
+        "pledgeValue": 3007546
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-v0ilcpibn",
+      "id": "demo-1764836497762-mwi407h4z",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2467,14 +2467,14 @@
       "number": "ДЕМО-00095",
       "name": "Садовые дома (Здание) #2",
       "characteristics": {
-        "marketValue": 46928011,
-        "pledgeValue": 33806912
+        "marketValue": 15489637,
+        "pledgeValue": 12084906
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-1l7y5j3fq",
+      "id": "demo-1764836497762-k4p0quu00",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2489,18 +2489,18 @@
         "level5": "Садовые дома"
       },
       "cbCode": 2010,
-      "status": "editing",
+      "status": "approved",
       "number": "ДЕМО-00096",
       "name": "Садовые дома (Здание) #3",
       "characteristics": {
-        "marketValue": 8198251,
-        "pledgeValue": 5638945
+        "marketValue": 45126951,
+        "pledgeValue": 27605827
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-v5voilfs4",
+      "id": "demo-1764836497762-jzv5hu75y",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2519,14 +2519,14 @@
       "number": "ДЕМО-00097",
       "name": "Фитнес-центры (Помещение) #1",
       "characteristics": {
-        "marketValue": 14873592,
-        "pledgeValue": 10562850
+        "marketValue": 13332145,
+        "pledgeValue": 8859121
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-0xr2p9zwe",
+      "id": "demo-1764836497762-ezrrpvnw7",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2545,14 +2545,14 @@
       "number": "ДЕМО-00098",
       "name": "Фитнес-центры (Помещение) #2",
       "characteristics": {
-        "marketValue": 3891248,
-        "pledgeValue": 2950383
+        "marketValue": 5380613,
+        "pledgeValue": 4139213
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-m0veu24w2",
+      "id": "demo-1764836497762-p79fprvri",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2571,14 +2571,14 @@
       "number": "ДЕМО-00099",
       "name": "Фитнес-центры (Помещение) #3",
       "characteristics": {
-        "marketValue": 3815847,
-        "pledgeValue": 2804948
+        "marketValue": 17875415,
+        "pledgeValue": 10877440
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-20pxuexik",
+      "id": "demo-1764836497762-xxg65kuxb",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2593,18 +2593,18 @@
         "level5": "Земельные участки под коммерческое использование"
       },
       "cbCode": 2010,
-      "status": "approved",
+      "status": "editing",
       "number": "ДЕМО-00100",
       "name": "Земельные участки под коммерческое использование (Земельный участок) #1",
       "characteristics": {
-        "marketValue": 17804339,
-        "pledgeValue": 13660375
+        "marketValue": 1828002,
+        "pledgeValue": 1099574
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079956-40fnqh3ql",
+      "id": "demo-1764836497762-1qvo9dk81",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2623,14 +2623,14 @@
       "number": "ДЕМО-00101",
       "name": "Земельные участки под коммерческое использование (Земельный участок) #2",
       "characteristics": {
-        "marketValue": 21248432,
-        "pledgeValue": 13577996
+        "marketValue": 24377392,
+        "pledgeValue": 17893068
       },
-      "createdAt": "2025-12-04T07:24:39.956Z",
-      "updatedAt": "2025-12-04T07:24:39.956Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079957-zaiz1gt1x",
+      "id": "demo-1764836497762-jdxbubfhf",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2649,14 +2649,14 @@
       "number": "ДЕМО-00102",
       "name": "Земельные участки под коммерческое использование (Земельный участок) #3",
       "characteristics": {
-        "marketValue": 2252368,
-        "pledgeValue": 1540584
+        "marketValue": 18406693,
+        "pledgeValue": 12027324
       },
-      "createdAt": "2025-12-04T07:24:39.957Z",
-      "updatedAt": "2025-12-04T07:24:39.957Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079957-h9mcmmy8a",
+      "id": "demo-1764836497762-f41uhcn9k",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2675,14 +2675,14 @@
       "number": "ДЕМО-00103",
       "name": "Земельные участки под жилую застройку (Земельный участок) #1",
       "characteristics": {
-        "marketValue": 8796467,
-        "pledgeValue": 6189011
+        "marketValue": 12967890,
+        "pledgeValue": 8247508
       },
-      "createdAt": "2025-12-04T07:24:39.957Z",
-      "updatedAt": "2025-12-04T07:24:39.957Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079957-ze1ldag3f",
+      "id": "demo-1764836497762-lnlh0rkic",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2701,14 +2701,14 @@
       "number": "ДЕМО-00104",
       "name": "Земельные участки под жилую застройку (Земельный участок) #2",
       "characteristics": {
-        "marketValue": 49990402,
-        "pledgeValue": 29594016
+        "marketValue": 28297722,
+        "pledgeValue": 16358259
       },
-      "createdAt": "2025-12-04T07:24:39.957Z",
-      "updatedAt": "2025-12-04T07:24:39.957Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     },
     {
-      "id": "demo-1764833079957-dxhhtzb72",
+      "id": "demo-1764836497762-lsktjxgub",
       "mainCategory": "real_estate",
       "classification": {
         "level0": "Недвижимое имущество и права аренды недвижимого имущества",
@@ -2727,11 +2727,11 @@
       "number": "ДЕМО-00105",
       "name": "Земельные участки под жилую застройку (Земельный участок) #3",
       "characteristics": {
-        "marketValue": 35503741,
-        "pledgeValue": 19421659
+        "marketValue": 4665526,
+        "pledgeValue": 2469071
       },
-      "createdAt": "2025-12-04T07:24:39.957Z",
-      "updatedAt": "2025-12-04T07:24:39.957Z"
+      "createdAt": "2025-12-04T08:21:37.762Z",
+      "updatedAt": "2025-12-04T08:21:37.762Z"
     }
   ]
 }
