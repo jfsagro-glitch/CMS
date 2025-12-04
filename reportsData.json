@@ -1,0 +1,400 @@
+{
+  "reports": [
+    {
+      "id": "f3d2ee09-9c98-4e6a-ba5e-7414980a0c1b",
+      "guid": "7d1c313a-426a-40e0-b45e-ad39565a72bd",
+      "reportDate": "2025-11-17",
+      "reportNumber": "Ф310-20251117-1018",
+      "reportType": "form310",
+      "status": "approved",
+      "createdAt": "2025-10-27T08:31:38.144302",
+      "updatedAt": "2025-11-17T08:31:38.144339",
+      "creditOrg": {
+        "name": "Не указано",
+        "code": ""
+      }
+    },
+    {
+      "id": "3935c4e7-2520-4b3a-9551-7a65f5d171a8",
+      "guid": "9554f62e-938e-487b-a540-7138651c21e7",
+      "reportDate": "2025-11-17",
+      "reportNumber": "Ф310-20251117-7674",
+      "reportType": "form310",
+      "status": "submitted",
+      "createdAt": "2025-10-20T08:31:38.146136",
+      "updatedAt": "2025-11-17T08:31:38.146160",
+      "creditOrg": {
+        "name": "Не указано",
+        "code": ""
+      }
+    },
+    {
+      "id": "25fdb828-6efd-47d1-a8a4-b0afa6eba740",
+      "guid": "dfae8463-f289-4efa-a49f-f822e69e4811",
+      "reportDate": "2024-12-20",
+      "reportNumber": "Ф310-20241220-1000",
+      "reportType": "form310",
+      "status": "rejected",
+      "createdAt": "2025-11-07T08:31:38.146310",
+      "updatedAt": "2025-11-17T08:31:38.146329",
+      "creditOrg": {
+        "name": "ПАО \"Газпромбанк\"",
+        "code": "435100",
+        "inn": "7992659518"
+      },
+      "section1": {
+        "items": [
+          {
+            "id": "7b10affc-39c7-418f-ba82-5b7fbaa559ef",
+            "reference": "REF-23179",
+            "collateralType": "Недвижимость"
+          },
+          {
+            "id": "4b4ce422-0591-4254-a9d2-ffec310cebeb",
+            "reference": "REF-60178",
+            "collateralType": "Транспорт"
+          },
+          {
+            "id": "1542f64e-671a-4a14-9c12-59539c84cb83",
+            "reference": "REF-84565",
+            "collateralType": "Транспорт"
+          }
+        ]
+      },
+      "section2": {
+        "items": [
+          {
+            "id": "4c8a68ba-04c6-49ac-ab2f-3ec41c6eb744",
+            "reference": "REF-35952",
+            "principalAmount": 56900000
+          },
+          {
+            "id": "7a9b2642-68ba-4779-b083-f28f3d43b76e",
+            "reference": "REF-29945",
+            "principalAmount": 20900000
+          },
+          {
+            "id": "89168bed-1f3e-40c0-86ec-1f44c5ad8c93",
+            "reference": "REF-33405",
+            "principalAmount": 43500000
+          },
+          {
+            "id": "4c654dac-8cce-49c2-a6a8-eb6469ec16cc",
+            "reference": "REF-35964",
+            "principalAmount": 29500000
+          }
+        ]
+      },
+      "section3": {
+        "items": [
+          {
+            "id": "7c228bed-75bd-4b6e-9bee-945533bda745",
+            "reference": "REF-73539",
+            "collateralValue": 180500000
+          },
+          {
+            "id": "ddbfa1c9-f5fe-4ec8-a7cb-91f3789e24f8",
+            "reference": "REF-47815",
+            "collateralValue": 360500000
+          },
+          {
+            "id": "d1da41b3-3aa4-4fb8-b6e8-d0d2c4107a44",
+            "reference": "REF-76492",
+            "collateralValue": 301500000
+          },
+          {
+            "id": "6cf03c99-569a-4d29-a575-fae795652bb7",
+            "reference": "REF-58558",
+            "collateralValue": 147500000
+          }
+        ]
+      }
+    },
+    {
+      "id": "b06373a6-434f-4179-8d83-89752b95a20c",
+      "guid": "fe89c52e-618e-4495-a30c-805a4af2306e",
+      "reportDate": "2024-12-04",
+      "reportNumber": "Ф310-20241204-1001",
+      "reportType": "form310",
+      "status": "draft",
+      "createdAt": "2025-09-04T08:31:38.146620",
+      "updatedAt": "2025-11-17T08:31:38.146636",
+      "creditOrg": {
+        "name": "ПАО \"Россельхозбанк\"",
+        "code": "304582",
+        "inn": "5045300957"
+      },
+      "section1": {
+        "items": [
+          {
+            "id": "820a4fc2-76c3-4cc9-8cc2-a449e5f180a2",
+            "reference": "REF-75925",
+            "collateralType": "Транспорт"
+          },
+          {
+            "id": "7869e4a2-c199-46d8-bde3-f1c1a9240e21",
+            "reference": "REF-32683",
+            "collateralType": "Недвижимость"
+          },
+          {
+            "id": "31ab11fd-5c01-420b-b9b5-b8a0527843e5",
+            "reference": "REF-33442",
+            "collateralType": "Недвижимость"
+          },
+          {
+            "id": "d2ae5e4e-73cf-4640-a226-29b2bd30b067",
+            "reference": "REF-71951",
+            "collateralType": "Оборудование"
+          }
+        ]
+      },
+      "section2": {
+        "items": [
+          {
+            "id": "28703fdd-ae2b-4bab-8c85-d3872227f017",
+            "reference": "REF-25016",
+            "principalAmount": 53700000
+          },
+          {
+            "id": "d33e1188-708d-467c-8ac4-1bacc667ac38",
+            "reference": "REF-63493",
+            "principalAmount": 61400000
+          },
+          {
+            "id": "b8c82a3d-5901-47c7-b548-8183615d897a",
+            "reference": "REF-16545",
+            "principalAmount": 54100000
+          },
+          {
+            "id": "8a703c17-e30e-480e-b734-75cc05090a67",
+            "reference": "REF-20725",
+            "principalAmount": 33400000
+          },
+          {
+            "id": "13c65f10-124c-45d0-807b-1cf1cbf5d7b4",
+            "reference": "REF-54797",
+            "principalAmount": 39500000
+          }
+        ]
+      },
+      "section3": {
+        "items": [
+          {
+            "id": "16b37ce7-9c88-4c1f-a398-145de4e73572",
+            "reference": "REF-98599",
+            "collateralValue": 40500000
+          },
+          {
+            "id": "151c369c-adc8-479f-90a1-a2a7e22e3741",
+            "reference": "REF-93807",
+            "collateralValue": 69500000
+          },
+          {
+            "id": "d584f5c9-767d-40dc-a66c-88262809948c",
+            "reference": "REF-26840",
+            "collateralValue": 156500000
+          }
+        ]
+      }
+    },
+    {
+      "id": "a805a0a0-932a-4374-86c7-e78f976beab7",
+      "guid": "c8945145-e6d6-47c7-ac96-e2433bfd3a2b",
+      "reportDate": "2024-12-23",
+      "reportNumber": "Ф310-20241223-1002",
+      "reportType": "form310",
+      "status": "submitted",
+      "createdAt": "2025-10-21T08:31:38.146900",
+      "updatedAt": "2025-11-17T08:31:38.146913",
+      "creditOrg": {
+        "name": "ПАО \"Сбербанк\"",
+        "code": "807922",
+        "inn": "3387107986"
+      },
+      "section1": {
+        "items": [
+          {
+            "id": "7deb3d86-c741-4330-a269-cd70af932a0f",
+            "reference": "REF-53398",
+            "collateralType": "Недвижимость"
+          }
+        ]
+      },
+      "section2": {
+        "items": [
+          {
+            "id": "92c36113-6465-4541-adbe-08801cb352b2",
+            "reference": "REF-92238",
+            "principalAmount": 72400000
+          },
+          {
+            "id": "6fc1317f-84ce-4621-ad85-2e3567da5503",
+            "reference": "REF-85152",
+            "principalAmount": 50800000
+          },
+          {
+            "id": "7decdee2-61bc-43f9-a6ec-e3d0d1e82afa",
+            "reference": "REF-80437",
+            "principalAmount": 98100000
+          },
+          {
+            "id": "12ebe82a-f0ef-4b50-b262-a408cad0f983",
+            "reference": "REF-33421",
+            "principalAmount": 17500000
+          }
+        ]
+      },
+      "section3": {
+        "items": [
+          {
+            "id": "f64b36ac-39aa-431a-ac6b-8b3daa09a11b",
+            "reference": "REF-93193",
+            "collateralValue": 182000000
+          }
+        ]
+      }
+    },
+    {
+      "id": "5e31eaf7-b12b-496b-b1a9-6abf8c10b55b",
+      "guid": "afd9758b-cbbd-4f9d-8e2a-d41b801fdd5c",
+      "reportDate": "2024-02-17",
+      "reportNumber": "Ф310-20240217-1003",
+      "reportType": "form310",
+      "status": "draft",
+      "createdAt": "2025-08-29T08:31:38.147122",
+      "updatedAt": "2025-11-17T08:31:38.147137",
+      "creditOrg": {
+        "name": "ПАО \"Газпромбанк\"",
+        "code": "778614",
+        "inn": "8644328816"
+      },
+      "section1": {
+        "items": [
+          {
+            "id": "220a39cc-2ffa-4a2a-9f7a-57a98fb83cfa",
+            "reference": "REF-52188",
+            "collateralType": "Недвижимость"
+          },
+          {
+            "id": "6dcebe87-2e37-49b2-a112-68239f181845",
+            "reference": "REF-67110",
+            "collateralType": "Недвижимость"
+          },
+          {
+            "id": "137047ff-700a-4438-b6a4-1db7007309e2",
+            "reference": "REF-94384",
+            "collateralType": "Транспорт"
+          },
+          {
+            "id": "e9c77db4-0f90-4061-979d-eee4258c73cc",
+            "reference": "REF-41854",
+            "collateralType": "Недвижимость"
+          },
+          {
+            "id": "025e6131-80f0-45d6-8344-9dddcc9c0e17",
+            "reference": "REF-13033",
+            "collateralType": "Оборудование"
+          }
+        ]
+      },
+      "section2": {
+        "items": [
+          {
+            "id": "9d81057f-6044-467b-a0cd-9ac0ed01be1b",
+            "reference": "REF-97762",
+            "principalAmount": 1100000
+          }
+        ]
+      },
+      "section3": {
+        "items": [
+          {
+            "id": "cc7fd838-120f-41d0-b173-c4e9f7df7413",
+            "reference": "REF-77196",
+            "collateralValue": 216000000
+          },
+          {
+            "id": "afac264e-3f73-41c9-acdf-be47205808fc",
+            "reference": "REF-69901",
+            "collateralValue": 408000000
+          },
+          {
+            "id": "1223c7e4-4f31-4351-a16a-382624b97e11",
+            "reference": "REF-95877",
+            "collateralValue": 354000000
+          }
+        ]
+      }
+    },
+    {
+      "id": "af586bef-5b9e-4bab-a7d5-35a54b939637",
+      "guid": "7824e39d-8e57-4b0b-b1d0-07802a4055c9",
+      "reportDate": "2024-12-02",
+      "reportNumber": "Ф310-20241202-1004",
+      "reportType": "form310",
+      "status": "approved",
+      "createdAt": "2025-09-02T08:31:38.147373",
+      "updatedAt": "2025-11-17T08:31:38.147385",
+      "creditOrg": {
+        "name": "АО \"Альфа-Банк\"",
+        "code": "960138",
+        "inn": "8462583383"
+      },
+      "section1": {
+        "items": [
+          {
+            "id": "bc348dc5-983b-4dac-bd61-6ba397eace65",
+            "reference": "REF-71036",
+            "collateralType": "Оборудование"
+          },
+          {
+            "id": "e10d631c-76d7-49ae-b6f6-16445275f58a",
+            "reference": "REF-51740",
+            "collateralType": "Недвижимость"
+          },
+          {
+            "id": "260283e9-6d7f-4339-aee6-a1bc468df2d2",
+            "reference": "REF-62850",
+            "collateralType": "Оборудование"
+          }
+        ]
+      },
+      "section2": {
+        "items": [
+          {
+            "id": "7fcb5022-1999-4307-af98-47d1ad02f69e",
+            "reference": "REF-72569",
+            "principalAmount": 92400000
+          },
+          {
+            "id": "186e66aa-c380-41d6-b026-e3975dfe631b",
+            "reference": "REF-90770",
+            "principalAmount": 82100000
+          },
+          {
+            "id": "50069f3d-0355-4c01-8c25-89ef7589fc90",
+            "reference": "REF-27969",
+            "principalAmount": 93200000
+          }
+        ]
+      },
+      "section3": {
+        "items": [
+          {
+            "id": "a03a12de-91bf-4cd6-9272-d6b99bb1bf1f",
+            "reference": "REF-94774",
+            "collateralValue": 287000000
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "totalReports": 7,
+    "lastUpdated": "2025-11-17T08:31:38.147510",
+    "sourceFiles": [
+      "Ф310_Meta_Phys.xml",
+      "Ф310_Template.xml"
+    ]
+  }
+}

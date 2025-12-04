@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ЗАДАЧНИК - Система управления задачами с ролевой моделью</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/modal.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка с переключением ролей -->
+        <header class="header">
+            <div class="header-left">
+                <h1>📋 ЗАДАЧНИК</h1>
+                <div class="role-switcher">
+                    <label>Роль:</label>
+                    <select id="role-select" onchange="app.switchRole()">
+                        <option value="business">Бизнес</option>
+                        <option value="manager">Руководитель</option>
+                        <option value="employee">Сотрудник</option>
+                        <option value="superuser">Суперпользователь</option>
+                    </select>
+                    <select id="region-select" onchange="app.switchRegion()">
+                        <!-- Опции регионов подставляются динамически из CMS -->
+                    </select>
+                    <select id="employee-select" onchange="app.switchEmployee()" style="display:none;">
+                        <option value="">Выберите сотрудника...</option>
+                    </select>
+                    <span class="user-info" id="current-user-name"></span>
+                    <span class="user-tasks-count" id="user-tasks-count" style="display:none;"></span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="app.createNewTask()" id="btn-create-task">➕ Новая задача</button>
+                <button class="btn btn-secondary" onclick="app.showAnalytics()" id="btn-analytics" style="display:none;">📊 Аналитика</button>
+                <button class="btn btn-autopilot" onclick="app.toggleAutopilot()" id="btn-autopilot" style="display:none;">
+                    <span id="autopilot-icon">🤖</span> <span id="autopilot-text">Автопилот</span>
+                </button>
+                <button class="btn btn-secondary" onclick="app.showSettings()">⚙️ Настройки</button>
+                <!-- Обновление демо-данных отключено, данные приходят из CMS -->
+                <button class="btn btn-secondary" onclick="app.reloadDemoData()" title="Обновление данных выполняется в CMS" disabled>🔄 Обновить данные</button>
+                <button class="btn btn-secondary" onclick="app.exportToCSV()">📥 Экспорт CSV</button>
+            </div>
+        </header>
+
+        <!-- Панель фильтров -->
+        <div class="filters-panel">
+            <div class="filter-group">
+                <label>🔍 Поиск:</label>
+                <input type="text" id="search-input" placeholder="ID, название, исполнитель..." onkeyup="app.applyFilters()">
+            </div>
+            
+            <div class="filter-group" id="filter-region-group">
+                <label>Регион:</label>
+                <select id="filter-region" onchange="app.applyFilters()">
+                    <option value="">Все</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Тип:</label>
+                <select id="filter-type" onchange="app.applyFilters()">
+                    <option value="">Все</option>
+                    <option value="Оценка">Оценка</option>
+                    <option value="Экспертиза">Экспертиза</option>
+                    <option value="Рецензия">Рецензия</option>
+                    <option value="ПРКК">ПРКК</option>
+                    <option value="Прочее">Прочее</option>
+                    <option value="Отчетность">Отчетность</option>
+                    <option value="Подготовка СЗ">Подготовка СЗ</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Статус:</label>
+                <select id="filter-status" onchange="app.applyFilters()">
+                    <option value="">Все</option>
+                    <option value="created">Создана</option>
+                    <option value="assigned">Распределена</option>
+                    <option value="in-progress">В работе</option>
+                    <option value="paused">На паузе</option>
+                    <option value="rework">На доработке</option>
+                    <option value="approval">На утверждении</option>
+                    <option value="approved">Согласовано</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Приоритет:</label>
+                <select id="filter-priority" onchange="app.applyFilters()">
+                    <option value="">Все</option>
+                    <option value="low">Низкий</option>
+                    <option value="medium">Средний</option>
+                    <option value="high">Высокий</option>
+                    <option value="critical">Критический</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-reset" onclick="app.resetFilters()">🔄 Сброс</button>
+            
+            <div class="stats">
+                Показано: <strong id="visible-count">0</strong> из <strong id="total-count">0</strong>
+            </div>
+        </div>
+
+        <!-- Компактная таблица задач -->
+        <div class="table-wrapper">
+            <table class="compact-table" id="tasks-table">
+                <thead>
+                    <tr>
+                        <th class="col-id" onclick="app.sortBy('id')">ID ↕</th>
+                        <th class="col-region" onclick="app.sortBy('region')">Регион ↕</th>
+                        <th class="col-type" onclick="app.sortBy('type')">Тип ↕</th>
+                        <th class="col-title" onclick="app.sortBy('title')">Название ↕</th>
+                        <th class="col-priority" onclick="app.sortBy('priority')">Приор. ↕</th>
+                        <th class="col-deadline" onclick="app.sortBy('dueDate')">Срок ↕</th>
+                        <th class="col-status" onclick="app.sortBy('status')">Статус ↕</th>
+                        <th class="col-assignee" onclick="app.sortBy('currentAssignee')">Исполнитель ↕</th>
+                        <th class="col-actions">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="tasks-tbody">
+                    <!-- Задачи добавляются через JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Модальное окно карточки задачи -->
+        <div id="task-modal" class="modal">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2 id="modal-title">Карточка задачи</h2>
+                    <span class="close" onclick="app.closeTaskModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="task-form" onsubmit="app.saveTask(event)">
+                        <input type="hidden" id="task-id">
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="task-region">Регион:</label>
+                                <select id="task-region" required>
+                                    <option value="Москва">Москва</option>
+                                    <option value="Санкт-Петербург">Санкт-Петербург</option>
+                                    <option value="Новосибирск">Новосибирск</option>
+                                    <option value="Екатеринбург">Екатеринбург</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="task-type">Тип задачи:</label>
+                                <select id="task-type" required>
+                                    <option value="Оценка">Оценка</option>
+                                    <option value="Экспертиза">Экспертиза</option>
+                                    <option value="Рецензия">Рецензия</option>
+                                    <option value="ПРКК">ПРКК</option>
+                                    <option value="Прочее">Прочее</option>
+                                    <option value="Отчетность">Отчетность</option>
+                                    <option value="Подготовка СЗ">Подготовка СЗ</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="task-title">Название задачи:</label>
+                            <input type="text" id="task-title" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="task-description">Описание:</label>
+                            <textarea id="task-description" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="task-priority">Приоритет:</label>
+                                <select id="task-priority" required>
+                                    <option value="low">Низкий</option>
+                                    <option value="medium">Средний</option>
+                                    <option value="high">Высокий</option>
+                                    <option value="critical">Критический</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="task-deadline">Срок выполнения:</label>
+                                <input type="date" id="task-deadline" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Исполнители (для руководителя) -->
+                        <div class="form-group" id="assignees-group" style="display:none;">
+                            <label>Исполнители:</label>
+                            <div id="assignees-list" class="assignees-list">
+                                <!-- Чекбоксы исполнителей -->
+                            </div>
+                        </div>
+                        
+                        <!-- Документы -->
+                        <div class="form-group">
+                            <label>📎 Документы:</label>
+                            <div class="documents-list" id="documents-list">
+                                <!-- Список документов -->
+                            </div>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="app.attachDocument()">
+                                📎 Прикрепить файл
+                            </button>
+                            <input type="file" id="file-input" style="display:none;" onchange="app.handleFileSelect(event)">
+                        </div>
+                        
+                        <!-- Комментарии -->
+                        <div class="form-group">
+                            <label>💬 Комментарии:</label>
+                            <div class="comments-list" id="comments-list">
+                                <!-- Список комментариев -->
+                            </div>
+                            <div class="comment-input-group">
+                                <textarea id="new-comment" placeholder="Добавить комментарий..." rows="2"></textarea>
+                                <button type="button" class="btn btn-sm btn-primary" onclick="app.addComment()">
+                                    Добавить
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- История -->
+                        <div class="form-group">
+                            <label>📜 История изменений:</label>
+                            <div class="history-list" id="history-list">
+                                <!-- История задачи -->
+                            </div>
+                        </div>
+                        
+                        <!-- Действия -->
+                        <div class="form-actions">
+                            <div class="workflow-actions" id="workflow-actions">
+                                <!-- Кнопки workflow действий -->
+                            </div>
+                            <div class="form-buttons">
+                                <button type="button" class="btn btn-secondary" onclick="app.closeTaskModal()">Закрыть</button>
+                                <button type="submit" class="btn btn-primary" id="btn-save-task">Сохранить</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно аналитики -->
+        <div id="analytics-modal" class="modal">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2>📊 Аналитика и KPI</h2>
+                    <span class="close" onclick="app.closeAnalyticsModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="analytics-content" id="analytics-content">
+                        <!-- Аналитические данные -->
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-secondary" onclick="app.closeAnalyticsModal()">Закрыть</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно действия с комментарием -->
+        <div id="action-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="action-modal-title">Действие</h2>
+                    <span class="close" onclick="app.closeActionModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="action-comment">Комментарий:</label>
+                        <textarea id="action-comment" rows="3" required></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-secondary" onclick="app.closeActionModal()">Закрыть</button>
+                        <button class="btn btn-primary" onclick="app.confirmAction()">Подтвердить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно распределения задачи -->
+        <div id="assign-modal" class="modal">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2>👥 Распределение задачи</h2>
+                    <span class="close" onclick="app.closeAssignModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="assign-task-info" id="assign-task-info">
+                        <!-- Информация о задаче -->
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="assign-priority">Приоритет:</label>
+                            <select id="assign-priority">
+                                <option value="low">Низкий</option>
+                                <option value="medium">Средний</option>
+                                <option value="high">Высокий</option>
+                                <option value="critical">Критический</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="assign-deadline">Срок выполнения:</label>
+                            <input type="date" id="assign-deadline">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="assign-employee-select">Выберите сотрудника:</label>
+                        <select id="assign-employee-select" size="10" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                            <!-- Список сотрудников -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🔍 Поиск сотрудника:</label>
+                        <input type="text" id="employee-search" placeholder="Введите имя..." onkeyup="app.filterEmployeesInSelect()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Или выберите из карточек (клик для быстрого назначения):</label>
+                        <div class="employees-grid" id="employees-grid">
+                            <!-- Список сотрудников карточками -->
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="assign-comment">Комментарий (необязательно):</label>
+                        <textarea id="assign-comment" rows="2" placeholder="Дополнительные указания..."></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-secondary" onclick="app.closeAssignModal()">Закрыть</button>
+                        <button class="btn btn-primary" onclick="app.confirmAssignment()">Распределить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно настроек -->
+        <div id="settings-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>⚙️ Настройки</h2>
+                    <span class="close" onclick="app.closeSettingsModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-section">
+                        <h3>🎨 Внешний вид</h3>
+                        
+                        <div class="form-group">
+                            <label for="theme-select">Тема оформления:</label>
+                            <select id="theme-select" onchange="app.changeTheme()">
+                                <option value="light">☀️ Светлая</option>
+                                <option value="dark">🌙 Темная</option>
+                                <option value="balanced">⚖️ Сбалансированная</option>
+                            </select>
+                        </div>
+                        
+                        <div class="theme-preview" id="theme-preview">
+                            <div class="preview-box">
+                                <div class="preview-header">Предпросмотр темы</div>
+                                <div class="preview-content">
+                                    <div class="preview-text">Текст в выбранной теме</div>
+                                    <button class="preview-button">Кнопка</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>ℹ️ Информация</h3>
+                        <p><strong>Версия:</strong> 2.0.0</p>
+                        <p><strong>Хостинг:</strong> GitHub Pages</p>
+                        <p><strong>Хранилище:</strong> localStorage</p>
+                        <p><strong>Сотрудников:</strong> 120 (по 30 на регион)</p>
+                        <p><strong>Регионов:</strong> 4</p>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-secondary" onclick="app.closeSettingsModal()">Закрыть</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Скрипты -->
+    <script src="js/data.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/workflow.js"></script>
+    <script src="js/analytics.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Запуск CURSOR Pipeline Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+        
+        .launch-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            color: white;
+            padding: 20px 40px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.4);
+        }
+        
+        .launch-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255,107,107,0.6);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+        
+        .feature {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .feature h3 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .feature p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .instructions {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .step {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        
+        .step-number {
+            background: #ff6b6b;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .code-block {
+            background: rgba(0,0,0,0.3);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .warning {
+            background: rgba(255,193,7,0.2);
+            border: 1px solid rgba(255,193,7,0.5);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .warning h3 {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+        
+        .warning p {
+            color: #ffc107;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .launch-button {
+                padding: 15px 30px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 ЗАДАЧНИК</h1>
+        <p class="subtitle">Система управления задачами и проектами</p>
+        
+        <a href="https://github.com/codespaces/new?hide_repo_select=true&repo=jfsagro-glitch%2Fzadachnik&ref=main" 
+           class="launch-button" 
+           target="_blank">
+            🚀 Запустить в Codespaces
+        </a>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>📋 Kanban доска</h3>
+                <p>Управление задачами с перетаскиванием</p>
+            </div>
+            <div class="feature">
+                <h3>👥 Команды</h3>
+                <p>8 тестовых пользователей с разными ролями</p>
+            </div>
+            <div class="feature">
+                <h3>📊 Аналитика</h3>
+                <p>KPI метрики и загрузка сотрудников</p>
+            </div>
+            <div class="feature">
+                <h3>🎯 Демо-сессии</h3>
+                <p>6 часов изолированного тестирования</p>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 Как запустить</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Нажмите кнопку "🚀 Запустить в Codespaces"</strong>
+                <p>Откроется новая вкладка с GitHub Codespaces</p>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Создайте Codespace</strong>
+                <p>GitHub автоматически создаст облачную среду разработки</p>
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Автоматический запуск</strong>
+                <p>Сервер запустится автоматически, приложение откроется в браузере</p>
+            </div>
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Начните тестирование</strong>
+                <p>Нажмите "Демо-режим" и изучите все возможности системы</p>
+            </div>
+        </div>
+        
+        <div class="warning">
+            <h3>⚠️ Альтернативные способы запуска</h3>
+            <p>Для статической версии откройте:</p>
+            <div class="code-block">
+https://jfsagro-glitch.github.io/zadachnik/
+            </div>
+            <p>Или локальный запуск:</p>
+            <div class="code-block">
+git clone https://github.com/jfsagro-glitch/zadachnik.git
+cd zadachnik
+# Откройте index.html в браузере
+            </div>
+        </div>
+        
+        <div style="margin-top: 40px; opacity: 0.8;">
+            <p>📖 <a href="https://github.com/jfsagro-glitch/zadachnik/blob/main/README.md" 
+                     style="color: white; text-decoration: underline;">Полная документация</a></p>
+            <p>📁 <a href="https://github.com/jfsagro-glitch/zadachnik" 
+                     style="color: white; text-decoration: underline;">Исходный код на GitHub</a></p>
+        </div>
+    </div>
+    
+    <script>
+        // Автоматическое определение поддержки Codespaces
+        if (window.location.hostname === 'github.io' || window.location.hostname.includes('github')) {
+            console.log('🎉 GitHub environment detected');
+        }
+        
+        // Обработка клика по кнопке запуска
+        document.querySelector('.launch-button').addEventListener('click', function(e) {
+            console.log('🚀 Запуск ЗАДАЧНИК...');
+            // Кнопка откроет Codespaces в новой вкладке
+        });
+    </script>
+</body>
+</html>
