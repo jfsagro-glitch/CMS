@@ -18,37 +18,24 @@ interface FeedbackAnalysis {
 
 class DeepSeekService {
   private readonly MODEL = 'deepseek-chat';
-  private readonly proxyUrl = (import.meta.env.VITE_DEEPSEEK_PROXY_URL || '').trim();
-  
-  /**
-   * Проверяет, находимся ли мы в локальном окружении
-   */
-  private isLocalDev(): boolean {
-    return import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  }
-  
-  /**
-   * Проверяет, выполняется ли прямой запрос из браузера (без серверного прокси)
-   */
-  private isDirectBrowserCall(): boolean {
-    return !this.isLocalDev() && !this.proxyUrl;
-  }
   
   /**
    * Определяет URL API в зависимости от окружения
-   * В development используем прокси Vite, в production — URL серверного прокси или прямой API
+   * В development используем прокси Vite, в production — Cloudflare Worker прокси
    */
   private getApiUrl(): string {
-    if (this.isLocalDev()) {
+    const isLocalDev =
+      import.meta.env.DEV ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
+
+    if (isLocalDev) {
       return '/api/deepseek/chat/completions';
     }
-    
-    if (this.proxyUrl) {
-      return this.proxyUrl;
-    }
-    
-    // Фоллбек на прямой запрос (будет заблокирован CORS, но показываем понятное сообщение)
-    return 'https://api.deepseek.com/v1/chat/completions';
+
+    // В production ВСЕГДА ходим через Cloudflare Worker прокси,
+    // чтобы избежать CORS при прямом запросе к DeepSeek.
+    return 'https://deepseek-proxy-cms.jfsagro.workers.dev/';
   }
   private feedbackCache: {
     data: FeedbackAnalysis;
@@ -99,7 +86,11 @@ class DeepSeekService {
       
       // Определяем режим запроса и URL
       const apiUrl = this.getApiUrl();
-      const fetchMode = this.isLocalDev() ? 'same-origin' : 'cors';
+      const isLocalDev =
+        import.meta.env.DEV ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
+      const fetchMode: RequestMode = isLocalDev ? 'same-origin' : 'cors';
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -163,16 +154,10 @@ class DeepSeekService {
         // Обработка CORS и сетевых ошибок
         const errorMessage = error.message.toLowerCase();
         if (errorMessage.includes('failed to fetch') || errorMessage.includes('networkerror')) {
-          // В production всегда считаем это CORS ошибкой, если идем напрямую в DeepSeek
-          if (this.isDirectBrowserCall()) {
-            throw new Error(
-              'Ошибка CORS: API DeepSeek не поддерживает прямые запросы из браузера. ' +
-              'Для работы требуется серверный прокси. ' +
-              'В development режиме (localhost) используется прокси Vite, который обходит эту проблему.'
-            );
-          }
-          
-          throw new Error('Ошибка сети. Проверьте подключение к интернету.');
+          throw new Error(
+            'Не удалось выполнить запрос к DeepSeek API через прокси. ' +
+            'Проверьте подключение к интернету или работу Cloudflare Worker прокси.'
+          );
         }
       }
       
