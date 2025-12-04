@@ -8,7 +8,7 @@ import { evolutionService } from './EvolutionService';
 import { questionEnhancementService } from './QuestionEnhancementService';
 
 // Зашифрованный API ключ (base64 + простой шифр)
-const ENCRYPTED_API_KEY = 'c2stMWIyN2JhYmVlNzQ2NGVlODk2Nzc5ZmRlNDI5MDg0ZWQ='; // base64(sk-1b27babee7464ee896779fde429084ed)
+const ENCRYPTED_API_KEY = 'c2stNWYwNmRiOTY5YjVmNDI4YmJlNDQ3NzY5NGU2ZDdkN2Y='; // base64(sk-5f06db969b5f428bbe4477694e6d7d7f)
 
 interface FeedbackAnalysis {
   goodExamples: string[];
@@ -17,8 +17,30 @@ interface FeedbackAnalysis {
 }
 
 class DeepSeekService {
-  private readonly API_URL = 'https://api.deepseek.com/v1/chat/completions';
   private readonly MODEL = 'deepseek-chat';
+  
+  /**
+   * Определяет URL API в зависимости от окружения
+   * В development используем прокси Vite, в production - CORS proxy
+   */
+  private getApiUrl(): string {
+    // В development режиме (localhost) используем прокси Vite
+    if (import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return '/api/deepseek/chat/completions';
+    }
+    // В production используем CORS proxy для обхода CORS
+    // Используем allorigins.win, который поддерживает POST запросы
+    const targetUrl = 'https://api.deepseek.com/v1/chat/completions';
+    return `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+  }
+  
+  /**
+   * Определяет, нужно ли использовать прокси для обхода CORS
+   */
+  private shouldUseProxy(): boolean {
+    // В development всегда используем прокси Vite
+    return import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  }
   private feedbackCache: {
     data: FeedbackAnalysis;
     timestamp: number;
@@ -66,8 +88,13 @@ class DeepSeekService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
       
-      const response = await fetch(this.API_URL, {
+      // Определяем режим запроса и URL
+      const apiUrl = this.getApiUrl();
+      const fetchMode = this.shouldUseProxy() ? 'same-origin' : 'cors';
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
+        mode: fetchMode,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
@@ -124,11 +151,25 @@ class DeepSeekService {
         if (error.name === 'AbortError') {
           throw new Error('Превышено время ожидания ответа от API (30 секунд). Попробуйте еще раз.');
         }
-        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        // Обработка CORS и сетевых ошибок
+        const errorMessage = error.message.toLowerCase();
+        if (errorMessage.includes('failed to fetch') || errorMessage.includes('networkerror')) {
+          // Проверяем, является ли это CORS ошибкой
+          const isCorsError = 
+            errorMessage.includes('cors') ||
+            errorMessage.includes('access-control-allow-origin') ||
+            errorMessage.includes('blocked by cors policy') ||
+            (!this.shouldUseProxy() && errorMessage.includes('failed to fetch'));
+          
+          if (isCorsError) {
+            throw new Error(
+              'Ошибка CORS: API DeepSeek блокирует запросы из браузера. ' +
+              'Требуется серверный прокси для обхода ограничений. ' +
+              'Обратитесь к администратору для настройки прокси-сервера.'
+            );
+          }
+          
           throw new Error('Ошибка сети. Проверьте подключение к интернету.');
-        }
-        if (error.message.includes('CORS')) {
-          throw new Error('Ошибка CORS. Проблема с настройками сервера.');
         }
       }
       

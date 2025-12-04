@@ -20,6 +20,14 @@ export default defineConfig(() => ({
   server: {
     port: 3000,
     open: true,
+    proxy: {
+      '/api/deepseek': {
+        target: 'https://api.deepseek.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/deepseek/, '/v1'),
+        secure: true,
+      },
+    },
   },
   build: {
     outDir: 'dist',
