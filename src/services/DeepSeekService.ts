@@ -80,9 +80,9 @@ class DeepSeekService {
     ];
 
     try {
-      // Добавляем таймаут для запроса (30 секунд)
+      // Добавляем таймаут для запроса (60 секунд)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
       
       // Определяем режим запроса и URL
       const apiUrl = this.getApiUrl();
