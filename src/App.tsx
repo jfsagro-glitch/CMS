@@ -7,6 +7,10 @@ import { store } from './store';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { setInitialized, setSettings } from './store/slices/appSlice';
 import { setCards } from './store/slices/cardsSlice';
+import {
+  setCases as setWorkflowCases,
+  setTemplates as setWorkflowTemplates,
+} from './store/slices/workflowSlice';
 import extendedStorageService from './services/ExtendedStorageService';
 import employeeService from './services/EmployeeService';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -46,6 +50,7 @@ import './styles/global.css';
 const AppContent: React.FC = () => {
   const dispatch = useAppDispatch();
   const { theme: appTheme, initialized } = useAppSelector(state => state.app);
+  const workflowState = useAppSelector(state => state.workflow);
 
   useEffect(() => {
     const initApp = async () => {
@@ -162,6 +167,20 @@ const AppContent: React.FC = () => {
           console.warn('Демо-данные осмотров не загружены:', error);
         }
 
+        // Загрузка workflow (кейсы и шаблоны) из IndexedDB
+        try {
+          const wfCases = await extendedStorageService.getWorkflowCases();
+          if (wfCases && wfCases.length > 0) {
+            dispatch(setWorkflowCases(wfCases));
+          }
+          const wfTemplates = await extendedStorageService.getWorkflowTemplates();
+          if (wfTemplates && wfTemplates.length > 0) {
+            dispatch(setWorkflowTemplates(wfTemplates));
+          }
+        } catch (error) {
+          console.warn('Не удалось загрузить workflow из IndexedDB:', error);
+        }
+
         dispatch(setInitialized(true));
       } catch (error) {
         console.error('Failed to initialize app:', error);
@@ -170,6 +189,19 @@ const AppContent: React.FC = () => {
 
     initApp();
   }, [dispatch]);
+
+  // Сохраняем workflow кейсы и шаблоны в IndexedDB при изменениях (после инициализации)
+  useEffect(() => {
+    if (!initialized) return;
+    (async () => {
+      try {
+        await extendedStorageService.saveWorkflowCases(workflowState.cases);
+        await extendedStorageService.saveWorkflowTemplates(workflowState.templates);
+      } catch (error) {
+        console.warn('Не удалось сохранить workflow в IndexedDB:', error);
+      }
+    })();
+  }, [initialized, workflowState.cases, workflowState.templates]);
 
   if (!initialized) {
     return (

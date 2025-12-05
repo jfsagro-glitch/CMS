@@ -8,6 +8,7 @@ import type {
   AppSettings,
   ExportResult,
 } from '@/types';
+import type { WorkflowCase, WorkflowTemplate } from '@/types/workflow';
 import type { Inspection } from '@/types/inspection';
 
 // Интерфейсы для индексов документов
@@ -95,122 +96,162 @@ class ExtendedCMSDatabase extends Dexie {
   knowledgeCategories!: Table<KnowledgeCategoryDB, string>;
   knowledgeSearchIndex!: Table<KnowledgeSearchIndexDB, string>;
   tasks!: Table<TaskDB, string>;
+  workflowCases!: Table<WorkflowCase, string>;
+  workflowTemplates!: Table<WorkflowTemplate, string>;
 
   constructor() {
     super('CMSDatabase');
-    
+
     // Версия 2 с расширенной схемой
-    this.version(2).stores({
-      collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
-      partners: 'id, type, role, inn, lastName, organizationName',
-      documents: 'id, name, type, category, uploadDate',
-      settings: 'id'
-    }).upgrade(async () => {
-      // Миграция данных из версии 1
-      console.log('Upgrading database to version 2...');
-    });
-    
+    this.version(2)
+      .stores({
+        collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
+        partners: 'id, type, role, inn, lastName, organizationName',
+        documents: 'id, name, type, category, uploadDate',
+        settings: 'id',
+      })
+      .upgrade(async () => {
+        // Миграция данных из версии 1
+        console.log('Upgrading database to version 2...');
+      });
+
     // Версия 3 с таблицей осмотров
-    this.version(3).stores({
-      collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
-      partners: 'id, type, role, inn, lastName, organizationName',
-      documents: 'id, name, type, category, uploadDate',
-      settings: 'id',
-      inspections: 'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt'
-    }).upgrade(async () => {
-      // Миграция данных из версии 2
-      console.log('Upgrading database to version 3...');
-    });
+    this.version(3)
+      .stores({
+        collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
+        partners: 'id, type, role, inn, lastName, organizationName',
+        documents: 'id, name, type, category, uploadDate',
+        settings: 'id',
+        inspections:
+          'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
+      })
+      .upgrade(async () => {
+        // Миграция данных из версии 2
+        console.log('Upgrading database to version 3...');
+      });
 
     // Версия 4 с таблицами для индексов документов
-    this.version(4).stores({
-      collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
-      partners: 'id, type, role, inn, lastName, organizationName',
-      documents: 'id, name, type, category, uploadDate',
-      settings: 'id',
-      inspections: 'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
-      documentIndexes: 'documentName',
-      documentChunks: 'id, documentName, page'
-    }).upgrade(async () => {
-      // Миграция данных из версии 3
-      console.log('Upgrading database to version 4...');
-    });
+    this.version(4)
+      .stores({
+        collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
+        partners: 'id, type, role, inn, lastName, organizationName',
+        documents: 'id, name, type, category, uploadDate',
+        settings: 'id',
+        inspections:
+          'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
+        documentIndexes: 'documentName',
+        documentChunks: 'id, documentName, page',
+      })
+      .upgrade(async () => {
+        // Миграция данных из версии 3
+        console.log('Upgrading database to version 4...');
+      });
 
     // Версия 5 с таблицами для базы знаний
-    this.version(5).stores({
-      collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
-      partners: 'id, type, role, inn, lastName, organizationName',
-      documents: 'id, name, type, category, uploadDate',
-      settings: 'id',
-      inspections: 'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
-      documentIndexes: 'documentName',
-      documentChunks: 'id, documentName, page',
-      knowledgeTopics: 'id, category',
-      knowledgeCategories: 'id',
-      knowledgeSearchIndex: 'keyword'
-    }).upgrade(async () => {
-      // Миграция данных из версии 4
-      console.log('Upgrading database to version 5...');
-    });
+    this.version(5)
+      .stores({
+        collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
+        partners: 'id, type, role, inn, lastName, organizationName',
+        documents: 'id, name, type, category, uploadDate',
+        settings: 'id',
+        inspections:
+          'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
+        documentIndexes: 'documentName',
+        documentChunks: 'id, documentName, page',
+        knowledgeTopics: 'id, category',
+        knowledgeCategories: 'id',
+        knowledgeSearchIndex: 'keyword',
+      })
+      .upgrade(async () => {
+        // Миграция данных из версии 4
+        console.log('Upgrading database to version 5...');
+      });
 
     // Версия 6 с таблицей для задач
-    this.version(6).stores({
-      collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
-      partners: 'id, type, role, inn, lastName, organizationName',
-      documents: 'id, name, type, category, uploadDate',
-      settings: 'id',
-      inspections: 'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
-      documentIndexes: 'documentName',
-      documentChunks: 'id, documentName, page',
-      knowledgeTopics: 'id, category',
-      knowledgeCategories: 'id',
-      knowledgeSearchIndex: 'keyword',
-      tasks: 'id, employeeId, region, status, type, dueDate, createdAt'
-    }).upgrade(async (tx) => {
-      // Миграция задач из localStorage в IndexedDB
-      console.log('Upgrading database to version 6: migrating tasks from localStorage...');
-      try {
-        let tasksJson: string | null = null;
+    this.version(6)
+      .stores({
+        collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
+        partners: 'id, type, role, inn, lastName, organizationName',
+        documents: 'id, name, type, category, uploadDate',
+        settings: 'id',
+        inspections:
+          'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
+        documentIndexes: 'documentName',
+        documentChunks: 'id, documentName, page',
+        knowledgeTopics: 'id, category',
+        knowledgeCategories: 'id',
+        knowledgeSearchIndex: 'keyword',
+        tasks: 'id, employeeId, region, status, type, dueDate, createdAt',
+      })
+      .upgrade(async tx => {
+        // Миграция задач из localStorage в IndexedDB
+        console.log('Upgrading database to version 6: migrating tasks from localStorage...');
         try {
-          tasksJson = localStorage.getItem('zadachnik_tasks');
-        } catch (error) {
-          // Если не удалось прочитать из localStorage (например, QuotaExceededError), просто пропускаем миграцию
-          console.warn('Не удалось прочитать задачи из localStorage (возможно, данные слишком большие), пропускаем миграцию');
-          return;
-        }
-        
-        if (tasksJson) {
+          let tasksJson: string | null = null;
           try {
-            const tasks = JSON.parse(tasksJson);
-            if (Array.isArray(tasks) && tasks.length > 0) {
-              // Сохраняем задачи батчами по 1000
-              const batchSize = 1000;
-              for (let i = 0; i < tasks.length; i += batchSize) {
-                const batch = tasks.slice(i, i + batchSize);
-                await tx.table('tasks').bulkPut(batch);
+            tasksJson = localStorage.getItem('zadachnik_tasks');
+          } catch (error) {
+            // Если не удалось прочитать из localStorage (например, QuotaExceededError), просто пропускаем миграцию
+            console.warn(
+              'Не удалось прочитать задачи из localStorage (возможно, данные слишком большие), пропускаем миграцию'
+            );
+            return;
+          }
+
+          if (tasksJson) {
+            try {
+              const tasks = JSON.parse(tasksJson);
+              if (Array.isArray(tasks) && tasks.length > 0) {
+                // Сохраняем задачи батчами по 1000
+                const batchSize = 1000;
+                for (let i = 0; i < tasks.length; i += batchSize) {
+                  const batch = tasks.slice(i, i + batchSize);
+                  await tx.table('tasks').bulkPut(batch);
+                }
+                console.log(`✅ Мигрировано ${tasks.length} задач из localStorage в IndexedDB`);
+                // Удаляем из localStorage после успешной миграции
+                try {
+                  localStorage.removeItem('zadachnik_tasks');
+                } catch (e) {
+                  console.warn('Не удалось удалить задачи из localStorage (не критично)');
+                }
               }
-              console.log(`✅ Мигрировано ${tasks.length} задач из localStorage в IndexedDB`);
-              // Удаляем из localStorage после успешной миграции
+            } catch (parseError) {
+              console.error('Ошибка парсинга задач из localStorage:', parseError);
+              // Пытаемся очистить поврежденные данные
               try {
                 localStorage.removeItem('zadachnik_tasks');
               } catch (e) {
-                console.warn('Не удалось удалить задачи из localStorage (не критично)');
+                // Игнорируем ошибку удаления
               }
             }
-          } catch (parseError) {
-            console.error('Ошибка парсинга задач из localStorage:', parseError);
-            // Пытаемся очистить поврежденные данные
-            try {
-              localStorage.removeItem('zadachnik_tasks');
-            } catch (e) {
-              // Игнорируем ошибку удаления
-            }
           }
+        } catch (error) {
+          console.error('Ошибка миграции задач:', error);
         }
-      } catch (error) {
-        console.error('Ошибка миграции задач:', error);
-      }
-    });
+      });
+
+    // Версия 7 с таблицами workflow
+    this.version(7)
+      .stores({
+        collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
+        partners: 'id, type, role, inn, lastName, organizationName',
+        documents: 'id, name, type, category, uploadDate',
+        settings: 'id',
+        inspections:
+          'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
+        documentIndexes: 'documentName',
+        documentChunks: 'id, documentName, page',
+        knowledgeTopics: 'id, category',
+        knowledgeCategories: 'id',
+        knowledgeSearchIndex: 'keyword',
+        tasks: 'id, employeeId, region, status, type, dueDate, createdAt',
+        workflowCases: 'id, objectId, stage, updatedAt',
+        workflowTemplates: 'id, type, updatedAt',
+      })
+      .upgrade(async () => {
+        console.log('Upgrading database to version 7: adding workflow tables');
+      });
   }
 }
 
@@ -232,7 +273,7 @@ class ExtendedStorageService {
     try {
       await this.db.open();
       console.log('Extended database initialized successfully');
-      
+
       // Инициализация настроек по умолчанию
       const existingSettings = await this.db.settings.get('app-settings');
       if (!existingSettings) {
@@ -240,7 +281,7 @@ class ExtendedStorageService {
           id: 'app-settings',
           theme: 'light',
           language: 'ru',
-          sidebarCollapsed: false
+          sidebarCollapsed: false,
         });
       }
     } catch (error) {
@@ -258,9 +299,9 @@ class ExtendedStorageService {
       const cardToSave: ExtendedCollateralCard = {
         ...card,
         updatedAt: now,
-        createdAt: card.createdAt || now
+        createdAt: card.createdAt || now,
       };
-      
+
       await this.db.collateralCards.put(cardToSave);
       return cardToSave.id;
     } catch (error) {
@@ -276,9 +317,7 @@ class ExtendedStorageService {
 
       if (filters) {
         if (filters.mainCategory) {
-          collection = this.db.collateralCards
-            .where('mainCategory')
-            .equals(filters.mainCategory);
+          collection = this.db.collateralCards.where('mainCategory').equals(filters.mainCategory);
         }
 
         if (filters.status) {
@@ -287,15 +326,18 @@ class ExtendedStorageService {
 
         if (filters.searchQuery) {
           const query = filters.searchQuery.toLowerCase();
-          collection = collection.filter(card =>
-            card.name.toLowerCase().includes(query) ||
-            card.number.toLowerCase().includes(query) ||
-            card.address?.fullAddress?.toLowerCase().includes(query) ||
-            (card.partners?.some(p =>
-              p.lastName?.toLowerCase().includes(query) ||
-              p.firstName?.toLowerCase().includes(query) ||
-              p.organizationName?.toLowerCase().includes(query)
-            ) || false)
+          collection = collection.filter(
+            card =>
+              card.name.toLowerCase().includes(query) ||
+              card.number.toLowerCase().includes(query) ||
+              card.address?.fullAddress?.toLowerCase().includes(query) ||
+              card.partners?.some(
+                p =>
+                  p.lastName?.toLowerCase().includes(query) ||
+                  p.firstName?.toLowerCase().includes(query) ||
+                  p.organizationName?.toLowerCase().includes(query)
+              ) ||
+              false
           );
         }
 
@@ -322,7 +364,9 @@ class ExtendedStorageService {
 
         if (filters.hasDocuments !== undefined) {
           collection = collection.filter(card =>
-            filters.hasDocuments ? (card.documents?.length || 0) > 0 : (card.documents?.length || 0) === 0
+            filters.hasDocuments
+              ? (card.documents?.length || 0) > 0
+              : (card.documents?.length || 0) === 0
           );
         }
 
@@ -407,10 +451,12 @@ class ExtendedStorageService {
       const lowerQuery = query.toLowerCase();
       return await this.db.partners
         .filter(partner =>
-          Boolean(partner.lastName?.toLowerCase().includes(lowerQuery) ||
-          partner.firstName?.toLowerCase().includes(lowerQuery) ||
-          partner.organizationName?.toLowerCase().includes(lowerQuery) ||
-          partner.inn?.includes(query))
+          Boolean(
+            partner.lastName?.toLowerCase().includes(lowerQuery) ||
+              partner.firstName?.toLowerCase().includes(lowerQuery) ||
+              partner.organizationName?.toLowerCase().includes(lowerQuery) ||
+              partner.inn?.includes(query)
+          )
         )
         .toArray();
     } catch (error) {
@@ -448,11 +494,13 @@ class ExtendedStorageService {
   async getSettings(): Promise<AppSettings> {
     try {
       const settings = await this.db.settings.get('app-settings');
-      return settings || {
-        theme: 'light',
-        language: 'ru',
-        sidebarCollapsed: false
-      };
+      return (
+        settings || {
+          theme: 'light',
+          language: 'ru',
+          sidebarCollapsed: false,
+        }
+      );
     } catch (error) {
       console.error('Failed to get settings:', error);
       throw error;
@@ -466,7 +514,7 @@ class ExtendedStorageService {
       await this.db.settings.put({
         id: 'app-settings',
         ...currentSettings,
-        ...settings
+        ...settings,
       });
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -491,7 +539,7 @@ class ExtendedStorageService {
     try {
       // Очищаем старые задачи перед сохранением новых
       await this.db.tasks.clear();
-      
+
       // Сохраняем батчами по 1000 для производительности
       const batchSize = 1000;
       for (let i = 0; i < tasks.length; i += batchSize) {
@@ -550,21 +598,22 @@ class ExtendedStorageService {
   async exportToExcel(data: ExtendedCollateralCard[], filename: string): Promise<ExportResult> {
     try {
       const exportData = data.map(card => ({
-        'ID': card.id,
-        'Номер': card.number,
-        'Название': card.name,
-        'Категория': this.translateCategory(card.mainCategory),
+        ID: card.id,
+        Номер: card.number,
+        Название: card.name,
+        Категория: this.translateCategory(card.mainCategory),
         'Вид объекта': card.classification.level1,
-        'Тип': card.classification.level2,
+        Тип: card.classification.level2,
         'Код ЦБ': card.cbCode,
-        'Статус': card.status === 'editing' ? 'Редактирование' : 'Утвержден',
-        'Адрес': card.address?.fullAddress || '',
-        'Собственники': card.partners
-          ?.filter(p => p.role === 'owner')
-          .map(p => this.getPartnerName(p))
-          .join(', ') || '',
-        'Площадь': card.characteristics?.totalArea || card.characteristics?.area || '',
-        'Документов': card.documents?.length || 0,
+        Статус: card.status === 'editing' ? 'Редактирование' : 'Утвержден',
+        Адрес: card.address?.fullAddress || '',
+        Собственники:
+          card.partners
+            ?.filter(p => p.role === 'owner')
+            .map(p => this.getPartnerName(p))
+            .join(', ') || '',
+        Площадь: card.characteristics?.totalArea || card.characteristics?.area || '',
+        Документов: card.documents?.length || 0,
         'Дата создания': new Date(card.createdAt).toLocaleString('ru-RU'),
         'Дата обновления': new Date(card.updatedAt).toLocaleString('ru-RU'),
       }));
@@ -581,13 +630,13 @@ class ExtendedStorageService {
       return {
         success: true,
         message: `Экспортировано ${data.length} записей`,
-        filename: `${filename}.xlsx`
+        filename: `${filename}.xlsx`,
       };
     } catch (error) {
       console.error('Failed to export to Excel:', error);
       return {
         success: false,
-        message: 'Ошибка при экспорте данных'
+        message: 'Ошибка при экспорте данных',
       };
     }
   }
@@ -607,8 +656,8 @@ class ExtendedStorageService {
           cards,
           partners,
           documents,
-          settings
-        }
+          settings,
+        },
       };
 
       return new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -669,9 +718,9 @@ class ExtendedStorageService {
 
   private translateCategory(category: string): string {
     const translations: Record<string, string> = {
-      'real_estate': 'Недвижимость',
-      'movable': 'Движимое имущество',
-      'property_rights': 'Имущественные права'
+      real_estate: 'Недвижимость',
+      movable: 'Движимое имущество',
+      property_rights: 'Имущественные права',
     };
     return translations[category] || category;
   }
@@ -687,17 +736,17 @@ class ExtendedStorageService {
   async getStatistics() {
     try {
       const allCards = await this.db.collateralCards.toArray();
-      
+
       return {
         total: allCards.length,
         byCategory: {
           real_estate: allCards.filter(c => c.mainCategory === 'real_estate').length,
           movable: allCards.filter(c => c.mainCategory === 'movable').length,
-          property_rights: allCards.filter(c => c.mainCategory === 'property_rights').length
+          property_rights: allCards.filter(c => c.mainCategory === 'property_rights').length,
         },
         byStatus: {
           editing: allCards.filter(c => c.status === 'editing').length,
-          approved: allCards.filter(c => c.status === 'approved').length
+          approved: allCards.filter(c => c.status === 'approved').length,
         },
         withDocuments: allCards.filter(c => (c.documents?.length || 0) > 0).length,
         withPartners: allCards.filter(c => (c.partners?.length || 0) > 0).length,
@@ -707,9 +756,39 @@ class ExtendedStorageService {
       throw error;
     }
   }
+
+  // ============ Workflow ============
+
+  async getWorkflowCases(): Promise<WorkflowCase[]> {
+    return await this.db.workflowCases.toArray();
+  }
+
+  async saveWorkflowCases(cases: WorkflowCase[]): Promise<void> {
+    await this.db.workflowCases.clear();
+    if (cases.length > 0) {
+      await this.db.workflowCases.bulkPut(cases);
+    }
+  }
+
+  async getWorkflowTemplates(): Promise<WorkflowTemplate[]> {
+    return await this.db.workflowTemplates.toArray();
+  }
+
+  async saveWorkflowTemplates(templates: WorkflowTemplate[]): Promise<void> {
+    await this.db.workflowTemplates.clear();
+    if (templates.length > 0) {
+      await this.db.workflowTemplates.bulkPut(templates);
+    }
+  }
+
+  async ensureDefaultWorkflowTemplates(defaultTemplates: WorkflowTemplate[]): Promise<void> {
+    const existing = await this.db.workflowTemplates.toArray();
+    if (!existing || existing.length === 0) {
+      await this.saveWorkflowTemplates(defaultTemplates);
+    }
+  }
 }
 
 // Экспортируем синглтон
 export const extendedStorageService = new ExtendedStorageService();
 export default extendedStorageService;
-
