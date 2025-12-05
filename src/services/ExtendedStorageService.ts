@@ -81,6 +81,7 @@ export interface TaskDB {
     status: string;
   }>;
   category?: string;
+  workflowCaseId?: string;
 }
 
 // Расширенная схема базы данных

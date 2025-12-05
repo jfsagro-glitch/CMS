@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   Card,
@@ -31,6 +31,30 @@ const WorkflowCasePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const cases = useAppSelector(state => state.workflow.cases);
   const current = useMemo(() => cases.find(c => c.id === id), [cases, id]);
+  const [caseTasks, setCaseTasks] = useState<TaskDB[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [docForm] = Form.useForm();
+
+  const loadTasks = async () => {
+    setTasksLoading(true);
+    try {
+      const all = await extendedStorageService.getTasks();
+      if (current) {
+        setCaseTasks(all.filter(t => t.workflowCaseId === current.id));
+      } else {
+        setCaseTasks([]);
+      }
+    } catch (error) {
+      console.warn('Не удалось загрузить задачи workflow:', error);
+    } finally {
+      setTasksLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTasks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current?.id]);
 
   if (!current) {
     return <Alert type="warning" message="Кейс не найден" />;
@@ -41,7 +65,6 @@ const WorkflowCasePage: React.FC = () => {
   const idx = stageOrder.indexOf(current.stage);
   const prevStage = idx > 0 ? stageOrder[idx - 1] : null;
   const nextStage = idx >= 0 && idx < stageOrder.length - 1 ? stageOrder[idx + 1] : null;
-  const [docForm] = Form.useForm();
 
   const changeStage = async (stage: string, comment: string) => {
     dispatch(
@@ -89,8 +112,10 @@ const WorkflowCasePage: React.FC = () => {
             },
           ],
           category: 'workflow',
+          workflowCaseId: current.id,
         };
         await extendedStorageService.saveTask(task);
+        await loadTasks();
         message.success(`Этап изменён на ${stage}. Создана задача в Zadachnik`);
       } catch (error) {
         console.warn('Не удалось создать задачу для workflow:', error);
@@ -115,7 +140,10 @@ const WorkflowCasePage: React.FC = () => {
           </Button>
         )}
         {nextStage && (
-          <Button type="primary" onClick={() => changeStage(nextStage, 'Перевод на следующий этап')}>
+          <Button
+            type="primary"
+            onClick={() => changeStage(nextStage, 'Перевод на следующий этап')}
+          >
             {nextStage} →
           </Button>
         )}
@@ -284,6 +312,26 @@ const WorkflowCasePage: React.FC = () => {
               }))}
             />
           </Card>
+
+          <Card title="Связанные задачи (workflow)" style={{ marginTop: 16 }}>
+            {tasksLoading ? (
+              <Text type="secondary">Загрузка задач...</Text>
+            ) : caseTasks.length === 0 ? (
+              <Text type="secondary">Задач ещё нет</Text>
+            ) : (
+              <ul style={{ paddingLeft: 18, marginBottom: 0 }}>
+                {caseTasks.map(t => (
+                  <li key={t.id}>
+                    <Text strong>{t.title}</Text> — <Text type="secondary">{t.status}</Text>
+                    <br />
+                    <Text type="secondary">
+                      До: {new Date(t.dueDate).toLocaleDateString()} · {t.description}
+                    </Text>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
         </Col>
       </Row>
     </div>
@@ -291,4 +339,3 @@ const WorkflowCasePage: React.FC = () => {
 };
 
 export default WorkflowCasePage;
-
