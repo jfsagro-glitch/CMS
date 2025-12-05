@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, Col, Row, Tag, Button, Dropdown, MenuProps, Space, Typography } from 'antd';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { WORKFLOW_STAGES } from './stages';
@@ -10,6 +10,7 @@ const { Text } = Typography;
 const WorkflowPipeline: React.FC = () => {
   const dispatch = useAppDispatch();
   const cases = useAppSelector(state => state.workflow.cases);
+  const [dragOverStage, setDragOverStage] = useState<WorkflowStage | null>(null);
 
   const grouped = useMemo(() => {
     const map: Record<WorkflowStage, WorkflowCase[]> = {
@@ -34,8 +35,21 @@ const WorkflowPipeline: React.FC = () => {
     })),
   });
 
+  const handleDrop = (stage: WorkflowStage, caseId: string) => {
+    dispatch(updateCaseStage({ id: caseId, stage }));
+  };
+
+  const columnStyle = (stage: WorkflowStage) =>
+    dragOverStage === stage
+      ? { border: '1px dashed #1890ff', background: '#f0f7ff' }
+      : { border: '1px solid #f0f0f0' };
+
   return (
     <div style={{ padding: 16 }}>
+      <Text type="secondary" style={{ fontSize: 12 }}>
+        Перетащи карточку в нужный этап или выбери этап через «Перевести»
+      </Text>
+      <div style={{ height: 8 }} />
       <Row gutter={[12, 12]} wrap>
         {WORKFLOW_STAGES.map(stage => (
           <Col xs={24} sm={12} md={8} lg={6} key={stage.key}>
@@ -50,6 +64,20 @@ const WorkflowPipeline: React.FC = () => {
               }
               size="small"
               bodyStyle={{ padding: 8 }}
+              style={columnStyle(stage.key)}
+              onDragOver={e => {
+                e.preventDefault();
+                setDragOverStage(stage.key);
+              }}
+              onDragLeave={() => setDragOverStage(null)}
+              onDrop={e => {
+                e.preventDefault();
+                const caseId = e.dataTransfer.getData('text/plain');
+                if (caseId) {
+                  handleDrop(stage.key, caseId);
+                }
+                setDragOverStage(null);
+              }}
             >
               <Space direction="vertical" style={{ width: '100%' }} size="small">
                 {grouped[stage.key].length === 0 && (
@@ -64,6 +92,12 @@ const WorkflowPipeline: React.FC = () => {
                     style={{ borderColor: '#f0f0f0' }}
                     title={item.objectName}
                     extra={<Tag color="blue">{item.assetType}</Tag>}
+                    draggable
+                    onDragStart={e => {
+                      e.dataTransfer.setData('text/plain', item.id);
+                      setDragOverStage(stage.key);
+                    }}
+                    onDragEnd={() => setDragOverStage(null)}
                   >
                     <div style={{ fontSize: 12, marginBottom: 8 }}>
                       Долг: {item.debtAmount?.toLocaleString('ru-RU') || '—'} ₽ <br />
