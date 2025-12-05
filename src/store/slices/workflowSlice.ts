@@ -72,39 +72,41 @@ const sampleCases: WorkflowCase[] = [
   },
 ];
 
+export const DEFAULT_WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
+  {
+    id: 'tpl-1',
+    name: 'Уведомление о намерении реализовать залог',
+    type: 'notification',
+    description: 'Базовое уведомление о старте внесудебной реализации',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'tpl-2',
+    name: 'Претензионное письмо',
+    type: 'claim',
+    description: 'Претензия с указанием задолженности и сроков',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'tpl-3',
+    name: 'Соглашение об отступном',
+    type: 'agreement',
+    description: 'Шаблон соглашения об отступном',
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'tpl-4',
+    name: 'Договор купли-продажи залогового имущества',
+    type: 'sale-contract',
+    description: 'Шаблон ДКП для внесудебной реализации',
+    updatedAt: new Date().toISOString(),
+  },
+];
+
 const initialState: WorkflowState = {
   cases: sampleCases,
   kpi: null,
-  templates: [
-    {
-      id: 'tpl-1',
-      name: 'Уведомление о намерении реализовать залог',
-      type: 'notification',
-      description: 'Базовое уведомление о старте внесудебной реализации',
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'tpl-2',
-      name: 'Претензионное письмо',
-      type: 'claim',
-      description: 'Претензия с указанием задолженности и сроков',
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'tpl-3',
-      name: 'Соглашение об отступном',
-      type: 'agreement',
-      description: 'Шаблон соглашения об отступном',
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'tpl-4',
-      name: 'Договор купли-продажи залогового имущества',
-      type: 'sale-contract',
-      description: 'Шаблон ДКП для внесудебной реализации',
-      updatedAt: new Date().toISOString(),
-    },
-  ],
+  templates: DEFAULT_WORKFLOW_TEMPLATES,
 };
 
 const workflowSlice = createSlice({
@@ -152,4 +154,3 @@ const workflowSlice = createSlice({
 export const { setCases, addCase, updateCaseStage, setKpi, setTemplates, updateTemplate } =
   workflowSlice.actions;
 export default workflowSlice.reducer;
-

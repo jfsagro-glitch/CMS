@@ -10,6 +10,7 @@ import { setCards } from './store/slices/cardsSlice';
 import {
   setCases as setWorkflowCases,
   setTemplates as setWorkflowTemplates,
+  DEFAULT_WORKFLOW_TEMPLATES,
 } from './store/slices/workflowSlice';
 import extendedStorageService from './services/ExtendedStorageService';
 import employeeService from './services/EmployeeService';
@@ -176,6 +177,9 @@ const AppContent: React.FC = () => {
           const wfTemplates = await extendedStorageService.getWorkflowTemplates();
           if (wfTemplates && wfTemplates.length > 0) {
             dispatch(setWorkflowTemplates(wfTemplates));
+          } else {
+            await extendedStorageService.saveWorkflowTemplates(DEFAULT_WORKFLOW_TEMPLATES);
+            dispatch(setWorkflowTemplates(DEFAULT_WORKFLOW_TEMPLATES));
           }
         } catch (error) {
           console.warn('Не удалось загрузить workflow из IndexedDB:', error);
