@@ -14,24 +14,38 @@ const WorkflowDashboard: React.FC = () => {
     return map;
   }, [cases]);
 
-  const activeTasks = useMemo(
-    () =>
-      cases
-        .filter(c => c.stage !== 'COMPLETED' && c.stage !== 'CANCELLED')
-        .slice(0, 5)
-        .map(c => ({
-          title: c.objectName,
-          stage: c.stage,
-          deadline: c.deadline,
-          manager: c.manager || 'Не назначен',
-        })),
-    [cases]
-  );
+  const activeTasks = useMemo(() => {
+    return cases
+      .filter(c => c.stage !== 'COMPLETED' && c.stage !== 'CANCELLED')
+      .slice(0, 5)
+      .map(c => ({
+        title: c.objectName,
+        stage: c.stage,
+        deadline: c.deadline,
+        manager: c.manager || 'Не назначен',
+      }));
+  }, [cases]);
 
-  const avgDuration = 45; // заглушка, пока нет реальных расчётов
-  const totalRecovered = cases
-    .filter(c => c.stage === 'COMPLETED')
-    .reduce((acc, c) => acc + (c.appraisedValue || 0) * 0.8, 0);
+  const avgDuration = useMemo(() => {
+    if (cases.length === 0) return 0;
+    const now = Date.now();
+    const sumDays = cases.reduce((acc, c) => {
+      const start = new Date(c.createdAt).getTime();
+      return acc + Math.max(0, now - start) / (1000 * 3600 * 24);
+    }, 0);
+    return Math.round(sumDays / cases.length);
+  }, [cases]);
+
+  const completedCases = cases.filter(c => c.stage === 'COMPLETED');
+  const totalRecovered = completedCases.reduce(
+    (acc, c) => acc + (c.appraisedValue || 0) * 0.8,
+    0
+  );
+  const totalAppraised = cases.reduce((acc, c) => acc + (c.appraisedValue || 0), 0);
+  const efficiencyPercent =
+    totalAppraised > 0 ? Math.round((totalRecovered / totalAppraised) * 100) : 0;
+  const conversionRate =
+    cases.length > 0 ? Math.round((completedCases.length / cases.length) * 100) : 0;
 
   return (
     <div style={{ padding: 16 }}>
@@ -47,13 +61,18 @@ const WorkflowDashboard: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} md={6}>
-          <Card title="Завершено">
-            <Statistic value={stageCounts.COMPLETED || 0} />
+          <Card title="Завершено / конверсия">
+            <Statistic value={`${stageCounts.COMPLETED || 0} (${conversionRate}%)`} />
           </Card>
         </Col>
         <Col xs={24} md={6}>
           <Card title="Возвращено средств (оценка)">
             <Statistic value={totalRecovered} suffix="₽" precision={0} />
+          </Card>
+        </Col>
+        <Col xs={24} md={6}>
+          <Card title="Эффективность по оценке">
+            <Statistic value={efficiencyPercent} suffix="%" />
           </Card>
         </Col>
       </Row>

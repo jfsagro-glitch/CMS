@@ -1,9 +1,27 @@
 import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Card, Row, Col, Tag, Descriptions, Timeline, Alert, Typography, Divider, Space, Button, message } from 'antd';
+import {
+  Card,
+  Row,
+  Col,
+  Tag,
+  Descriptions,
+  Timeline,
+  Alert,
+  Typography,
+  Divider,
+  Space,
+  Button,
+  message,
+  Form,
+  Input,
+  Select,
+} from 'antd';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { WORKFLOW_STAGES } from './stages';
-import { updateCaseStage } from '@/store/slices/workflowSlice';
+import { updateCaseStage, updateCaseDocuments } from '@/store/slices/workflowSlice';
+import extendedStorageService from '@/services/ExtendedStorageService';
+import type { TaskDB } from '@/services/ExtendedStorageService';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -22,8 +40,9 @@ const WorkflowCasePage: React.FC = () => {
   const idx = stageOrder.indexOf(current.stage);
   const prevStage = idx > 0 ? stageOrder[idx - 1] : null;
   const nextStage = idx >= 0 && idx < stageOrder.length - 1 ? stageOrder[idx + 1] : null;
+  const [docForm] = Form.useForm();
 
-  const changeStage = (stage: string, comment: string) => {
+  const changeStage = async (stage: string, comment: string) => {
     dispatch(
       updateCaseStage({
         id: current.id,
@@ -32,7 +51,53 @@ const WorkflowCasePage: React.FC = () => {
         user: 'Система',
       })
     );
-    message.success(`Этап изменён на ${stage}`);
+
+    // Триггеры задач: при APPROVAL и COMPLETED создаём задачу в Zadachnik (IndexedDB)
+    if (stage === 'APPROVAL' || stage === 'COMPLETED') {
+      try {
+        const now = new Date();
+        const task: TaskDB = {
+          id: `task-wf-${current.id}-${stage}-${now.getTime()}`,
+          region: current.assetType || '—',
+          type: stage === 'APPROVAL' ? 'workflow-approval' : 'workflow-release',
+          title:
+            stage === 'APPROVAL'
+              ? `Согласование условий сделки по ${current.objectName}`
+              : `Снятие обременения / завершение по ${current.objectName}`,
+          description: `Workflow кейс ${current.id} перешёл в этап ${stage}. Источник: карточка workflow.`,
+          priority: 'high',
+          dueDate: new Date(now.getTime() + 3 * 24 * 3600 * 1000).toISOString(),
+          status: 'new',
+          businessUser: 'workflow',
+          businessUserName: 'Workflow',
+          assignedTo: [],
+          currentAssignee: null,
+          currentAssigneeName: null,
+          employeeId: undefined,
+          documents: [],
+          comments: [],
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+          history: [
+            {
+              date: now.toISOString(),
+              user: 'Workflow',
+              userRole: 'system',
+              action: `Создано при переходе в этап ${stage}`,
+              status: 'new',
+            },
+          ],
+          category: 'workflow',
+        };
+        await extendedStorageService.saveTask(task);
+        message.success(`Этап изменён на ${stage}. Создана задача в Zadachnik`);
+      } catch (error) {
+        console.warn('Не удалось создать задачу для workflow:', error);
+        message.warning(`Этап изменён на ${stage}, но задачу создать не удалось`);
+      }
+    } else {
+      message.success(`Этап изменён на ${stage}`);
+    }
   };
 
   return (
@@ -98,6 +163,57 @@ const WorkflowCasePage: React.FC = () => {
                 </Paragraph>
               ))
             )}
+            <Divider />
+            <Form
+              form={docForm}
+              layout="vertical"
+              onFinish={values => {
+                const newDoc = {
+                  id: `doc-${Date.now()}`,
+                  name: values.name,
+                  type: values.type,
+                  url: values.url || undefined,
+                  createdAt: new Date().toISOString(),
+                };
+                dispatch(
+                  updateCaseDocuments({
+                    id: current.id,
+                    documents: [...current.documents, newDoc],
+                  })
+                );
+                docForm.resetFields();
+                message.success('Документ добавлен в кейс');
+              }}
+            >
+              <Row gutter={8}>
+                <Col span={8}>
+                  <Form.Item name="name" label="Название" rules={[{ required: true }]}>
+                    <Input placeholder="Напр. Уведомление" />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="type" label="Тип" initialValue="workflow-doc">
+                    <Select
+                      options={[
+                        { value: 'workflow-doc', label: 'Workflow' },
+                        { value: 'notification', label: 'Уведомление' },
+                        { value: 'agreement', label: 'Соглашение' },
+                        { value: 'sale-contract', label: 'ДКП' },
+                        { value: 'other', label: 'Другое' },
+                      ]}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={10}>
+                  <Form.Item name="url" label="Ссылка (опционально)">
+                    <Input placeholder="https://..." />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Button type="primary" htmlType="submit">
+                Добавить документ
+              </Button>
+            </Form>
           </Card>
         </Col>
 

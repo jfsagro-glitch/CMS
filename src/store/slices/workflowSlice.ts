@@ -138,6 +138,15 @@ const workflowSlice = createSlice({
         ...item.history,
       ];
     },
+    updateCaseDocuments: (
+      state,
+      action: PayloadAction<{ id: string; documents: WorkflowCase['documents'] }>
+    ) => {
+      const item = state.cases.find(c => c.id === action.payload.id);
+      if (!item) return;
+      item.documents = action.payload.documents;
+      item.updatedAt = new Date().toISOString();
+    },
     setKpi: (state, action: PayloadAction<WorkflowKPI | null>) => {
       state.kpi = action.payload;
     },
@@ -151,6 +160,13 @@ const workflowSlice = createSlice({
   },
 });
 
-export const { setCases, addCase, updateCaseStage, setKpi, setTemplates, updateTemplate } =
-  workflowSlice.actions;
+export const {
+  setCases,
+  addCase,
+  updateCaseStage,
+  updateCaseDocuments,
+  setKpi,
+  setTemplates,
+  updateTemplate,
+} = workflowSlice.actions;
 export default workflowSlice.reducer;
