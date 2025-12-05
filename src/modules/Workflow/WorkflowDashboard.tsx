@@ -1,10 +1,29 @@
-import React, { useMemo } from 'react';
-import { Card, Col, Row, Statistic, Progress, List, Tag } from 'antd';
+import React, { useMemo, useEffect, useState } from 'react';
+import { Card, Col, Row, Statistic, Progress, List, Tag, Typography, Space } from 'antd';
 import { useAppSelector } from '@/store/hooks';
 import { WORKFLOW_STAGES } from './stages';
+import extendedStorageService from '@/services/ExtendedStorageService';
+import type { TaskDB } from '@/services/ExtendedStorageService';
 
 const WorkflowDashboard: React.FC = () => {
   const cases = useAppSelector(state => state.workflow.cases);
+  const [tasks, setTasks] = useState<TaskDB[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+
+  useEffect(() => {
+    const loadTasks = async () => {
+      setTasksLoading(true);
+      try {
+        const all = await extendedStorageService.getTasks();
+        setTasks(all.filter(t => t.category === 'workflow'));
+      } catch (error) {
+        console.warn('Не удалось загрузить задачи для KPI workflow:', error);
+      } finally {
+        setTasksLoading(false);
+      }
+    };
+    loadTasks();
+  }, []);
 
   const stageCounts = useMemo(() => {
     const map: Record<string, number> = {};
@@ -37,15 +56,32 @@ const WorkflowDashboard: React.FC = () => {
   }, [cases]);
 
   const completedCases = cases.filter(c => c.stage === 'COMPLETED');
-  const totalRecovered = completedCases.reduce(
-    (acc, c) => acc + (c.appraisedValue || 0) * 0.8,
-    0
-  );
+  const totalRecovered = completedCases.reduce((acc, c) => acc + (c.appraisedValue || 0) * 0.8, 0);
   const totalAppraised = cases.reduce((acc, c) => acc + (c.appraisedValue || 0), 0);
   const efficiencyPercent =
     totalAppraised > 0 ? Math.round((totalRecovered / totalAppraised) * 100) : 0;
   const conversionRate =
     cases.length > 0 ? Math.round((completedCases.length / cases.length) * 100) : 0;
+
+  const now = Date.now();
+  const overdueTasks = tasks.filter(
+    t => t.status !== 'completed' && new Date(t.dueDate).getTime() < now
+  );
+  const tasksByStage = useMemo(() => {
+    const map: Record<string, number> = {};
+    tasks.forEach(t => {
+      const parts = t.type?.split('workflow-');
+      const stage = parts && parts[1] ? parts[1].toUpperCase() : 'OTHER';
+      map[stage] = (map[stage] || 0) + 1;
+    });
+    return map;
+  }, [tasks]);
+  const topTasks = tasks
+    .filter(t => t.status !== 'completed')
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .slice(0, 5);
+
+  const { Text } = Typography;
 
   return (
     <div style={{ padding: 16 }}>
@@ -73,6 +109,16 @@ const WorkflowDashboard: React.FC = () => {
         <Col xs={24} md={6}>
           <Card title="Эффективность по оценке">
             <Statistic value={efficiencyPercent} suffix="%" />
+          </Card>
+        </Col>
+        <Col xs={24} md={6}>
+          <Card title="Задачи workflow">
+            <Statistic value={tasks.length} suffix={tasksLoading ? ' (загрузка)' : ''} />
+            <div style={{ marginTop: 8 }}>
+              <Text type={overdueTasks.length > 0 ? 'danger' : 'secondary'}>
+                Просрочено: {overdueTasks.length}
+              </Text>
+            </div>
           </Card>
         </Col>
       </Row>
@@ -119,10 +165,48 @@ const WorkflowDashboard: React.FC = () => {
             />
           </Card>
         </Col>
+        <Col xs={24} md={12}>
+          <Card title="Задачи (workflow) — ближайшие">
+            <List
+              dataSource={topTasks}
+              locale={{ emptyText: tasksLoading ? 'Загрузка...' : 'Нет задач' }}
+              renderItem={t => (
+                <List.Item>
+                  <List.Item.Meta
+                    title={t.title}
+                    description={
+                      <Space direction="vertical" size={0}>
+                        <Text type="secondary">{t.description}</Text>
+                        <Text type="secondary">
+                          До: {new Date(t.dueDate).toLocaleDateString()} · Статус: {t.status}
+                        </Text>
+                      </Space>
+                    }
+                  />
+                  <Tag>{t.type}</Tag>
+                </List.Item>
+              )}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} md={12}>
+          <Card title="Задачи по этапам (workflow)">
+            <List
+              dataSource={Object.entries(tasksByStage)}
+              renderItem={([stage, count]) => (
+                <List.Item>
+                  <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                    <Text>{stage}</Text>
+                    <Tag color={stage === 'COMPLETED' ? 'green' : 'blue'}>{count}</Tag>
+                  </Space>
+                </List.Item>
+              )}
+            />
+          </Card>
+        </Col>
       </Row>
     </div>
   );
 };
 
 export default WorkflowDashboard;
-

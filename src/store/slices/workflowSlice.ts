@@ -119,6 +119,9 @@ const workflowSlice = createSlice({
     addCase: (state, action: PayloadAction<WorkflowCase>) => {
       state.cases.push(action.payload);
     },
+    addTemplate: (state, action: PayloadAction<WorkflowTemplate>) => {
+      state.templates.push(action.payload);
+    },
     updateCaseStage: (
       state,
       action: PayloadAction<{ id: string; stage: WorkflowStage; comment?: string; user?: string }>
@@ -163,6 +166,7 @@ const workflowSlice = createSlice({
 export const {
   setCases,
   addCase,
+  addTemplate,
   updateCaseStage,
   updateCaseDocuments,
   setKpi,

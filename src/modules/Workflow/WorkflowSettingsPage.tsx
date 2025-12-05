@@ -1,8 +1,20 @@
 import React, { useState } from 'react';
-import { Card, List, Tag, Typography, Modal, Form, Input, Select, Button, Space, message } from 'antd';
+import {
+  Card,
+  List,
+  Tag,
+  Typography,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Button,
+  Space,
+  message,
+} from 'antd';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { WORKFLOW_STAGES } from './stages';
-import { updateTemplate } from '@/store/slices/workflowSlice';
+import { updateTemplate, addTemplate } from '@/store/slices/workflowSlice';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -10,6 +22,7 @@ const WorkflowSettingsPage: React.FC = () => {
   const templates = useAppSelector(state => state.workflow.templates);
   const dispatch = useAppDispatch();
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
   const [form] = Form.useForm();
 
   const startEdit = (tplId: string) => {
@@ -31,6 +44,28 @@ const WorkflowSettingsPage: React.FC = () => {
         dispatch(updateTemplate(updated));
         setEditingTemplateId(null);
         message.success('Шаблон обновлён');
+      })
+      .catch(() => {});
+  };
+
+  const startCreate = () => {
+    form.resetFields();
+    setCreating(true);
+  };
+
+  const saveCreate = () => {
+    form
+      .validateFields()
+      .then(values => {
+        const now = new Date().toISOString();
+        const newTpl = {
+          ...values,
+          id: `tpl-${Date.now()}`,
+          updatedAt: now,
+        };
+        dispatch(addTemplate(newTpl));
+        setCreating(false);
+        message.success('Шаблон создан');
       })
       .catch(() => {});
   };
@@ -71,7 +106,14 @@ const WorkflowSettingsPage: React.FC = () => {
         />
       </Card>
 
-      <Card title="Шаблоны документов workflow">
+      <Card
+        title="Шаблоны документов workflow"
+        extra={
+          <Button type="primary" onClick={startCreate}>
+            Добавить шаблон
+          </Button>
+        }
+      >
         <List
           dataSource={templates}
           renderItem={tpl => (
@@ -110,6 +152,35 @@ const WorkflowSettingsPage: React.FC = () => {
         onOk={saveEdit}
         onCancel={() => setEditingTemplateId(null)}
         okText="Сохранить"
+        cancelText="Отмена"
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item name="name" label="Название" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="type" label="Тип" rules={[{ required: true }]}>
+            <Select
+              options={[
+                { value: 'notification', label: 'Уведомление' },
+                { value: 'claim', label: 'Претензия' },
+                { value: 'agreement', label: 'Соглашение' },
+                { value: 'sale-contract', label: 'ДКП' },
+                { value: 'other', label: 'Другое' },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item name="description" label="Описание">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Новый шаблон"
+        open={creating}
+        onOk={saveCreate}
+        onCancel={() => setCreating(false)}
+        okText="Создать"
         cancelText="Отмена"
       >
         <Form form={form} layout="vertical">
