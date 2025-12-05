@@ -58,6 +58,10 @@ const WorkflowDashboard: React.FC = () => {
   const completedCases = cases.filter(c => c.stage === 'COMPLETED');
   const totalRecovered = completedCases.reduce((acc, c) => acc + (c.appraisedValue || 0) * 0.8, 0);
   const totalAppraised = cases.reduce((acc, c) => acc + (c.appraisedValue || 0), 0);
+  const totalDebt = cases.reduce((acc, c) => acc + (c.debtAmount || 0), 0);
+  const activeDebt = cases
+    .filter(c => c.stage !== 'COMPLETED' && c.stage !== 'CANCELLED')
+    .reduce((acc, c) => acc + (c.debtAmount || 0), 0);
   const efficiencyPercent =
     totalAppraised > 0 ? Math.round((totalRecovered / totalAppraised) * 100) : 0;
   const conversionRate =
@@ -118,6 +122,14 @@ const WorkflowDashboard: React.FC = () => {
               <Text type={overdueTasks.length > 0 ? 'danger' : 'secondary'}>
                 Просрочено: {overdueTasks.length}
               </Text>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} md={6}>
+          <Card title="Долг по кейсам">
+            <Statistic value={activeDebt} suffix="₽ (актив)" precision={0} />
+            <div style={{ marginTop: 4 }}>
+              <Text type="secondary">Всего: {totalDebt.toLocaleString('ru-RU')} ₽</Text>
             </div>
           </Card>
         </Col>
