@@ -1,13 +1,15 @@
 import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Card, Row, Col, Tag, Descriptions, Timeline, Alert, Typography, Divider } from 'antd';
-import { useAppSelector } from '@/store/hooks';
+import { Card, Row, Col, Tag, Descriptions, Timeline, Alert, Typography, Divider, Space, Button, message } from 'antd';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { WORKFLOW_STAGES } from './stages';
+import { updateCaseStage } from '@/store/slices/workflowSlice';
 
 const { Title, Paragraph, Text } = Typography;
 
 const WorkflowCasePage: React.FC = () => {
   const { id } = useParams();
+  const dispatch = useAppDispatch();
   const cases = useAppSelector(state => state.workflow.cases);
   const current = useMemo(() => cases.find(c => c.id === id), [cases, id]);
 
@@ -16,6 +18,22 @@ const WorkflowCasePage: React.FC = () => {
   }
 
   const stageMeta = WORKFLOW_STAGES.find(s => s.key === current.stage);
+  const stageOrder = WORKFLOW_STAGES.map(s => s.key);
+  const idx = stageOrder.indexOf(current.stage);
+  const prevStage = idx > 0 ? stageOrder[idx - 1] : null;
+  const nextStage = idx >= 0 && idx < stageOrder.length - 1 ? stageOrder[idx + 1] : null;
+
+  const changeStage = (stage: string, comment: string) => {
+    dispatch(
+      updateCaseStage({
+        id: current.id,
+        stage: stage as any,
+        comment,
+        user: 'Система',
+      })
+    );
+    message.success(`Этап изменён на ${stage}`);
+  };
 
   return (
     <div style={{ padding: 16 }}>
@@ -23,6 +41,22 @@ const WorkflowCasePage: React.FC = () => {
         {current.objectName}{' '}
         <Tag color={current.stage === 'COMPLETED' ? 'green' : 'blue'}>{current.stage}</Tag>
       </Title>
+
+      <Space style={{ marginBottom: 12 }} wrap>
+        {prevStage && (
+          <Button onClick={() => changeStage(prevStage, 'Возврат на предыдущий этап из карточки')}>
+            ← {prevStage}
+          </Button>
+        )}
+        {nextStage && (
+          <Button type="primary" onClick={() => changeStage(nextStage, 'Перевод на следующий этап')}>
+            {nextStage} →
+          </Button>
+        )}
+        <Button onClick={() => changeStage(current.stage, 'Зафиксировано без изменений')}>
+          Обновить историю
+        </Button>
+      </Space>
 
       <Row gutter={[16, 16]}>
         <Col xs={24} md={14}>
