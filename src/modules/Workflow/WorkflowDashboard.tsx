@@ -33,6 +33,30 @@ const WorkflowDashboard: React.FC = () => {
     return map;
   }, [cases]);
 
+  const avgStageDurationByStage = useMemo(() => {
+    const map: Record<string, { totalDays: number; count: number }> = {};
+    const now = Date.now();
+
+    cases.forEach(c => {
+      if (!Array.isArray(c.history) || c.history.length === 0) return;
+      // История у нас хранится с последним событием в начале
+      const lastEntry = c.history.find(h => h.stage === c.stage);
+      if (!lastEntry) return;
+      const startedAt = new Date(lastEntry.createdAt).getTime();
+      const days = Math.max(0, (now - startedAt) / (1000 * 3600 * 24));
+      if (!map[c.stage]) {
+        map[c.stage] = { totalDays: 0, count: 0 };
+      }
+      map[c.stage].totalDays += days;
+      map[c.stage].count += 1;
+    });
+
+    return Object.entries(map).map(([stage, { totalDays, count }]) => ({
+      stage,
+      avgDays: count > 0 ? Math.round(totalDays / count) : 0,
+    }));
+  }, [cases]);
+
   const activeTasks = useMemo(() => {
     return cases
       .filter(c => c.stage !== 'COMPLETED' && c.stage !== 'CANCELLED')
@@ -156,6 +180,24 @@ const WorkflowDashboard: React.FC = () => {
                     size="small"
                     showInfo={false}
                   />
+                </List.Item>
+              )}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} md={12}>
+          <Card title="Средний срок в текущем этапе">
+            <List
+              dataSource={avgStageDurationByStage}
+              locale={{ emptyText: 'Нет кейсов' }}
+              renderItem={item => (
+                <List.Item>
+                  <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                    <Text>{item.stage}</Text>
+                    <Tag color={item.avgDays > 14 ? 'red' : 'blue'}>
+                      ~{item.avgDays} дн.
+                    </Tag>
+                  </Space>
                 </List.Item>
               )}
             />
