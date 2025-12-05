@@ -167,10 +167,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       tooltip: 'Workflow внесудебной реализации залога',
     },
     {
-      key: 'workflow-settings',
+      key: 'settings-workflow',
       label: 'Настройки Workflow',
       icon: <SettingOutlined />,
-      path: '/workflow/settings',
+      path: '/settings/workflow',
       tooltip: 'Этапы, чеклисты и шаблоны документов',
     },
     {
@@ -210,6 +210,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   const getSelectedKey = (): string => {
     const pathParts = location.pathname.split('/').filter(Boolean);
     if (pathParts.length === 0) return 'registry'; // По умолчанию
+    // Подсвечиваем пункт настроек workflow
+    if (pathParts[0] === 'settings' && pathParts[1] === 'workflow') {
+      return 'settings-workflow';
+    }
     return pathParts[0];
   };
 

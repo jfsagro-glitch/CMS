@@ -112,34 +112,34 @@ const WorkflowDashboard: React.FC = () => {
   const { Text } = Typography;
 
   return (
-    <div style={{ padding: 16 }}>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} md={6}>
+    <div style={{ padding: 12 }}>
+      <Row gutter={[12, 12]}>
+        <Col xs={24} sm={12} md={8} lg={6} xl={6}>
           <Card title="Средний срок реализации">
             <Statistic value={avgDuration} suffix="дней" />
           </Card>
         </Col>
-        <Col xs={24} md={6}>
+        <Col xs={24} sm={12} md={8} lg={6} xl={6}>
           <Card title="Активных кейсов">
             <Statistic value={cases.length} />
           </Card>
         </Col>
-        <Col xs={24} md={6}>
+        <Col xs={24} sm={12} md={8} lg={6} xl={6}>
           <Card title="Завершено / конверсия">
             <Statistic value={`${stageCounts.COMPLETED || 0} (${conversionRate}%)`} />
           </Card>
         </Col>
-        <Col xs={24} md={6}>
+        <Col xs={24} sm={12} md={8} lg={6} xl={6}>
           <Card title="Возвращено средств (оценка)">
             <Statistic value={totalRecovered} suffix="₽" precision={0} />
           </Card>
         </Col>
-        <Col xs={24} md={6}>
+        <Col xs={24} sm={12} md={8} lg={6} xl={6}>
           <Card title="Эффективность по оценке">
             <Statistic value={efficiencyPercent} suffix="%" />
           </Card>
         </Col>
-        <Col xs={24} md={6}>
+        <Col xs={24} sm={12} md={8} lg={6} xl={6}>
           <Card title="Задачи workflow">
             <Statistic value={tasks.length} suffix={tasksLoading ? ' (загрузка)' : ''} />
             <div style={{ marginTop: 8 }}>
@@ -149,7 +149,7 @@ const WorkflowDashboard: React.FC = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={24} md={6}>
+        <Col xs={24} sm={12} md={8} lg={6} xl={6}>
           <Card title="Долг по кейсам">
             <Statistic value={activeDebt} suffix="₽ (актив)" precision={0} />
             <div style={{ marginTop: 4 }}>
@@ -159,10 +159,11 @@ const WorkflowDashboard: React.FC = () => {
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} md={12}>
-          <Card title="Воронка этапов">
+      <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
+        <Col xs={24} lg={12}>
+          <Card title="Воронка этапов" bodyStyle={{ padding: 12 }}>
             <List
+              size="small"
               dataSource={WORKFLOW_STAGES}
               renderItem={stage => (
                 <List.Item>
@@ -176,7 +177,7 @@ const WorkflowDashboard: React.FC = () => {
                     description={stage.description}
                   />
                   <Progress
-                    percent={Math.min(100, (stageCounts[stage.key] || 0) * 10)}
+                    percent={Math.min(100, (stageCounts[stage.key] || 0) * 8)}
                     size="small"
                     showInfo={false}
                   />
@@ -185,9 +186,10 @@ const WorkflowDashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} md={12}>
-          <Card title="Средний срок в текущем этапе">
+        <Col xs={24} lg={12}>
+          <Card title="Средний срок в текущем этапе" bodyStyle={{ padding: 12 }}>
             <List
+              size="small"
               dataSource={avgStageDurationByStage}
               locale={{ emptyText: 'Нет кейсов' }}
               renderItem={item => (
@@ -203,9 +205,10 @@ const WorkflowDashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} md={12}>
-          <Card title="Ближайшие дедлайны">
+        <Col xs={24} lg={12}>
+          <Card title="Ближайшие дедлайны" bodyStyle={{ padding: 12 }}>
             <List
+              size="small"
               dataSource={activeTasks}
               renderItem={item => (
                 <List.Item>
@@ -219,9 +222,10 @@ const WorkflowDashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} md={12}>
-          <Card title="Задачи (workflow) — ближайшие">
+        <Col xs={24} lg={12}>
+          <Card title="Задачи (workflow) — ближайшие" bodyStyle={{ padding: 12 }}>
             <List
+              size="small"
               dataSource={topTasks}
               locale={{ emptyText: tasksLoading ? 'Загрузка...' : 'Нет задач' }}
               renderItem={t => (
@@ -243,9 +247,10 @@ const WorkflowDashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} md={12}>
-          <Card title="Задачи по этапам (workflow)">
+        <Col xs={24} lg={12}>
+          <Card title="Задачи по этапам (workflow)" bodyStyle={{ padding: 12 }}>
             <List
+              size="small"
               dataSource={Object.entries(tasksByStage)}
               renderItem={([stage, count]) => (
                 <List.Item>
