@@ -1,9 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { WorkflowCase, WorkflowStage, WorkflowKPI } from '@/types/workflow';
+import { WorkflowCase, WorkflowStage, WorkflowKPI, WorkflowTemplate } from '@/types/workflow';
 
 export interface WorkflowState {
   cases: WorkflowCase[];
   kpi: WorkflowKPI | null;
+  templates: WorkflowTemplate[];
 }
 
 const sampleCases: WorkflowCase[] = [
@@ -74,6 +75,36 @@ const sampleCases: WorkflowCase[] = [
 const initialState: WorkflowState = {
   cases: sampleCases,
   kpi: null,
+  templates: [
+    {
+      id: 'tpl-1',
+      name: 'Уведомление о намерении реализовать залог',
+      type: 'notification',
+      description: 'Базовое уведомление о старте внесудебной реализации',
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: 'tpl-2',
+      name: 'Претензионное письмо',
+      type: 'claim',
+      description: 'Претензия с указанием задолженности и сроков',
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: 'tpl-3',
+      name: 'Соглашение об отступном',
+      type: 'agreement',
+      description: 'Шаблон соглашения об отступном',
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: 'tpl-4',
+      name: 'Договор купли-продажи залогового имущества',
+      type: 'sale-contract',
+      description: 'Шаблон ДКП для внесудебной реализации',
+      updatedAt: new Date().toISOString(),
+    },
+  ],
 };
 
 const workflowSlice = createSlice({
@@ -108,9 +139,17 @@ const workflowSlice = createSlice({
     setKpi: (state, action: PayloadAction<WorkflowKPI | null>) => {
       state.kpi = action.payload;
     },
+    setTemplates: (state, action: PayloadAction<WorkflowTemplate[]>) => {
+      state.templates = action.payload;
+    },
+    updateTemplate: (state, action: PayloadAction<WorkflowTemplate>) => {
+      const idx = state.templates.findIndex(t => t.id === action.payload.id);
+      if (idx >= 0) state.templates[idx] = action.payload;
+    },
   },
 });
 
-export const { setCases, addCase, updateCaseStage, setKpi } = workflowSlice.actions;
+export const { setCases, addCase, updateCaseStage, setKpi, setTemplates, updateTemplate } =
+  workflowSlice.actions;
 export default workflowSlice.reducer;
 
