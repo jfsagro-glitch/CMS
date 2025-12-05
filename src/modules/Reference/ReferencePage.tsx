@@ -388,26 +388,29 @@ const ReferencePage: React.FC = () => {
 
       if (preset === 'transport') {
         nextValues.assetGroup = 'movable';
-        nextValues.assetType =
-          nextValues.assetType || 'Наземные безрельсовые механические транспортные средства, прицепы';
+        nextValues.assetType = 'Наземные безрельсовые механические транспортные средства, прицепы';
         nextValues.attributes = {
           ...nextValues.attributes,
-          baseLocation: nextValues.attributes?.baseLocation || '',
-          year: nextValues.attributes?.year || new Date().getFullYear() - 3,
-          usageHours: nextValues.attributes?.usageHours || '',
-          condition: nextValues.attributes?.condition || 'рабочее',
+          baseLocation: '',
+          year: new Date().getFullYear() - 3,
+          usageHours: '',
+          condition: 'рабочее',
+          mileage: nextValues.attributes?.mileage || '',
+          vin: nextValues.attributes?.vin || '',
         };
       }
 
       if (preset === 'real_estate') {
         nextValues.assetGroup = 'real_estate';
-        nextValues.assetType = nextValues.assetType || 'Помещение';
+        nextValues.assetType = 'Помещение';
         nextValues.attributes = {
           ...nextValues.attributes,
-          location: nextValues.attributes?.location || '',
-          areaSqm: nextValues.attributes?.areaSqm || '',
-          floors: nextValues.attributes?.floors || 1,
-          condition: nextValues.attributes?.condition || 'хорошее',
+          location: '',
+          areaSqm: '',
+          floors: 1,
+          condition: 'хорошее',
+          cadastralNumber: nextValues.attributes?.cadastralNumber || '',
+          yearBuilt: nextValues.attributes?.yearBuilt || '',
         };
       }
 
