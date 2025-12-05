@@ -66,6 +66,54 @@ const WorkflowCasePage: React.FC = () => {
   const prevStage = idx > 0 ? stageOrder[idx - 1] : null;
   const nextStage = idx >= 0 && idx < stageOrder.length - 1 ? stageOrder[idx + 1] : null;
 
+  const createTaskForStage = async ({
+    stage,
+    title,
+    description,
+    priority = 'medium',
+    dueInDays = 3,
+  }: {
+    stage: string;
+    title: string;
+    description: string;
+    priority?: TaskDB['priority'];
+    dueInDays?: number;
+  }) => {
+    const now = new Date();
+    const task: TaskDB = {
+      id: `task-wf-${current.id}-${stage}-${now.getTime()}`,
+      region: current.assetType || '—',
+      type: `workflow-${stage.toLowerCase()}`,
+      title,
+      description,
+      priority: priority as TaskDB['priority'],
+      dueDate: new Date(now.getTime() + dueInDays * 24 * 3600 * 1000).toISOString(),
+      status: 'new',
+      businessUser: 'workflow',
+      businessUserName: 'Workflow',
+      assignedTo: [],
+      currentAssignee: null,
+      currentAssigneeName: null,
+      employeeId: undefined,
+      documents: [],
+      comments: [],
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      history: [
+        {
+          date: now.toISOString(),
+          user: 'Workflow',
+          userRole: 'system',
+          action: `Создано при переходе в этап ${stage}`,
+          status: 'new',
+        },
+      ],
+      category: 'workflow',
+      workflowCaseId: current.id,
+    };
+    await extendedStorageService.saveTask(task);
+  };
+
   const changeStage = async (stage: string, comment: string) => {
     dispatch(
       updateCaseStage({
@@ -76,52 +124,73 @@ const WorkflowCasePage: React.FC = () => {
       })
     );
 
-    // Триггеры задач: при APPROVAL и COMPLETED создаём задачу в Zadachnik (IndexedDB)
-    if (stage === 'APPROVAL' || stage === 'COMPLETED') {
-      try {
-        const now = new Date();
-        const task: TaskDB = {
-          id: `task-wf-${current.id}-${stage}-${now.getTime()}`,
-          region: current.assetType || '—',
-          type: stage === 'APPROVAL' ? 'workflow-approval' : 'workflow-release',
-          title:
-            stage === 'APPROVAL'
-              ? `Согласование условий сделки по ${current.objectName}`
-              : `Снятие обременения / завершение по ${current.objectName}`,
-          description: `Workflow кейс ${current.id} перешёл в этап ${stage}. Источник: карточка workflow.`,
+    // Триггеры задач по этапам
+    try {
+      if (stage === 'PREPARATION') {
+        await createTaskForStage({
+          stage,
+          title: `Подготовить пакет документов по ${current.objectName}`,
+          description: `Workflow кейс ${current.id} на этапе PREPARATION. Собрать уведомления/претензии.`,
           priority: 'high',
-          dueDate: new Date(now.getTime() + 3 * 24 * 3600 * 1000).toISOString(),
-          status: 'new',
-          businessUser: 'workflow',
-          businessUserName: 'Workflow',
-          assignedTo: [],
-          currentAssignee: null,
-          currentAssigneeName: null,
-          employeeId: undefined,
-          documents: [],
-          comments: [],
-          createdAt: now.toISOString(),
-          updatedAt: now.toISOString(),
-          history: [
-            {
-              date: now.toISOString(),
-              user: 'Workflow',
-              userRole: 'system',
-              action: `Создано при переходе в этап ${stage}`,
-              status: 'new',
-            },
-          ],
-          category: 'workflow',
-          workflowCaseId: current.id,
-        };
-        await extendedStorageService.saveTask(task);
-        await loadTasks();
-        message.success(`Этап изменён на ${stage}. Создана задача в Zadachnik`);
-      } catch (error) {
-        console.warn('Не удалось создать задачу для workflow:', error);
-        message.warning(`Этап изменён на ${stage}, но задачу создать не удалось`);
+          dueInDays: 2,
+        });
       }
-    } else {
+      if (stage === 'NEGOTIATION') {
+        await createTaskForStage({
+          stage,
+          title: `Переговоры с должником/залогодателем по ${current.objectName}`,
+          description: `Workflow кейс ${current.id} на этапе NEGOTIATION. Зафиксировать предложения, скидку/рассрочку.`,
+          priority: 'high',
+          dueInDays: 3,
+        });
+      }
+      if (stage === 'APPROVAL') {
+        await createTaskForStage({
+          stage,
+          title: `Согласование условий сделки по ${current.objectName}`,
+          description: `Workflow кейс ${current.id} на этапе APPROVAL. Визы руководства/юрблока.`,
+          priority: 'high',
+          dueInDays: 3,
+        });
+      }
+      if (stage === 'AGREEMENT') {
+        await createTaskForStage({
+          stage,
+          title: `Договор/отступное по ${current.objectName}`,
+          description: `Workflow кейс ${current.id} на этапе AGREEMENT. Подготовить/подписать договор.`,
+          priority: 'high',
+          dueInDays: 5,
+        });
+      }
+      if (stage === 'SALE') {
+        await createTaskForStage({
+          stage,
+          title: `Фиксация сделки и расчётов по ${current.objectName}`,
+          description: `Workflow кейс ${current.id} на этапе SALE. Ввести покупателя, сумму, дату.`,
+          priority: 'medium',
+          dueInDays: 5,
+        });
+      }
+      if (stage === 'COMPLETED') {
+        await createTaskForStage({
+          stage,
+          title: `Снятие обременения / закрытие кейса ${current.objectName}`,
+          description: `Workflow кейс ${current.id} завершён. Создать задачу на снятие обременения, обновить досье.`,
+          priority: 'high',
+          dueInDays: 5,
+        });
+      }
+      await loadTasks();
+      message.success(`Этап изменён на ${stage}. Задачи созданы (если требуются).`);
+    } catch (error) {
+      console.warn('Не удалось создать задачи для workflow:', error);
+      message.warning(`Этап изменён на ${stage}, но часть задач не создалась`);
+    }
+
+    // Сообщение по умолчанию (если задач не было)
+    if (
+      !['PREPARATION', 'NEGOTIATION', 'APPROVAL', 'AGREEMENT', 'SALE', 'COMPLETED'].includes(stage)
+    ) {
       message.success(`Этап изменён на ${stage}`);
     }
   };
