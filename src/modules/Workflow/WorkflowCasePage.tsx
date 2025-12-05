@@ -22,6 +22,7 @@ import { WORKFLOW_STAGES } from './stages';
 import { updateCaseStage, updateCaseDocuments } from '@/store/slices/workflowSlice';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import type { TaskDB } from '@/services/ExtendedStorageService';
+import type { ExtendedCollateralCard } from '@/types';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -167,7 +168,7 @@ const WorkflowCasePage: React.FC = () => {
             <Form
               form={docForm}
               layout="vertical"
-              onFinish={values => {
+              onFinish={async values => {
                 const newDoc = {
                   id: `doc-${Date.now()}`,
                   name: values.name,
@@ -183,6 +184,35 @@ const WorkflowCasePage: React.FC = () => {
                 );
                 docForm.resetFields();
                 message.success('Документ добавлен в кейс');
+
+                // Сохраняем ссылку в залоговое досье объекта (documents в карточке)
+                try {
+                  const card = (await extendedStorageService.getExtendedCardById(
+                    current.objectId
+                  )) as ExtendedCollateralCard | undefined;
+                  if (card) {
+                    const existingDocs = Array.isArray(card.documents) ? card.documents : [];
+                    const updatedCard: ExtendedCollateralCard = {
+                      ...card,
+                      documents: [
+                        ...existingDocs,
+                        {
+                          id: newDoc.id,
+                          name: newDoc.name,
+                          type: newDoc.type,
+                          size: 0,
+                          mimeType: 'text/uri-list',
+                          uploadDate: new Date(),
+                          description: 'Добавлено из workflow',
+                          fileData: newDoc.url,
+                        },
+                      ],
+                    };
+                    await extendedStorageService.saveExtendedCard(updatedCard);
+                  }
+                } catch (error) {
+                  console.warn('Не удалось сохранить документ в залоговом досье:', error);
+                }
               }}
             >
               <Row gutter={8}>
