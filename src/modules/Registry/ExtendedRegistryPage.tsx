@@ -14,8 +14,10 @@ import {
   deleteExtendedCard,
   setExtendedLoading,
 } from '@/store/slices/extendedCardsSlice';
+import { addCase as addWorkflowCase } from '@/store/slices/workflowSlice';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
+import type { WorkflowCase } from '@/types/workflow';
 import type { ExtendedCollateralCard } from '@/types';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LinkOutlined, DatabaseOutlined } from '@ant-design/icons';
@@ -27,6 +29,7 @@ const ExtendedRegistryPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { filteredItems: cards, loading } = useAppSelector((state: any) => state.extendedCards);
+  const workflowCases = useAppSelector((state: any) => state.workflow.cases);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCard, setEditingCard] = useState<ExtendedCollateralCard | null>(null);
   const [viewingCard, setViewingCard] = useState<ExtendedCollateralCard | null>(null);
@@ -133,6 +136,52 @@ const ExtendedRegistryPage: React.FC = () => {
     setViewingCard(null);
   };
 
+  const handleStartWorkflow = () => {
+    if (!viewingCard) return;
+    const existing = workflowCases.find((c: any) => c.objectId === viewingCard.id);
+    if (existing) {
+      message.info('Workflow уже запущен для этого объекта');
+      navigate(`/workflow/object/${existing.id}`);
+      closeViewModal();
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const newCaseId = `wf-${viewingCard.id}`;
+    const newCase: WorkflowCase = {
+      id: newCaseId,
+      objectId: viewingCard.id,
+      objectName: viewingCard.name,
+      assetType: viewingCard.mainCategory || 'Обеспечение',
+      debtAmount: undefined,
+      appraisedValue: undefined,
+      stage: 'ANALYSIS',
+      manager:
+        typeof viewingCard.owner === 'string'
+          ? viewingCard.owner
+          : viewingCard.owner?.name || 'Не назначен',
+      deadline: undefined,
+      createdAt: now,
+      updatedAt: now,
+      history: [
+        {
+          id: `h-${now}`,
+          stage: 'ANALYSIS',
+          user: 'Система',
+          comment: 'Workflow запущен из карточки реестра',
+          createdAt: now,
+        },
+      ],
+      documents: [],
+      notes: viewingCard.number ? `Запущено по договору ${viewingCard.number}` : undefined,
+    };
+
+    dispatch(addWorkflowCase(newCase as any));
+    message.success('Workflow запущен');
+    navigate(`/workflow/object/${newCaseId}`);
+    closeViewModal();
+  };
+
   const openDossierModal = () => {
     if (!viewingCard) return;
     const reference = String(viewingCard.number ?? viewingCard.id ?? '');
@@ -175,19 +224,19 @@ const ExtendedRegistryPage: React.FC = () => {
       console.error(error);
     }
   };
-  
+
   const handleCreate = () => {
     setEditingCard(null);
     setModalVisible(true);
   };
-  
+
   const handleGenerateDemoData = async () => {
     try {
       message.loading({ content: 'Генерация демо-карточек...', key: 'generating', duration: 0 });
       const demoCards = await generateAllCollateralDemoCards();
       let successCount = 0;
       let errorCount = 0;
-      
+
       for (const card of demoCards) {
         try {
           // Автоматически обновляем рыночную и залоговую стоимость перед сохранением
@@ -199,10 +248,12 @@ const ExtendedRegistryPage: React.FC = () => {
           console.error(`Ошибка создания карточки ${card.number}:`, error);
         }
       }
-      
+
       await loadCards();
       message.destroy('generating');
-      message.success(`Создано ${successCount} демо-карточек${errorCount > 0 ? `, ошибок: ${errorCount}` : ''}`);
+      message.success(
+        `Создано ${successCount} демо-карточек${errorCount > 0 ? `, ошибок: ${errorCount}` : ''}`
+      );
     } catch (error) {
       message.destroy('generating');
       message.error('Ошибка генерации демо-данных');
@@ -228,7 +279,7 @@ const ExtendedRegistryPage: React.FC = () => {
           </Button>
         </Popconfirm>
       </Space>
-      
+
       <RegistryTable
         data={tableData}
         loading={loading}
@@ -276,6 +327,14 @@ const ExtendedRegistryPage: React.FC = () => {
         open={viewModalVisible}
         onCancel={closeViewModal}
         footer={[
+          <Button
+            key="workflow"
+            type="primary"
+            onClick={handleStartWorkflow}
+            disabled={!viewingCard}
+          >
+            Запустить workflow
+          </Button>,
           viewingCard?.reference && (
             <Button
               key="portfolio"
