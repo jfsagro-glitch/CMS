@@ -36,6 +36,8 @@ import MetricsPage from './modules/Settings/MetricsPage';
 import { AppraisalCompaniesPage } from './modules/Settings/AppraisalCompaniesPage';
 import UploadPage from './modules/Upload/UploadPage';
 import ReferencePage from './modules/Reference/ReferencePage';
+import WorkflowPage from './modules/Workflow/WorkflowPage';
+import WorkflowCasePage from './modules/Workflow/WorkflowCasePage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -67,7 +69,7 @@ const AppContent: React.FC = () => {
 
         // Загрузка расширенных карточек
         const cards = await extendedStorageService.getExtendedCards();
-        
+
         // Автозагрузка демо-данных при первом запуске (если база пустая)
         if (cards.length === 0) {
           try {
@@ -88,11 +90,11 @@ const AppContent: React.FC = () => {
         try {
           const { syncEmployeesToZadachnik } = await import('./utils/syncEmployeesToZadachnik');
           syncEmployeesToZadachnik();
-          
+
           // Проверяем наличие сотрудников
           const employees = employeeService.getEmployees();
           const activeEmployees = employees.filter(emp => emp.isActive);
-          
+
           // Проверяем, есть ли задачи, и достаточно ли их (минимум 60 задач на сотрудника)
           let tasksData: any[] = [];
           try {
@@ -103,10 +105,13 @@ const AppContent: React.FC = () => {
               const existingTasks = localStorage.getItem('zadachnik_tasks');
               if (existingTasks) {
                 // Проверяем размер перед парсингом
-                if (existingTasks.length < 4 * 1024 * 1024) { // Только если меньше 4MB
+                if (existingTasks.length < 4 * 1024 * 1024) {
+                  // Только если меньше 4MB
                   tasksData = JSON.parse(existingTasks);
                 } else {
-                  console.warn('Задачи в localStorage слишком большие, используем только IndexedDB');
+                  console.warn(
+                    'Задачи в localStorage слишком большие, используем только IndexedDB'
+                  );
                 }
               }
             } catch (e) {
@@ -116,14 +121,26 @@ const AppContent: React.FC = () => {
 
           const minTasksPerEmployee = 60;
           const expectedMinTasks = activeEmployees.length * minTasksPerEmployee;
-          
+
           if (!tasksData || tasksData.length === 0 || tasksData.length < expectedMinTasks) {
             const { generateTasksForEmployees } = await import('./utils/generateTasksForEmployees');
             await generateTasksForEmployees();
             tasksData = await extendedStorageService.getTasks();
-            console.log(`✅ Сгенерировано ${tasksData.length} задач для ${activeEmployees.length} активных сотрудников (${(tasksData.length / activeEmployees.length).toFixed(1)} задач на сотрудника)`);
+            console.log(
+              `✅ Сгенерировано ${tasksData.length} задач для ${
+                activeEmployees.length
+              } активных сотрудников (${(tasksData.length / activeEmployees.length).toFixed(
+                1
+              )} задач на сотрудника)`
+            );
           } else {
-            console.log(`✅ Загружено ${tasksData.length} задач для ${activeEmployees.length} активных сотрудников (${(tasksData.length / activeEmployees.length).toFixed(1)} задач на сотрудника)`);
+            console.log(
+              `✅ Загружено ${tasksData.length} задач для ${
+                activeEmployees.length
+              } активных сотрудников (${(tasksData.length / activeEmployees.length).toFixed(
+                1
+              )} задач на сотрудника)`
+            );
           }
         } catch (error) {
           console.warn('Не удалось синхронизировать сотрудников с zadachnik:', error);
@@ -134,7 +151,7 @@ const AppContent: React.FC = () => {
           const inspectionService = (await import('./services/InspectionService')).default;
           await inspectionService.initDatabase();
           const inspections = await inspectionService.getInspections();
-          
+
           if (inspections.length === 0) {
             const { loadInspectionDemoData } = await import('./utils/inspectionDemoData');
             await loadInspectionDemoData();
@@ -157,9 +174,9 @@ const AppContent: React.FC = () => {
     return (
       <div
         style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
           height: '100vh',
         }}
       >
@@ -179,25 +196,25 @@ const AppContent: React.FC = () => {
     }
   };
 
-      return (
-        <ThemeProvider>
-          <DemoDataProvider>
-            <ConfigProvider
-              locale={ruRU}
-              theme={{
-                algorithm: getThemeAlgorithm(),
-                token: {
-                  colorPrimary: '#1890ff',
-                  borderRadius: 6,
-                },
-              }}
-            >
-              <AntApp>
-                <HashRouter>
-                  <Routes>
-                  <Route path="/" element={<MainLayout />}>
-                    <Route index element={<Navigate to="/registry" replace />} />
-                    <Route path="registry" element={<ExtendedRegistryPage />} />
+  return (
+    <ThemeProvider>
+      <DemoDataProvider>
+        <ConfigProvider
+          locale={ruRU}
+          theme={{
+            algorithm: getThemeAlgorithm(),
+            token: {
+              colorPrimary: '#1890ff',
+              borderRadius: 6,
+            },
+          }}
+        >
+          <AntApp>
+            <HashRouter>
+              <Routes>
+                <Route path="/" element={<MainLayout />}>
+                  <Route index element={<Navigate to="/registry" replace />} />
+                  <Route path="registry" element={<ExtendedRegistryPage />} />
                   <Route path="portfolio" element={<PortfolioPage />} />
                   <Route path="collateral-dossier" element={<CollateralDossierPage />} />
                   <Route path="collateral-conclusions" element={<CollateralConclusionsPage />} />
@@ -206,29 +223,31 @@ const AppContent: React.FC = () => {
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="insurance" element={<InsurancePage />} />
                   <Route path="fnp" element={<FNPServicePage />} />
-                    <Route path="analytics" element={<AnalyticsPage />} />
+                  <Route path="analytics" element={<AnalyticsPage />} />
                   <Route path="credit-risk" element={<CreditRiskPage />} />
                   <Route path="appraisal" element={<AppraisalPage />} />
                   <Route path="cms-check" element={<CMSCheckPage />} />
                   <Route path="inspection/:token" element={<MobileInspectionPage />} />
                   <Route path="egrn" element={<EGRNPage />} />
-                      <Route path="upload" element={<UploadPage />} />
+                  <Route path="upload" element={<UploadPage />} />
                   <Route path="monitoring" element={<MonitoringPage />} />
                   <Route path="reference" element={<ReferencePage />} />
-                      <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
-                      <Route path="settings/employees" element={<EmployeesPage />} />
-                      <Route path="settings/reference-data" element={<ReferenceDataPage />} />
-                      <Route path="settings/norm-hours" element={<NormHoursPage />} />
-                      <Route path="settings/metrics" element={<MetricsPage />} />
-                      <Route path="settings/appraisal-companies" element={<AppraisalCompaniesPage />} />
-                    </Route>
-                  </Routes>
-                </HashRouter>
-              </AntApp>
-            </ConfigProvider>
-          </DemoDataProvider>
-        </ThemeProvider>
-      );
+                  <Route path="workflow" element={<WorkflowPage />} />
+                  <Route path="workflow/object/:id" element={<WorkflowCasePage />} />
+                  <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
+                  <Route path="settings/employees" element={<EmployeesPage />} />
+                  <Route path="settings/reference-data" element={<ReferenceDataPage />} />
+                  <Route path="settings/norm-hours" element={<NormHoursPage />} />
+                  <Route path="settings/metrics" element={<MetricsPage />} />
+                  <Route path="settings/appraisal-companies" element={<AppraisalCompaniesPage />} />
+                </Route>
+              </Routes>
+            </HashRouter>
+          </AntApp>
+        </ConfigProvider>
+      </DemoDataProvider>
+    </ThemeProvider>
+  );
 };
 
 const App: React.FC = () => {

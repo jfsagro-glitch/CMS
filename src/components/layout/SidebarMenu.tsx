@@ -160,6 +160,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       tooltip: 'Консультации по нормативным документам, оценке и рабочим вопросам',
     },
     {
+      key: 'workflow',
+      label: 'Внесудебная реализация',
+      icon: <FileTextOutlined />,
+      path: '/workflow',
+      tooltip: 'Workflow внесудебной реализации залога',
+    },
+    {
       key: 'settings',
       label: 'Настройки',
       icon: <SettingOutlined />,

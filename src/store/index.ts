@@ -2,14 +2,16 @@ import { configureStore } from '@reduxjs/toolkit';
 import appReducer from './slices/appSlice';
 import cardsReducer from './slices/cardsSlice';
 import extendedCardsReducer from './slices/extendedCardsSlice';
+import workflowReducer from './slices/workflowSlice';
 
 export const store = configureStore({
   reducer: {
     app: appReducer,
     cards: cardsReducer,
     extendedCards: extendedCardsReducer,
+    workflow: workflowReducer,
   },
-  middleware: (getDefaultMiddleware) =>
+  middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
       serializableCheck: {
         // Игнорируем проверку сериализации для Date объектов
@@ -28,4 +30,3 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
-
