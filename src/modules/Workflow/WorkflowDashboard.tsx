@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { Card, Col, Row, Statistic, Progress, List, Tag, Typography, Space } from 'antd';
+import { Card, Col, Row, Statistic, Progress, List, Tag, Typography, Space, Tooltip } from 'antd';
 import { useAppSelector } from '@/store/hooks';
 import { WORKFLOW_STAGES } from './stages';
 import extendedStorageService from '@/services/ExtendedStorageService';
@@ -171,11 +171,13 @@ const WorkflowDashboard: React.FC = () => {
                   <List.Item.Meta
                     title={
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>{stage.title}</span>
+                          <Tooltip title={stage.description} placement="right">
+                            <span style={{ cursor: 'help' }}>{stage.title}</span>
+                          </Tooltip>
                         <Tag>{stageCounts[stage.key] || 0}</Tag>
                       </div>
                     }
-                    description={stage.description}
+                      description={null}
                   />
                     <Progress
                       percent={Math.min(
