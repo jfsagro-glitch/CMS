@@ -19,7 +19,9 @@ import { updateTemplate, addTemplate } from '@/store/slices/workflowSlice';
 const { Title, Paragraph, Text } = Typography;
 
 const WorkflowSettingsPage: React.FC = () => {
-  const templates = useAppSelector(state => state.workflow.templates);
+  const { templates, segments, steps, scripts, restructuringRules } = useAppSelector(
+    state => state.workflow
+  );
   const dispatch = useAppDispatch();
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -141,6 +143,70 @@ const WorkflowSettingsPage: React.FC = () => {
                   Редактировать
                 </Button>
               </Space>
+            </List.Item>
+          )}
+        />
+      </Card>
+
+      <Card title="Сегментация должников" style={{ marginTop: 16 }}>
+        <List
+          dataSource={segments}
+          renderItem={seg => (
+            <List.Item>
+              <List.Item.Meta
+                title={
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{seg.name}</span>
+                    <Tag>{seg.debtorTypes.join(', ')}</Tag>
+                  </div>
+                }
+                description={
+                  <div>
+                    <Paragraph style={{ marginBottom: 4 }}>{seg.description}</Paragraph>
+                    <Text type="secondary">{seg.strategySummary}</Text>
+                  </div>
+                }
+              />
+            </List.Item>
+          )}
+        />
+      </Card>
+
+      <Card title="Лестница взыскания" style={{ marginTop: 16 }}>
+        <List
+          dataSource={steps}
+          renderItem={step => (
+            <List.Item>
+              <List.Item.Meta
+                title={`${step.name} (дни ${step.dayFrom}–${step.dayTo})`}
+                description={step.description}
+              />
+              <Tag>{step.channel}</Tag>
+            </List.Item>
+          )}
+        />
+      </Card>
+
+      <Card title="Скрипты и шаблоны коммуникации" style={{ marginTop: 16 }}>
+        <List
+          dataSource={scripts}
+          renderItem={scr => (
+            <List.Item>
+              <List.Item.Meta title={scr.name} description={scr.summary} />
+            </List.Item>
+          )}
+        />
+      </Card>
+
+      <Card title="Правила реструктуризации" style={{ marginTop: 16 }}>
+        <List
+          dataSource={restructuringRules}
+          renderItem={rule => (
+            <List.Item>
+              <List.Item.Meta title={rule.name} description={rule.description} />
+              {rule.managerLimitPercent && (
+                <Tag color="purple">Лимит менеджера: {rule.managerLimitPercent}%</Tag>
+              )}
             </List.Item>
           )}
         />

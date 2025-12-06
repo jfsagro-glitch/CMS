@@ -19,7 +19,11 @@ import {
 } from 'antd';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { WORKFLOW_STAGES } from './stages';
-import { updateCaseStage, updateCaseDocuments } from '@/store/slices/workflowSlice';
+import {
+  updateCaseStage,
+  updateCaseDocuments,
+  updateCaseSegment,
+} from '@/store/slices/workflowSlice';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import type { TaskDB } from '@/services/ExtendedStorageService';
 import type { ExtendedCollateralCard } from '@/types';
@@ -29,7 +33,7 @@ const { Title, Paragraph, Text } = Typography;
 const WorkflowCasePage: React.FC = () => {
   const { id } = useParams();
   const dispatch = useAppDispatch();
-  const cases = useAppSelector(state => state.workflow.cases);
+  const { cases, segments } = useAppSelector(state => state.workflow);
   const current = useMemo(() => cases.find(c => c.id === id), [cases, id]);
   const [caseTasks, setCaseTasks] = useState<TaskDB[]>([]);
   const [tasksLoading, setTasksLoading] = useState(false);
@@ -232,6 +236,27 @@ const WorkflowCasePage: React.FC = () => {
               </Descriptions.Item>
               <Descriptions.Item label="Оценка">
                 {current.appraisedValue?.toLocaleString('ru-RU') || '—'} ₽
+              </Descriptions.Item>
+              <Descriptions.Item label="Сегмент должника">
+                <Select
+                  size="small"
+                  style={{ minWidth: 220 }}
+                  placeholder="Выберите сегмент"
+                  value={current.segmentId}
+                  onChange={value =>
+                    dispatch(
+                      updateCaseSegment({
+                        id: current.id,
+                        segmentId: value,
+                      })
+                    )
+                  }
+                  allowClear
+                  options={segments.map(seg => ({
+                    value: seg.id,
+                    label: seg.name,
+                  }))}
+                />
               </Descriptions.Item>
               <Descriptions.Item label="Менеджер">
                 {current.manager || 'Не назначен'}
