@@ -39,6 +39,46 @@ export interface WorkflowTemplate {
   updatedAt: string;
 }
 
+export type DebtorType = 'individual' | 'sole_trader' | 'legal';
+
+export interface DebtorSegment {
+  id: string;
+  name: string;
+  description: string;
+  minDebt?: number;
+  maxDebt?: number;
+  minDaysOverdue?: number;
+  maxDaysOverdue?: number;
+  debtorTypes: DebtorType[];
+  strategySummary: string;
+}
+
+export interface CollectionStep {
+  id: string;
+  name: string;
+  dayFrom: number;
+  dayTo: number;
+  channel: 'sms' | 'email' | 'call' | 'letter' | 'legal';
+  owner: 'system' | 'manager' | 'senior_manager' | 'legal';
+  description: string;
+}
+
+export interface CommunicationScript {
+  id: string;
+  name: string;
+  segmentIds: string[];
+  stepIds: string[];
+  summary: string;
+}
+
+export interface RestructuringRule {
+  id: string;
+  name: string;
+  description: string;
+  allowedForSegments: string[];
+  managerLimitPercent?: number;
+}
+
 export interface WorkflowCase {
   id: string;
   objectId: string;
@@ -46,6 +86,9 @@ export interface WorkflowCase {
   assetType: string;
   debtAmount?: number;
   appraisedValue?: number;
+  debtorType?: DebtorType;
+  daysOverdue?: number;
+  segmentId?: string;
   stage: WorkflowStage;
   manager?: string;
   deadline?: string;
