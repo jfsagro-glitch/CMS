@@ -109,6 +109,7 @@ const WorkflowDashboard: React.FC = () => {
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 5);
 
+  const maxStageCount = Math.max(...WORKFLOW_STAGES.map(s => stageCounts[s.key] || 0), 1);
   const { Text } = Typography;
 
   return (
@@ -176,11 +177,14 @@ const WorkflowDashboard: React.FC = () => {
                     }
                     description={stage.description}
                   />
-                  <Progress
-                    percent={Math.min(100, (stageCounts[stage.key] || 0) * 8)}
-                    size="small"
-                    showInfo={false}
-                  />
+                    <Progress
+                      percent={Math.min(
+                        100,
+                        ((stageCounts[stage.key] || 0) / maxStageCount) * 100
+                      )}
+                      size="small"
+                      showInfo={false}
+                    />
                 </List.Item>
               )}
             />

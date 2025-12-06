@@ -78,28 +78,28 @@ export const DEFAULT_WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     name: 'Уведомление о намерении реализовать залог',
     type: 'notification',
     description: 'Базовое уведомление о старте внесудебной реализации',
-    updatedAt: '2025-12-05T00:00:00.000Z',
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'tpl-2',
     name: 'Претензионное письмо',
     type: 'claim',
     description: 'Претензия с указанием задолженности и сроков',
-    updatedAt: '2025-12-05T00:00:00.000Z',
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'tpl-3',
     name: 'Соглашение об отступном',
     type: 'agreement',
     description: 'Шаблон соглашения об отступном',
-    updatedAt: '2025-12-05T00:00:00.000Z',
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'tpl-4',
     name: 'Договор купли-продажи залогового имущества',
     type: 'sale-contract',
     description: 'Шаблон ДКП для внесудебной реализации',
-    updatedAt: '2025-12-05T00:00:00.000Z',
+    updatedAt: new Date().toISOString(),
   },
 ];
 

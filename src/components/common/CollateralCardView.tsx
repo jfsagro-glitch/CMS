@@ -1,26 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import {
-  Card,
-  Descriptions,
-  Tag,
-  Row,
-  Col,
-  Divider,
-  Typography,
-  Space,
-  Statistic,
-  Tabs,
-  Button,
-  List,
-  Empty,
-  Form,
-  Input,
-  InputNumber,
-  Modal,
-  message,
-  Alert,
-  Select,
-} from 'antd';
+import { Card, Descriptions, Tag, Row, Col, Divider, Typography, Space, Statistic, Tabs, Button, List, Empty, Form, Input, InputNumber, Modal, message, Alert, Select } from 'antd';
 import {
   HomeOutlined,
   CarOutlined,
@@ -34,10 +13,7 @@ import {
   CalculatorOutlined,
 } from '@ant-design/icons';
 import type { ExtendedCollateralCard } from '../../types';
-import {
-  getAttributesForPropertyType,
-  distributeAttributesByTabs,
-} from '@/utils/collateralAttributesFromDict';
+import { getAttributesForPropertyType, distributeAttributesByTabs } from '@/utils/collateralAttributesFromDict';
 import { useNavigate } from 'react-router-dom';
 import inspectionService from '@/services/InspectionService';
 import InspectionCardModal from '@/components/InspectionCardModal/InspectionCardModal';
@@ -47,7 +23,6 @@ import dayjs from 'dayjs';
 import AppraisalAIService from '@/services/AppraisalAIService';
 import appraisalStorage, { type StoredAIAppraisal } from '@/utils/appraisalStorage';
 import { getAppraisalGroups } from '@/utils/appraisalTaxonomy';
-import { getAppraisalConfigForType } from '@/utils/appraisalAttributeConfig';
 import './CollateralCardView.css';
 
 const { Title, Text } = Typography;
@@ -67,12 +42,6 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
   const [aiAppraisalLoading, setAiAppraisalLoading] = useState(false);
   const [aiAppraisalForm] = Form.useForm();
   const appraisalGroups = useMemo(() => getAppraisalGroups(), []);
-  const watchedAssetType = Form.useWatch('assetType', aiAppraisalForm);
-  const attributeConfig = useMemo(
-    () => getAppraisalConfigForType(watchedAssetType),
-    [watchedAssetType]
-  );
-  const attributeFields = useMemo(() => attributeConfig?.fields ?? [], [attributeConfig]);
 
   const loadInspections = useCallback(async () => {
     setInspectionsLoading(true);
@@ -99,47 +68,6 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
     setInspectionModalVisible(true);
   };
 
-  const applyAppraisalPreset = useCallback(
-    (preset: 'transport' | 'real_estate' | 'equity') => {
-      const baseValues: any = aiAppraisalForm.getFieldsValue();
-      const nextValues: any = { ...baseValues };
-
-      if (preset === 'transport') {
-        nextValues.assetGroup = 'movable';
-        nextValues.assetType =
-          nextValues.assetType ||
-          'Наземные безрельсовые механические транспортные средства, прицепы';
-        nextValues.location = nextValues.location || card.address?.fullAddress;
-        nextValues.condition = nextValues.condition || 'рабочее';
-      }
-
-      if (preset === 'real_estate') {
-        nextValues.assetGroup = 'real_estate';
-        nextValues.assetType = nextValues.assetType || 'Помещение';
-        nextValues.location = nextValues.location || card.address?.fullAddress;
-        nextValues.condition = nextValues.condition || 'хорошее';
-        nextValues.areaUnit = nextValues.areaUnit || 'м²';
-      }
-
-      if (preset === 'equity') {
-        nextValues.assetGroup = 'equity';
-        nextValues.assetType =
-          nextValues.assetType ||
-          'Доли в уставных капиталах обществ с ограниченной ответственностью';
-      }
-
-      aiAppraisalForm.setFieldsValue(nextValues);
-      message.success(
-        preset === 'transport'
-          ? 'Заполнены основные поля для транспорта'
-          : preset === 'real_estate'
-          ? 'Заполнены основные поля для недвижимости'
-          : 'Заполнены основные поля для долей/акций'
-      );
-    },
-    [aiAppraisalForm, card.address?.fullAddress]
-  );
-
   const openAiAppraisalModal = () => {
     const defaults = defaultAppraisalSelection;
     aiAppraisalForm.setFieldsValue({
@@ -148,10 +76,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
       location: card.address?.fullAddress,
       area: card.characteristics?.totalAreaSqm || card.characteristics?.totalArea,
       areaUnit: 'м²',
-      condition:
-        card.characteristics?.STATE ||
-        card.characteristics?.CONDITION ||
-        card.characteristics?.condition,
+      condition: card.characteristics?.STATE || card.characteristics?.CONDITION || card.characteristics?.condition,
       purpose: 'Обновление карточки обеспечения',
       additionalFactors: card.notes,
     });
@@ -209,7 +134,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
       setAiAppraisalLoading(false);
     }
   };
-
+  
   // Функции для определения цвета статуса
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -255,9 +180,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
     if (!group) {
       group = appraisalGroups[0];
     }
-    let type = group?.types.find(
-      t => t.label === card.propertyType || t.label === card.classification?.level2
-    );
+    let type = group?.types.find(t => t.label === card.propertyType || t.label === card.classification?.level2);
     if (!type && group?.types.length) {
       type = group.types[0];
     }
@@ -312,23 +235,15 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
     if (!card.propertyType) return [];
     return getAttributesForPropertyType(card.propertyType);
   }, [card.propertyType]);
-
+  
   const distributedAttributes = useMemo(() => {
     return distributeAttributesByTabs(propertyAttributes);
   }, [propertyAttributes]);
 
   // Получаем заемщика и залогодателя
-  const borrower = useMemo(
-    () =>
-      card.partners?.find(
-        p =>
-          p.role === 'owner' ||
-          (p.role === 'pledgor' && !card.partners?.find(p2 => p2.role === 'owner'))
-      ),
-    [card.partners]
-  );
+  const borrower = useMemo(() => card.partners?.find(p => p.role === 'owner' || (p.role === 'pledgor' && !card.partners?.find(p2 => p2.role === 'owner'))), [card.partners]);
   const pledgor = useMemo(() => card.partners?.find(p => p.role === 'pledgor'), [card.partners]);
-
+  
   // Проверка, нужно ли показывать кнопку заказа выписки ЕГРН
   const shouldShowOrderEgrnButton = useMemo(() => {
     if (!card.egrnStatementDate || card.mainCategory !== 'real_estate') {
@@ -338,18 +253,13 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
     const daysSinceStatement = dayjs().diff(statementDate, 'days');
     return daysSinceStatement > 30;
   }, [card.egrnStatementDate, card.mainCategory]);
-
+  
   // Обработчик заказа выписки ЕГРН
   const handleOrderEgrn = () => {
-    const cadastralNumber =
-      card.address?.cadastralNumber || card.characteristics?.objectCadastralNumber;
-    navigate(
-      `/egrn?objectId=${card.id}&cadastralNumber=${cadastralNumber}&objectName=${encodeURIComponent(
-        card.name || ''
-      )}`
-    );
+    const cadastralNumber = card.address?.cadastralNumber || card.characteristics?.objectCadastralNumber;
+    navigate(`/egrn?objectId=${card.id}&cadastralNumber=${cadastralNumber}&objectName=${encodeURIComponent(card.name || '')}`);
   };
-
+  
   // Переход к договору
   const handleGoToContract = () => {
     if (card.contractId) {
@@ -360,7 +270,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
       navigate(`/portfolio?reference=${card.reference}`);
     }
   };
-
+  
   // Переход в залоговое досье
   const handleGoToDossier = () => {
     if (card.reference) {
@@ -396,53 +306,41 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
             <Descriptions.Item label="Наименование (NAME_OF_PROPERTY)" span={2}>
               {card.name || '—'}
             </Descriptions.Item>
-
+            
             <Descriptions.Item label="Адрес" span={2}>
               {card.address?.fullAddress || '—'}
             </Descriptions.Item>
-
+            
             <Descriptions.Item label="Заемщик" span={1}>
-              {borrower?.organizationName ||
-                `${borrower?.lastName || ''} ${borrower?.firstName || ''} ${
-                  borrower?.middleName || ''
-                }`.trim() ||
-                '—'}
+              {borrower?.organizationName || `${borrower?.lastName || ''} ${borrower?.firstName || ''} ${borrower?.middleName || ''}`.trim() || '—'}
             </Descriptions.Item>
             <Descriptions.Item label="ИНН заемщика" span={1}>
               {borrower?.inn || '—'}
             </Descriptions.Item>
-
+            
             <Descriptions.Item label="Залогодатель (OWNER_TIN)" span={1}>
-              {pledgor?.organizationName ||
-                `${pledgor?.lastName || ''} ${pledgor?.firstName || ''} ${
-                  pledgor?.middleName || ''
-                }`.trim() ||
-                '—'}
+              {pledgor?.organizationName || `${pledgor?.lastName || ''} ${pledgor?.firstName || ''} ${pledgor?.middleName || ''}`.trim() || '—'}
             </Descriptions.Item>
             <Descriptions.Item label="ИНН залогодателя (OWNER_TIN)" span={1}>
               {pledgor?.inn || '—'}
             </Descriptions.Item>
-
+            
             {card.propertyType && (
               <Descriptions.Item label="Тип имущества" span={2}>
                 {card.propertyType}
               </Descriptions.Item>
             )}
           </Descriptions>
-
+          
           {distributedAttributes.characteristics.length > 0 && (
             <>
               <Divider orientation="left">Характеристики</Divider>
               <Descriptions bordered column={2} size="small">
-                {distributedAttributes.characteristics.map(attr => {
+                {distributedAttributes.characteristics.map((attr) => {
                   const value = card.characteristics?.[attr.code];
                   if (value === null || value === undefined || value === '') return null;
                   return (
-                    <Descriptions.Item
-                      key={attr.code}
-                      label={attr.name}
-                      span={attr.code === 'NAME_OF_PROPERTY' ? 2 : 1}
-                    >
+                    <Descriptions.Item key={attr.code} label={attr.name} span={attr.code === 'NAME_OF_PROPERTY' ? 2 : 1}>
                       {formatAttributeValue(value)}
                     </Descriptions.Item>
                   );
@@ -460,7 +358,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
         <div>
           {distributedAttributes.characteristics.length > 0 ? (
             <Descriptions bordered column={2} size="small">
-              {distributedAttributes.characteristics.map(attr => {
+              {distributedAttributes.characteristics.map((attr) => {
                 const value = card.characteristics?.[attr.code];
                 if (value === null || value === undefined || value === '') return null;
                 return (
@@ -502,30 +400,28 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
           ) : (
             <Typography.Text type="secondary">Документы не загружены</Typography.Text>
           )}
-
+          
           <Divider />
-
+          
           <Space direction="vertical" style={{ width: '100%' }}>
-            <Button
-              type="link"
-              icon={<LinkOutlined />}
+            <Button 
+              type="link" 
+              icon={<LinkOutlined />} 
               onClick={handleGoToDossier}
               style={{ paddingLeft: 0 }}
             >
               Перейти в Залоговое досье
             </Button>
-
+            
             {/* Выписка ЕГРН показывается только для типов объектов, где требуется ЕГРН */}
             {needsEgrn && (
               <div>
                 <Descriptions bordered column={1} size="small">
                   <Descriptions.Item label="Дата выписки ЕГРН">
-                    {card.egrnStatementDate
-                      ? dayjs(card.egrnStatementDate).format('DD.MM.YYYY')
-                      : '—'}
+                    {card.egrnStatementDate ? dayjs(card.egrnStatementDate).format('DD.MM.YYYY') : '—'}
                   </Descriptions.Item>
                 </Descriptions>
-
+                
                 {shouldShowOrderEgrnButton && (
                   <Button
                     type="primary"
@@ -549,7 +445,9 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
       children: (
         <div>
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Комментарии">{card.notes || '—'}</Descriptions.Item>
+            <Descriptions.Item label="Комментарии">
+              {card.notes || '—'}
+            </Descriptions.Item>
             <Descriptions.Item label="Отлагательные условия">
               {card.suspensiveConditions || '—'}
             </Descriptions.Item>
@@ -567,7 +465,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
               <Statistic
                 title="Рыночная стоимость"
                 value={card.marketValue || 0}
-                formatter={value => formatCurrency(Number(value))}
+                formatter={(value) => formatCurrency(Number(value))}
                 valueStyle={{ color: '#3f8600' }}
               />
             </Col>
@@ -575,14 +473,14 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
               <Statistic
                 title="Залоговая стоимость"
                 value={card.pledgeValue || 0}
-                formatter={value => formatCurrency(Number(value))}
+                formatter={(value) => formatCurrency(Number(value))}
                 valueStyle={{ color: '#1890ff' }}
               />
             </Col>
           </Row>
-
+          
           <Divider />
-
+          
           <Descriptions bordered column={2} size="small">
             <Descriptions.Item label="Наличие ликвидного рынка (HAVEL_MARKET)">
               {card.characteristics?.HAVEL_MARKET ? 'Да' : 'Нет'}
@@ -590,7 +488,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
             <Descriptions.Item label="Тип обеспечения (TYPE_COLLATERAL)">
               {card.characteristics?.TYPE_COLLATERAL || '—'}
             </Descriptions.Item>
-            {distributedAttributes.evaluation.map(attr => {
+            {distributedAttributes.evaluation.map((attr) => {
               const value = card.characteristics?.[attr.code];
               if (value === null || value === undefined || value === '') return null;
               return (
@@ -616,11 +514,11 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
               {card.contractNumber || '—'}
             </Descriptions.Item>
           </Descriptions>
-
+          
           {(card.reference || card.contractNumber) && (
-            <Button
-              type="primary"
-              icon={<LinkOutlined />}
+            <Button 
+              type="primary" 
+              icon={<LinkOutlined />} 
               onClick={handleGoToContract}
               style={{ marginTop: 16 }}
             >
@@ -645,20 +543,16 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
               <Alert
                 type="info"
                 showIcon
-                message={`Рыночная стоимость: ${formatCurrency(
-                  latestAiAppraisal.estimate.marketValue
-                )} · Залоговая: ${formatCurrency(latestAiAppraisal.estimate.collateralValue)}`}
+                message={`Рыночная стоимость: ${formatCurrency(latestAiAppraisal.estimate.marketValue)} · Залоговая: ${formatCurrency(latestAiAppraisal.estimate.collateralValue)}`}
                 description={
                   <div>
                     <Text strong>Методология:</Text> {latestAiAppraisal.estimate.methodology}
                     <br />
                     <Text strong>Уровень уверенности:</Text> {latestAiAppraisal.estimate.confidence}
                     <br />
-                    <Text strong>Риски:</Text>{' '}
-                    {latestAiAppraisal.estimate.riskFactors.join('; ') || 'не выявлены'}
+                    <Text strong>Риски:</Text> {latestAiAppraisal.estimate.riskFactors.join('; ') || 'не выявлены'}
                     <br />
-                    <Text strong>Рекомендации:</Text>{' '}
-                    {latestAiAppraisal.estimate.recommendedActions.join('; ') || '—'}
+                    <Text strong>Рекомендации:</Text> {latestAiAppraisal.estimate.recommendedActions.join('; ') || '—'}
                   </div>
                 }
                 style={{ marginBottom: 16 }}
@@ -684,7 +578,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
               <List
                 header="История AI оценок"
                 dataSource={aiAppraisals}
-                renderItem={item => (
+                renderItem={(item) => (
                   <List.Item>
                     <Space direction="vertical" size="small">
                       <Text strong>{dayjs(item.createdAt).format('DD.MM.YYYY HH:mm')}</Text>
@@ -703,170 +597,144 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
       ),
     },
     // Вкладка "Осмотры" показывается только для типов объектов, где требуется осмотр
-    ...(needsInspection
-      ? [
-          {
-            key: '7',
-            label: (
-              <Space>
-                <CameraOutlined />
-                Осмотры ({inspections.length})
-              </Space>
-            ),
-            children: (
-              <div>
-                <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <Text strong>Осмотры объекта</Text>
-                  <Button size="small" icon={<CalculatorOutlined />} onClick={openAiAppraisalModal}>
-                    Оценка ИИ
-                  </Button>
-                </Space>
-                {inspectionsLoading ? (
-                  <Empty description="Загрузка осмотров..." />
-                ) : inspections.length === 0 ? (
-                  <Empty description="Осмотры отсутствуют" />
-                ) : (
-                  <List
-                    dataSource={inspections}
-                    renderItem={inspection => (
-                      <List.Item
-                        actions={[
-                          <Button type="link" onClick={() => handleViewInspection(inspection.id)}>
-                            Открыть
-                          </Button>,
-                        ]}
-                      >
-                        <List.Item.Meta
-                          title={
-                            <Space>
-                              <span>{inspection.inspectionType}</span>
-                              <Tag
-                                color={
-                                  inspection.status === 'approved'
-                                    ? 'green'
-                                    : inspection.status === 'submitted_for_review'
-                                    ? 'purple'
-                                    : inspection.status === 'in_progress'
-                                    ? 'orange'
-                                    : inspection.status === 'needs_revision'
-                                    ? 'red'
-                                    : 'blue'
-                                }
-                              >
-                                {inspection.status === 'approved'
-                                  ? 'Согласован'
-                                  : inspection.status === 'submitted_for_review'
-                                  ? 'На проверке'
-                                  : inspection.status === 'in_progress'
-                                  ? 'В процессе'
-                                  : inspection.status === 'needs_revision'
-                                  ? 'Требует доработки'
-                                  : inspection.status === 'scheduled'
-                                  ? 'Запланирован'
-                                  : inspection.status}
-                              </Tag>
-                            </Space>
-                          }
-                          description={
-                            <Space direction="vertical" size="small">
-                              <Text type="secondary">
-                                Дата: {dayjs(inspection.inspectionDate).format('DD.MM.YYYY HH:mm')}
-                              </Text>
-                              <Text type="secondary">
-                                Исполнитель: {inspection.inspectorName}
-                                {inspection.inspectorType === 'client' && (
-                                  <Tag color="orange" style={{ marginLeft: 8 }}>
-                                    Клиент
-                                  </Tag>
-                                )}
-                              </Text>
-                              {inspection.photos && inspection.photos.length > 0 && (
-                                <Text type="secondary">Фотографий: {inspection.photos.length}</Text>
-                              )}
-                            </Space>
-                          }
-                        />
-                      </List.Item>
-                    )}
-                  />
-                )}
-                <Divider />
-                <Button
-                  type="primary"
-                  icon={<CameraOutlined />}
-                  onClick={() => navigate(`/cms-check?cardId=${card.id}`)}
-                >
-                  Создать осмотр
-                </Button>
-              </div>
-            ),
-          },
-        ]
-      : []),
-    // Вкладка "Выписка ЕГРН" показывается только для типов объектов, где требуется ЕГРН
-    ...(needsEgrn
-      ? [
-          {
-            key: '8',
-            label: (
-              <Space>
-                <FileSearchOutlined />
-                Выписка ЕГРН
-              </Space>
-            ),
-            children: (
-              <div>
-                <Descriptions bordered column={1} size="small">
-                  <Descriptions.Item label="Дата выписки ЕГРН">
-                    {card.egrnStatementDate
-                      ? dayjs(card.egrnStatementDate).format('DD.MM.YYYY')
-                      : '—'}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Кадастровый номер">
-                    {card.address?.cadastralNumber ||
-                      card.characteristics?.objectCadastralNumber ||
-                      '—'}
-                  </Descriptions.Item>
-                </Descriptions>
-
-                <Divider />
-
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  {shouldShowOrderEgrnButton && (
+    ...(needsInspection ? [{
+      key: '7',
+      label: (
+        <Space>
+          <CameraOutlined />
+          Осмотры ({inspections.length})
+        </Space>
+      ),
+      children: (
+        <div>
+          <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
+            <Text strong>Осмотры объекта</Text>
+            <Button
+              size="small"
+              icon={<CalculatorOutlined />}
+              onClick={openAiAppraisalModal}
+            >
+              Оценка ИИ
+            </Button>
+          </Space>
+          {inspectionsLoading ? (
+            <Empty description="Загрузка осмотров..." />
+          ) : inspections.length === 0 ? (
+            <Empty description="Осмотры отсутствуют" />
+          ) : (
+            <List
+              dataSource={inspections}
+              renderItem={(inspection) => (
+                <List.Item
+                  actions={[
                     <Button
-                      type="primary"
-                      danger
-                      icon={<ExclamationCircleOutlined />}
-                      onClick={handleOrderEgrn}
+                      type="link"
+                      onClick={() => handleViewInspection(inspection.id)}
                     >
-                      Заказать выписку ЕГРН (выписка более 30 дней)
-                    </Button>
-                  )}
-
-                  <Button
-                    type="default"
-                    icon={<FileSearchOutlined />}
-                    onClick={() => {
-                      const cadastralNumber =
-                        card.address?.cadastralNumber ||
-                        card.characteristics?.objectCadastralNumber;
-                      navigate(
-                        `/egrn?objectId=${
-                          card.id
-                        }&cadastralNumber=${cadastralNumber}&objectName=${encodeURIComponent(
-                          card.name || ''
-                        )}`
-                      );
-                    }}
-                  >
-                    Перейти в модуль ЕГРН
-                  </Button>
-                </Space>
-              </div>
-            ),
-          },
-        ]
-      : []),
+                      Открыть
+                    </Button>,
+                  ]}
+                >
+                  <List.Item.Meta
+                    title={
+                      <Space>
+                        <span>{inspection.inspectionType}</span>
+                        <Tag color={
+                          inspection.status === 'approved' ? 'green' :
+                          inspection.status === 'submitted_for_review' ? 'purple' :
+                          inspection.status === 'in_progress' ? 'orange' :
+                          inspection.status === 'needs_revision' ? 'red' : 'blue'
+                        }>
+                          {inspection.status === 'approved' ? 'Согласован' :
+                           inspection.status === 'submitted_for_review' ? 'На проверке' :
+                           inspection.status === 'in_progress' ? 'В процессе' :
+                           inspection.status === 'needs_revision' ? 'Требует доработки' :
+                           inspection.status === 'scheduled' ? 'Запланирован' : inspection.status}
+                        </Tag>
+                      </Space>
+                    }
+                    description={
+                      <Space direction="vertical" size="small">
+                        <Text type="secondary">
+                          Дата: {dayjs(inspection.inspectionDate).format('DD.MM.YYYY HH:mm')}
+                        </Text>
+                        <Text type="secondary">
+                          Исполнитель: {inspection.inspectorName}
+                          {inspection.inspectorType === 'client' && (
+                            <Tag color="orange" style={{ marginLeft: 8 }}>Клиент</Tag>
+                          )}
+                        </Text>
+                        {inspection.photos && inspection.photos.length > 0 && (
+                          <Text type="secondary">
+                            Фотографий: {inspection.photos.length}
+                          </Text>
+                        )}
+                      </Space>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+          )}
+          <Divider />
+          <Button
+            type="primary"
+            icon={<CameraOutlined />}
+            onClick={() => navigate(`/cms-check?cardId=${card.id}`)}
+          >
+            Создать осмотр
+          </Button>
+        </div>
+      ),
+    }] : []),
+    // Вкладка "Выписка ЕГРН" показывается только для типов объектов, где требуется ЕГРН
+    ...(needsEgrn ? [{
+      key: '8',
+      label: (
+        <Space>
+          <FileSearchOutlined />
+          Выписка ЕГРН
+        </Space>
+      ),
+      children: (
+        <div>
+          <Descriptions bordered column={1} size="small">
+            <Descriptions.Item label="Дата выписки ЕГРН">
+              {card.egrnStatementDate ? dayjs(card.egrnStatementDate).format('DD.MM.YYYY') : '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Кадастровый номер">
+              {card.address?.cadastralNumber || card.characteristics?.objectCadastralNumber || '—'}
+            </Descriptions.Item>
+          </Descriptions>
+          
+          <Divider />
+          
+          <Space direction="vertical" style={{ width: '100%' }}>
+            {shouldShowOrderEgrnButton && (
+              <Button
+                type="primary"
+                danger
+                icon={<ExclamationCircleOutlined />}
+                onClick={handleOrderEgrn}
+              >
+                Заказать выписку ЕГРН (выписка более 30 дней)
+              </Button>
+            )}
+            
+            <Button
+              type="default"
+              icon={<FileSearchOutlined />}
+              onClick={() => {
+                const cadastralNumber = card.address?.cadastralNumber || card.characteristics?.objectCadastralNumber;
+                navigate(`/egrn?objectId=${card.id}&cadastralNumber=${cadastralNumber}&objectName=${encodeURIComponent(card.name || '')}`);
+              }}
+            >
+              Перейти в модуль ЕГРН
+            </Button>
+          </Space>
+        </div>
+      ),
+    }] : []),
   ];
 
   return (
@@ -906,7 +774,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
           setViewingInspectionId(null);
           loadInspections();
         }}
-        onApprove={async id => {
+        onApprove={async (id) => {
           await inspectionService.approveInspection(id, 'Система');
           loadInspections();
         }}
@@ -925,17 +793,6 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
         cancelText="Отмена"
       >
         <Form layout="vertical" form={aiAppraisalForm}>
-          <Space wrap size="small" style={{ marginBottom: 8 }}>
-            <Button size="small" onClick={() => applyAppraisalPreset('transport')}>
-              Транспорт
-            </Button>
-            <Button size="small" onClick={() => applyAppraisalPreset('real_estate')}>
-              Недвижимость
-            </Button>
-            <Button size="small" onClick={() => applyAppraisalPreset('equity')}>
-              Акции / Доли в УК
-            </Button>
-          </Space>
           <Form.Item
             label="Категория"
             name="assetGroup"
@@ -980,40 +837,8 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
             <Input placeholder="Например, актуализация стоимости" />
           </Form.Item>
           <Form.Item label="Дополнительные факторы" name="additionalFactors">
-            <Input.TextArea
-              rows={3}
-              placeholder="Обременения, особенности участка, условия эксплуатации..."
-            />
+            <Input.TextArea rows={3} placeholder="Обременения, особенности участка, условия эксплуатации..." />
           </Form.Item>
-          {attributeFields.length > 0 && (
-            <div>
-              <Text strong>Ключевые атрибуты (по типу актива)</Text>
-              <Row gutter={8} style={{ marginTop: 8 }}>
-                {attributeFields.map(field => (
-                  <Col xs={24} md={12} key={field.key} style={{ marginBottom: 8 }}>
-                    <Form.Item label={field.label} name={['attributes', field.key]}>
-                      {field.type === 'number' ? (
-                        <InputNumber
-                          style={{ width: '100%' }}
-                          placeholder={field.placeholder}
-                          controls={false}
-                          addonAfter={field.suffix}
-                        />
-                      ) : field.type === 'select' ? (
-                        <Select
-                          allowClear
-                          options={field.options?.map(opt => ({ label: opt, value: opt }))}
-                          placeholder={field.placeholder}
-                        />
-                      ) : (
-                        <Input placeholder={field.placeholder} />
-                      )}
-                    </Form.Item>
-                  </Col>
-                ))}
-              </Row>
-            </div>
-          )}
         </Form>
       </Modal>
     </div>

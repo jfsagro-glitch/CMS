@@ -782,24 +782,11 @@ class ExtendedStorageService {
     }
   }
 
-  async ensureDefaultWorkflowTemplates(
-    defaultTemplates: WorkflowTemplate[]
-  ): Promise<WorkflowTemplate[]> {
+  async ensureDefaultWorkflowTemplates(defaultTemplates: WorkflowTemplate[]): Promise<void> {
     const existing = await this.db.workflowTemplates.toArray();
     if (!existing || existing.length === 0) {
       await this.saveWorkflowTemplates(defaultTemplates);
-      return defaultTemplates;
     }
-
-    const toAdd = defaultTemplates.filter(
-      tpl => !existing.some(e => e.type === tpl.type || e.id === tpl.id)
-    );
-    if (toAdd.length > 0) {
-      const merged = [...existing, ...toAdd];
-      await this.saveWorkflowTemplates(merged);
-      return merged;
-    }
-    return existing;
   }
 }
 

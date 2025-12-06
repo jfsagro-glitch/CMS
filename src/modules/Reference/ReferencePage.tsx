@@ -379,66 +379,6 @@ const ReferencePage: React.FC = () => {
       return !prev;
     });
   }, []);
-
-  // Быстрые пресеты атрибутов для оценки
-  const applyAppraisalPreset = useCallback(
-    (preset: 'transport' | 'real_estate' | 'equity') => {
-      const baseValues: any = appraisalForm.getFieldsValue();
-      const nextValues: any = { ...baseValues };
-
-      if (preset === 'transport') {
-        nextValues.assetGroup = 'movable';
-        nextValues.assetType = 'Наземные безрельсовые механические транспортные средства, прицепы';
-        nextValues.attributes = {
-          ...nextValues.attributes,
-          baseLocation: '',
-          year: new Date().getFullYear() - 3,
-          usageHours: '',
-          condition: 'рабочее',
-          mileage: nextValues.attributes?.mileage || '',
-          vin: nextValues.attributes?.vin || '',
-        };
-      }
-
-      if (preset === 'real_estate') {
-        nextValues.assetGroup = 'real_estate';
-        nextValues.assetType = 'Помещение';
-        nextValues.attributes = {
-          ...nextValues.attributes,
-          location: '',
-          areaSqm: '',
-          floors: 1,
-          condition: 'хорошее',
-          cadastralNumber: nextValues.attributes?.cadastralNumber || '',
-          yearBuilt: nextValues.attributes?.yearBuilt || '',
-        };
-      }
-
-      if (preset === 'equity') {
-        nextValues.assetGroup = 'equity';
-        nextValues.assetType =
-          nextValues.assetType ||
-          'Доли в уставных капиталах обществ с ограниченной ответственностью';
-        nextValues.attributes = {
-          ...nextValues.attributes,
-          companyName: nextValues.attributes?.companyName || '',
-          sharePercent: nextValues.attributes?.sharePercent || 100,
-          financialSnapshot: nextValues.attributes?.financialSnapshot || 'Выручка, EBITDA, прибыль',
-          corporateRights: nextValues.attributes?.corporateRights || '',
-        };
-      }
-
-      appraisalForm.setFieldsValue(nextValues);
-      message.success(
-        preset === 'transport'
-          ? 'Заполнены основные поля для транспорта'
-          : preset === 'real_estate'
-          ? 'Заполнены основные поля для недвижимости'
-          : 'Заполнены основные поля для долей/акций'
-      );
-    },
-    [appraisalForm]
-  );
   const buildAppraisalContext = useCallback(() => {
     const values = appraisalForm.getFieldsValue();
     if (!values || !values.assetGroup || !values.assetType) return '';
@@ -2696,17 +2636,6 @@ const ReferencePage: React.FC = () => {
                   <Text strong>Режим оценки активен</Text>
                   <Button size="small" onClick={handleToggleAppraisalMode}>
                     Выйти из режима оценки
-                  </Button>
-                </Space>
-                <Space wrap size="small">
-                  <Button size="small" onClick={() => applyAppraisalPreset('transport')}>
-                    Транспорт
-                  </Button>
-                  <Button size="small" onClick={() => applyAppraisalPreset('real_estate')}>
-                    Недвижимость
-                  </Button>
-                  <Button size="small" onClick={() => applyAppraisalPreset('equity')}>
-                    Акции / Доли в УК
                   </Button>
                 </Space>
                 <Space size="middle" wrap>

@@ -174,10 +174,13 @@ const AppContent: React.FC = () => {
           if (wfCases && wfCases.length > 0) {
             dispatch(setWorkflowCases(wfCases));
           }
-          const wfTemplates = await extendedStorageService.ensureDefaultWorkflowTemplates(
-            DEFAULT_WORKFLOW_TEMPLATES
-          );
-          dispatch(setWorkflowTemplates(wfTemplates));
+          const wfTemplates = await extendedStorageService.getWorkflowTemplates();
+          if (wfTemplates && wfTemplates.length > 0) {
+            dispatch(setWorkflowTemplates(wfTemplates));
+          } else {
+            await extendedStorageService.saveWorkflowTemplates(DEFAULT_WORKFLOW_TEMPLATES);
+            dispatch(setWorkflowTemplates(DEFAULT_WORKFLOW_TEMPLATES));
+          }
         } catch (error) {
           console.warn('Не удалось загрузить workflow из IndexedDB:', error);
         }
@@ -268,7 +271,7 @@ const AppContent: React.FC = () => {
                   <Route path="reference" element={<ReferencePage />} />
                   <Route path="workflow" element={<WorkflowPage />} />
                   <Route path="workflow/object/:id" element={<WorkflowCasePage />} />
-                  <Route path="settings/workflow" element={<WorkflowSettingsPage />} />
+                  <Route path="workflow/settings" element={<WorkflowSettingsPage />} />
                   <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
                   <Route path="settings/employees" element={<EmployeesPage />} />
                   <Route path="settings/reference-data" element={<ReferenceDataPage />} />
