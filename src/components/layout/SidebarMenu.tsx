@@ -167,13 +167,6 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       tooltip: 'Workflow внесудебной реализации залога',
     },
     {
-      key: 'workflow-settings',
-      label: 'Настройки Workflow',
-      icon: <SettingOutlined />,
-      path: '/workflow/settings',
-      tooltip: 'Этапы, чеклисты и шаблоны документов',
-    },
-    {
       key: 'settings',
       label: 'Настройки',
       icon: <SettingOutlined />,

@@ -271,8 +271,12 @@ const AppContent: React.FC = () => {
                   <Route path="reference" element={<ReferencePage />} />
                   <Route path="workflow" element={<WorkflowPage />} />
                   <Route path="workflow/object/:id" element={<WorkflowCasePage />} />
-                  <Route path="workflow/settings" element={<WorkflowSettingsPage />} />
+                  <Route
+                    path="workflow/settings"
+                    element={<Navigate to="/settings/workflow" replace />}
+                  />
                   <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
+                  <Route path="settings/workflow" element={<WorkflowSettingsPage />} />
                   <Route path="settings/employees" element={<EmployeesPage />} />
                   <Route path="settings/reference-data" element={<ReferenceDataPage />} />
                   <Route path="settings/norm-hours" element={<NormHoursPage />} />
