@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { Card, Col, Row, Statistic, Progress, List, Tag, Typography, Space, Tooltip } from 'antd';
+import { Card, Col, Row, Statistic, List, Tag, Typography, Space, Tooltip } from 'antd';
 import { useAppSelector } from '@/store/hooks';
 import { WORKFLOW_STAGES } from './stages';
 import extendedStorageService from '@/services/ExtendedStorageService';
@@ -32,6 +32,8 @@ const WorkflowDashboard: React.FC = () => {
     });
     return map;
   }, [cases]);
+
+  const totalCases = cases.length || 1;
 
   const avgStageDurationByStage = useMemo(() => {
     const map: Record<string, { totalDays: number; count: number }> = {};
@@ -109,7 +111,6 @@ const WorkflowDashboard: React.FC = () => {
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 5);
 
-  const maxStageCount = Math.max(...WORKFLOW_STAGES.map(s => stageCounts[s.key] || 0), 1);
   const { Text } = Typography;
 
   return (
@@ -170,23 +171,25 @@ const WorkflowDashboard: React.FC = () => {
                 <List.Item>
                   <List.Item.Meta
                     title={
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Tooltip title={stage.description} placement="right">
-                            <span style={{ cursor: 'help' }}>{stage.title}</span>
-                          </Tooltip>
-                        <Tag>{stageCounts[stage.key] || 0}</Tag>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Tooltip title={stage.description} placement="right">
+                          <span style={{ cursor: 'help' }}>{stage.title}</span>
+                        </Tooltip>
+                        {(() => {
+                          const count = stageCounts[stage.key] || 0;
+                          const percent =
+                            cases.length > 0 ? Math.round((count / totalCases) * 100) : 0;
+                          return (
+                            <Space size={4}>
+                              <Tag color="blue">{`${percent}%`}</Tag>
+                              <Tag>{count}</Tag>
+                            </Space>
+                          );
+                        })()}
                       </div>
                     }
-                      description={null}
+                    description={null}
                   />
-                    <Progress
-                      percent={Math.min(
-                        100,
-                        ((stageCounts[stage.key] || 0) / maxStageCount) * 100
-                      )}
-                      size="small"
-                      showInfo={false}
-                    />
                 </List.Item>
               )}
             />

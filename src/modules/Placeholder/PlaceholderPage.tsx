@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import { Result, Button, Card, Row, Col, message } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserOutlined, DatabaseOutlined, FilePdfOutlined, ClockCircleOutlined, LineChartOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import {
+  UserOutlined,
+  DatabaseOutlined,
+  FilePdfOutlined,
+  ClockCircleOutlined,
+  LineChartOutlined,
+  SafetyCertificateOutlined,
+  RocketOutlined,
+} from '@ant-design/icons';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -16,7 +24,10 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
   const [loading, setLoading] = useState(false);
 
   // Если это страница настроек, показываем ссылки на подразделы
-  const isSettingsPage = location.pathname === '/settings' || location.pathname === '#/settings' || location.hash === '#/settings';
+  const isSettingsPage =
+    location.pathname === '/settings' ||
+    location.pathname === '#/settings' ||
+    location.hash === '#/settings';
 
   const getSystemDescriptionMarkdown = (): string => {
     return `# ОПИСАНИЕ ФУНКЦИОНАЛА CMS - СИСТЕМА УПРАВЛЕНИЯ ЗАЛОГОВЫМ ИМУЩЕСТВОМ
@@ -381,7 +392,8 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
       container.style.padding = '20px';
       container.style.backgroundColor = '#ffffff';
       container.style.color = '#000000';
-      container.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      container.style.fontFamily =
+        'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
       container.style.fontSize = '12px';
       container.style.lineHeight = '1.6';
       container.style.boxSizing = 'border-box';
@@ -470,9 +482,18 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
     let html = markdown;
 
     // Заголовки
-    html = html.replace(/^### (.*$)/gim, '<h3 style="margin: 16px 0 8px 0; font-size: 16px; font-weight: 600; color: #1890ff;">$1</h3>');
-    html = html.replace(/^## (.*$)/gim, '<h2 style="margin: 20px 0 12px 0; font-size: 20px; font-weight: 700; color: #1890ff; border-bottom: 2px solid #1890ff; padding-bottom: 4px;">$1</h2>');
-    html = html.replace(/^# (.*$)/gim, '<h1 style="margin: 24px 0 16px 0; font-size: 24px; font-weight: 700; color: #1890ff;">$1</h1>');
+    html = html.replace(
+      /^### (.*$)/gim,
+      '<h3 style="margin: 16px 0 8px 0; font-size: 16px; font-weight: 600; color: #1890ff;">$1</h3>'
+    );
+    html = html.replace(
+      /^## (.*$)/gim,
+      '<h2 style="margin: 20px 0 12px 0; font-size: 20px; font-weight: 700; color: #1890ff; border-bottom: 2px solid #1890ff; padding-bottom: 4px;">$1</h2>'
+    );
+    html = html.replace(
+      /^# (.*$)/gim,
+      '<h1 style="margin: 24px 0 16px 0; font-size: 24px; font-weight: 700; color: #1890ff;">$1</h1>'
+    );
 
     // Жирный текст
     html = html.replace(/\*\*(.*?)\*\*/gim, '<strong style="font-weight: 600;">$1</strong>');
@@ -482,21 +503,33 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
     html = html.replace(/(<li.*<\/li>)/s, '<ul style="margin: 8px 0; padding-left: 24px;">$1</ul>');
 
     // Разделители
-    html = html.replace(/^---$/gim, '<hr style="margin: 16px 0; border: none; border-top: 1px solid #e8e8e8;" />');
+    html = html.replace(
+      /^---$/gim,
+      '<hr style="margin: 16px 0; border: none; border-top: 1px solid #e8e8e8;" />'
+    );
 
     // Параграфы
-    html = html.split('\n\n').map(para => {
-      if (para.trim() && !para.match(/^<[h|u|o|l|d]/)) {
-        return `<p style="margin: 8px 0; text-align: justify;">${para.trim()}</p>`;
-      }
-      return para;
-    }).join('\n');
+    html = html
+      .split('\n\n')
+      .map(para => {
+        if (para.trim() && !para.match(/^<[h|u|o|l|d]/)) {
+          return `<p style="margin: 8px 0; text-align: justify;">${para.trim()}</p>`;
+        }
+        return para;
+      })
+      .join('\n');
 
     // Код
-    html = html.replace(/`(.*?)`/gim, '<code style="background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">$1</code>');
+    html = html.replace(
+      /`(.*?)`/gim,
+      '<code style="background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">$1</code>'
+    );
 
     // Ссылки
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" style="color: #1890ff; text-decoration: none;">$1</a>');
+    html = html.replace(
+      /\[([^\]]+)\]\(([^)]+)\)/gim,
+      '<a href="$2" style="color: #1890ff; text-decoration: none;">$1</a>'
+    );
 
     return `<div style="max-width: 800px; margin: 0 auto;">${html}</div>`;
   };
@@ -504,7 +537,14 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
   if (isSettingsPage) {
     return (
       <div style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}
+        >
           <h1 style={{ margin: 0 }}>Настройки</h1>
           <Button
             type="primary"
@@ -524,9 +564,13 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
               onClick={() => navigate('/settings/employees')}
             >
               <div style={{ textAlign: 'center' }}>
-                <UserOutlined style={{ fontSize: '48px', color: '#1890ff', marginBottom: '16px' }} />
+                <UserOutlined
+                  style={{ fontSize: '48px', color: '#1890ff', marginBottom: '16px' }}
+                />
                 <h3>Управление сотрудниками</h3>
-                <p style={{ color: '#8c8c8c' }}>Добавление и редактирование сотрудников, их ролей и прав доступа</p>
+                <p style={{ color: '#8c8c8c' }}>
+                  Добавление и редактирование сотрудников, их ролей и прав доступа
+                </p>
               </div>
             </Card>
           </Col>
@@ -537,7 +581,9 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
               onClick={() => navigate('/settings/reference-data')}
             >
               <div style={{ textAlign: 'center' }}>
-                <DatabaseOutlined style={{ fontSize: '48px', color: '#52c41a', marginBottom: '16px' }} />
+                <DatabaseOutlined
+                  style={{ fontSize: '48px', color: '#52c41a', marginBottom: '16px' }}
+                />
                 <h3>Справочники</h3>
                 <p style={{ color: '#8c8c8c' }}>Управление всеми справочниками системы</p>
               </div>
@@ -550,9 +596,13 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
               onClick={() => navigate('/settings/norm-hours')}
             >
               <div style={{ textAlign: 'center' }}>
-                <ClockCircleOutlined style={{ fontSize: '48px', color: '#fa8c16', marginBottom: '16px' }} />
+                <ClockCircleOutlined
+                  style={{ fontSize: '48px', color: '#fa8c16', marginBottom: '16px' }}
+                />
                 <h3>Нормочасы по функциям</h3>
-                <p style={{ color: '#8c8c8c' }}>Управление нормочасами для расчета загрузки сотрудников</p>
+                <p style={{ color: '#8c8c8c' }}>
+                  Управление нормочасами для расчета загрузки сотрудников
+                </p>
               </div>
             </Card>
           </Col>
@@ -563,9 +613,13 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
               onClick={() => navigate('/settings/metrics')}
             >
               <div style={{ textAlign: 'center' }}>
-                <LineChartOutlined style={{ fontSize: '48px', color: '#722ed1', marginBottom: '16px' }} />
+                <LineChartOutlined
+                  style={{ fontSize: '48px', color: '#722ed1', marginBottom: '16px' }}
+                />
                 <h3>Метрики KPI и MBO</h3>
-                <p style={{ color: '#8c8c8c' }}>Корректировка ключевых показателей и целевых значений MBO</p>
+                <p style={{ color: '#8c8c8c' }}>
+                  Корректировка ключевых показателей и целевых значений MBO
+                </p>
               </div>
             </Card>
           </Col>
@@ -576,9 +630,30 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
               onClick={() => navigate('/settings/appraisal-companies')}
             >
               <div style={{ textAlign: 'center' }}>
-                <SafetyCertificateOutlined style={{ fontSize: '48px', color: '#13c2c2', marginBottom: '16px' }} />
+                <SafetyCertificateOutlined
+                  style={{ fontSize: '48px', color: '#13c2c2', marginBottom: '16px' }}
+                />
                 <h3>Аккредитация оценочных компаний</h3>
-                <p style={{ color: '#8c8c8c' }}>Реестр оценочных компаний и управление их аккредитацией</p>
+                <p style={{ color: '#8c8c8c' }}>
+                  Реестр оценочных компаний и управление их аккредитацией
+                </p>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card
+              hoverable
+              style={{ height: '100%' }}
+              onClick={() => navigate('/settings/workflow')}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <RocketOutlined
+                  style={{ fontSize: '48px', color: '#fadb14', marginBottom: '16px' }}
+                />
+                <h3>Настройки Workflow</h3>
+                <p style={{ color: '#8c8c8c' }}>
+                  Управление этапами, чеклистами и шаблонами внесудебной реализации
+                </p>
               </div>
             </Card>
           </Col>
@@ -592,14 +667,9 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
       status="info"
       title={title}
       subTitle={subtitle || 'Этот раздел находится в разработке'}
-      extra={
-        <Button onClick={() => navigate('/registry')}>
-          Вернуться к реестру
-        </Button>
-      }
+      extra={<Button onClick={() => navigate('/registry')}>Вернуться к реестру</Button>}
     />
   );
 };
 
 export default PlaceholderPage;
-
