@@ -18,10 +18,54 @@ const MainLayout: React.FC = () => {
   const [searchAttribute, setSearchAttribute] = useState('name');
   const [headerVisible, setHeaderVisible] = useState(true);
 
-  // Показываем Header только на /registry, на остальных скрываем
   const currentPath = location.pathname || location.hash.replace('#', '');
-  const isRegistry = currentPath === '/registry' || location.hash === '#/registry';
-  const shouldShowHeader = headerVisible && isRegistry;
+  const pathParts = currentPath.split('/').filter(Boolean);
+  const mainSection = pathParts[0] || 'registry';
+
+  const getHeaderContextTitle = () => {
+    switch (mainSection) {
+      case 'registry':
+        return 'Реестр объектов';
+      case 'portfolio':
+        return 'Залоговый портфель';
+      case 'tasks':
+        return 'Задачи';
+      case 'kpi':
+        return 'KPI и аналитика';
+      case 'reports':
+        return 'Отчеты';
+      case 'collateral-dossier':
+        return 'Залоговое досье';
+      case 'collateral-conclusions':
+        return 'Залоговые заключения';
+      case 'insurance':
+        return 'Страхование';
+      case 'fnp':
+        return 'ФНП';
+      case 'analytics':
+        return 'Аналитика';
+      case 'credit-risk':
+        return 'Модуль мониторинга';
+      case 'appraisal':
+        return 'Модуль оценки';
+      case 'cms-check':
+        return 'CMS Check';
+      case 'egrn':
+        return 'ЕГРН';
+      case 'upload':
+        return 'Загрузка и миграция';
+      case 'monitoring':
+        return 'Мониторинг';
+      case 'reference':
+        return 'Справочная с ИИ';
+      case 'workflow':
+        return 'Внесудебная реализация (Workflow)';
+      case 'settings':
+        return 'Настройки';
+      default:
+        return 'Система управления залоговым имуществом';
+    }
+  };
 
   const handleCreateCard = () => {
     // Логика создания карточки будет передана через контекст
@@ -38,6 +82,8 @@ const MainLayout: React.FC = () => {
   const handleToggleHeader = () => {
     setHeaderVisible(!headerVisible);
   };
+
+  const shouldShowHeader = headerVisible;
 
   return (
     <Layout className="main-layout">
@@ -59,6 +105,7 @@ const MainLayout: React.FC = () => {
             searchText={searchText}
             searchAttribute={searchAttribute}
             headerVisible={headerVisible}
+            contextTitle={getHeaderContextTitle()}
           />
         )}
         <Content className="main-content" style={{ marginTop: shouldShowHeader ? 64 : 0 }}>

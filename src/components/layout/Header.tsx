@@ -20,12 +20,18 @@ const { Header: AntHeader } = Layout;
 
 const getSearchPlaceholder = (attribute: string): string => {
   switch (attribute) {
-    case 'owner': return 'залогодателю (название, ИНН)';
-    case 'identifier': return 'идентификатору (кадастровый номер, VIN, серийный номер, ID)';
-    case 'name': return 'наименованию';
-    case 'type': return 'типу объекта';
-    case 'kind': return 'виду объекта';
-    default: return 'наименованию';
+    case 'owner':
+      return 'залогодателю (название, ИНН)';
+    case 'identifier':
+      return 'идентификатору (кадастровый номер, VIN, серийный номер, ID)';
+    case 'name':
+      return 'наименованию';
+    case 'type':
+      return 'типу объекта';
+    case 'kind':
+      return 'виду объекта';
+    default:
+      return 'наименованию';
   }
 };
 
@@ -39,6 +45,7 @@ interface HeaderProps {
   searchText?: string;
   searchAttribute?: string;
   headerVisible?: boolean;
+  contextTitle?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -50,7 +57,8 @@ const Header: React.FC<HeaderProps> = ({
   onToggleHeader,
   searchText = '',
   searchAttribute = 'name',
-  headerVisible = true
+  headerVisible = true,
+  contextTitle,
 }) => {
   const dispatch = useAppDispatch();
   const { sidebarCollapsed } = useAppSelector(state => state.app);
@@ -101,7 +109,7 @@ const Header: React.FC<HeaderProps> = ({
           onClick={handleToggleSidebar}
           style={{ fontSize: '16px', width: 40, height: 40 }}
         />
-        
+
         <Button
           type="text"
           icon={headerVisible ? <UpOutlined /> : <DownOutlined />}
@@ -109,26 +117,18 @@ const Header: React.FC<HeaderProps> = ({
           style={{ fontSize: '16px', width: 40, height: 40 }}
           title={headerVisible ? 'Скрыть шапку' : 'Показать шапку'}
         />
-        
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={onCreateCard}
-        >
+
+        {contextTitle && <span style={{ fontWeight: 600, fontSize: 16 }}>{contextTitle}</span>}
+
+        <Button type="primary" icon={<PlusOutlined />} onClick={onCreateCard}>
           Создать карточку
         </Button>
-        
-        <Button
-          icon={<ExportOutlined />}
-          onClick={onExport}
-        >
+
+        <Button icon={<ExportOutlined />} onClick={onExport}>
           Экспорт в Excel
         </Button>
-        
-        <Button
-          icon={<ImportOutlined />}
-          onClick={onImport}
-        >
+
+        <Button icon={<ImportOutlined />} onClick={onImport}>
           Импорт
         </Button>
       </Space>
@@ -146,17 +146,16 @@ const Header: React.FC<HeaderProps> = ({
             { value: 'kind', label: 'Вид' },
           ]}
         />
-        
+
         <Input
           placeholder={`Поиск по ${getSearchPlaceholder(searchAttribute)}...`}
           prefix={<SearchOutlined />}
           value={searchText}
-          onChange={(e) => onSearch?.(e.target.value)}
+          onChange={e => onSearch?.(e.target.value)}
           style={{ width: 300 }}
           allowClear
         />
-        
-        
+
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
           <Avatar
             icon={<UserOutlined />}
@@ -169,4 +168,3 @@ const Header: React.FC<HeaderProps> = ({
 };
 
 export default Header;
-
