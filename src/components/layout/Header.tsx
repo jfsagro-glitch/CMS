@@ -25,7 +25,6 @@ import {
   UpOutlined,
   DownOutlined,
   BellOutlined,
-  ClockCircleOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -247,28 +246,16 @@ const Header: React.FC<HeaderProps> = ({
 
         {!isRegistry && (
           <Space size={16} align="center">
-            <Tooltip title={`Активные задачи: ${tasksSummary.total}`}>
-              <Badge count={tasksSummary.total} size="small" style={{ marginRight: 4 }}>
-                <UnorderedListOutlined style={{ fontSize: 16 }} />
-              </Badge>
-            </Tooltip>
-            <Tooltip title={`Просроченные задачи: ${tasksSummary.overdue}`}>
-              <Badge
-                count={tasksSummary.overdue}
-                size="small"
-                style={{
-                  backgroundColor: tasksSummary.overdue > 0 ? '#ff4d4f' : undefined,
-                  marginRight: 4,
-                }}
-              >
-                <ClockCircleOutlined style={{ fontSize: 16, color: '#ff4d4f' }} />
-              </Badge>
-            </Tooltip>
-            {tasksSummary.nearestDeadline && (
-              <Tooltip title={`Ближайший дедлайн: ${tasksSummary.nearestDeadline}`}>
-                <ClockCircleOutlined style={{ color: '#ff4d4f', fontSize: 16 }} />
-              </Tooltip>
-            )}
+            <Space size={4} align="center">
+              <UnorderedListOutlined style={{ fontSize: 18, color: '#52c41a' }} />
+              <Text>{tasksSummary.total}</Text>
+            </Space>
+            <Space size={4} align="center">
+              <UnorderedListOutlined style={{ fontSize: 18, color: '#ff4d4f' }} />
+              <Text type={tasksSummary.overdue > 0 ? 'danger' : 'secondary'}>
+                {tasksSummary.overdue}
+              </Text>
+            </Space>
             <Text type={mboRate >= 90 ? 'success' : mboRate >= 70 ? 'warning' : 'danger'}>
               KPI {mboRate}%
             </Text>
