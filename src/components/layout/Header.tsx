@@ -10,6 +10,8 @@ import {
   Typography,
   Tooltip,
   Badge,
+  Modal,
+  Descriptions,
 } from 'antd';
 import {
   MenuFoldOutlined,
@@ -95,6 +97,7 @@ const Header: React.FC<HeaderProps> = ({
     newCount: 0,
     completed: 0,
   });
+  const [profileVisible, setProfileVisible] = useState(false);
 
   const handleToggleSidebar = () => {
     dispatch(toggleSidebar());
@@ -147,6 +150,21 @@ const Header: React.FC<HeaderProps> = ({
       danger: true,
     },
   ];
+
+  const handleUserMenuClick: MenuProps['onClick'] = ({ key }) => {
+    if (key === 'profile') {
+      setProfileVisible(true);
+    }
+  };
+
+  const totalTasksAll = tasksSummary.total + tasksSummary.completed;
+  const completionRate =
+    totalTasksAll > 0 ? Math.round((tasksSummary.completed / totalTasksAll) * 100) : 100;
+  const slaRate =
+    totalTasksAll > 0
+      ? Math.round(100 - (tasksSummary.overdue / Math.max(1, totalTasksAll)) * 100)
+      : 100;
+  const mboRate = Math.round((completionRate + slaRate) / 2);
 
   return (
     <AntHeader
@@ -257,7 +275,10 @@ const Header: React.FC<HeaderProps> = ({
           </Badge>
         </Tooltip>
 
-        <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+        <Dropdown
+          menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
+          placement="bottomRight"
+        >
           <Space>
             <Avatar
               icon={<UserOutlined />}
@@ -267,6 +288,37 @@ const Header: React.FC<HeaderProps> = ({
           </Space>
         </Dropdown>
       </Space>
+
+      <Modal
+        title="Профиль сотрудника"
+        open={profileVisible}
+        onCancel={() => setProfileVisible(false)}
+        onOk={() => setProfileVisible(false)}
+        okText="Закрыть"
+        cancelButtonProps={{ style: { display: 'none' } }}
+      >
+        <Descriptions column={1} size="small" bordered>
+          <Descriptions.Item label="ФИО">Администратор</Descriptions.Item>
+          <Descriptions.Item label="Роль">Администратор системы</Descriptions.Item>
+          <Descriptions.Item label="Задачи сейчас">
+            {tasksSummary.total} активных · {tasksSummary.overdue} просроченных
+          </Descriptions.Item>
+          <Descriptions.Item label="Ближайший дедлайн">
+            {tasksSummary.nearestDeadline || '—'}
+          </Descriptions.Item>
+          <Descriptions.Item label="Выполнено задач (всего)">
+            {tasksSummary.completed}
+          </Descriptions.Item>
+          <Descriptions.Item label="KPI по задачам (completion)">
+            {completionRate}%
+          </Descriptions.Item>
+          <Descriptions.Item label="SLA по срокам">{slaRate}%</Descriptions.Item>
+          <Descriptions.Item label="% выполнения MBO (оценка)">{mboRate}%</Descriptions.Item>
+          <Descriptions.Item label="Рейтинг сотрудника">
+            Топ-10% по нагрузке (оценочно)
+          </Descriptions.Item>
+        </Descriptions>
+      </Modal>
     </AntHeader>
   );
 };
