@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Input, Space, Button, Avatar, Dropdown, Select, Typography } from 'antd';
+import {
+  Layout,
+  Input,
+  Space,
+  Button,
+  Avatar,
+  Dropdown,
+  Select,
+  Typography,
+  Tooltip,
+  Badge,
+} from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -11,6 +22,8 @@ import {
   ImportOutlined,
   UpOutlined,
   DownOutlined,
+  BellOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { toggleSidebar } from '@/store/slices/appSlice';
@@ -201,28 +214,36 @@ const Header: React.FC<HeaderProps> = ({
               prefix={<SearchOutlined />}
               value={searchText}
               onChange={e => onSearch?.(e.target.value)}
-              style={{ width: 300 }}
+              style={{ width: 280 }}
               allowClear
             />
           </>
         )}
 
-        <div style={{ textAlign: 'right' }}>
-          <Text strong>Задачи: {tasksSummary.total}</Text>
-          <br />
-          <Text type={tasksSummary.overdue > 0 ? 'danger' : 'secondary'}>
-            Просрочено: {tasksSummary.overdue}
-          </Text>
-          {tasksSummary.nearestDeadline && (
-            <Text type="danger" style={{ marginLeft: 8 }}>
-              Ближайший дедлайн: {tasksSummary.nearestDeadline}
-            </Text>
-          )}
-        </div>
+        {!isRegistry && (
+          <Space size="small">
+            <div style={{ textAlign: 'right' }}>
+              <Text strong>{tasksSummary.total} задач</Text>
+              <br />
+              <Text type={tasksSummary.overdue > 0 ? 'danger' : 'secondary'}>
+                <ClockCircleOutlined style={{ marginRight: 4 }} />
+                Просрочено: {tasksSummary.overdue}
+              </Text>
+            </div>
 
-        <div>
-          <Text type="success">Уведомления: {tasksSummary.newCount}</Text>
-        </div>
+            {tasksSummary.nearestDeadline && (
+              <Tooltip title={`Ближайший дедлайн: ${tasksSummary.nearestDeadline}`}>
+                <ClockCircleOutlined style={{ color: '#ff4d4f', fontSize: 16 }} />
+              </Tooltip>
+            )}
+          </Space>
+        )}
+
+        <Tooltip title={`Новые уведомления: ${tasksSummary.newCount}`}>
+          <Badge count={tasksSummary.newCount} size="small">
+            <BellOutlined style={{ fontSize: 18, color: '#52c41a' }} />
+          </Badge>
+        </Tooltip>
 
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
           <Space>
