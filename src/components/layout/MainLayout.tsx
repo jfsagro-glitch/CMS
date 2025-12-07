@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout, Button } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { Outlet, useLocation } from 'react-router-dom';
@@ -17,6 +17,15 @@ const MainLayout: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [searchAttribute, setSearchAttribute] = useState('name');
   const [headerVisible, setHeaderVisible] = useState(true);
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const currentPath = location.pathname || location.hash.replace('#', '');
   const pathParts = currentPath.split('/').filter(Boolean);
@@ -85,16 +94,18 @@ const MainLayout: React.FC = () => {
 
   const isRegistrySection = mainSection === 'registry';
   const shouldShowHeader = headerVisible;
+  const contentMarginLeft = isMobile ? 0 : sidebarCollapsed ? 80 : 250;
 
   return (
     <Layout className="main-layout">
       <SidebarMenu
         collapsed={sidebarCollapsed}
+        isMobile={isMobile}
         onLoadDemoData={loadDemoData}
         onClearDemoData={clearDemoData}
         hasCards={cards.length > 0}
       />
-      <Layout style={{ marginLeft: sidebarCollapsed ? 80 : 250, transition: 'margin-left 0.2s' }}>
+      <Layout style={{ marginLeft: contentMarginLeft, transition: 'margin-left 0.2s' }}>
         {shouldShowHeader && (
           <Header
             onCreateCard={handleCreateCard}
@@ -108,6 +119,7 @@ const MainLayout: React.FC = () => {
             headerVisible={headerVisible}
             contextTitle={getHeaderContextTitle()}
             isRegistry={isRegistrySection}
+            isMobile={isMobile}
           />
         )}
         <Content className="main-content" style={{ marginTop: shouldShowHeader ? 64 : 0 }}>

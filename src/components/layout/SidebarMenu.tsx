@@ -35,6 +35,7 @@ interface SidebarMenuProps {
   onLoadDemoData?: () => void;
   onClearDemoData?: () => void;
   hasCards?: boolean;
+  isMobile?: boolean;
 }
 
 const SidebarMenu: React.FC<SidebarMenuProps> = ({
@@ -42,6 +43,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   onLoadDemoData,
   onClearDemoData,
   hasCards = false,
+  isMobile = false,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -219,6 +221,9 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
         left: 0,
         top: 0,
         bottom: 0,
+        zIndex: 1000,
+        transform: isMobile && collapsed ? 'translateX(-100%)' : 'translateX(0)',
+        transition: 'transform 0.2s',
       }}
     >
       <div

@@ -63,6 +63,7 @@ interface HeaderProps {
   headerVisible?: boolean;
   contextTitle?: string;
   isRegistry?: boolean;
+  isMobile?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -77,6 +78,7 @@ const Header: React.FC<HeaderProps> = ({
   headerVisible = true,
   contextTitle,
   isRegistry = false,
+  isMobile = false,
 }) => {
   const dispatch = useAppDispatch();
   const { sidebarCollapsed } = useAppSelector(state => state.app);
@@ -204,7 +206,7 @@ const Header: React.FC<HeaderProps> = ({
             <Select
               value={searchAttribute}
               onChange={onSearchAttributeChange}
-              style={{ width: 150 }}
+              style={{ width: isMobile ? 120 : 150 }}
               options={[
                 { value: 'owner', label: 'Залогодатель' },
                 { value: 'identifier', label: 'Идентификатор' },
@@ -219,7 +221,7 @@ const Header: React.FC<HeaderProps> = ({
               prefix={<SearchOutlined />}
               value={searchText}
               onChange={e => onSearch?.(e.target.value)}
-              style={{ width: 280 }}
+              style={{ width: isMobile ? 180 : 280 }}
               allowClear
             />
           </>
