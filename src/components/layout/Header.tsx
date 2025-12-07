@@ -183,7 +183,7 @@ const Header: React.FC<HeaderProps> = ({
         transition: 'left 0.2s',
       }}
     >
-      <Space size="middle">
+      <Space size="large">
         <Button
           type="text"
           icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -246,9 +246,9 @@ const Header: React.FC<HeaderProps> = ({
         )}
 
         {!isRegistry && (
-          <Space size="small" align="center">
+          <Space size={16} align="center">
             <Tooltip title={`Активные задачи: ${tasksSummary.total}`}>
-              <Badge count={tasksSummary.total} size="small">
+              <Badge count={tasksSummary.total} size="small" style={{ marginRight: 4 }}>
                 <UnorderedListOutlined style={{ fontSize: 16 }} />
               </Badge>
             </Tooltip>
@@ -256,7 +256,10 @@ const Header: React.FC<HeaderProps> = ({
               <Badge
                 count={tasksSummary.overdue}
                 size="small"
-                style={{ backgroundColor: tasksSummary.overdue > 0 ? '#ff4d4f' : undefined }}
+                style={{
+                  backgroundColor: tasksSummary.overdue > 0 ? '#ff4d4f' : undefined,
+                  marginRight: 4,
+                }}
               >
                 <ClockCircleOutlined style={{ fontSize: 16, color: '#ff4d4f' }} />
               </Badge>
@@ -266,6 +269,9 @@ const Header: React.FC<HeaderProps> = ({
                 <ClockCircleOutlined style={{ color: '#ff4d4f', fontSize: 16 }} />
               </Tooltip>
             )}
+            <Text type={mboRate >= 90 ? 'success' : mboRate >= 70 ? 'warning' : 'danger'}>
+              KPI {mboRate}%
+            </Text>
           </Space>
         )}
 
