@@ -221,16 +221,12 @@ const Header: React.FC<HeaderProps> = ({
         )}
 
         {!isRegistry && (
-          <Space size="small">
-            <div style={{ textAlign: 'right' }}>
-              <Text strong>{tasksSummary.total} задач</Text>
-              <br />
-              <Text type={tasksSummary.overdue > 0 ? 'danger' : 'secondary'}>
-                <ClockCircleOutlined style={{ marginRight: 4 }} />
-                Просрочено: {tasksSummary.overdue}
-              </Text>
-            </div>
-
+          <Space size="small" align="center">
+            <Text strong>{tasksSummary.total} задач</Text>
+            <Text type={tasksSummary.overdue > 0 ? 'danger' : 'secondary'}>
+              <ClockCircleOutlined style={{ marginRight: 4 }} />
+              Просрочено: {tasksSummary.overdue}
+            </Text>
             {tasksSummary.nearestDeadline && (
               <Tooltip title={`Ближайший дедлайн: ${tasksSummary.nearestDeadline}`}>
                 <ClockCircleOutlined style={{ color: '#ff4d4f', fontSize: 16 }} />
