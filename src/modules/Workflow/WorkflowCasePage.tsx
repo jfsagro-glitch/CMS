@@ -27,17 +27,20 @@ import {
 import extendedStorageService from '@/services/ExtendedStorageService';
 import type { TaskDB } from '@/services/ExtendedStorageService';
 import type { ExtendedCollateralCard } from '@/types';
+import { renderWorkflowTemplate } from '@/utils/workflowTemplates';
 
 const { Title, Paragraph, Text } = Typography;
 
 const WorkflowCasePage: React.FC = () => {
   const { id } = useParams();
   const dispatch = useAppDispatch();
-  const { cases, segments } = useAppSelector(state => state.workflow);
+  const { cases, segments, templates } = useAppSelector(state => state.workflow);
   const current = useMemo(() => cases.find(c => c.id === id), [cases, id]);
   const [caseTasks, setCaseTasks] = useState<TaskDB[]>([]);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [docForm] = Form.useForm();
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>();
+  const [generating, setGenerating] = useState(false);
 
   const loadTasks = async () => {
     setTasksLoading(true);
@@ -274,6 +277,88 @@ const WorkflowCasePage: React.FC = () => {
           </Card>
 
           <Card title="Документы workflow" style={{ marginTop: 16 }}>
+            <Space style={{ marginBottom: 8 }} wrap>
+              <Select
+                placeholder="Выберите шаблон для генерации"
+                style={{ minWidth: 260 }}
+                value={selectedTemplateId}
+                onChange={value => setSelectedTemplateId(value)}
+                options={templates.map(t => ({
+                  value: t.id,
+                  label: t.name,
+                }))}
+              />
+              <Button
+                type="primary"
+                disabled={!selectedTemplateId}
+                loading={generating}
+                onClick={async () => {
+                  if (!selectedTemplateId) return;
+                  const tpl = templates.find(t => t.id === selectedTemplateId);
+                  if (!tpl) return;
+                  try {
+                    setGenerating(true);
+                    const card = (await extendedStorageService.getExtendedCardById(
+                      current.objectId
+                    )) as ExtendedCollateralCard | undefined;
+                    const content = renderWorkflowTemplate(tpl, current, card || null, {});
+                    const encoded = encodeURIComponent(content);
+                    const url = `data:text/plain;charset=utf-8,${encoded}`;
+                    const docName = `${tpl.name} от ${new Date()
+                      .toLocaleDateString('ru-RU')
+                      .replace(/\./g, '-')}`;
+
+                    const newDoc = {
+                      id: `doc-${Date.now()}`,
+                      name: docName,
+                      type: tpl.type,
+                      url,
+                      createdAt: new Date().toISOString(),
+                    };
+
+                    // Обновляем кейс
+                    const updatedDocs = [...current.documents, newDoc];
+                    dispatch(
+                      updateCaseDocuments({
+                        id: current.id,
+                        documents: updatedDocs,
+                      })
+                    );
+
+                    // Сохраняем в залоговое досье
+                    if (card) {
+                      const existingDocs = Array.isArray(card.documents) ? card.documents : [];
+                      const updatedCard: ExtendedCollateralCard = {
+                        ...card,
+                        documents: [
+                          ...existingDocs,
+                          {
+                            id: newDoc.id,
+                            name: newDoc.name,
+                            type: newDoc.type,
+                            size: content.length,
+                            mimeType: 'text/plain',
+                            uploadDate: new Date(),
+                            description: `Сгенерировано в Workflow по шаблону "${tpl.name}"`,
+                            fileData: content,
+                          },
+                        ],
+                      };
+                      await extendedStorageService.saveExtendedCard(updatedCard);
+                    }
+
+                    message.success(`Документ по шаблону "${tpl.name}" сгенерирован`);
+                  } catch (error) {
+                    console.error('Ошибка генерации документа workflow:', error);
+                    message.error('Не удалось сгенерировать документ по шаблону');
+                  } finally {
+                    setGenerating(false);
+                  }
+                }}
+              >
+                Сгенерировать документ
+              </Button>
+            </Space>
             {current.documents.length === 0 ? (
               <Text type="secondary">Документы ещё не добавлены</Text>
             ) : (

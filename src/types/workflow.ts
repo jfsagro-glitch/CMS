@@ -37,6 +37,8 @@ export interface WorkflowTemplate {
   description?: string;
   type: 'notification' | 'claim' | 'agreement' | 'sale-contract' | 'other';
   updatedAt: string;
+  /** Текст шаблона с плейсхолдерами в стиле {{object.name}}, {{workflow.debtAmount}} и т.п. */
+  content: string;
 }
 
 export type DebtorType = 'individual' | 'sole_trader' | 'legal';

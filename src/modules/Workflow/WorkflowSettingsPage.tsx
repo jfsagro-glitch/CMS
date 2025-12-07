@@ -238,6 +238,13 @@ const WorkflowSettingsPage: React.FC = () => {
           <Form.Item name="description" label="Описание">
             <Input.TextArea rows={3} />
           </Form.Item>
+          <Form.Item
+            name="content"
+            label="Текст шаблона (поддерживаются плейсхолдеры {{object.*}}, {{workflow.*}}, {{today}})"
+            rules={[{ required: true, message: 'Введите текст шаблона' }]}
+          >
+            <Input.TextArea rows={8} />
+          </Form.Item>
         </Form>
       </Modal>
 
@@ -266,6 +273,13 @@ const WorkflowSettingsPage: React.FC = () => {
           </Form.Item>
           <Form.Item name="description" label="Описание">
             <Input.TextArea rows={3} />
+          </Form.Item>
+          <Form.Item
+            name="content"
+            label="Текст шаблона (поддерживаются плейсхолдеры {{object.*}}, {{workflow.*}}, {{today}})"
+            rules={[{ required: true, message: 'Введите текст шаблона' }]}
+          >
+            <Input.TextArea rows={8} />
           </Form.Item>
         </Form>
       </Modal>
