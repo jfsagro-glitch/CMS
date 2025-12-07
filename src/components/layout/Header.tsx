@@ -24,6 +24,7 @@ import {
   DownOutlined,
   BellOutlined,
   ClockCircleOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { toggleSidebar } from '@/store/slices/appSlice';
@@ -84,11 +85,13 @@ const Header: React.FC<HeaderProps> = ({
     overdue: number;
     nearestDeadline?: string;
     newCount: number;
+    completed: number;
   }>({
     total: 0,
     overdue: 0,
     nearestDeadline: undefined,
     newCount: 0,
+    completed: 0,
   });
 
   const handleToggleSidebar = () => {
@@ -106,6 +109,7 @@ const Header: React.FC<HeaderProps> = ({
           .filter(t => new Date(t.dueDate).getTime() >= now)
           .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0];
         const newCount = active.filter(t => t.status === 'new').length;
+        const completed = all.filter(t => t.status === 'completed').length;
 
         setTasksSummary({
           total: active.length,
@@ -114,6 +118,7 @@ const Header: React.FC<HeaderProps> = ({
             ? new Date(upcoming.dueDate).toLocaleDateString('ru-RU')
             : undefined,
           newCount,
+          completed,
         });
       } catch (error) {
         console.warn('Не удалось загрузить задачи для хедера:', error);
@@ -222,11 +227,20 @@ const Header: React.FC<HeaderProps> = ({
 
         {!isRegistry && (
           <Space size="small" align="center">
-            <Text strong>{tasksSummary.total} задач</Text>
-            <Text type={tasksSummary.overdue > 0 ? 'danger' : 'secondary'}>
-              <ClockCircleOutlined style={{ marginRight: 4 }} />
-              Просрочено: {tasksSummary.overdue}
-            </Text>
+            <Tooltip title={`Активные задачи: ${tasksSummary.total}`}>
+              <Badge count={tasksSummary.total} size="small">
+                <UnorderedListOutlined style={{ fontSize: 16 }} />
+              </Badge>
+            </Tooltip>
+            <Tooltip title={`Просроченные задачи: ${tasksSummary.overdue}`}>
+              <Badge
+                count={tasksSummary.overdue}
+                size="small"
+                style={{ backgroundColor: tasksSummary.overdue > 0 ? '#ff4d4f' : undefined }}
+              >
+                <ClockCircleOutlined style={{ fontSize: 16, color: '#ff4d4f' }} />
+              </Badge>
+            </Tooltip>
             {tasksSummary.nearestDeadline && (
               <Tooltip title={`Ближайший дедлайн: ${tasksSummary.nearestDeadline}`}>
                 <ClockCircleOutlined style={{ color: '#ff4d4f', fontSize: 16 }} />
