@@ -83,6 +83,7 @@ const MainLayout: React.FC = () => {
     setHeaderVisible(!headerVisible);
   };
 
+  const isRegistrySection = mainSection === 'registry';
   const shouldShowHeader = headerVisible;
 
   return (
@@ -106,6 +107,7 @@ const MainLayout: React.FC = () => {
             searchAttribute={searchAttribute}
             headerVisible={headerVisible}
             contextTitle={getHeaderContextTitle()}
+            isRegistry={isRegistrySection}
           />
         )}
         <Content className="main-content" style={{ marginTop: shouldShowHeader ? 64 : 0 }}>
