@@ -1095,7 +1095,7 @@ const ReferencePage: React.FC = () => {
           console.error('Ошибка запроса к DeepSeek API:', error);
         }
 
-        // Проверяем, не связана ли ошибка с API ключом или сетью
+        // Если проблема с API ключом или авторизацией — сообщаем об этом явно
         if (
           errorMessage.includes('API ключ') ||
           errorMessage.includes('401') ||
@@ -1104,31 +1104,12 @@ const ReferencePage: React.FC = () => {
           throw new Error('Проблема с доступом к AI сервису. Проверьте настройки API.');
         }
 
-        // Fallback на локальную генерацию ответа
-        if (topics.length > 0) {
-          response = `На основе справочной литературы по банковским залогам:\n\n`;
-
-          const byCategory = new Map<string, KnowledgeTopic[]>();
-          for (const topic of topics) {
-            if (!byCategory.has(topic.category)) {
-              byCategory.set(topic.category, []);
-            }
-            byCategory.get(topic.category)!.push(topic);
-          }
-
-          for (const [categoryId, categoryTopics] of byCategory.entries()) {
-            const categoryName = categories.find(c => c.id === categoryId)?.name || categoryId;
-            response += `**${categoryName}**\n\n`;
-
-            for (const topic of categoryTopics.slice(0, 2)) {
-              response += `*${topic.title}*\n\n${topic.content.slice(0, 300)}...\n\n`;
-            }
-          }
-          knowledgeContext = knowledgeContext || 'Локальная генерация';
-        } else {
-          response = `Извините, произошла ошибка при обращении к ИИ. Попробуйте переформулировать вопрос или использовать поиск по категориям.`;
-          knowledgeContext = 'Ошибка';
-        }
+        // Без fallback-режима: если DeepSeek недоступен, возвращаем понятное служебное сообщение,
+        // а не псевдо-ответ из базы знаний
+        response =
+          'Извините, профессиональный AI-помощник (DeepSeek) сейчас недоступен или ответ не удалось получить вовремя. ' +
+          'Пожалуйста, повторите запрос позже. При необходимости вы можете временно воспользоваться обычным поиском по базе знаний.';
+        knowledgeContext = 'AI_unavailable';
       }
 
       return { content: response, sources, context: knowledgeContext };
@@ -1408,38 +1389,8 @@ const ReferencePage: React.FC = () => {
       let index;
 
       if (isImage) {
-        // Для изображений индексируем и анализируем через AI
-        message.info('Анализирую изображение через ИИ...');
+        // Для изображений выполняем только базовую индексацию без обращения к AI
         index = await documentIndexer.indexDocument(file);
-
-        // Анализируем изображение через AI для создания описания
-        if (index.chunks.length > 0 && index.chunks[0].imageData) {
-          try {
-            const imageDescription = await deepSeekService.analyzeImage(
-              index.chunks[0].imageData,
-              file.name
-            );
-
-            // Обновляем текст чанка с описанием от AI
-            index.chunks[0].text = `[Изображение: ${file.name}]\n\nОписание от ИИ:\n${imageDescription}`;
-
-            // Обновляем ключевые слова на основе описания
-            const descriptionKeywords = documentIndexer.extractKeywordsPublic(imageDescription);
-            index.chunks[0].keywords = [
-              ...new Set([...index.chunks[0].keywords, ...descriptionKeywords]),
-            ];
-
-            // Сохраняем обновленный индекс
-            documentIndexer.updateDocumentIndex(index);
-
-            message.success('Изображение проанализировано ИИ');
-          } catch (aiError) {
-            if (import.meta.env.MODE === 'development') {
-              console.error('Ошибка анализа изображения через AI:', aiError);
-            }
-            message.warning('Изображение загружено, но не удалось проанализировать через ИИ');
-          }
-        }
       } else {
         // Для документов используем стандартную индексацию
         index = await loadDocumentManually(file);
@@ -1464,9 +1415,7 @@ const ReferencePage: React.FC = () => {
       }
 
       message.success(
-        `${isImage ? 'Изображение' : 'Документ'} "${file.name}" успешно ${
-          isImage ? 'проанализирован' : 'проиндексирован'
-        }. База знаний обновлена.`
+        `${isImage ? 'Изображение' : 'Документ'} "${file.name}" успешно проиндексирован(о). База знаний обновлена.`
       );
     } catch (error) {
       if (import.meta.env.MODE === 'development') {
@@ -1474,9 +1423,7 @@ const ReferencePage: React.FC = () => {
       }
       const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
       message.error(
-        `Не удалось ${
-          isImage ? 'проанализировать изображение' : 'проиндексировать документ'
-        }: ${errorMessage}`
+        `Не удалось ${isImage ? 'проиндексировать изображение' : 'проиндексировать документ'}: ${errorMessage}`
       );
     } finally {
       setIndexing(false);

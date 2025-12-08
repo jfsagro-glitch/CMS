@@ -80,9 +80,9 @@ class DeepSeekService {
     const requestMessages = [{ role: 'system' as const, content: systemMessage }, ...messages];
 
     try {
-      // Добавляем таймаут для запроса (60 секунд)
+      // Добавляем таймаут для запроса (оптимизировано до 35 секунд)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      const timeoutId = setTimeout(() => controller.abort(), 35000);
 
       // Определяем режим запроса и URL
       const apiUrl = this.getApiUrl();
@@ -102,8 +102,8 @@ class DeepSeekService {
         body: JSON.stringify({
           model: this.MODEL,
           messages: requestMessages,
-          temperature: 0.5, // Снижена для более точных и профессиональных ответов
-          max_tokens: 1500, // Уменьшено для более кратких ответов
+          temperature: 0.4, // Чуть ниже для более стабильных и быстрых ответов
+          max_tokens: 900, // Ограничиваем длину ответа для ускорения
           stream: false,
         }),
         signal: controller.signal,
