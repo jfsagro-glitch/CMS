@@ -101,11 +101,21 @@ const parseJsonFromResponse = (response: string): any | null => {
   }
 
   if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+    const jsonStr = response.substring(startIndex, endIndex + 1);
     try {
-      const jsonStr = response.substring(startIndex, endIndex + 1);
       return JSON.parse(jsonStr);
     } catch (error) {
-      console.warn('Не удалось распарсить JSON с балансом скобок:', error);
+      console.warn('Не удалось распарсить JSON с балансом скобок, пробуем без блока comparables:', error);
+      // Часто ошибка из-за обрезанного массива comparables — пробуем вырезать его целиком
+      try {
+        const withoutComparables = jsonStr.replace(
+          /"comparables"\s*:\s*\[[\s\S]*?\](\s*,)?/m,
+          ''
+        );
+        return JSON.parse(withoutComparables);
+      } catch (error2) {
+        console.warn('Не удалось распарсить JSON после удаления comparables:', error2);
+      }
     }
   }
 
@@ -346,9 +356,9 @@ export const AppraisalAIService = {
       }
     }
 
-    // Делаем несколько попыток получения ответа от ИИ
+    // Делаем несколько попыток получения ответа от ИИ (оптимизировано: меньше попыток и ожиданий)
     let lastError: Error | null = null;
-    const maxRetries = 3;
+    const maxRetries = 2;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -393,8 +403,8 @@ ${contextParts.join('\n')}
           );
         }
 
-        // Ждем перед следующей попыткой
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        // Короткая экспоненциальная задержка перед следующей попыткой
+        await new Promise(resolve => setTimeout(resolve, 1500 * attempt));
       }
     }
 
