@@ -24,15 +24,41 @@ class FeedbackStorage {
         ...feedback,
         timestamp: feedback.timestamp,
       });
-      
+
       // Храним только последние 1000 отзывов
-      if (feedbacks.length > 1000) {
-        feedbacks.shift();
+      let limited = feedbacks;
+      if (limited.length > 1000) {
+        limited = limited.slice(-1000);
       }
-      
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(feedbacks));
+
+      const serialized = JSON.stringify(limited);
+
+      try {
+        localStorage.setItem(this.STORAGE_KEY, serialized);
+      } catch (error) {
+        // Обработка переполнения localStorage, аналогично chatStorage
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+          try {
+            // Пробуем сохранить только последние 200 отзывов
+            const pruned = limited.slice(-200);
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(pruned));
+            console.warn(
+              'localStorage для ai_feedback переполнен, старые отзывы удалены. Оставлено:',
+              pruned.length
+            );
+          } catch (secondError) {
+            console.error(
+              'Повторная ошибка QuotaExceededError при сохранении обратной связи, очищаем ai_feedback.',
+              secondError
+            );
+            localStorage.removeItem(this.STORAGE_KEY);
+          }
+        } else {
+          console.error('Ошибка сохранения обратной связи:', error);
+        }
+      }
     } catch (error) {
-      console.error('Ошибка сохранения обратной связи:', error);
+      console.error('Ошибка подготовки обратной связи к сохранению:', error);
     }
   }
 

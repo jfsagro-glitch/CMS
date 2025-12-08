@@ -18,7 +18,7 @@ interface FeedbackAnalysis {
 
 class DeepSeekService {
   private readonly MODEL = 'deepseek-chat';
-  
+
   /**
    * Определяет URL API в зависимости от окружения
    * В development используем прокси Vite, в production — Cloudflare Worker прокси
@@ -42,7 +42,7 @@ class DeepSeekService {
     timestamp: number;
   } | null = null;
   private readonly CACHE_TTL = 60000; // 1 минута
-  
+
   /**
    * Расшифровывает API ключ
    */
@@ -59,31 +59,31 @@ class DeepSeekService {
   /**
    * Отправляет запрос к DeepSeek API
    */
-  async chat(messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>, context?: string): Promise<string> {
+  async chat(
+    messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
+    context?: string
+  ): Promise<string> {
     const apiKey = this.getApiKey();
-    
+
     if (!apiKey) {
       throw new Error('API ключ не найден');
     }
 
     // Анализируем обратную связь для улучшения ответов
     const feedbackAnalysis = this.getFeedbackAnalysis();
-    
+
     // Формируем системный промпт с контекстом
-    const systemMessage = context 
+    const systemMessage = context
       ? this.buildSystemPromptWithContext(context, feedbackAnalysis)
       : this.buildSystemPrompt(feedbackAnalysis);
 
-    const requestMessages = [
-      { role: 'system' as const, content: systemMessage },
-      ...messages,
-    ];
+    const requestMessages = [{ role: 'system' as const, content: systemMessage }, ...messages];
 
     try {
       // Добавляем таймаут для запроса (60 секунд)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
-      
+
       // Определяем режим запроса и URL
       const apiUrl = this.getApiUrl();
       const isLocalDev =
@@ -91,13 +91,13 @@ class DeepSeekService {
         window.location.hostname === 'localhost' ||
         window.location.hostname === '127.0.0.1';
       const fetchMode: RequestMode = isLocalDev ? 'same-origin' : 'cors';
-      
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         mode: fetchMode,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: this.MODEL,
@@ -108,12 +108,12 @@ class DeepSeekService {
         }),
         signal: controller.signal,
       });
-      
+
       clearTimeout(timeoutId);
 
       if (!response.ok) {
         let errorMessage = `DeepSeek API error: ${response.status} ${response.statusText}`;
-        
+
         try {
           const errorData = await response.json();
           errorMessage += ` - ${JSON.stringify(errorData)}`;
@@ -124,22 +124,22 @@ class DeepSeekService {
             errorMessage += ` - ${text}`;
           }
         }
-        
+
         // Специальная обработка для ошибок авторизации
         if (response.status === 401 || response.status === 403) {
           throw new Error(`API ключ недействителен или отсутствует. Статус: ${response.status}`);
         }
-        
+
         // Специальная обработка для ошибок лимита
         if (response.status === 429) {
           throw new Error('Превышен лимит запросов к API. Попробуйте позже.');
         }
-        
+
         throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      
+
       if (data.choices && data.choices.length > 0) {
         return data.choices[0].message.content || 'Не удалось получить ответ от ИИ';
       }
@@ -149,23 +149,25 @@ class DeepSeekService {
       // Обработка различных типов ошибок
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          throw new Error('Превышено время ожидания ответа от API (30 секунд). Попробуйте еще раз.');
+          throw new Error(
+            'Превышено время ожидания ответа от API (30 секунд). Попробуйте еще раз.'
+          );
         }
         // Обработка CORS и сетевых ошибок
         const errorMessage = error.message.toLowerCase();
         if (errorMessage.includes('failed to fetch') || errorMessage.includes('networkerror')) {
           throw new Error(
             'Не удалось выполнить запрос к DeepSeek API через прокси. ' +
-            'Проверьте подключение к интернету или работу Cloudflare Worker прокси.'
+              'Проверьте подключение к интернету или работу Cloudflare Worker прокси.'
           );
         }
       }
-      
+
       // Логируем ошибку только в development режиме
       if (import.meta.env.MODE === 'development') {
         console.error('Ошибка запроса к DeepSeek API:', error);
       }
-      
+
       throw error;
     }
   }
@@ -178,7 +180,7 @@ class DeepSeekService {
    */
   async analyzeImage(imageBase64: string, fileName: string): Promise<string> {
     const apiKey = this.getApiKey();
-    
+
     if (!apiKey) {
       throw new Error('API ключ не найден');
     }
@@ -199,7 +201,9 @@ class DeepSeekService {
       const response = await this.chat([
         {
           role: 'user',
-          content: `${prompt}\n\nФайл: ${fileName}\nРазмер изображения: ${Math.round(imageBase64.length / 1024)}KB\n[Изображение загружено, требуется анализ содержимого]`,
+          content: `${prompt}\n\nФайл: ${fileName}\nРазмер изображения: ${Math.round(
+            imageBase64.length / 1024
+          )}KB\n[Изображение загружено, требуется анализ содержимого]`,
         },
       ]);
 
@@ -214,13 +218,13 @@ class DeepSeekService {
   async generateResponse(userQuestion: string, knowledgeContext: string): Promise<string> {
     // Анализируем вопрос для определения необходимости уточнений
     const questionAnalysis = questionEnhancementService.analyzeQuestion(userQuestion);
-    
+
     // Получаем рекомендации от системы самообучения
     const recommendations = learningService.getRecommendations(userQuestion);
-    
+
     // Улучшаем контекст на основе рекомендаций
     let enhancedContext = knowledgeContext;
-    
+
     // Добавляем информацию об анализе вопроса
     if (questionAnalysis.detectedAssetType) {
       enhancedContext += `\n\nТип актива: ${questionAnalysis.detectedAssetType}`;
@@ -231,11 +235,11 @@ class DeepSeekService {
     if (questionAnalysis.detectedRegistrationType) {
       enhancedContext += `\nТип регистрации: ${questionAnalysis.detectedRegistrationType}`;
     }
-    
+
     if (recommendations.suggestedTemplate) {
       enhancedContext += `\n\nШаблон успешного ответа для подобных вопросов:\n${recommendations.suggestedTemplate}`;
     }
-    
+
     if (recommendations.documentInsights && recommendations.documentInsights.length > 0) {
       enhancedContext += `\n\nВажные темы из релевантных документов:\n`;
       recommendations.documentInsights.forEach(insight => {
@@ -245,16 +249,15 @@ class DeepSeekService {
         });
       });
     }
-    
+
     if (recommendations.importantKeywords.length > 0) {
-      enhancedContext += `\n\nВажные ключевые слова для этого вопроса: ${recommendations.importantKeywords.join(', ')}`;
+      enhancedContext += `\n\nВажные ключевые слова для этого вопроса: ${recommendations.importantKeywords.join(
+        ', '
+      )}`;
     }
 
-    let response = await this.chat(
-      [{ role: 'user', content: userQuestion }],
-      enhancedContext
-    );
-    
+    let response = await this.chat([{ role: 'user', content: userQuestion }], enhancedContext);
+
     // Если нужны уточнения и ответ короткий, добавляем уточняющие вопросы
     if (questionAnalysis.needsClarification && response.length < 500) {
       const clarificationText = questionEnhancementService.formatClarificationQuestions(
@@ -272,7 +275,7 @@ class DeepSeekService {
   private getFeedbackAnalysis(): FeedbackAnalysis {
     // Проверяем кэш
     const now = Date.now();
-    if (this.feedbackCache && (now - this.feedbackCache.timestamp) < this.CACHE_TTL) {
+    if (this.feedbackCache && now - this.feedbackCache.timestamp < this.CACHE_TTL) {
       return this.feedbackCache.data;
     }
 
@@ -282,8 +285,12 @@ class DeepSeekService {
       const analysis = feedbackStorage.analyzeDislikes();
 
       const result = {
-        goodExamples: goodExamples.map(f => `Вопрос: ${f.question}\nОтвет: ${f.answer.slice(0, 200)}...`),
-        badExamples: badExamples.map(f => `Вопрос: ${f.question}\nОтвет: ${f.answer.slice(0, 200)}...`),
+        goodExamples: goodExamples.map(
+          f => `Вопрос: ${f.question}\nОтвет: ${f.answer.slice(0, 200)}...`
+        ),
+        badExamples: badExamples.map(
+          f => `Вопрос: ${f.question}\nОтвет: ${f.answer.slice(0, 200)}...`
+        ),
         suggestions: analysis.suggestions,
       };
 
@@ -352,6 +359,11 @@ class DeepSeekService {
 
 5. ГЛАВНАЯ ЦЕЛЬ: Реализовать обеспечение для возврата заемных средств с минимальными потерями.
 
+ОЦЕНКИ СТОИМОСТИ ВСЕГДА ДЕЛАЙ ПО СОСТОЯНИЮ НА ТЕКУЩУЮ ДАТУ ОТВЕТА.
+Если в вопросе явно не указана другая дата оценки, считай датой оценки дату формирования ответа (${new Date().toLocaleDateString(
+      'ru-RU'
+    )}) и указывай это явно в формулировках.
+
 ВАЖНО - ЗАДАВАЙ УТОЧНЯЮЩИЕ ВОПРОСЫ:
 Если вопрос недостаточно конкретен или не хватает информации для точного ответа, обязательно задай 1-3 уточняющих вопроса. Это поможет дать максимально профессиональный и корректный ответ.
 
@@ -378,11 +390,15 @@ ${context}
 Используй эту информацию для ответа. Если в контексте нет точной информации, используй свои профессиональные знания, но укажи источник.`;
 
     if (feedback.goodExamples.length > 0) {
-      prompt += `\n\nПримеры хороших ответов (на что ориентироваться):\n${feedback.goodExamples.join('\n\n---\n\n')}`;
+      prompt += `\n\nПримеры хороших ответов (на что ориентироваться):\n${feedback.goodExamples.join(
+        '\n\n---\n\n'
+      )}`;
     }
 
     if (feedback.badExamples.length > 0) {
-      prompt += `\n\nПримеры плохих ответов (чего избегать):\n${feedback.badExamples.join('\n\n---\n\n')}`;
+      prompt += `\n\nПримеры плохих ответов (чего избегать):\n${feedback.badExamples.join(
+        '\n\n---\n\n'
+      )}`;
     }
 
     if (feedback.suggestions.length > 0) {
@@ -397,6 +413,7 @@ ${context}
    * Строит базовый системный промпт с эволюцией
    */
   private buildSystemPrompt(feedback: FeedbackAnalysis): string {
+    const today = new Date().toLocaleDateString('ru-RU');
     let prompt = `Ты - ПРОФЕССИОНАЛЬНЫЙ ЭКСПЕРТ-ОЦЕНЩИК и СПЕЦИАЛИСТ ПО АНАЛИЗУ РИСКОВ в Банке. Твоя основная деятельность:
 
 1. ОЦЕНКА ВСЕХ ВИДОВ АКТИВОВ:
@@ -424,24 +441,32 @@ ${context}
    - Визуальный осмотр обеспечения
    - Проверка наличия и состояния залога
    - Мониторинг изменений стоимости
-
+ 
 5. ГЛАВНАЯ ЦЕЛЬ: Реализовать обеспечение для возврата заемных средств с минимальными потерями.
 
+ВАЖНО: Все стоимостные оценки (рыночная, залоговая, диапазон стоимости, дисконты) нужно давать
+по состоянию на текущую дату ответа. Если в вопросе не указана другая дата оценки,
+считай датой оценки "${today}" и явно указывай это в тексте (например: "по состоянию на ${today}").
+ 
 Ты консультируешь коллег-профессионалов, которые работают в той же сфере. Отвечай:
 - КРАТКО и ЧЕТКО - только суть, без лишних слов
 - ПРОФЕССИОНАЛЬНО - используй терминологию, ссылайся на нормативные документы (ФСО, ФЗ-135)
 - ПО ДЕЛУ - фокусируйся на практических аспектах работы
 - СТРУКТУРИРОВАННО - используй списки, выделяй ключевые моменты
 - ЭКСПЕРТНО - демонстрируй глубокие знания в оценке и анализе рисков
-
+ 
 База знаний основана на справочной литературе "Залоговik. Все о банковских залогах" и других профессиональных документах.`;
 
     if (feedback.goodExamples.length > 0) {
-      prompt += `\n\nПримеры хороших ответов (на что ориентироваться):\n${feedback.goodExamples.join('\n\n---\n\n')}`;
+      prompt += `\n\nПримеры хороших ответов (на что ориентироваться):\n${feedback.goodExamples.join(
+        '\n\n---\n\n'
+      )}`;
     }
 
     if (feedback.badExamples.length > 0) {
-      prompt += `\n\nПримеры плохих ответов (чего избегать):\n${feedback.badExamples.join('\n\n---\n\n')}`;
+      prompt += `\n\nПримеры плохих ответов (чего избегать):\n${feedback.badExamples.join(
+        '\n\n---\n\n'
+      )}`;
     }
 
     if (feedback.suggestions.length > 0) {
@@ -455,4 +480,3 @@ ${context}
 
 export const deepSeekService = new DeepSeekService();
 export default deepSeekService;
-
