@@ -1,423 +1,396 @@
-import React from 'react';
-import { Card, Row, Col, Typography, Space, Divider, Button } from 'antd';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
-  GlobalOutlined,
   DatabaseOutlined,
   ShoppingOutlined,
+  CheckCircleOutlined,
+  CameraOutlined,
   MailOutlined,
   PhoneOutlined,
   LinkOutlined,
-  CheckCircleOutlined,
-  CameraOutlined,
+  ArrowRightOutlined,
+  RocketOutlined,
+  CodeOutlined,
+  TeamOutlined,
+  TrophyOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import './ProjectsPortfolioPage.css';
 
-const { Title, Paragraph, Text } = Typography;
-
 const ProjectsPortfolioPage: React.FC = () => {
+  const [visibleElements, setVisibleElements] = useState<Set<string>>(new Set());
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [scrollY, setScrollY] = useState(0);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+
+  // Оптимизированный обработчик движения мыши с throttle
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    requestAnimationFrame(() => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    });
+  }, []);
+
+  // Оптимизированный обработчик скролла
+  const handleScroll = useCallback(() => {
+    requestAnimationFrame(() => {
+      setScrollY(window.scrollY);
+    });
+  }, []);
+
+  useEffect(() => {
+    // Intersection Observer для анимации при скролле
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisibleElements((prev) => new Set(prev).add(entry.target.id));
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px',
+      }
+    );
+
+    // Наблюдаем за всеми элементами с классом animate-on-scroll
+    const elements = document.querySelectorAll('.animate-on-scroll');
+    elements.forEach((el) => {
+      if (observerRef.current) {
+        observerRef.current.observe(el);
+      }
+    });
+
+    // Изначально видимые элементы (hero section)
+    setVisibleElements((prev) => {
+      const newSet = new Set(prev);
+      newSet.add('hero-logo');
+      newSet.add('hero-text');
+      return newSet;
+    });
+
+    // Добавляем обработчики событий
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [handleMouseMove, handleScroll]);
+
+  const projects = [
+    {
+      id: 1,
+      title: 'Банковская CRM',
+      description: 'Комплексная банковская CRM-система для управления залоговым имуществом. Платформа предоставляет полный функционал для ведения учета, классификации и управления объектами залога в банковской сфере.',
+      icon: <DatabaseOutlined />,
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      url: 'https://cmsauto.ru/#/registry',
+      stats: { users: '500+', objects: '10K+', uptime: '99.9%' },
+      features: [
+        'Управление карточками залогового имущества',
+        'Расширенная классификация объектов (60+ типов)',
+        'Динамические формы с 150+ полями',
+        'Многостраничная форма карточки',
+        'Фильтрация, поиск и сортировка',
+        'Экспорт/импорт в Excel',
+        'Резервное копирование',
+        'Интеграция с DaData API',
+      ],
+    },
+    {
+      id: 2,
+      title: 'Онлайн Автосалон',
+      description: 'Интернет-магазин автомобилей с расширенным каталогом и удобной системой поиска. Платформа для продажи автомобилей из различных регионов с полным циклом оформления документов.',
+      icon: <ShoppingOutlined />,
+      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      url: 'https://cmsauto.store/index.html#catalog',
+      stats: { cars: '5K+', regions: '5', orders: '1K+' },
+      features: [
+        'Каталог автомобилей с детальной информацией',
+        'Расширенный поиск и фильтрация',
+        'Каталоги из разных регионов',
+        'Таможенный калькулятор',
+        'Заявка на подбор автомобиля',
+        'Самостоятельный просчет стоимости',
+        'Система оформления заказов',
+        'Контактная форма',
+      ],
+    },
+    {
+      id: 3,
+      title: 'Задачник',
+      description: 'Система управления задачами для сотрудников с поддержкой ролевой модели, распределения по регионам и автоматизации процессов. Платформа для эффективного управления рабочими задачами.',
+      icon: <CheckCircleOutlined />,
+      gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      url: 'https://jfsagro-glitch.github.io/zadachnik/',
+      stats: { tasks: '50K+', users: '200+', regions: '4' },
+      features: [
+        'Управление задачами различных типов',
+        'Ролевая модель доступа',
+        'Распределение по регионам',
+        'Система приоритетов и статусов',
+        'Аналитика и KPI',
+        'Автопилот для распределения',
+        'Экспорт данных в CSV',
+        'Комментарии и история',
+      ],
+    },
+    {
+      id: 4,
+      title: 'Система дистанционных осмотров',
+      description: 'Платформа для проведения дистанционных осмотров объектов залогового имущества. Система позволяет проводить осмотры через мобильные устройства с фотофиксацией и геолокацией.',
+      icon: <CameraOutlined />,
+      gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      url: 'https://jfsagro-glitch.github.io/CMS_chek/',
+      stats: { inspections: '20K+', mobile: '100%', accuracy: '99%' },
+      features: [
+        'Мобильный интерфейс',
+        'Фотофиксация объектов',
+        'Структурированные чек-листы',
+        'Геолокация и привязка к адресу',
+        'Электронная подпись',
+        'Автоматическое формирование отчетов',
+        'История осмотров',
+        'Интеграция с CMS',
+      ],
+    },
+  ];
+
+  const stats = [
+    { icon: <RocketOutlined />, value: '4', label: 'Проекта', color: '#0066cc' },
+    { icon: <CodeOutlined />, value: '50K+', label: 'Строк кода', color: '#0099cc' },
+    { icon: <TeamOutlined />, value: '500+', label: 'Пользователей', color: '#00cc99' },
+    { icon: <TrophyOutlined />, value: '99.9%', label: 'Uptime', color: '#00ff99' },
+  ];
+
   return (
-    <div className="projects-portfolio-page">
-      {/* Заголовок с логотипом и брендом */}
-      <div className="portfolio-header">
-        <div className="brand-section">
-          <img src="/logo.png" alt="CMS AUTO Logo" className="brand-logo" />
-          <div className="brand-info">
-            <Title level={1} className="brand-title">
-              CMS AUTO
-            </Title>
-            <Text type="secondary" className="brand-subtitle">
-              Профессиональные решения для бизнеса
-            </Text>
+    <div className="bitrix-portfolio-page">
+      {/* Hero Section */}
+      <section className="hero-section" ref={heroRef}>
+        <div className="hero-content">
+          <div className="brand-container">
+            <img
+              src="/logo.png"
+              alt="CMS AUTO Logo"
+              className={`hero-logo ${visibleElements.has('hero-logo') ? 'animate-fade-in-up' : ''}`}
+              id="hero-logo"
+              loading="lazy"
+            />
+            <div
+              className={`hero-text ${visibleElements.has('hero-text') ? 'animate-fade-in-up-delay' : ''}`}
+              id="hero-text"
+            >
+              <h1 className="hero-title">
+                <span className="title-gradient">CMS AUTO</span>
+                <div className="ai-badge">
+                  <ThunderboltOutlined className="ai-icon" />
+                  <span className="ai-text">AI</span>
+                  <div className="ai-pulse-ring"></div>
+                  <div className="ai-pulse-ring ai-pulse-ring-delay"></div>
+                </div>
+              </h1>
+              <p className="hero-subtitle">Профессиональные решения для бизнеса</p>
+              <div className="hero-stats">
+                {stats.map((stat, index) => (
+                  <div
+                    key={index}
+                    className="hero-stat-item"
+                    style={{ animationDelay: `${0.4 + index * 0.1}s` }}
+                  >
+                    <div className="stat-icon" style={{ color: stat.color }}>
+                      {stat.icon}
+                    </div>
+                    <div className="stat-content">
+                      <div className="stat-value">{stat.value}</div>
+                      <div className="stat-label">{stat.label}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+        <div className="hero-animated-bg">
+          <div className="floating-shape shape-1"></div>
+          <div className="floating-shape shape-2"></div>
+          <div className="floating-shape shape-3"></div>
+          <div
+            className="mouse-follower"
+            style={{
+              transform: `translate(${mousePosition.x}px, ${mousePosition.y}px)`,
+            }}
+          ></div>
+        </div>
+        <div
+          className="parallax-layer"
+          style={{
+            transform: `translateY(${scrollY * 0.5}px)`,
+          }}
+        ></div>
+      </section>
 
-      <div style={{ marginBottom: 32, marginTop: 24 }}>
-        <Title level={2}>Портфолио проектов</Title>
-        <Paragraph style={{ fontSize: 16, color: '#666' }}>
-          Ознакомьтесь с реализованными проектами и решениями
-        </Paragraph>
-      </div>
+      {/* Projects Section */}
+      <section className="projects-section">
+        <div className="section-container">
+          <div className="section-header animate-on-scroll" id={`header-${Date.now()}`}>
+            <h2 className="section-title">
+              <span className="title-underline">Портфолио проектов</span>
+            </h2>
+            <p className="section-description">
+              Ознакомьтесь с реализованными проектами и решениями
+            </p>
+          </div>
 
-      <Row gutter={[24, 24]}>
-        {/* Проект 1: Реестр объектов */}
-        <Col xs={24} lg={12}>
-          <Card
-            hoverable
-            style={{ height: '100%' }}
-            cover={
+          <div className="projects-grid">
+            {projects.map((project, index) => (
               <div
-                style={{
-                  height: 200,
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                key={project.id}
+                className={`project-card animate-on-scroll ${visibleElements.has(`project-${project.id}`) ? 'animate-fade-in-up' : ''}`}
+                id={`project-${project.id}`}
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <DatabaseOutlined style={{ fontSize: 64, color: '#fff' }} />
-              </div>
-            }
-            actions={[
-              <Button
-                type="link"
-                icon={<LinkOutlined />}
-                href="https://cmsauto.ru/#/registry"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Открыть проект
-              </Button>,
-            ]}
-          >
-            <Card.Meta
-              title={
-                <Title level={3} style={{ margin: 0 }}>
-                  Банковская CRM
-                </Title>
-              }
-              description={
-                <div>
-                  <Paragraph>
-                    Комплексная банковская CRM-система для управления залоговым имуществом. 
-                    Платформа предоставляет полный функционал для ведения учета, классификации 
-                    и управления объектами залога в банковской сфере.
-                  </Paragraph>
-                  <Divider style={{ margin: '16px 0' }} />
-                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                    <Text strong>Основные возможности:</Text>
-                    <ul style={{ margin: 0, paddingLeft: 20 }}>
-                      <li>Управление карточками залогового имущества (CRUD)</li>
-                      <li>Расширенная классификация объектов (60+ типов)</li>
-                      <li>Динамические формы с 150+ полями характеристик</li>
-                      <li>Многостраничная форма карточки (5 вкладок)</li>
-                      <li>Фильтрация, поиск и сортировка</li>
-                      <li>Экспорт/импорт в Excel</li>
-                      <li>Резервное копирование базы данных</li>
-                      <li>Интеграция с DaData API для автозаполнения адресов</li>
-                    </ul>
-                  </Space>
-                  <Divider style={{ margin: '16px 0' }} />
-                  <Space>
-                    <Text type="secondary">URL:</Text>
-                    <Text code>
-                      <a
-                        href="https://cmsauto.ru/#/registry"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: '#1890ff' }}
-                      >
-                        https://cmsauto.ru/#/registry
-                      </a>
-                    </Text>
-                  </Space>
+                <div className="project-icon-wrapper" style={{ background: project.gradient }}>
+                  <div className="project-icon icon-pulse">{project.icon}</div>
+                  <div className="gradient-overlay"></div>
+                  <div className="particles">
+                    {[...Array(20)].map((_, i) => (
+                      <div key={i} className="particle" style={{ '--delay': `${i * 0.1}s` } as React.CSSProperties}></div>
+                    ))}
+                  </div>
                 </div>
-              }
-            />
-          </Card>
-        </Col>
+                <div className="project-content">
+                  <h3 className="project-title">{project.title}</h3>
+                  <p className="project-description">{project.description}</p>
+                  
+                  {/* Stats */}
+                  <div className="project-stats">
+                    {Object.entries(project.stats).map(([key, value]) => (
+                      <div key={key} className="project-stat">
+                        <div className="project-stat-value">{value}</div>
+                        <div className="project-stat-label">{key}</div>
+                      </div>
+                    ))}
+                  </div>
 
-        {/* Проект 2: Онлайн Автосалон */}
-        <Col xs={24} lg={12}>
-          <Card
-            hoverable
-            style={{ height: '100%' }}
-            cover={
-              <div
-                style={{
-                  height: 200,
-                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <ShoppingOutlined style={{ fontSize: 64, color: '#fff' }} />
-              </div>
-            }
-            actions={[
-              <Button
-                type="link"
-                icon={<LinkOutlined />}
-                href="https://cmsauto.store/index.html#catalog"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Открыть проект
-              </Button>,
-            ]}
-          >
-            <Card.Meta
-              title={
-                <Title level={3} style={{ margin: 0 }}>
-                  Онлайн Автосалон
-                </Title>
-              }
-              description={
-                <div>
-                  <Paragraph>
-                    Интернет-магазин автомобилей с расширенным каталогом и удобной системой 
-                    поиска. Платформа для продажи автомобилей из различных регионов с полным 
-                    циклом оформления документов.
-                  </Paragraph>
-                  <Divider style={{ margin: '16px 0' }} />
-                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                    <Text strong>Основные возможности:</Text>
-                    <ul style={{ margin: 0, paddingLeft: 20 }}>
-                      <li>Каталог автомобилей с детальной информацией</li>
-                      <li>Расширенный поиск и фильтрация по параметрам</li>
-                      <li>Каталоги из разных регионов (Грузия, США, Корея, Китай, Европа)</li>
-                      <li>Таможенный калькулятор</li>
-                      <li>Заявка на подбор автомобиля</li>
-                      <li>Самостоятельный просчет стоимости</li>
-                      <li>Система оформления заказов</li>
-                      <li>Контактная форма и обратная связь</li>
+                  <div className="project-features">
+                    <h4 className="features-title">Основные возможности:</h4>
+                    <ul className="features-list">
+                      {project.features.map((feature, index) => (
+                        <li
+                          key={index}
+                          className="feature-item"
+                          style={{ animationDelay: `${index * 0.05}s` }}
+                        >
+                          {feature}
+                        </li>
+                      ))}
                     </ul>
-                  </Space>
-                  <Divider style={{ margin: '16px 0' }} />
-                  <Space>
-                    <Text type="secondary">URL:</Text>
-                    <Text code>
-                      <a
-                        href="https://cmsauto.store/index.html#catalog"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: '#1890ff' }}
-                      >
-                        https://cmsauto.store/index.html#catalog
-                      </a>
-                    </Text>
-                  </Space>
+                  </div>
+                  <div className="project-footer">
+                    <a
+                      href={project.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="project-link"
+                    >
+                      <span>Открыть проект</span>
+                      <ArrowRightOutlined />
+                    </a>
+                  </div>
                 </div>
-              }
-            />
-          </Card>
-        </Col>
-
-        {/* Проект 3: Задачник */}
-        <Col xs={24} lg={12}>
-          <Card
-            hoverable
-            style={{ height: '100%' }}
-            cover={
-              <div
-                style={{
-                  height: 200,
-                  background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <CheckCircleOutlined style={{ fontSize: 64, color: '#fff' }} />
               </div>
-            }
-            actions={[
-              <Button
-                type="link"
-                icon={<LinkOutlined />}
-                href="https://jfsagro-glitch.github.io/zadachnik/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Открыть проект
-              </Button>,
-            ]}
-          >
-            <Card.Meta
-              title={
-                <Title level={3} style={{ margin: 0 }}>
-                  Задачник
-                </Title>
-              }
-              description={
-                <div>
-                  <Paragraph>
-                    Система управления задачами для сотрудников с поддержкой ролевой модели, 
-                    распределения по регионам и автоматизации процессов. Платформа для 
-                    эффективного управления рабочими задачами и контроля их выполнения.
-                  </Paragraph>
-                  <Divider style={{ margin: '16px 0' }} />
-                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                    <Text strong>Основные возможности:</Text>
-                    <ul style={{ margin: 0, paddingLeft: 20 }}>
-                      <li>Управление задачами с различными типами (Оценка, Экспертиза, Рецензия, ПРКК и др.)</li>
-                      <li>Ролевая модель (Бизнес, Руководитель, Сотрудник, Суперпользователь)</li>
-                      <li>Распределение по регионам (Москва, Санкт-Петербург, Новосибирск, Екатеринбург)</li>
-                      <li>Система приоритетов и статусов задач</li>
-                      <li>Аналитика и KPI по задачам</li>
-                      <li>Автопилот для автоматического распределения задач</li>
-                      <li>Экспорт данных в CSV</li>
-                      <li>Комментарии и история изменений</li>
-                      <li>Прикрепление документов к задачам</li>
-                    </ul>
-                  </Space>
-                  <Divider style={{ margin: '16px 0' }} />
-                  <Space>
-                    <Text type="secondary">URL:</Text>
-                    <Text code>
-                      <a
-                        href="https://jfsagro-glitch.github.io/zadachnik/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: '#1890ff' }}
-                      >
-                        https://jfsagro-glitch.github.io/zadachnik/
-                      </a>
-                    </Text>
-                  </Space>
-                </div>
-              }
-            />
-          </Card>
-        </Col>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        {/* Проект 4: Система дистанционных осмотров */}
-        <Col xs={24} lg={12}>
-          <Card
-            hoverable
-            style={{ height: '100%' }}
-            cover={
-              <div
-                style={{
-                  height: 200,
-                  background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <CameraOutlined style={{ fontSize: 64, color: '#fff' }} />
+      {/* Contacts Section */}
+      <section className="contacts-section">
+        <div className="section-container">
+          <h2 className="section-title">
+            <span className="title-underline">Контактная информация</span>
+          </h2>
+          <div className="contacts-grid">
+            <div
+              className="contact-item animate-on-scroll"
+              id="contact-1"
+              style={{ animationDelay: '0s' }}
+            >
+              <div className="contact-icon-wrapper">
+                <MailOutlined className="contact-icon icon-bounce" />
               </div>
-            }
-            actions={[
-              <Button
-                type="link"
-                icon={<LinkOutlined />}
-                href="https://jfsagro-glitch.github.io/CMS_chek/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Открыть проект
-              </Button>,
-            ]}
-          >
-            <Card.Meta
-              title={
-                <Title level={3} style={{ margin: 0 }}>
-                  Система дистанционных осмотров
-                </Title>
-              }
-              description={
-                <div>
-                  <Paragraph>
-                    Платформа для проведения дистанционных осмотров объектов залогового имущества. 
-                    Система позволяет проводить осмотры через мобильные устройства с фотофиксацией, 
-                    геолокацией и формированием отчетов.
-                  </Paragraph>
-                  <Divider style={{ margin: '16px 0' }} />
-                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                    <Text strong>Основные возможности:</Text>
-                    <ul style={{ margin: 0, paddingLeft: 20 }}>
-                      <li>Мобильный интерфейс для проведения осмотров</li>
-                      <li>Фотофиксация объектов с привязкой к координатам</li>
-                      <li>Структурированные чек-листы осмотра</li>
-                      <li>Геолокация и привязка к адресу</li>
-                      <li>Электронная подпись результатов осмотра</li>
-                      <li>Автоматическое формирование отчетов об осмотре</li>
-                      <li>История осмотров и отслеживание изменений</li>
-                      <li>Интеграция с основной системой CMS</li>
-                    </ul>
-                  </Space>
-                  <Divider style={{ margin: '16px 0' }} />
-                  <Space>
-                    <Text type="secondary">URL:</Text>
-                    <Text code>
-                      <a
-                        href="https://jfsagro-glitch.github.io/CMS_chek/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: '#1890ff' }}
-                      >
-                        https://jfsagro-glitch.github.io/CMS_chek/
-                      </a>
-                    </Text>
-                  </Space>
-                </div>
-              }
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Контактная информация */}
-      <Card
-        style={{ marginTop: 32 }}
-        title={
-          <Space>
-            <GlobalOutlined />
-            <span>Контактная информация</span>
-          </Space>
-        }
-      >
-        <Row gutter={[24, 24]}>
-          <Col xs={24} sm={12} md={6}>
-            <Space direction="vertical" size="small">
-              <Text strong>
-                <MailOutlined style={{ marginRight: 8 }} />
-                Email
-              </Text>
-              <div>
-                <a href="mailto:cmsauto@bk.ru" style={{ color: '#1890ff' }}>
+              <div className="contact-info">
+                <h4 className="contact-label">Email</h4>
+                <a href="mailto:cmsauto@bk.ru" className="contact-value">
                   cmsauto@bk.ru
                 </a>
               </div>
-            </Space>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Space direction="vertical" size="small">
-              <Text strong>
-                <PhoneOutlined style={{ marginRight: 8 }} />
-                Телефон
-              </Text>
-              <div>
-                <a href="tel:+79154441208" style={{ color: '#1890ff' }}>
+            </div>
+            <div
+              className="contact-item animate-on-scroll"
+              id="contact-2"
+              style={{ animationDelay: '0.1s' }}
+            >
+              <div className="contact-icon-wrapper">
+                <PhoneOutlined className="contact-icon icon-bounce" />
+              </div>
+              <div className="contact-info">
+                <h4 className="contact-label">Телефон</h4>
+                <a href="tel:+79154441208" className="contact-value">
                   +7 (915) 444-12-08
                 </a>
               </div>
-            </Space>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Space direction="vertical" size="small">
-              <Text strong>
-                <PhoneOutlined style={{ marginRight: 8 }} />
-                WhatsApp
-              </Text>
-              <div>
-                <a href="https://wa.me/79184140636" target="_blank" rel="noopener noreferrer" style={{ color: '#1890ff' }}>
+            </div>
+            <div
+              className="contact-item animate-on-scroll"
+              id="contact-3"
+              style={{ animationDelay: '0.2s' }}
+            >
+              <div className="contact-icon-wrapper">
+                <PhoneOutlined className="contact-icon icon-bounce" />
+              </div>
+              <div className="contact-info">
+                <h4 className="contact-label">WhatsApp</h4>
+                <a
+                  href="https://wa.me/79184140636"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="contact-value"
+                >
                   +7 (918) 414-06-36
                 </a>
               </div>
-            </Space>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Space direction="vertical" size="small">
-              <Text strong>
-                <LinkOutlined style={{ marginRight: 8 }} />
-                Сайт
-              </Text>
-              <div>
-                <a href="https://cmsauto.ru" target="_blank" rel="noopener noreferrer" style={{ color: '#1890ff' }}>
+            </div>
+            <div
+              className="contact-item animate-on-scroll"
+              id="contact-4"
+              style={{ animationDelay: '0.3s' }}
+            >
+              <div className="contact-icon-wrapper">
+                <LinkOutlined className="contact-icon icon-bounce" />
+              </div>
+              <div className="contact-info">
+                <h4 className="contact-label">Сайт</h4>
+                <a
+                  href="https://cmsauto.ru"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="contact-value"
+                >
                   https://cmsauto.ru
                 </a>
               </div>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
 
 export default ProjectsPortfolioPage;
-
