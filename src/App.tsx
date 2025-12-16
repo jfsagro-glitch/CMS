@@ -44,6 +44,7 @@ import ReferencePage from './modules/Reference/ReferencePage';
 import WorkflowPage from './modules/Workflow/WorkflowPage';
 import WorkflowCasePage from './modules/Workflow/WorkflowCasePage';
 import WorkflowSettingsPage from './modules/Workflow/WorkflowSettingsPage';
+import ProjectsPortfolioPage from './modules/ProjectsPortfolio/ProjectsPortfolioPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -269,6 +270,7 @@ const AppContent: React.FC = () => {
                   <Route path="upload" element={<UploadPage />} />
                   <Route path="monitoring" element={<MonitoringPage />} />
                   <Route path="reference" element={<ReferencePage />} />
+                  <Route path="projects-portfolio" element={<ProjectsPortfolioPage />} />
                   <Route path="workflow" element={<WorkflowPage />} />
                   <Route path="workflow/object/:id" element={<WorkflowCasePage />} />
                   <Route
