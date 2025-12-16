@@ -93,18 +93,22 @@ const MainLayout: React.FC = () => {
   };
 
   const isRegistrySection = mainSection === 'registry';
-  const shouldShowHeader = headerVisible;
-  const contentMarginLeft = isMobile ? 0 : sidebarCollapsed ? 80 : 250;
+  const isProjectsPortfolio = mainSection === 'projects-portfolio';
+  const shouldShowHeader = headerVisible && !isProjectsPortfolio;
+  const shouldShowSidebar = !isProjectsPortfolio;
+  const contentMarginLeft = isProjectsPortfolio ? 0 : isMobile ? 0 : sidebarCollapsed ? 80 : 250;
 
   return (
     <Layout className="main-layout">
-      <SidebarMenu
-        collapsed={sidebarCollapsed}
-        isMobile={isMobile}
-        onLoadDemoData={loadDemoData}
-        onClearDemoData={clearDemoData}
-        hasCards={cards.length > 0}
-      />
+      {shouldShowSidebar && (
+        <SidebarMenu
+          collapsed={sidebarCollapsed}
+          isMobile={isMobile}
+          onLoadDemoData={loadDemoData}
+          onClearDemoData={clearDemoData}
+          hasCards={cards.length > 0}
+        />
+      )}
       <Layout style={{ marginLeft: contentMarginLeft, transition: 'margin-left 0.2s' }}>
         {shouldShowHeader && (
           <Header
@@ -123,7 +127,7 @@ const MainLayout: React.FC = () => {
           />
         )}
         <Content className="main-content" style={{ marginTop: shouldShowHeader ? 64 : 0 }}>
-          {!shouldShowHeader && (
+          {!shouldShowHeader && !isProjectsPortfolio && (
             <div
               style={{
                 position: 'fixed',

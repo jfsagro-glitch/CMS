@@ -19,7 +19,6 @@ import {
   DollarOutlined,
   DashboardOutlined,
   RobotOutlined,
-  GlobalOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
@@ -161,13 +160,6 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       icon: <RobotOutlined />,
       path: '/reference',
       tooltip: 'Консультации по нормативным документам, оценке и рабочим вопросам',
-    },
-    {
-      key: 'projects-portfolio',
-      label: 'Портфолио проектов',
-      icon: <GlobalOutlined />,
-      path: '/projects-portfolio',
-      tooltip: 'Портфолио реализованных проектов',
     },
     {
       key: 'workflow',
