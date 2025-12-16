@@ -29,19 +29,19 @@ if (fs.existsSync(indexHtmlPath)) {
         
         // Если есть hash, перенаправляем на главную с этим hash
         if (hash && hash.startsWith('#/')) {
-          window.location.replace('/cms/' + hash);
+          window.location.replace('/' + hash);
           return;
         }
         
         // Если нет hash, но есть путь (например /registry), создаем hash из пути
-        if (path && path !== '/' && path !== '/index.html' && !path.startsWith('/cms')) {
-          const hashPath = '#' + path.replace('/cms', '');
-          window.location.replace('/cms/' + hashPath);
+        if (path && path !== '/' && path !== '/index.html') {
+          const hashPath = '#' + path;
+          window.location.replace('/' + hashPath);
           return;
         }
         
         // Иначе просто перенаправляем на главную
-        window.location.replace('/cms/#/registry');
+        window.location.replace('/#/registry');
       })();
     </script>
   `;
