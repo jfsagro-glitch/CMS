@@ -2,8 +2,8 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/cms/logo.png" />
-    <link rel="apple-touch-icon" href="/cms/logo.png" />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="CMS для управления залоговым имуществом" />
     <title>CMS - Система управления залоговым имуществом</title>
@@ -21,11 +21,11 @@
     <meta property="twitter:title" content="CMS - Система управления залоговым имуществом" />
     <meta property="twitter:description" content="CMS для управления залоговым имуществом" />
     <meta property="twitter:image" content="https://cmsauto.ru/logo.png" />
-    <script type="module" crossorigin src="/cms/assets/index-D4pX5fL3.js"></script>
-    <link rel="modulepreload" crossorigin href="/cms/assets/react-vendor-Of7we7Bb.js">
-    <link rel="modulepreload" crossorigin href="/cms/assets/redux-vendor-fNz2gZ-b.js">
-    <link rel="modulepreload" crossorigin href="/cms/assets/antd-vendor-CynLt8fZ.js">
-    <link rel="stylesheet" crossorigin href="/cms/assets/index-BhTcIMOw.css">
+    <script type="module" crossorigin src="/assets/index-C5Vhv5c_.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/react-vendor-Of7we7Bb.js">
+    <link rel="modulepreload" crossorigin href="/assets/redux-vendor-fNz2gZ-b.js">
+    <link rel="modulepreload" crossorigin href="/assets/antd-vendor-CynLt8fZ.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-BhTcIMOw.css">
   </head>
   <body>
     <div id="root"></div>
@@ -38,19 +38,19 @@
         
         // Если есть hash, перенаправляем на главную с этим hash
         if (hash && hash.startsWith('#/')) {
-          window.location.replace('/cms/' + hash);
+          window.location.replace('/' + hash);
           return;
         }
         
         // Если нет hash, но есть путь (например /registry), создаем hash из пути
-        if (path && path !== '/' && path !== '/index.html' && !path.startsWith('/cms')) {
-          const hashPath = '#' + path.replace('/cms', '');
-          window.location.replace('/cms/' + hashPath);
+        if (path && path !== '/' && path !== '/index.html') {
+          const hashPath = '#' + path;
+          window.location.replace('/' + hashPath);
           return;
         }
         
         // Иначе просто перенаправляем на главную
-        window.location.replace('/cms/#/registry');
+        window.location.replace('/#/registry');
       })();
     </script>
   </body>
