@@ -317,8 +317,7 @@ const ProjectsPortfolioPage: React.FC = () => {
           </h2>
           <div className="contacts-grid">
             <div
-              className="contact-item animate-on-scroll"
-              id="contact-1"
+              className="contact-item contact-item-visible"
               style={{ animationDelay: '0s' }}
             >
               <div className="contact-icon-wrapper">
@@ -332,8 +331,7 @@ const ProjectsPortfolioPage: React.FC = () => {
               </div>
             </div>
             <div
-              className="contact-item animate-on-scroll"
-              id="contact-2"
+              className="contact-item contact-item-visible"
               style={{ animationDelay: '0.1s' }}
             >
               <div className="contact-icon-wrapper">
@@ -347,8 +345,7 @@ const ProjectsPortfolioPage: React.FC = () => {
               </div>
             </div>
             <div
-              className="contact-item animate-on-scroll"
-              id="contact-3"
+              className="contact-item contact-item-visible"
               style={{ animationDelay: '0.2s' }}
             >
               <div className="contact-icon-wrapper">
@@ -367,8 +364,7 @@ const ProjectsPortfolioPage: React.FC = () => {
               </div>
             </div>
             <div
-              className="contact-item animate-on-scroll"
-              id="contact-4"
+              className="contact-item contact-item-visible"
               style={{ animationDelay: '0.3s' }}
             >
               <div className="contact-icon-wrapper">
