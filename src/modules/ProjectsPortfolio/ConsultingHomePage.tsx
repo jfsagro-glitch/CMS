@@ -93,6 +93,9 @@ export const ConsultingHomePage: React.FC = () => {
             <Button type="primary" size="large" onClick={onRequestAudit}>
               {copy.cta.getAudit}
             </Button>
+            <Link className="mkt-link" to="/projects-portfolio/offer">
+              {copy.cta.getOffer}
+            </Link>
             <Link className="mkt-link" to="/projects-portfolio/cases">
               Смотреть кейсы <ArrowRightOutlined />
             </Link>

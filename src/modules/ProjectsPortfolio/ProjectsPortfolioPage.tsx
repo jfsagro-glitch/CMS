@@ -69,6 +69,7 @@ const ProjectsPortfolioPage: React.FC = () => {
                 {CONTACT_EMAIL}
               </a>
             )}
+            <Button onClick={() => navigate('/projects-portfolio/offer')}>{copy.cta.getOffer}</Button>
             <Button type="primary" onClick={() => setAuditOpen(true)}>
               {copy.cta.getAudit}
             </Button>

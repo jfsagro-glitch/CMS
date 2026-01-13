@@ -3,8 +3,16 @@ export type MarketingLang = 'ru' | 'en';
 export type MarketingCopy = {
   nav: { home: string; services: string; cases: string; about: string };
   links: { readFullLegend: string };
-  cta: { getAudit: string; send: string; cancel: string };
+  cta: { getAudit: string; getOffer: string; downloadPdf: string; send: string; cancel: string };
   footer: { title: string; tagline: string };
+  offer: {
+    title: string;
+    subtitle: string;
+    brandLine: string;
+    sections: { title: string; body: Array<string | { bullets: string[] }> }[];
+    strongPhraseTitle: string;
+    strongPhrase: string;
+  };
   brand: {
     kicker: string;
     title: string;
@@ -62,10 +70,97 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
   const ru: MarketingCopy = {
     nav: { home: 'Главная', services: 'Услуги', cases: 'Кейсы', about: 'О CMS' },
     links: { readFullLegend: 'Читать полную легенду →' },
-    cta: { getAudit: 'Получить аудит процессов', send: 'Отправить', cancel: 'Отмена' },
+    cta: {
+      getAudit: 'Получить аудит процессов',
+      getOffer: 'Получить коммерческое предложение',
+      downloadPdf: 'Скачать PDF',
+      send: 'Отправить',
+      cancel: 'Отмена',
+    },
     footer: {
       title: 'CMS (Corporate Management Systems)',
       tagline: 'Digital agency for business process automation & RPA',
+    },
+    offer: {
+      title: 'КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ',
+      subtitle: 'Аудит бизнес-процессов и точек автоматизации',
+      brandLine: 'CMS — Corporate Management Systems',
+      sections: [
+        {
+          title: '1. ЗАЧЕМ ЭТО НУЖНО БИЗНЕСУ (ВСТУПЛЕНИЕ)',
+          body: [
+            'В большинстве компаний проблемы управления проявляются не сразу. Они накапливаются в виде:',
+            { bullets: ['ручных операций,', 'несогласованных процессов,', 'зависимости от ключевых сотрудников,', 'разрозненных IT-систем,', 'управленческих решений, принимаемых «вслепую».'] },
+            'Автоматизация без предварительного анализа часто усиливает хаос, а не устраняет его.',
+            'Аудит CMS — это управленческая диагностика, цель которой:',
+            { bullets: ['увидеть бизнес как систему,', 'выявить точки потерь и рисков,', 'сформировать архитектуру автоматизации с измеримым эффектом.'] },
+          ],
+        },
+        {
+          title: '2. ЧТО ТАКОЕ АУДИТ CMS',
+          body: [
+            'Аудит бизнес-процессов и точек автоматизации — это структурированный анализ ключевых процессов, данных и управленческих контуров компании с последующим формированием:',
+            { bullets: ['карты процессов «как есть»,', 'карты потерь и ограничений,', 'целевой архитектуры «как должно быть»,', 'пошагового плана автоматизации и роботизации.'] },
+            'Аудит не предполагает внедрение. Он создаёт основу для управляемых решений.',
+          ],
+        },
+        {
+          title: '3. КАК МЫ РАБОТАЕМ (ЭТАПЫ)',
+          body: [
+            'Этап 1. Системная диагностика',
+            { bullets: ['интервью с собственником / топ-менеджментом', 'анализ ключевых бизнес-процессов', 'анализ управленческой модели и данных'] },
+            'Цель: понять реальную логику работы бизнеса, а не формальные регламенты.',
+            'Этап 2. Выявление потерь и рисков',
+            { bullets: ['ручные и дублирующие операции', 'зависимость от людей', 'узкие места в процессах', 'зоны управленческой непрозрачности'] },
+            'Цель: зафиксировать, где бизнес теряет деньги, время и контроль.',
+            'Этап 3. Архитектура автоматизации',
+            { bullets: ['какие процессы автоматизировать', 'какие решения действительно нужны', 'приоритеты внедрения', 'где автоматизация даст эффект, а где — риск'] },
+            'Цель: не «оцифровать», а выстроить управляемую систему.',
+            'Этап 4. Экономический эффект',
+            { bullets: ['оценка потенциального ROI', 'снижение операционных издержек', 'эффект на масштабируемость и контроль'] },
+            'Этап 5. Итоговый отчёт',
+            'Вы получаете:',
+            { bullets: ['визуальную схему процессов', 'карту потерь и рисков', 'целевую архитектуру', 'roadmap внедрения (этапы, сроки, логика)'] },
+          ],
+        },
+        {
+          title: '4. ЧТО ПОЛУЧАЕТ КЛИЕНТ',
+          body: [
+            'По итогам аудита у вас есть:',
+            { bullets: ['✔ прозрачная картина бизнеса', '✔ понимание, что мешает росту', '✔ чёткий план автоматизации', '✔ основа для принятия управленческих решений', '✔ возможность привлекать подрядчиков без потери контроля'] },
+          ],
+        },
+        {
+          title: '5. ДЛЯ КОГО ЭТО ПОДХОДИТ',
+          body: [
+            { bullets: ['компании от 20 до 300+ сотрудников', 'бизнес с оборотом от 150 млн ₽', 'собственники и CEO, которым важны:', 'контроль,', 'предсказуемость,', 'снижение рисков,', 'масштабируемость'] },
+          ],
+        },
+        {
+          title: '6. ФОРМАТ И СРОКИ',
+          body: [{ bullets: ['Срок: 2–4 недели', 'Формат: интервью + анализ + отчёт', 'Участие клиента: минимальное, точечное'] }],
+        },
+        {
+          title: '7. СТОИМОСТЬ',
+          body: [
+            'Стоимость аудита формируется индивидуально и зависит от:',
+            { bullets: ['масштаба бизнеса,', 'количества процессов,', 'глубины анализа.'] },
+            'Ориентир: 👉 от 300 000 ₽',
+            '(Стоимость всегда ниже потенциального эффекта от внедрения.)',
+          ],
+        },
+        {
+          title: '8. ЧТО ДАЛЬШЕ',
+          body: [
+            'По результатам аудита вы можете:',
+            { bullets: ['реализовать roadmap самостоятельно,', 'привлечь подрядчиков,', 'продолжить работу с CMS в формате сопровождения.'] },
+            '👉 Аудит не создаёт обязательств, но даёт контроль.',
+          ],
+        },
+      ],
+      strongPhraseTitle: '9. ПОЗИЦИОННАЯ ФРАЗА (ОЧЕНЬ СИЛЬНАЯ)',
+      strongPhrase:
+        'Мы не продаём автоматизацию. Мы помогаем бизнесу увидеть себя таким, какой он есть, и выстроить управляемую архитектуру роста.',
     },
     brand: {
       kicker: 'ОБНОВЛЁННАЯ ЛЕГЕНДА БРЕНДА CMS',
@@ -142,10 +237,100 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
   const en: MarketingCopy = {
     nav: { home: 'Home', services: 'Services', cases: 'Cases', about: 'About CMS' },
     links: { readFullLegend: 'Read the full brand story →' },
-    cta: { getAudit: 'Get a process audit', send: 'Send', cancel: 'Cancel' },
+    cta: {
+      getAudit: 'Get a process audit',
+      getOffer: 'Get a commercial proposal',
+      downloadPdf: 'Download PDF',
+      send: 'Send',
+      cancel: 'Cancel',
+    },
     footer: {
       title: 'CMS (Corporate Management Systems)',
       tagline: 'Digital agency for business process automation & RPA',
+    },
+    offer: {
+      title: 'COMMERCIAL PROPOSAL',
+      subtitle: 'Business process audit & automation opportunities',
+      brandLine: 'CMS — Corporate Management Systems',
+      sections: [
+        {
+          title: '1. WHY YOUR BUSINESS NEEDS THIS',
+          body: [
+            'In most companies, management issues do not appear instantly. They accumulate as:',
+            {
+              bullets: [
+                'manual operations,',
+                'misaligned processes,',
+                'dependency on key employees,',
+                'fragmented IT systems,',
+                'management decisions made “blind”.',
+              ],
+            },
+            'Automation without prior analysis often amplifies chaos instead of eliminating it.',
+            'CMS Audit is an executive diagnostic aimed to:',
+            { bullets: ['see the business as a system,', 'identify points of loss and risk,', 'build an automation architecture with measurable impact.'] },
+          ],
+        },
+        {
+          title: '2. WHAT CMS AUDIT IS',
+          body: [
+            'A structured analysis of key processes, data and governance loops resulting in:',
+            { bullets: ['AS‑IS process map,', 'losses & constraints map,', 'TO‑BE target architecture,', 'step-by-step automation & RPA roadmap.'] },
+            'The audit does not include implementation. It creates a foundation for controlled decisions.',
+          ],
+        },
+        {
+          title: '3. HOW WE WORK (STAGES)',
+          body: [
+            'Stage 1. System diagnostics',
+            { bullets: ['owner / top-management interviews', 'analysis of key business processes', 'analysis of operating model and data'] },
+            'Goal: understand how the business really works, not formal regulations.',
+            'Stage 2. Losses & risks',
+            { bullets: ['manual and duplicate operations', 'people dependency', 'process bottlenecks', 'zones of management opacity'] },
+            'Goal: document where you lose money, time and control.',
+            'Stage 3. Automation architecture',
+            { bullets: ['what to automate', 'what solutions are actually needed', 'implementation priorities', 'where automation helps vs creates risk'] },
+            'Goal: build a manageable system, not just “digitize”.',
+            'Stage 4. Economic impact',
+            { bullets: ['ROI potential', 'operating cost reduction', 'impact on scalability and control'] },
+            'Stage 5. Final report',
+            'You receive:',
+            { bullets: ['visual process scheme', 'losses & risks map', 'target architecture', 'implementation roadmap (stages, timelines, logic)'] },
+          ],
+        },
+        {
+          title: '4. WHAT YOU GET',
+          body: [
+            { bullets: ['clear picture of operations', 'what blocks growth', 'a concrete automation plan', 'basis for executive decisions', 'ability to engage vendors without losing control'] },
+          ],
+        },
+        {
+          title: '5. WHO IT FITS',
+          body: [{ bullets: ['companies 20–300+ employees', 'revenue from ~150M ₽ equivalent', 'owners and CEOs who value control, predictability, risk reduction and scalability'] }],
+        },
+        {
+          title: '6. FORMAT & TIMELINE',
+          body: [{ bullets: ['Timeline: 2–4 weeks', 'Format: interviews + analysis + report', 'Client involvement: minimal and focused'] }],
+        },
+        {
+          title: '7. PRICING',
+          body: [
+            'Pricing depends on scope, number of processes and depth of analysis.',
+            'Reference point: from 300,000 ₽',
+            '(Always below the potential implementation effect.)',
+          ],
+        },
+        {
+          title: '8. WHAT’S NEXT',
+          body: [
+            { bullets: ['implement the roadmap in-house', 'engage external vendors', 'continue with CMS in support mode'] },
+            'The audit creates no obligations — it gives you control.',
+          ],
+        },
+      ],
+      strongPhraseTitle: '9. POSITIONING PHRASE',
+      strongPhrase:
+        'We do not sell automation. We help a business see itself as it is and build a manageable architecture for growth.',
     },
     brand: {
       kicker: 'UPDATED CMS BRAND STORY',
