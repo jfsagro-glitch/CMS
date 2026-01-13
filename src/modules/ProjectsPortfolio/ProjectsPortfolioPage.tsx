@@ -24,7 +24,10 @@ const ProjectsPortfolioPage: React.FC = () => {
         <div className="mkt-container mkt-topbar__inner">
           <button className="mkt-brand" type="button" onClick={() => navigate('/projects-portfolio')}>
             <img src="/brand/consulting-logo.png" alt="Логотип" className="mkt-brand__logo" />
-            <span className="mkt-brand__name">Automation Consulting</span>
+            <span className="mkt-brand__text">
+              <span className="mkt-brand__name">CMS</span>
+              <span className="mkt-brand__sub">Corporate Management Systems</span>
+            </span>
           </button>
 
           <nav className="mkt-nav" aria-label="Навигация">
@@ -67,9 +70,9 @@ const ProjectsPortfolioPage: React.FC = () => {
               loading="lazy"
             />
               <div>
-                <div className="mkt-footer__title">Консалтинг по автоматизации процессов</div>
+                <div className="mkt-footer__title">CMS (Corporate Management Systems)</div>
                 <div className="mkt-footer__muted">
-                  Аудит → Архитектура → Внедрение. Фокус на эффекте.
+                  Digital agency for business process automation &amp; RPA
                 </div>
               </div>
             </div>
