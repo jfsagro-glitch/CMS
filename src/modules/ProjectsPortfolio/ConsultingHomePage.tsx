@@ -80,9 +80,10 @@ export const ConsultingHomePage: React.FC = () => {
           <p className="mkt-hero__subtitle">{HERO.subtitle}</p>
 
           <div className="mkt-hero__brand">
-            <div className="mkt-kicker">{copy.brand.kicker}</div>
             <div className="mkt-brandline">
-              <b>{copy.brand.title}</b> — {copy.brand.shortVersionLines.slice(1).join(' ')}
+              <div className="mkt-brandline__title">{copy.brand.shortVersionLines[0]}</div>
+              <div>{copy.brand.shortVersionLines[1]}</div>
+              <div>{copy.brand.shortVersionLines[2]}</div>
             </div>
             <Link className="mkt-link mkt-link--muted" to="/projects-portfolio/about">
               {copy.links.readFullLegend}

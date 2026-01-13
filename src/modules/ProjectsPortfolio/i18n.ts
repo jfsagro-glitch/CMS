@@ -163,7 +163,7 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
         'Мы не продаём автоматизацию. Мы помогаем бизнесу увидеть себя таким, какой он есть, и выстроить управляемую архитектуру роста.',
     },
     brand: {
-      kicker: 'ОБНОВЛЁННАЯ ЛЕГЕНДА БРЕНДА CMS',
+      kicker: '',
       title: 'CMS — Corporate Management Systems',
       story: {
         intro:
@@ -197,13 +197,13 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
         closing:
           'CMS — это партнёр для компаний, которым нужен взгляд со стороны, опыт системной оценки и архитектура устойчивого развития.',
       },
-      shortVersionTitle: 'КОРОТКАЯ ВЕРСИЯ (ДЛЯ ПЕРВОГО ЭКРАНА)',
+      shortVersionTitle: '',
       shortVersionLines: [
         'CMS — Corporate Management Systems',
         'Системный анализ бизнес-процессов и архитектура автоматизации.',
         'Основано на 20+ годах практики оценки, анализа и сопровождения бизнесов в финансовой и корпоративной среде.',
       ],
-      ceoTitle: 'ВЕРСИЯ ДЛЯ ПЕРЕГОВОРОВ С CEO',
+      ceoTitle: 'Для CEO: ключевые тезисы',
       ceoLines: [
         'Мы не управляли бизнесами вместо собственников.',
         'Мы 20 лет наблюдали, анализировали и оценивали, какие бизнесы выживают, масштабируются или рушатся — и почему.',
@@ -333,7 +333,7 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
         'We do not sell automation. We help a business see itself as it is and build a manageable architecture for growth.',
     },
     brand: {
-      kicker: 'UPDATED CMS BRAND STORY',
+      kicker: '',
       title: 'CMS — Corporate Management Systems',
       story: {
         intro:
@@ -367,13 +367,13 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
         closing:
           'CMS is a partner for companies that need an outside perspective, system-level assessment experience, and an architecture for sustainable growth.',
       },
-      shortVersionTitle: 'SHORT VERSION (FOR THE FIRST SCREEN)',
+      shortVersionTitle: '',
       shortVersionLines: [
         'CMS — Corporate Management Systems',
         'Systemic analysis of business processes and automation architecture.',
         'Built on 20+ years of assessment, analysis, and support in financial and corporate environments.',
       ],
-      ceoTitle: 'VERSION FOR CEO CONVERSATIONS',
+      ceoTitle: 'For CEOs: key talking points',
       ceoLines: [
         'We did not run businesses instead of owners.',
         'For 20 years we have observed, analyzed, and assessed which businesses survive, scale, or collapse — and why.',

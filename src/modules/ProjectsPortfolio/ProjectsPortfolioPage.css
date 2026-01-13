@@ -36,6 +36,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
+  flex-wrap: nowrap;
 }
 
 .mkt-brand {
@@ -81,7 +82,9 @@
 .mkt-nav {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .mkt-nav__link {
@@ -107,7 +110,9 @@
 .mkt-topbar__cta {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .mkt-lang {
@@ -223,6 +228,10 @@
   padding-top: 18px;
   border-top: 1px solid var(--mkt-border);
   max-width: 980px;
+}
+
+.mkt-brandline__title {
+  font-weight: 650;
 }
 
 .mkt-kicker {
@@ -534,7 +543,7 @@
   line-height: 1.5;
 }
 
-@media (max-width: 920px) {
+@media (max-width: 720px) {
   .mkt-topbar__inner {
     height: auto;
     padding: 14px 0;

@@ -13,11 +13,9 @@ export const BrandStoryPage: React.FC = () => {
     <div className="mkt-page">
       <section className="mkt-section mkt-section--tight">
         <div className="mkt-container">
-          <div className="mkt-kicker">{b.kicker}</div>
           <h1 className="mkt-h1">{b.title}</h1>
 
           <div className="mkt-card" style={{ marginTop: 14 }}>
-            <div className="mkt-card__title">{b.shortVersionTitle}</div>
             <div className="mkt-card__text" style={{ lineHeight: 1.75 }}>
               {b.shortVersionLines.map((line) => (
                 <div key={line}>{line}</div>
