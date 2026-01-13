@@ -110,6 +110,11 @@
   gap: 16px;
 }
 
+.mkt-lang {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+}
+
 .mkt-link {
   color: rgba(0, 0, 0, 0.78);
   text-decoration: none;

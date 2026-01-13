@@ -2,9 +2,10 @@ import React from 'react';
 import { Button } from 'antd';
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { Link, useOutletContext } from 'react-router-dom';
-import { BRAND, HERO, SERVICES } from './marketingContent';
+import { HERO, SERVICES } from './marketingContent';
+import type { MarketingCopy, MarketingLang } from './i18n';
 
-type OutletCtx = { onRequestAudit: () => void };
+type OutletCtx = { onRequestAudit: () => void; lang: MarketingLang; copy: MarketingCopy };
 
 const Diagram: React.FC = () => {
   return (
@@ -69,7 +70,7 @@ const Diagram: React.FC = () => {
 };
 
 export const ConsultingHomePage: React.FC = () => {
-  const { onRequestAudit } = useOutletContext<OutletCtx>();
+  const { onRequestAudit, copy } = useOutletContext<OutletCtx>();
   return (
     <div className="mkt-page">
       <section className="mkt-hero">
@@ -79,18 +80,18 @@ export const ConsultingHomePage: React.FC = () => {
           <p className="mkt-hero__subtitle">{HERO.subtitle}</p>
 
           <div className="mkt-hero__brand">
-            <div className="mkt-kicker">{BRAND.shortKicker}</div>
+            <div className="mkt-kicker">{copy.brand.kicker}</div>
             <div className="mkt-brandline">
-              <b>{BRAND.shortTitle}</b> — {BRAND.shortText}
+              <b>{copy.brand.title}</b> — {copy.brand.shortVersionLines.slice(1).join(' ')}
             </div>
             <Link className="mkt-link mkt-link--muted" to="/projects-portfolio/about">
-              Читать полную легенду →
+              {copy.links.readFullLegend}
             </Link>
           </div>
 
           <div className="mkt-hero__cta">
             <Button type="primary" size="large" onClick={onRequestAudit}>
-              Получить аудит процессов
+              {copy.cta.getAudit}
             </Button>
             <Link className="mkt-link" to="/projects-portfolio/cases">
               Смотреть кейсы <ArrowRightOutlined />

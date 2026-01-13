@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react';
 import { Button, Form, Input, Modal, Select, Typography } from 'antd';
 import { CONTACT_EMAIL } from './marketingContent';
+import type { MarketingCopy } from './i18n';
 
 type Props = {
   open: boolean;
   onClose: () => void;
+  copy: MarketingCopy;
 };
 
 type AuditRequestForm = {
@@ -25,7 +27,7 @@ const ROLE_OPTIONS = [
   { value: 'other', label: 'Другое' },
 ];
 
-export const RequestAuditModal: React.FC<Props> = ({ open, onClose }) => {
+export const RequestAuditModal: React.FC<Props> = ({ open, onClose, copy }) => {
   const [form] = Form.useForm<AuditRequestForm>();
 
   const mailToBase = useMemo(() => {
@@ -58,71 +60,70 @@ export const RequestAuditModal: React.FC<Props> = ({ open, onClose }) => {
       open={open}
       onCancel={onClose}
       footer={null}
-      title="Получить аудит процессов"
+      title={copy.auditModal.title}
       destroyOnClose
     >
       <Typography.Paragraph style={{ marginTop: 0, color: 'rgba(0,0,0,0.7)' }}>
-        Коротко опишите ситуацию — мы вернёмся с вопросами и предложим формат аудита, сроки и
-        ожидаемый эффект.
+        {copy.auditModal.intro}
       </Typography.Paragraph>
 
       <Form form={form} layout="vertical" onFinish={handleSubmit} requiredMark={false}>
         <Form.Item
-          label="Имя"
+          label={copy.auditModal.name.label}
           name="name"
-          rules={[{ required: true, message: 'Укажите имя' }]}
+          rules={[{ required: true, message: copy.auditModal.name.required }]}
         >
-          <Input placeholder="Иван" />
+          <Input placeholder={copy.auditModal.name.placeholder} />
         </Form.Item>
 
         <Form.Item
-          label="Компания"
+          label={copy.auditModal.company.label}
           name="company"
-          rules={[{ required: true, message: 'Укажите компанию' }]}
+          rules={[{ required: true, message: copy.auditModal.company.required }]}
         >
-          <Input placeholder="ООО «Компания»" />
+          <Input placeholder={copy.auditModal.company.placeholder} />
         </Form.Item>
 
-        <Form.Item label="Роль" name="role">
-          <Select allowClear placeholder="Выберите" options={ROLE_OPTIONS} />
+        <Form.Item label={copy.auditModal.role.label} name="role">
+          <Select allowClear placeholder={copy.auditModal.role.placeholder} options={ROLE_OPTIONS} />
         </Form.Item>
 
         <Form.Item
-          label="Email"
+          label={copy.auditModal.email.label}
           name="email"
           rules={[
-            { required: true, message: 'Укажите email' },
-            { type: 'email', message: 'Некорректный email' },
+            { required: true, message: copy.auditModal.email.required },
+            { type: 'email', message: copy.auditModal.email.invalid },
           ]}
         >
-          <Input placeholder="name@company.ru" />
+          <Input placeholder={copy.auditModal.email.placeholder} />
         </Form.Item>
 
-        <Form.Item label="Телефон" name="phone">
-          <Input placeholder="+7 ..." />
+        <Form.Item label={copy.auditModal.phone.label} name="phone">
+          <Input placeholder={copy.auditModal.phone.placeholder} />
         </Form.Item>
 
         <Form.Item
-          label="Что хотите улучшить (цель, процесс, боль)"
+          label={copy.auditModal.goal.label}
           name="goal"
-          rules={[{ required: true, message: 'Опишите цель' }]}
+          rules={[{ required: true, message: copy.auditModal.goal.required }]}
         >
           <Input.TextArea
             autoSize={{ minRows: 4, maxRows: 10 }}
-            placeholder="Например: сократить цикл обработки заявок, снизить ручной ввод, получить прозрачные KPI для COO..."
+            placeholder={copy.auditModal.goal.placeholder}
           />
         </Form.Item>
 
         <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-          <Button onClick={onClose}>Отмена</Button>
+          <Button onClick={onClose}>{copy.cta.cancel}</Button>
           <Button type="primary" htmlType="submit">
-            Отправить
+            {copy.cta.send}
           </Button>
         </div>
       </Form>
 
       <Typography.Paragraph style={{ marginTop: 16, color: 'rgba(0,0,0,0.55)' }}>
-        Если удобнее — напишите напрямую: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+        {copy.auditModal.direct} <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
       </Typography.Paragraph>
     </Modal>
   );

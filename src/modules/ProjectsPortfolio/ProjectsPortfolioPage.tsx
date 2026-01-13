@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
-import { Button } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Button, Segmented } from 'antd';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { RequestAuditModal } from './RequestAuditModal';
 import { CONTACT_EMAIL } from './marketingContent';
+import { getInitialLang, getMarketingCopy, setStoredLang, type MarketingLang } from './i18n';
 import './ProjectsPortfolioPage.css';
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -12,6 +13,13 @@ const ProjectsPortfolioPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [auditOpen, setAuditOpen] = useState(false);
+  const [lang, setLang] = useState<MarketingLang>(() => getInitialLang());
+
+  useEffect(() => {
+    setStoredLang(lang);
+  }, [lang]);
+
+  const copy = useMemo(() => getMarketingCopy(lang), [lang]);
 
   const isHome = useMemo(() => {
     const p = location.pathname;
@@ -32,34 +40,44 @@ const ProjectsPortfolioPage: React.FC = () => {
 
           <nav className="mkt-nav" aria-label="Навигация">
             <NavLink end to="/projects-portfolio" className={linkClass}>
-              Главная
+              {copy.nav.home}
             </NavLink>
             <NavLink to="/projects-portfolio/services" className={linkClass}>
-              Услуги
+              {copy.nav.services}
             </NavLink>
             <NavLink to="/projects-portfolio/cases" className={linkClass}>
-              Кейсы
+              {copy.nav.cases}
             </NavLink>
             <NavLink to="/projects-portfolio/about" className={linkClass}>
-              О CMS
+              {copy.nav.about}
             </NavLink>
           </nav>
 
           <div className="mkt-topbar__cta">
+            <Segmented
+              className="mkt-lang"
+              size="small"
+              value={lang}
+              options={[
+                { label: 'RU', value: 'ru' },
+                { label: 'EN', value: 'en' },
+              ]}
+              onChange={(v) => setLang(v as MarketingLang)}
+            />
             {!isHome && (
               <a className="mkt-link mkt-link--muted" href={`mailto:${CONTACT_EMAIL}`}>
                 {CONTACT_EMAIL}
               </a>
             )}
             <Button type="primary" onClick={() => setAuditOpen(true)}>
-              Получить аудит процессов
+              {copy.cta.getAudit}
             </Button>
           </div>
         </div>
       </header>
 
       <main className="mkt-main">
-        <Outlet context={{ onRequestAudit: () => setAuditOpen(true) }} />
+        <Outlet context={{ onRequestAudit: () => setAuditOpen(true), lang, copy }} />
       </main>
 
       <footer className="mkt-footer">
@@ -73,9 +91,9 @@ const ProjectsPortfolioPage: React.FC = () => {
               loading="lazy"
             />
               <div>
-                <div className="mkt-footer__title">CMS (Corporate Management Systems)</div>
+                <div className="mkt-footer__title">{copy.footer.title}</div>
                 <div className="mkt-footer__muted">
-                  Digital agency for business process automation &amp; RPA
+                  {copy.footer.tagline}
                 </div>
               </div>
             </div>
@@ -88,7 +106,7 @@ const ProjectsPortfolioPage: React.FC = () => {
         </div>
       </footer>
 
-      <RequestAuditModal open={auditOpen} onClose={() => setAuditOpen(false)} />
+      <RequestAuditModal open={auditOpen} onClose={() => setAuditOpen(false)} copy={copy} />
     </div>
   );
 };
