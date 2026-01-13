@@ -48,6 +48,7 @@ import ProjectsPortfolioPage from './modules/ProjectsPortfolio/ProjectsPortfolio
 import { ConsultingHomePage } from './modules/ProjectsPortfolio/ConsultingHomePage';
 import { ServicesPage } from './modules/ProjectsPortfolio/ServicesPage';
 import { CasesPage } from './modules/ProjectsPortfolio/CasesPage';
+import { BrandStoryPage } from './modules/ProjectsPortfolio/BrandStoryPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -277,6 +278,7 @@ const AppContent: React.FC = () => {
                     <Route index element={<ConsultingHomePage />} />
                     <Route path="services" element={<ServicesPage />} />
                     <Route path="cases" element={<CasesPage />} />
+                    <Route path="about" element={<BrandStoryPage />} />
                   </Route>
                   <Route path="workflow" element={<WorkflowPage />} />
                   <Route path="workflow/object/:id" element={<WorkflowCasePage />} />

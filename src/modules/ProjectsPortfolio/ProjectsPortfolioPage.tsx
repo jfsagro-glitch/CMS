@@ -40,6 +40,9 @@ const ProjectsPortfolioPage: React.FC = () => {
             <NavLink to="/projects-portfolio/cases" className={linkClass}>
               Кейсы
             </NavLink>
+            <NavLink to="/projects-portfolio/about" className={linkClass}>
+              О CMS
+            </NavLink>
           </nav>
 
           <div className="mkt-topbar__cta">

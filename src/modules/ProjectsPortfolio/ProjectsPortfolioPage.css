@@ -213,6 +213,30 @@
   color: rgba(0, 0, 0, 0.72);
 }
 
+.mkt-hero__brand {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--mkt-border);
+  max-width: 980px;
+}
+
+.mkt-kicker {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
+  margin-bottom: 8px;
+}
+
+.mkt-brandline {
+  color: rgba(0, 0, 0, 0.78);
+  line-height: 1.65;
+}
+
+.mkt-prose {
+  max-width: 980px;
+}
+
 .mkt-hero__cta {
   margin-top: 22px;
   display: flex;

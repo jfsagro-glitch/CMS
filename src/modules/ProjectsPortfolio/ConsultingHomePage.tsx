@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from 'antd';
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { Link, useOutletContext } from 'react-router-dom';
-import { HERO, SERVICES } from './marketingContent';
+import { BRAND, HERO, SERVICES } from './marketingContent';
 
 type OutletCtx = { onRequestAudit: () => void };
 
@@ -77,6 +77,16 @@ export const ConsultingHomePage: React.FC = () => {
           <div className="mkt-hero__kicker">{HERO.audience}</div>
           <h1 className="mkt-hero__title">{HERO.title}</h1>
           <p className="mkt-hero__subtitle">{HERO.subtitle}</p>
+
+          <div className="mkt-hero__brand">
+            <div className="mkt-kicker">{BRAND.shortKicker}</div>
+            <div className="mkt-brandline">
+              <b>{BRAND.shortTitle}</b> — {BRAND.shortText}
+            </div>
+            <Link className="mkt-link mkt-link--muted" to="/projects-portfolio/about">
+              Читать полную легенду →
+            </Link>
+          </div>
 
           <div className="mkt-hero__cta">
             <Button type="primary" size="large" onClick={onRequestAudit}>
