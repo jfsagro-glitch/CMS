@@ -59,8 +59,20 @@ const ProjectsPortfolioPage: React.FC = () => {
       <footer className="mkt-footer">
         <div className="mkt-container mkt-footer__inner">
           <div className="mkt-footer__left">
-            <div className="mkt-footer__title">Консалтинг по автоматизации процессов</div>
-            <div className="mkt-footer__muted">Аудит → Архитектура → Внедрение. Фокус на эффекте.</div>
+            <div className="mkt-footer__brand">
+              <img
+                src="/brand/consulting-logo.png"
+                alt="Логотип"
+                className="mkt-footer__logo"
+              loading="lazy"
+            />
+              <div>
+                <div className="mkt-footer__title">Консалтинг по автоматизации процессов</div>
+                <div className="mkt-footer__muted">
+                  Аудит → Архитектура → Внедрение. Фокус на эффекте.
+                </div>
+              </div>
+            </div>
           </div>
           <div className="mkt-footer__right">
             <a className="mkt-link" href={`mailto:${CONTACT_EMAIL}`}>

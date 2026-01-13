@@ -127,6 +127,21 @@
   justify-content: space-between;
 }
 
+.mkt-footer__brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.mkt-footer__logo {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  object-position: 50% 24%;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
 .mkt-footer__title {
   font-weight: 600;
   letter-spacing: -0.01em;
