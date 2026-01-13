@@ -23,7 +23,7 @@ const ProjectsPortfolioPage: React.FC = () => {
       <header className="mkt-topbar">
         <div className="mkt-container mkt-topbar__inner">
           <button className="mkt-brand" type="button" onClick={() => navigate('/projects-portfolio')}>
-            <img src="/logo.png" alt="Логотип" className="mkt-brand__logo" />
+            <img src="/brand/consulting-logo.png" alt="Логотип" className="mkt-brand__logo" />
             <span className="mkt-brand__name">Automation Consulting</span>
           </button>
 

@@ -50,9 +50,12 @@
 }
 
 .mkt-brand__logo {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+  object-position: 50% 24%;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .mkt-brand__name {
