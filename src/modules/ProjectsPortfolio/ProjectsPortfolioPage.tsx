@@ -9,6 +9,14 @@ import './ProjectsPortfolioPage.css';
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   isActive ? 'mkt-nav__link mkt-nav__link--active' : 'mkt-nav__link';
 
+const normalizeLang = (value: unknown): MarketingLang => {
+  if (value === 'ru' || value === 'en') return value;
+  const s = String(value ?? '').toLowerCase();
+  if (s === 'ru') return 'ru';
+  if (s === 'en') return 'en';
+  return 'ru';
+};
+
 const ProjectsPortfolioPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -62,7 +70,7 @@ const ProjectsPortfolioPage: React.FC = () => {
                 { label: 'RU', value: 'ru' },
                 { label: 'EN', value: 'en' },
               ]}
-              onChange={(v) => setLang(v as MarketingLang)}
+              onChange={(v) => setLang(normalizeLang(v))}
             />
             {!isHome && (
               <a className="mkt-link mkt-link--muted" href={`mailto:${CONTACT_EMAIL}`}>
