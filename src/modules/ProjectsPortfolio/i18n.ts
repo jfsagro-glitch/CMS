@@ -5,6 +5,79 @@ export type MarketingCopy = {
   links: { readFullLegend: string };
   cta: { getAudit: string; getOffer: string; downloadPdf: string; send: string; cancel: string };
   footer: { title: string; tagline: string };
+  home: {
+    audience: string;
+    heroTitle: string;
+    heroSubtitle: string;
+    heroMeta: Array<{ label: string; value: string }>;
+    brandTeaserLink: string;
+    diagram: {
+      businessGoal: string;
+      businessGoalSub: string;
+      processes: string;
+      processesSub: string;
+      data: string;
+      dataSub: string;
+      automation: string;
+      automationSub: string;
+      caption: string;
+    };
+    auditTitle: string;
+    auditLead: string;
+    auditLookTitle: string;
+    auditLookBullets: string[];
+    auditDeliverTitle: string;
+    auditDeliverBullets: string[];
+    servicesTitle: string;
+    servicesAllLink: string;
+    howWeWorkTitle: string;
+    howWeWork: Array<{ title: string; text: string }>;
+    whyTrustTitle: string;
+    whyTrust: Array<{ title: string; text: string }>;
+    ctaBandTitle: string;
+    ctaBandText: string;
+    viewCases: string;
+    viewAll: string;
+  };
+  servicesPage: {
+    title: string;
+    lead: string;
+    whenNeeded: string;
+    whatYouGet: string;
+    ctaTitle: string;
+    ctaText: string;
+  };
+  casesPage: {
+    title: string;
+    lead: string;
+    task: string;
+    solution: string;
+    result: string;
+    ctaTitle: string;
+    ctaText: string;
+  };
+  aboutPage: {
+    ctaBandTitle: string;
+    ctaBandText: string;
+  };
+  servicesData: Array<{
+    key: 'audit' | 'architecture' | 'rpa-ai' | 'bi-integrations' | 'support';
+    title: string;
+    short: string;
+    when: string[];
+    whatYouGet: string[];
+  }>;
+  casesData: Array<{
+    id: string;
+    industry: string;
+    companySize: string;
+    timeline: string;
+    task: string;
+    solution: string[];
+    result: { label: string; value: string }[];
+    economicEffect: string;
+    note?: string;
+  }>;
   offer: {
     title: string;
     subtitle: string;
@@ -38,6 +111,7 @@ export type MarketingCopy = {
     name: { label: string; placeholder: string; required: string };
     company: { label: string; placeholder: string; required: string };
     role: { label: string; placeholder: string };
+    roleOptions: Array<{ value: string; label: string }>;
     email: { label: string; placeholder: string; required: string; invalid: string };
     phone: { label: string; placeholder: string };
     goal: { label: string; placeholder: string; required: string };
@@ -81,6 +155,254 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
       title: 'CMS (Corporate Management Systems)',
       tagline: 'Digital agency for business process automation & RPA',
     },
+    home: {
+      audience: 'Для собственников, CEO/COO компаний 20–300+ сотрудников',
+      heroTitle: 'Digital agency for business process automation & RPA',
+      heroSubtitle:
+        'Начинаем с аудита процессов, проектируем архитектуру автоматизации и внедряем решения так, чтобы вы получили измеримый бизнес‑результат.',
+      heroMeta: [
+        { label: 'Фокус', value: 'Бизнес‑результат' },
+        { label: 'Формат', value: 'Аудит → Архитектура → Внедрение' },
+        { label: 'Результат', value: 'Метрики, план, расчёт эффекта' },
+      ],
+      brandTeaserLink: 'Читать полную легенду →',
+      diagram: {
+        businessGoal: 'Цель бизнеса',
+        businessGoalSub: 'эффект / KPI',
+        processes: 'Процессы',
+        processesSub: 'роли / контроль',
+        data: 'Данные',
+        dataSub: 'качество / витрины',
+        automation: 'Интеграции + автоматизация',
+        automationSub: 'RPA / AI / BI',
+        caption: 'Принцип: сначала архитектура и эффект, затем инструменты.',
+      },
+      auditTitle: 'Аудит процессов — основной продукт',
+      auditLead:
+        'Вы получаете управленческий документ: что менять, в каком порядке и какой эффект это даст. Технологии — вторичны.',
+      auditLookTitle: 'Что смотрим',
+      auditLookBullets: [
+        'сквозные процессы и точки контроля',
+        'данные: качество, источники, “разрывы”',
+        'стоимость операции и потери времени',
+        'риски: ошибки, комплаенс, зависимость от людей',
+      ],
+      auditDeliverTitle: 'Что отдаём',
+      auditDeliverBullets: [
+        'AS‑IS / TO‑BE + метрики и владельцы',
+        'реестр инициатив с приоритетами',
+        'архитектурные принципы и контуры',
+        'roadmap и финансовая модель эффекта',
+      ],
+      servicesTitle: 'Услуги',
+      servicesAllLink: 'Смотреть все',
+      howWeWorkTitle: 'Как работаем',
+      howWeWork: [
+        { title: 'Диагностика', text: 'Интервью, данные, факты, карта AS‑IS.' },
+        {
+          title: 'Модель эффекта',
+          text: 'Где экономия/рост, какие KPI меняем, какие риски закрываем.',
+        },
+        {
+          title: 'Архитектура',
+          text: 'TO‑BE, данные, интеграции, автоматизация, эксплуатация.',
+        },
+        { title: 'Пилот → масштаб', text: 'Быстрые результаты и контроль качества.' },
+      ],
+      whyTrustTitle: 'Почему доверяют',
+      whyTrust: [
+        {
+          title: 'Прозрачность',
+          text: 'Фиксируем цель, KPI, критерии приёмки и “что будет считаться успехом”.',
+        },
+        {
+          title: 'Архитектура',
+          text: 'Не “прикручиваем роботов”, а строим устойчивую систему: данные, роли, контроль.',
+        },
+        {
+          title: 'Передача знаний',
+          text: 'Документация и обучение, чтобы снижать зависимость от подрядчика.',
+        },
+      ],
+      ctaBandTitle: 'Готовы начать с аудита?',
+      ctaBandText: 'Опишите цель — предложим формат, сроки и ожидаемый экономический эффект.',
+      viewCases: 'Смотреть кейсы',
+      viewAll: 'Смотреть все',
+    },
+    servicesPage: {
+      title: 'Услуги',
+      lead:
+        'Мы работаем как консалтинг и архитекторы решений: начинаем с диагностики и эффекта, затем проектируем архитектуру и внедряем изменения.',
+      whenNeeded: 'Когда нужно',
+      whatYouGet: 'Что вы получаете',
+      ctaTitle: 'Нужна отправная точка?',
+      ctaText: 'Аудит процессов поможет зафиксировать цели, KPI и план действий.',
+    },
+    casesPage: {
+      title: 'Кейсы',
+      lead:
+        'Формат: Задача → Решение → Результат. Акцент — на экономический эффект, метрики и управляемость изменений.',
+      task: 'Задача',
+      solution: 'Решение',
+      result: 'Результат',
+      ctaTitle: 'Хотите такой же разбор для вашей компании?',
+      ctaText: 'Начнём с аудита: зафиксируем цели, измерим потери и составим roadmap внедрения.',
+    },
+    aboutPage: {
+      ctaBandTitle: 'Нужен “взгляд со стороны”?',
+      ctaBandText: 'Начнём с аудита: зафиксируем цель, измерим потери и соберём архитектуру решений.',
+    },
+    servicesData: [
+      {
+        key: 'audit',
+        title: 'Аудит процессов',
+        short:
+          'Находим узкие места, потери и риски. Даём карту процессов, список приоритетов и расчёт экономического эффекта.',
+        when: [
+          'Нет прозрачной картины “где теряем деньги и время”',
+          'Автоматизация стартует “с инструментов”, а не с цели',
+          'Сильно зависит от ключевых сотрудников',
+        ],
+        whatYouGet: [
+          'Карта процессов AS‑IS / TO‑BE (с метриками и владельцами)',
+          'Реестр проблем/потерь + приоритизация по эффекту/сложности',
+          'Roadmap 6–12 недель (что делать первым, что позже)',
+          'Финансовая модель эффекта (экономия/рост/риски)',
+        ],
+      },
+      {
+        key: 'architecture',
+        title: 'Архитектура автоматизации',
+        short:
+          'Проектируем целевую архитектуру: роли, данные, интеграции, безопасность и эксплуатацию. Чтобы внедрение не “рассыпалось”.',
+        when: [
+          'Есть разрозненные решения и ручные “костыли”',
+          'Нужны интеграции и единые правила данных',
+          'Важно снижение рисков и управляемость изменений',
+        ],
+        whatYouGet: [
+          'Целевая архитектура (данные → интеграции → автоматизация)',
+          'Контуры безопасности и контроля доступа',
+          'Техническое и процессное ТЗ для внедрения',
+          'План внедрения по этапам с KPI',
+        ],
+      },
+      {
+        key: 'rpa-ai',
+        title: 'RPA и AI',
+        short:
+          'Убираем ручные операции, ускоряем обработку, повышаем качество данных. AI — там, где он даёт эффект, а не “для галочки”.',
+        when: [
+          'Много повторяемых операций и “копипаста”',
+          'Нужно быстрее обрабатывать заявки/документы',
+          'Качество данных страдает из‑за ручного ввода',
+        ],
+        whatYouGet: [
+          'Роботы/агенты для регламентных операций',
+          'AI‑помощники (классификация/извлечение/подсказки)',
+          'Контроль качества и журналирование',
+          'Метрики: скорость, качество, стоимость операции',
+        ],
+      },
+      {
+        key: 'bi-integrations',
+        title: 'BI и интеграции',
+        short:
+          'Сквозная аналитика и “единая версия правды”: данные, витрины, отчётность, интеграции между системами и командами.',
+        when: [
+          'Сложно ответить “что происходит в бизнесе сейчас”',
+          'Отчёты собираются вручную и расходятся',
+          'Системы не “разговаривают” между собой',
+        ],
+        whatYouGet: [
+          'Карта данных и источников + правила качества',
+          'Интеграции и витрины данных под управленческие решения',
+          'Набор KPI/дашбордов для собственника/CEO/COO',
+          'Регламент обновления и ответственности',
+        ],
+      },
+      {
+        key: 'support',
+        title: 'Сопровождение',
+        short:
+          'Не бросаем после запуска: SLA/качество, улучшения, контроль эффективности, обучение и передача знаний команде.',
+        when: [
+          'Нужно поддерживать стабильность и качество',
+          'Требуются регулярные улучшения процесса',
+          'Важно снижение зависимости от подрядчика',
+        ],
+        whatYouGet: [
+          'Поддержка и развитие по согласованному плану',
+          'Мониторинг KPI эффекта и качества',
+          'Документация, обучение и передача компетенций',
+          'Прозрачная очередь задач и регулярные отчёты',
+        ],
+      },
+    ],
+    casesData: [
+      {
+        id: 'ops-cycle',
+        industry: 'B2B‑сервис',
+        companySize: '80 сотрудников',
+        timeline: '8 недель',
+        task:
+          'Сократить цикл обработки заявки и убрать ручные операции между отделами без потери качества и контроля.',
+        solution: [
+          'Аудит “сквозного” процесса от лида до акта',
+          'Целевая архитектура: данные, роли, точки контроля',
+          'Автоматизация согласований + интеграции между системами',
+          'Единый контур KPI по этапам',
+        ],
+        result: [
+          { label: 'Время обработки', value: '−35–45%' },
+          { label: 'Доля возвратов на доработку', value: '−20–30%' },
+          { label: 'Прозрачность статуса для руководства', value: 'в режиме “сейчас”' },
+        ],
+        economicEffect: 'Экономия 0.8–1.5 млн ₽/квартал за счёт снижения трудозатрат и простоев.',
+        note: 'Пример обезличен, цифры — из расчёта модели эффекта и факта пилота.',
+      },
+      {
+        id: 'finance-docs',
+        industry: 'Финансы',
+        companySize: '200+ сотрудников',
+        timeline: '10 недель',
+        task:
+          'Ускорить обработку документов и снизить операционные риски: ошибки, ручные правки, отсутствие трассировки решений.',
+        solution: [
+          'Нормализация данных и правила качества',
+          'RPA для регламентных операций',
+          'AI‑извлечение ключевых полей + валидации',
+          'Журналирование и контроль доступа',
+        ],
+        result: [
+          { label: 'Скорость обработки', value: '×1.6–2.1' },
+          { label: 'Ошибки ручного ввода', value: '−50–70%' },
+          { label: 'Аудит‑след', value: '100% операций' },
+        ],
+        economicEffect:
+          'Снижение операционных потерь и рисков на 1.2–2.4 млн ₽/квартал (по модели + контрольным замерам).',
+      },
+      {
+        id: 'bi-owner',
+        industry: 'Производство/дистрибуция',
+        companySize: '120 сотрудников',
+        timeline: '6 недель',
+        task:
+          'Собственнику и COO нужен единый набор управленческих KPI: продажи, маржинальность, производство, просрочки — без ручных Excel.',
+        solution: [
+          'Карта данных + единые определения показателей',
+          'Интеграции и витрина данных',
+          'Дашборды под роли: собственник / CEO / COO',
+          'Регламент обновления и ответственности',
+        ],
+        result: [
+          { label: 'Сбор отчётности', value: 'с дней до часов' },
+          { label: 'Согласованность цифр', value: 'единая “версия правды”' },
+          { label: 'Скорость управленческих решений', value: 'выше за счёт актуальности данных' },
+        ],
+        economicEffect: 'Ускорение реакции на отклонения и снижение потерь от “слепых зон”.',
+      },
+    ],
     offer: {
       title: 'КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ',
       subtitle: 'Аудит бизнес-процессов и точек автоматизации',
@@ -217,6 +539,14 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
       name: { label: 'Имя', placeholder: 'Иван', required: 'Укажите имя' },
       company: { label: 'Компания', placeholder: 'ООО «Компания»', required: 'Укажите компанию' },
       role: { label: 'Роль', placeholder: 'Выберите' },
+      roleOptions: [
+        { value: 'owner', label: 'Собственник' },
+        { value: 'ceo', label: 'CEO' },
+        { value: 'coo', label: 'COO / операционный директор' },
+        { value: 'cfo', label: 'CFO / финдиректор' },
+        { value: 'it', label: 'IT / Digital' },
+        { value: 'other', label: 'Другое' },
+      ],
       email: {
         label: 'Email',
         placeholder: 'name@company.ru',
@@ -248,6 +578,237 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
       title: 'CMS (Corporate Management Systems)',
       tagline: 'Digital agency for business process automation & RPA',
     },
+    home: {
+      audience: 'For owners and CEO/COO teams in companies of 20–300+ employees',
+      heroTitle: 'Digital agency for business process automation & RPA',
+      heroSubtitle:
+        'We start with a process audit, design an automation architecture, and deliver measurable business outcomes.',
+      heroMeta: [
+        { label: 'Focus', value: 'Business outcomes' },
+        { label: 'Approach', value: 'Audit → Architecture → Delivery' },
+        { label: 'Output', value: 'KPIs, plan, impact model' },
+      ],
+      brandTeaserLink: 'Read the full brand story →',
+      diagram: {
+        businessGoal: 'Business goal',
+        businessGoalSub: 'impact / KPI',
+        processes: 'Processes',
+        processesSub: 'roles / control',
+        data: 'Data',
+        dataSub: 'quality / marts',
+        automation: 'Integrations + automation',
+        automationSub: 'RPA / AI / BI',
+        caption: 'Principle: architecture & impact first, tools second.',
+      },
+      auditTitle: 'Process audit is the core product',
+      auditLead:
+        'You receive an executive document: what to change, in what order, and what impact it will produce. Tools come second.',
+      auditLookTitle: 'What we assess',
+      auditLookBullets: [
+        'end-to-end processes and control points',
+        'data: quality, sources, gaps',
+        'unit economics of operations and time losses',
+        'risks: errors, compliance, people dependency',
+      ],
+      auditDeliverTitle: 'What you get',
+      auditDeliverBullets: [
+        'AS‑IS / TO‑BE with metrics and owners',
+        'initiative backlog with priorities',
+        'architecture principles and contours',
+        'roadmap and financial impact model',
+      ],
+      servicesTitle: 'Services',
+      servicesAllLink: 'View all',
+      howWeWorkTitle: 'How we work',
+      howWeWork: [
+        { title: 'Diagnostics', text: 'Interviews, data, facts, AS‑IS map.' },
+        { title: 'Impact model', text: 'Where savings/growth are, which KPIs change, which risks close.' },
+        { title: 'Architecture', text: 'TO‑BE, data, integrations, automation, operations.' },
+        { title: 'Pilot → scale', text: 'Fast outcomes and quality control.' },
+      ],
+      whyTrustTitle: 'Why executives trust us',
+      whyTrust: [
+        { title: 'Transparency', text: 'We define the goal, KPIs and acceptance criteria up front.' },
+        { title: 'Architecture', text: 'We build a sustainable system: data, roles, control — not just “bots”.' },
+        { title: 'Knowledge transfer', text: 'Documentation and training to reduce vendor dependency.' },
+      ],
+      ctaBandTitle: 'Ready to start with an audit?',
+      ctaBandText: 'Describe your goal — we’ll propose the format, timeline, and expected economic impact.',
+      viewCases: 'View cases',
+      viewAll: 'View all',
+    },
+    servicesPage: {
+      title: 'Services',
+      lead:
+        'We work as consultants and solution architects: start with diagnosis and impact, then design architecture and deliver change.',
+      whenNeeded: 'When it’s needed',
+      whatYouGet: 'What you get',
+      ctaTitle: 'Need a starting point?',
+      ctaText: 'A process audit helps you define goals, KPIs, and an actionable plan.',
+    },
+    casesPage: {
+      title: 'Cases',
+      lead: 'Format: Task → Solution → Result. Focus on economic impact, metrics, and controllability.',
+      task: 'Task',
+      solution: 'Solution',
+      result: 'Result',
+      ctaTitle: 'Want the same analysis for your company?',
+      ctaText: 'We’ll start with an audit: define goals, quantify losses, and produce an implementation roadmap.',
+    },
+    aboutPage: {
+      ctaBandTitle: 'Need an outside perspective?',
+      ctaBandText: 'Start with an audit: define the goal, quantify losses, and build solution architecture.',
+    },
+    servicesData: [
+      {
+        key: 'audit',
+        title: 'Process audit',
+        short:
+          'We identify bottlenecks, losses, and risks. You get a process map, prioritized initiatives, and an impact model.',
+        when: [
+          'No clear view of where money and time are lost',
+          'Automation starts from tools, not from goals',
+          'High dependency on key employees',
+        ],
+        whatYouGet: [
+          'AS‑IS / TO‑BE maps (with metrics and owners)',
+          'Loss/risk register + prioritization by impact/effort',
+          '6–12 week roadmap (what first, what later)',
+          'Financial impact model (savings/growth/risks)',
+        ],
+      },
+      {
+        key: 'architecture',
+        title: 'Automation architecture',
+        short:
+          'We design the target architecture: roles, data, integrations, security and operations — so delivery doesn’t “fall apart”.',
+        when: [
+          'Fragmented solutions and manual workarounds',
+          'Need integrations and consistent data rules',
+          'Risk reduction and change controllability matter',
+        ],
+        whatYouGet: [
+          'Target architecture (data → integrations → automation)',
+          'Security and access control contours',
+          'Technical & process requirements for delivery',
+          'Phased implementation plan with KPIs',
+        ],
+      },
+      {
+        key: 'rpa-ai',
+        title: 'RPA & AI',
+        short:
+          'We remove manual operations, speed up processing, and improve data quality. AI is used only where it produces impact.',
+        when: [
+          'Many repetitive operations',
+          'Need faster document/application processing',
+          'Data quality suffers due to manual entry',
+        ],
+        whatYouGet: [
+          'Bots/agents for routine operations',
+          'AI assistants (classification/extraction/suggestions)',
+          'Quality control and logging',
+          'Metrics: speed, quality, cost per operation',
+        ],
+      },
+      {
+        key: 'bi-integrations',
+        title: 'BI & integrations',
+        short:
+          'End-to-end analytics and a single source of truth: data, marts, reporting, and integrations across systems and teams.',
+        when: [
+          'Hard to answer “what is happening right now”',
+          'Reports are manual and inconsistent',
+          'Systems don’t “talk” to each other',
+        ],
+        whatYouGet: [
+          'Data/source map + data quality rules',
+          'Integrations and data marts for executive decisions',
+          'KPI dashboards for owner/CEO/COO',
+          'Update/ownership governance',
+        ],
+      },
+      {
+        key: 'support',
+        title: 'Support',
+        short:
+          'We stay after launch: SLA/quality, improvements, effectiveness control, training and knowledge transfer.',
+        when: [
+          'Need stable operations and quality',
+          'Continuous process improvements required',
+          'Reducing vendor dependency is important',
+        ],
+        whatYouGet: [
+          'Support and development under an agreed plan',
+          'Monitoring of KPIs and quality',
+          'Documentation, training and capability transfer',
+          'Transparent backlog and regular reporting',
+        ],
+      },
+    ],
+    casesData: [
+      {
+        id: 'ops-cycle',
+        industry: 'B2B services',
+        companySize: '80 employees',
+        timeline: '8 weeks',
+        task:
+          'Reduce request processing lead time and remove manual handoffs between teams without losing quality and control.',
+        solution: [
+          'End-to-end audit from lead to delivery',
+          'Target architecture: data, roles, control points',
+          'Approval automation + system integrations',
+          'Unified KPI loop across stages',
+        ],
+        result: [
+          { label: 'Lead time', value: '−35–45%' },
+          { label: 'Rework share', value: '−20–30%' },
+          { label: 'Executive visibility', value: 'real-time' },
+        ],
+        economicEffect: 'Savings of 0.8–1.5M ₽ per quarter by reducing labor and idle time.',
+        note: 'Example is anonymized; figures are based on the impact model and pilot measurements.',
+      },
+      {
+        id: 'finance-docs',
+        industry: 'Finance',
+        companySize: '200+ employees',
+        timeline: '10 weeks',
+        task:
+          'Speed up document processing and reduce operational risks: errors, manual edits, lack of traceability.',
+        solution: [
+          'Data normalization and quality rules',
+          'RPA for routine operations',
+          'AI extraction of key fields + validations',
+          'Logging and access control',
+        ],
+        result: [
+          { label: 'Processing speed', value: '×1.6–2.1' },
+          { label: 'Manual entry errors', value: '−50–70%' },
+          { label: 'Audit trail', value: '100% of operations' },
+        ],
+        economicEffect: 'Reduced losses and risks by 1.2–2.4M ₽ per quarter (model + control measures).',
+      },
+      {
+        id: 'bi-owner',
+        industry: 'Manufacturing / distribution',
+        companySize: '120 employees',
+        timeline: '6 weeks',
+        task:
+          'Owner and COO needed a single set of executive KPIs: sales, margin, production, overdue — without manual spreadsheets.',
+        solution: [
+          'Data map + unified metric definitions',
+          'Integrations and data mart',
+          'Dashboards by role: owner / CEO / COO',
+          'Update and ownership governance',
+        ],
+        result: [
+          { label: 'Reporting', value: 'from days to hours' },
+          { label: 'Consistency', value: 'single source of truth' },
+          { label: 'Decision speed', value: 'higher due to fresh data' },
+        ],
+        economicEffect: 'Faster reaction to deviations and reduced losses from blind spots.',
+      },
+    ],
     offer: {
       title: 'COMMERCIAL PROPOSAL',
       subtitle: 'Business process audit & automation opportunities',
@@ -387,6 +948,14 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
       name: { label: 'Name', placeholder: 'John', required: 'Please enter your name' },
       company: { label: 'Company', placeholder: 'Company LLC', required: 'Please enter your company' },
       role: { label: 'Role', placeholder: 'Select' },
+      roleOptions: [
+        { value: 'owner', label: 'Owner' },
+        { value: 'ceo', label: 'CEO' },
+        { value: 'coo', label: 'COO / Operations' },
+        { value: 'cfo', label: 'CFO / Finance' },
+        { value: 'it', label: 'IT / Digital' },
+        { value: 'other', label: 'Other' },
+      ],
       email: {
         label: 'Email',
         placeholder: 'name@company.com',

@@ -18,15 +18,6 @@ type AuditRequestForm = {
   goal: string;
 };
 
-const ROLE_OPTIONS = [
-  { value: 'owner', label: 'Собственник' },
-  { value: 'ceo', label: 'CEO' },
-  { value: 'coo', label: 'COO / операционный директор' },
-  { value: 'cfo', label: 'CFO / финдиректор' },
-  { value: 'it', label: 'IT / Digital' },
-  { value: 'other', label: 'Другое' },
-];
-
 export const RequestAuditModal: React.FC<Props> = ({ open, onClose, copy }) => {
   const [form] = Form.useForm<AuditRequestForm>();
 
@@ -85,7 +76,11 @@ export const RequestAuditModal: React.FC<Props> = ({ open, onClose, copy }) => {
         </Form.Item>
 
         <Form.Item label={copy.auditModal.role.label} name="role">
-          <Select allowClear placeholder={copy.auditModal.role.placeholder} options={ROLE_OPTIONS} />
+          <Select
+            allowClear
+            placeholder={copy.auditModal.role.placeholder}
+            options={copy.auditModal.roleOptions}
+          />
         </Form.Item>
 
         <Form.Item

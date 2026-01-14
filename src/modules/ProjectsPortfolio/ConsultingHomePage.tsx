@@ -2,12 +2,11 @@ import React from 'react';
 import { Button } from 'antd';
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { Link, useOutletContext } from 'react-router-dom';
-import { HERO, SERVICES } from './marketingContent';
 import type { MarketingCopy, MarketingLang } from './i18n';
 
 type OutletCtx = { onRequestAudit: () => void; lang: MarketingLang; copy: MarketingCopy };
 
-const Diagram: React.FC = () => {
+const Diagram: React.FC<{ copy: MarketingCopy }> = ({ copy }) => {
   return (
     <svg className="mkt-diagram" viewBox="0 0 920 220" role="img" aria-label="Архитектура решения">
       <defs>
@@ -19,40 +18,40 @@ const Diagram: React.FC = () => {
       <g className="mkt-diagram__layer">
         <rect x="20" y="32" width="170" height="60" rx="10" />
         <text x="105" y="58" textAnchor="middle">
-          Цель бизнеса
+          {copy.home.diagram.businessGoal}
         </text>
         <text x="105" y="78" textAnchor="middle" className="mkt-diagram__muted">
-          эффект / KPI
+          {copy.home.diagram.businessGoalSub}
         </text>
       </g>
 
       <g className="mkt-diagram__layer">
         <rect x="240" y="32" width="170" height="60" rx="10" />
         <text x="325" y="58" textAnchor="middle">
-          Процессы
+          {copy.home.diagram.processes}
         </text>
         <text x="325" y="78" textAnchor="middle" className="mkt-diagram__muted">
-          роли / контроль
+          {copy.home.diagram.processesSub}
         </text>
       </g>
 
       <g className="mkt-diagram__layer">
         <rect x="460" y="32" width="170" height="60" rx="10" />
         <text x="545" y="58" textAnchor="middle">
-          Данные
+          {copy.home.diagram.data}
         </text>
         <text x="545" y="78" textAnchor="middle" className="mkt-diagram__muted">
-          качество / витрины
+          {copy.home.diagram.dataSub}
         </text>
       </g>
 
       <g className="mkt-diagram__layer">
         <rect x="680" y="32" width="220" height="60" rx="10" />
         <text x="790" y="58" textAnchor="middle">
-          Интеграции + автоматизация
+          {copy.home.diagram.automation}
         </text>
         <text x="790" y="78" textAnchor="middle" className="mkt-diagram__muted">
-          RPA / AI / BI
+          {copy.home.diagram.automationSub}
         </text>
       </g>
 
@@ -62,7 +61,7 @@ const Diagram: React.FC = () => {
 
       <g className="mkt-diagram__caption">
         <text x="20" y="156">
-          Принцип: сначала архитектура и эффект, затем инструменты.
+          {copy.home.diagram.caption}
         </text>
       </g>
     </svg>
@@ -75,9 +74,9 @@ export const ConsultingHomePage: React.FC = () => {
     <div className="mkt-page">
       <section className="mkt-hero">
         <div className="mkt-container">
-          <div className="mkt-hero__kicker">{HERO.audience}</div>
-          <h1 className="mkt-hero__title">{HERO.title}</h1>
-          <p className="mkt-hero__subtitle">{HERO.subtitle}</p>
+          <div className="mkt-hero__kicker">{copy.home.audience}</div>
+          <h1 className="mkt-hero__title">{copy.home.heroTitle}</h1>
+          <p className="mkt-hero__subtitle">{copy.home.heroSubtitle}</p>
 
           <div className="mkt-hero__brand">
             <div className="mkt-brandline">
@@ -86,7 +85,7 @@ export const ConsultingHomePage: React.FC = () => {
               <div>{copy.brand.shortVersionLines[2]}</div>
             </div>
             <Link className="mkt-link mkt-link--muted" to="/projects-portfolio/about">
-              {copy.links.readFullLegend}
+              {copy.home.brandTeaserLink}
             </Link>
           </div>
 
@@ -98,23 +97,17 @@ export const ConsultingHomePage: React.FC = () => {
               {copy.cta.getOffer}
             </Link>
             <Link className="mkt-link" to="/projects-portfolio/cases">
-              Смотреть кейсы <ArrowRightOutlined />
+              {copy.home.viewCases} <ArrowRightOutlined />
             </Link>
           </div>
 
           <div className="mkt-hero__meta">
-            <div className="mkt-meta">
-              <div className="mkt-meta__label">Фокус</div>
-              <div className="mkt-meta__value">Бизнес‑результат</div>
-            </div>
-            <div className="mkt-meta">
-              <div className="mkt-meta__label">Формат</div>
-              <div className="mkt-meta__value">Аудит → Архитектура → Внедрение</div>
-            </div>
-            <div className="mkt-meta">
-              <div className="mkt-meta__label">Результат</div>
-              <div className="mkt-meta__value">Метрики, план, расчёт эффекта</div>
-            </div>
+            {copy.home.heroMeta.map((m) => (
+              <div key={m.label} className="mkt-meta">
+                <div className="mkt-meta__label">{m.label}</div>
+                <div className="mkt-meta__value">{m.value}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -123,36 +116,31 @@ export const ConsultingHomePage: React.FC = () => {
         <div className="mkt-container">
           <div className="mkt-grid-2">
             <div>
-              <h2 className="mkt-h2">Аудит процессов — основной продукт</h2>
-              <p className="mkt-lead">
-                Вы получаете управленческий документ: что менять, в каком порядке и какой эффект это
-                даст. Технологии — вторичны.
-              </p>
+              <h2 className="mkt-h2">{copy.home.auditTitle}</h2>
+              <p className="mkt-lead">{copy.home.auditLead}</p>
 
               <div className="mkt-cards">
                 <div className="mkt-card">
-                  <div className="mkt-card__title">Что смотрим</div>
+                  <div className="mkt-card__title">{copy.home.auditLookTitle}</div>
                   <ul className="mkt-list">
-                    <li>сквозные процессы и точки контроля</li>
-                    <li>данные: качество, источники, “разрывы”</li>
-                    <li>стоимость операции и потери времени</li>
-                    <li>риски: ошибки, комплаенс, зависимость от людей</li>
+                    {copy.home.auditLookBullets.map((x) => (
+                      <li key={x}>{x}</li>
+                    ))}
                   </ul>
                 </div>
                 <div className="mkt-card">
-                  <div className="mkt-card__title">Что отдаём</div>
+                  <div className="mkt-card__title">{copy.home.auditDeliverTitle}</div>
                   <ul className="mkt-list">
-                    <li>AS‑IS / TO‑BE + метрики и владельцы</li>
-                    <li>реестр инициатив с приоритетами</li>
-                    <li>архитектурные принципы и контуры</li>
-                    <li>roadmap и финансовая модель эффекта</li>
+                    {copy.home.auditDeliverBullets.map((x) => (
+                      <li key={x}>{x}</li>
+                    ))}
                   </ul>
                 </div>
               </div>
             </div>
 
             <div className="mkt-figure">
-              <Diagram />
+              <Diagram copy={copy} />
             </div>
           </div>
         </div>
@@ -161,14 +149,14 @@ export const ConsultingHomePage: React.FC = () => {
       <section className="mkt-section mkt-section--alt">
         <div className="mkt-container">
           <div className="mkt-section__header">
-            <h2 className="mkt-h2">Услуги</h2>
+            <h2 className="mkt-h2">{copy.home.servicesTitle}</h2>
             <Link className="mkt-link" to="/projects-portfolio/services">
-              Смотреть все <ArrowRightOutlined />
+              {copy.home.servicesAllLink} <ArrowRightOutlined />
             </Link>
           </div>
 
           <div className="mkt-services-preview">
-            {SERVICES.slice(0, 3).map((s) => (
+            {copy.servicesData.slice(0, 3).map((s) => (
               <div key={s.key} className="mkt-card">
                 <div className="mkt-card__title">{s.title}</div>
                 <div className="mkt-card__text">{s.short}</div>
@@ -182,65 +170,37 @@ export const ConsultingHomePage: React.FC = () => {
         <div className="mkt-container">
           <div className="mkt-grid-2">
             <div>
-              <h2 className="mkt-h2">Как работаем</h2>
+              <h2 className="mkt-h2">{copy.home.howWeWorkTitle}</h2>
               <ol className="mkt-steps">
-                <li>
-                  <div className="mkt-steps__title">Диагностика</div>
-                  <div className="mkt-steps__text">Интервью, данные, факты, карта AS‑IS.</div>
-                </li>
-                <li>
-                  <div className="mkt-steps__title">Модель эффекта</div>
-                  <div className="mkt-steps__text">
-                    Где экономия/рост, какие KPI меняем, какие риски закрываем.
-                  </div>
-                </li>
-                <li>
-                  <div className="mkt-steps__title">Архитектура</div>
-                  <div className="mkt-steps__text">
-                    TO‑BE, данные, интеграции, автоматизация, эксплуатация.
-                  </div>
-                </li>
-                <li>
-                  <div className="mkt-steps__title">Пилот → масштаб</div>
-                  <div className="mkt-steps__text">Быстрые результаты и контроль качества.</div>
-                </li>
+                {copy.home.howWeWork.map((s) => (
+                  <li key={s.title}>
+                    <div className="mkt-steps__title">{s.title}</div>
+                    <div className="mkt-steps__text">{s.text}</div>
+                  </li>
+                ))}
               </ol>
             </div>
 
             <div>
-              <h2 className="mkt-h2">Почему доверяют</h2>
+              <h2 className="mkt-h2">{copy.home.whyTrustTitle}</h2>
               <div className="mkt-cards">
-                <div className="mkt-card">
-                  <div className="mkt-card__title">Прозрачность</div>
-                  <div className="mkt-card__text">
-                    Фиксируем цель, KPI, критерии приёмки и “что будет считаться успехом”.
+                {copy.home.whyTrust.map((c) => (
+                  <div key={c.title} className="mkt-card">
+                    <div className="mkt-card__title">{c.title}</div>
+                    <div className="mkt-card__text">{c.text}</div>
                   </div>
-                </div>
-                <div className="mkt-card">
-                  <div className="mkt-card__title">Архитектура</div>
-                  <div className="mkt-card__text">
-                    Не “прикручиваем роботов”, а строим устойчивую систему: данные, роли, контроль.
-                  </div>
-                </div>
-                <div className="mkt-card">
-                  <div className="mkt-card__title">Передача знаний</div>
-                  <div className="mkt-card__text">
-                    Документация и обучение, чтобы снижать зависимость от подрядчика.
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
 
           <div className="mkt-cta-band">
             <div>
-              <div className="mkt-cta-band__title">Готовы начать с аудита?</div>
-              <div className="mkt-cta-band__text">
-                Опишите цель — предложим формат, сроки и ожидаемый экономический эффект.
-              </div>
+              <div className="mkt-cta-band__title">{copy.home.ctaBandTitle}</div>
+              <div className="mkt-cta-band__text">{copy.home.ctaBandText}</div>
             </div>
             <Button type="primary" size="large" onClick={onRequestAudit}>
-              Получить аудит процессов
+              {copy.cta.getAudit}
             </Button>
           </div>
         </div>

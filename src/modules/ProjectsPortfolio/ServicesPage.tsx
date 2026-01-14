@@ -1,28 +1,25 @@
 import React from 'react';
 import { Button } from 'antd';
 import { useOutletContext } from 'react-router-dom';
-import { SERVICES } from './marketingContent';
+import type { MarketingCopy, MarketingLang } from './i18n';
 
-type OutletCtx = { onRequestAudit: () => void };
+type OutletCtx = { onRequestAudit: () => void; lang: MarketingLang; copy: MarketingCopy };
 
 export const ServicesPage: React.FC = () => {
-  const { onRequestAudit } = useOutletContext<OutletCtx>();
+  const { onRequestAudit, copy } = useOutletContext<OutletCtx>();
   return (
     <div className="mkt-page">
       <section className="mkt-section mkt-section--tight">
         <div className="mkt-container">
-          <h1 className="mkt-h1">Услуги</h1>
-          <p className="mkt-lead">
-            Мы работаем как консалтинг и архитекторы решений: начинаем с диагностики и эффекта, затем
-            проектируем архитектуру и внедряем изменения.
-          </p>
+          <h1 className="mkt-h1">{copy.servicesPage.title}</h1>
+          <p className="mkt-lead">{copy.servicesPage.lead}</p>
         </div>
       </section>
 
       <section className="mkt-section">
         <div className="mkt-container">
           <div className="mkt-services">
-            {SERVICES.map((s) => (
+            {copy.servicesData.map((s) => (
               <div key={s.key} className="mkt-service">
                 <div className="mkt-service__head">
                   <div className="mkt-service__title">{s.title}</div>
@@ -31,7 +28,7 @@ export const ServicesPage: React.FC = () => {
 
                 <div className="mkt-grid-2 mkt-grid-2--compact">
                   <div className="mkt-card">
-                    <div className="mkt-card__title">Когда нужно</div>
+                    <div className="mkt-card__title">{copy.servicesPage.whenNeeded}</div>
                     <ul className="mkt-list">
                       {s.when.map((x) => (
                         <li key={x}>{x}</li>
@@ -39,7 +36,7 @@ export const ServicesPage: React.FC = () => {
                     </ul>
                   </div>
                   <div className="mkt-card">
-                    <div className="mkt-card__title">Что вы получаете</div>
+                    <div className="mkt-card__title">{copy.servicesPage.whatYouGet}</div>
                     <ul className="mkt-list">
                       {s.whatYouGet.map((x) => (
                         <li key={x}>{x}</li>
@@ -53,13 +50,11 @@ export const ServicesPage: React.FC = () => {
 
           <div className="mkt-cta-band">
             <div>
-              <div className="mkt-cta-band__title">Нужна отправная точка?</div>
-              <div className="mkt-cta-band__text">
-                Аудит процессов поможет зафиксировать цели, KPI и план действий.
-              </div>
+              <div className="mkt-cta-band__title">{copy.servicesPage.ctaTitle}</div>
+              <div className="mkt-cta-band__text">{copy.servicesPage.ctaText}</div>
             </div>
             <Button type="primary" size="large" onClick={onRequestAudit}>
-              Получить аудит процессов
+              {copy.cta.getAudit}
             </Button>
           </div>
         </div>

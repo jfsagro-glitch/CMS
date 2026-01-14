@@ -92,10 +92,8 @@ export const BrandStoryPage: React.FC = () => {
 
           <div className="mkt-cta-band">
             <div>
-              <div className="mkt-cta-band__title">Нужен “взгляд со стороны”?</div>
-              <div className="mkt-cta-band__text">
-                Начнём с аудита: зафиксируем цель, измерим потери и соберём архитектуру решений.
-              </div>
+              <div className="mkt-cta-band__title">{copy.aboutPage.ctaBandTitle}</div>
+              <div className="mkt-cta-band__text">{copy.aboutPage.ctaBandText}</div>
             </div>
             <Button type="primary" size="large" onClick={onRequestAudit}>
               {copy.cta.getAudit}
