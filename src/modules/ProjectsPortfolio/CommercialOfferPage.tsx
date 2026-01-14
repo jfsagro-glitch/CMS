@@ -27,7 +27,7 @@ function flattenOffer(copy: MarketingCopy): string[] {
     lines.push('');
   }
 
-  lines.push(copy.offer.strongPhraseTitle);
+  if (copy.offer.strongPhraseTitle) lines.push(copy.offer.strongPhraseTitle);
   lines.push(copy.offer.strongPhrase);
   return lines;
 }
@@ -134,7 +134,9 @@ export const CommercialOfferPage: React.FC = () => {
             ))}
 
             <div className="mkt-card">
-              <div className="mkt-card__title">{copy.offer.strongPhraseTitle}</div>
+              {copy.offer.strongPhraseTitle && (
+                <div className="mkt-card__title">{copy.offer.strongPhraseTitle}</div>
+              )}
               <div className="mkt-card__text" style={{ lineHeight: 1.7 }}>
                 <b>{copy.offer.strongPhrase}</b>
               </div>

@@ -158,7 +158,7 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
           ],
         },
       ],
-      strongPhraseTitle: '9. ПОЗИЦИОННАЯ ФРАЗА (ОЧЕНЬ СИЛЬНАЯ)',
+      strongPhraseTitle: '',
       strongPhrase:
         'Мы не продаём автоматизацию. Мы помогаем бизнесу увидеть себя таким, какой он есть, и выстроить управляемую архитектуру роста.',
     },
@@ -328,7 +328,7 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
           ],
         },
       ],
-      strongPhraseTitle: '9. POSITIONING PHRASE',
+      strongPhraseTitle: '',
       strongPhrase:
         'We do not sell automation. We help a business see itself as it is and build a manageable architecture for growth.',
     },
