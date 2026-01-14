@@ -934,7 +934,7 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
         'Systemic analysis of business processes and automation architecture.',
         'Built on 20+ years of assessment, analysis, and support in financial and corporate environments.',
       ],
-      ceoTitle: 'For CEOs: key talking points',
+      ceoTitle: 'For CEOs',
       ceoLines: [
         'We did not run businesses instead of owners.',
         'For 20 years we have observed, analyzed, and assessed which businesses survive, scale, or collapse — and why.',
