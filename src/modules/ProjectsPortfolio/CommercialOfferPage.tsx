@@ -1,89 +1,53 @@
-import React, { useMemo } from 'react';
-import { Button, Card, Typography } from 'antd';
+import React, { useMemo, useRef, useState } from 'react';
+import { Button, Card, Spin, Typography } from 'antd';
 import { useOutletContext } from 'react-router-dom';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import type { MarketingCopy, MarketingLang } from './i18n';
 
 type OutletCtx = { onRequestAudit: () => void; lang: MarketingLang; copy: MarketingCopy };
 
-function flattenOffer(copy: MarketingCopy): string[] {
-  const lines: string[] = [];
-  lines.push(copy.offer.title);
-  lines.push(copy.offer.subtitle);
-  lines.push(copy.offer.brandLine);
-  lines.push('');
+async function downloadOfferPdfFromNode(node: HTMLElement, lang: MarketingLang) {
+  // Render DOM -> canvas so Cyrillic/Unicode is preserved (browser font rendering).
+  const canvas = await html2canvas(node, {
+    scale: 2,
+    backgroundColor: '#ffffff',
+    useCORS: true,
+    logging: false,
+    windowWidth: node.scrollWidth,
+    windowHeight: node.scrollHeight,
+  } as any);
 
-  for (const s of copy.offer.sections) {
-    lines.push(s.title);
-    lines.push('');
-    for (const part of s.body) {
-      if (typeof part === 'string') {
-        lines.push(part);
-      } else {
-        for (const b of part.bullets) lines.push(`• ${b}`);
-      }
-      lines.push('');
-    }
-    lines.push('');
-  }
+  const imgData = canvas.toDataURL('image/png');
+  const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
 
-  if (copy.offer.strongPhraseTitle) lines.push(copy.offer.strongPhraseTitle);
-  lines.push(copy.offer.strongPhrase);
-  return lines;
-}
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
 
-function downloadOfferPdf(copy: MarketingCopy, lang: MarketingLang) {
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 48;
-  const maxWidth = pageWidth - margin * 2;
+  // Fit width.
+  const imgWidth = pageWidth;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-  const title = `${copy.offer.title}\n${copy.offer.subtitle}\n${copy.offer.brandLine}`;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  const titleLines = doc.splitTextToSize(title, maxWidth);
-  let y = margin;
-  doc.text(titleLines, margin, y);
-  y += titleLines.length * 18 + 8;
+  let y = 0;
+  pdf.addImage(imgData, 'PNG', 0, y, imgWidth, imgHeight);
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
-
-  const lines = flattenOffer(copy).slice(4); // skip repeated header
-  const lineHeight = 16;
-
-  for (const raw of lines) {
-    const text = raw.trimEnd();
-    if (text.length === 0) {
-      y += lineHeight * 0.6;
-      continue;
-    }
-
-    // Simple emphasis for section titles (starting with digit+dot) and last strong phrase title.
-    const isSectionTitle = /^\d+\./.test(text) || text === copy.offer.strongPhraseTitle;
-    if (isSectionTitle) {
-      doc.setFont('helvetica', 'bold');
-    } else {
-      doc.setFont('helvetica', 'normal');
-    }
-
-    const wrapped = doc.splitTextToSize(text, maxWidth);
-    const blockHeight = wrapped.length * lineHeight;
-    if (y + blockHeight > pageHeight - margin) {
-      doc.addPage();
-      y = margin;
-    }
-    doc.text(wrapped, margin, y);
-    y += blockHeight;
+  // If content is taller than one page, add pages by shifting the image upward.
+  let remaining = imgHeight - pageHeight;
+  while (remaining > 0) {
+    y -= pageHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, 'PNG', 0, y, imgWidth, imgHeight);
+    remaining -= pageHeight;
   }
 
   const safe = lang === 'ru' ? 'RU' : 'EN';
-  doc.save(`CMS_Commercial_Proposal_${safe}.pdf`);
+  pdf.save(`CMS_Commercial_Proposal_${safe}.pdf`);
 }
 
 export const CommercialOfferPage: React.FC = () => {
   const { copy, lang, onRequestAudit } = useOutletContext<OutletCtx>();
+  const printRef = useRef<HTMLDivElement | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   const sections = useMemo(() => copy.offer.sections, [copy.offer.sections]);
 
@@ -101,14 +65,32 @@ export const CommercialOfferPage: React.FC = () => {
             <Button type="primary" onClick={onRequestAudit}>
               {copy.cta.getAudit}
             </Button>
-            <Button onClick={() => downloadOfferPdf(copy, lang)}>{copy.cta.downloadPdf}</Button>
+            <Button
+              onClick={async () => {
+                if (!printRef.current || downloading) return;
+                try {
+                  setDownloading(true);
+                  await downloadOfferPdfFromNode(printRef.current, lang);
+                } finally {
+                  setDownloading(false);
+                }
+              }}
+            >
+              {downloading ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <Spin size="small" /> {copy.cta.downloadPdf}
+                </span>
+              ) : (
+                copy.cta.downloadPdf
+              )}
+            </Button>
           </div>
         </div>
       </section>
 
       <section className="mkt-section">
         <div className="mkt-container">
-          <div className="mkt-cards">
+          <div className="mkt-cards" ref={printRef}>
             {sections.map((s) => (
               <Card key={s.title} className="mkt-card" bordered={false} style={{ padding: 0 }}>
                 <div className="mkt-card__title">{s.title}</div>
