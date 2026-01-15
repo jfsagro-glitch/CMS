@@ -1,14 +1,17 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { Button, Card, Spin, Typography } from 'antd';
 import { useOutletContext } from 'react-router-dom';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import type { MarketingCopy, MarketingLang } from './i18n';
 
 type OutletCtx = { onRequestAudit: () => void; lang: MarketingLang; copy: MarketingCopy };
 
 async function downloadOfferPdfFromNode(node: HTMLElement, lang: MarketingLang) {
   // Render DOM -> canvas so Cyrillic/Unicode is preserved (browser font rendering).
+  const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+    import('html2canvas'),
+    import('jspdf'),
+  ]);
+
   const canvas = await html2canvas(node, {
     scale: 2,
     backgroundColor: '#ffffff',

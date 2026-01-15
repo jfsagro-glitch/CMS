@@ -7,9 +7,6 @@ import { learningService } from './LearningService';
 import { evolutionService } from './EvolutionService';
 import { questionEnhancementService } from './QuestionEnhancementService';
 
-// Зашифрованный API ключ (base64 + простой шифр)
-const ENCRYPTED_API_KEY = 'c2stNWYwNmRiOTY5YjVmNDI4YmJlNDQ3NzY5NGU2ZDdkN2Y='; // base64(sk-5f06db969b5f428bbe4477694e6d7d7f)
-
 interface FeedbackAnalysis {
   goodExamples: string[];
   badExamples: string[];
@@ -33,9 +30,18 @@ class DeepSeekService {
       return '/api/deepseek/chat/completions';
     }
 
-    // В production ВСЕГДА ходим через Cloudflare Worker прокси,
+    // В production ВСЕГДА ходим через прокси (Cloudflare Worker),
     // чтобы избежать CORS при прямом запросе к DeepSeek.
-    return 'https://deepseek-proxy-cms.jfsagro.workers.dev/';
+    //
+    // Рекомендуемый способ — задать VITE_DEEPSEEK_PROXY_URL (см. proxy/README.md).
+    // Формат: https://your-worker-name.your-account.workers.dev
+    const configuredProxy = (import.meta.env.VITE_DEEPSEEK_PROXY_URL as string | undefined)?.trim();
+    if (configuredProxy) {
+      return configuredProxy.replace(/\/+$/, '');
+    }
+
+    // Fallback на исторически используемый воркер (если .env.production не настроен).
+    return 'https://deepseek-proxy-cms.jfsagro.workers.dev';
   }
   private feedbackCache: {
     data: FeedbackAnalysis;
@@ -44,31 +50,12 @@ class DeepSeekService {
   private readonly CACHE_TTL = 60000; // 1 минута
 
   /**
-   * Расшифровывает API ключ
-   */
-  private getApiKey(): string {
-    try {
-      // Простое base64 декодирование
-      return atob(ENCRYPTED_API_KEY);
-    } catch (error) {
-      console.error('Ошибка расшифровки API ключа:', error);
-      return '';
-    }
-  }
-
-  /**
    * Отправляет запрос к DeepSeek API
    */
   async chat(
     messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
     context?: string
   ): Promise<string> {
-    const apiKey = this.getApiKey();
-
-    if (!apiKey) {
-      throw new Error('API ключ не найден');
-    }
-
     // Анализируем обратную связь для улучшения ответов
     const feedbackAnalysis = this.getFeedbackAnalysis();
 
@@ -92,12 +79,22 @@ class DeepSeekService {
         window.location.hostname === '127.0.0.1';
       const fetchMode: RequestMode = isLocalDev ? 'same-origin' : 'cors';
 
+      // В production ключ хранится на стороне прокси (Cloudflare Worker) и НЕ должен попадать в браузер.
+      // В dev можно задать локальный ключ через .env.local: VITE_DEEPSEEK_API_KEY=...
+      const devApiKey = (import.meta.env.VITE_DEEPSEEK_API_KEY as string | undefined)?.trim();
+      if (isLocalDev && !devApiKey) {
+        throw new Error(
+          'DeepSeek API ключ не настроен для development. ' +
+            'Добавьте VITE_DEEPSEEK_API_KEY в .env.local или используйте production proxy (VITE_DEEPSEEK_PROXY_URL).'
+        );
+      }
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         mode: fetchMode,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
+          ...(isLocalDev ? { Authorization: `Bearer ${devApiKey}` } : {}),
         },
         body: JSON.stringify({
           model: this.MODEL,
@@ -179,12 +176,6 @@ class DeepSeekService {
    * Анализирует изображение и возвращает описание
    */
   async analyzeImage(imageBase64: string, fileName: string): Promise<string> {
-    const apiKey = this.getApiKey();
-
-    if (!apiKey) {
-      throw new Error('API ключ не найден');
-    }
-
     try {
       // DeepSeek может анализировать изображения через vision API
       // Используем текстовое описание для модели без vision

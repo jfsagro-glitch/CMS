@@ -10,8 +10,6 @@ import {
   SafetyCertificateOutlined,
   RocketOutlined,
 } from '@ant-design/icons';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 interface PlaceholderPageProps {
   title: string;
@@ -418,6 +416,11 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
         document.body.removeChild(container);
         throw new Error('Контейнер PDF пуст или не отрендерился');
       }
+
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
 
       const canvas = await html2canvas(container, {
         scale: 2,

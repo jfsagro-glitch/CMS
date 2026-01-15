@@ -77,8 +77,6 @@ import {
   APPRAISAL_TYPE_OPTIONS,
 } from '@/utils/appraisalAttributeConfig';
 import { applyPreferredSkills } from '@/utils/appraisalSkillsConfig';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import AppraisalAIService, { type AppraisalEstimate } from '@/services/AppraisalAIService';
 import imageGenerationService from '@/services/ImageGenerationService';
 import './ReferencePage.css';
@@ -1790,6 +1788,11 @@ const ReferencePage: React.FC = () => {
         document.body.removeChild(container);
         throw new Error('Контейнер PDF пуст или не отрендерился');
       }
+
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
 
       const canvas = await html2canvas(container, {
         scale: 2,

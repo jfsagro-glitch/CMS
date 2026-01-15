@@ -113,6 +113,8 @@ export async function loadVNDDocuments(forceReindex: boolean = false): Promise<D
     const basePath = import.meta.env.BASE_URL || './';
     const indexedDocuments: DocumentIndex[] = [];
     let needsRebuild = false;
+    const existingIndexes = documentIndexer.getIndexedDocuments();
+    const existingIndexMap = new Map(existingIndexes.map(idx => [idx.documentName, idx]));
 
     // Пытаемся загрузить все известные документы
     for (const fileName of KNOWN_DOCUMENT_FILES) {
@@ -126,6 +128,15 @@ export async function loadVNDDocuments(forceReindex: boolean = false): Promise<D
         console.warn(`Пропущен файл с неизвестным типом: ${fileName}`);
         continue;
       }
+
+      // Критичная оптимизация для скорости: если документ уже проиндексирован и не требуется переиндексация,
+      // не делаем fetch (иначе на старте ReferencePage получается десятки сетевых запросов).
+      const existing = existingIndexMap.get(fileName);
+      if (!forceReindex && existing) {
+        indexedDocuments.push(existing);
+        continue;
+      }
+
       // Список путей для попытки загрузки (для GitHub Pages и локальной разработки)
       const pathsToTry = [
         `${basePath}VND/${fileName}`, // Для GitHub Pages с base path
@@ -166,22 +177,16 @@ export async function loadVNDDocuments(forceReindex: boolean = false): Promise<D
             { type: mimeType }
           );
 
-          // Проверяем, не индексирован ли уже этот документ
-          const existingIndexes = documentIndexer.getIndexedDocuments();
-          const existingIndex = existingIndexes.find(
-            idx => idx.documentName === file.name
-          );
-
           // Если принудительная переиндексация или документ не индексирован
-          if (forceReindex || !existingIndex) {
+          if (forceReindex || !existing) {
             console.log(`Индексирую документ: ${file.name} (тип: ${fileType})`);
             const index = await documentIndexer.indexDocument(file);
             indexedDocuments.push(index);
             console.log(`✅ Документ проиндексирован: ${file.name} (${index.totalPages} страниц/листов, ${index.chunks.length} чанков)`);
             needsRebuild = true;
           } else {
-            console.log(`Документ уже проиндексирован: ${file.name} (${existingIndex.totalPages} страниц/листов)`);
-            indexedDocuments.push(existingIndex);
+            console.log(`Документ уже проиндексирован: ${file.name} (${existing.totalPages} страниц/листов)`);
+            indexedDocuments.push(existing);
           }
         } catch (error) {
           console.error(`Ошибка индексации документа ${fileName}:`, error);
@@ -206,7 +211,6 @@ export async function loadVNDDocuments(forceReindex: boolean = false): Promise<D
 
     // Если не удалось загрузить ни одного документа, но есть сохраненные индексы
     if (indexedDocuments.length === 0) {
-      const existingIndexes = documentIndexer.getIndexedDocuments();
       if (existingIndexes.length > 0) {
         console.log(`Найдены ранее проиндексированные документы в localStorage: ${existingIndexes.length}`);
         return existingIndexes;
