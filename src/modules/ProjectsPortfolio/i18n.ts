@@ -70,7 +70,7 @@ export type MarketingCopy = {
     capabilities: string;
   };
   projectsData: Array<{
-    id: 'zadachnik' | 'cms' | 'cms-check' | 'carshop-website';
+    id: 'zadachnik' | 'cms' | 'cms-check' | 'carshop-website' | 'botvot';
     name: string;
     short: string;
     stack: string[];
@@ -300,6 +300,24 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
         ],
         githubUrl: 'https://github.com/jfsagro-glitch/zadachnik',
         demoUrl: 'https://jfsagro-glitch.github.io/zadachnik/',
+      },
+      {
+        id: 'botvot',
+        name: 'botvot — Telegram bot',
+        short:
+          'Telegram-бот для автоматизации коммуникаций и сценариев: обработка команд, уведомления, интеграции по API.',
+        stack: ['Python', 'Telegram Bot API'],
+        highlights: [
+          { label: 'Тип', value: 'бот / интерфейс для процессов и уведомлений' },
+          { label: 'Канал', value: 'Telegram' },
+        ],
+        capabilities: [
+          'Команды и сценарии взаимодействия',
+          'Уведомления и рассылки',
+          'Интеграции с внешними сервисами (API)',
+          'Логи и контроль выполнения',
+        ],
+        githubUrl: 'https://github.com/jfsagro-glitch/botvot',
       },
       {
         id: 'cms',
@@ -795,6 +813,24 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
         ],
         githubUrl: 'https://github.com/jfsagro-glitch/zadachnik',
         demoUrl: 'https://jfsagro-glitch.github.io/zadachnik/',
+      },
+      {
+        id: 'botvot',
+        name: 'botvot — Telegram bot',
+        short:
+          'A Telegram bot for automating communication and workflows: command handling, notifications, and API integrations.',
+        stack: ['Python', 'Telegram Bot API'],
+        highlights: [
+          { label: 'Type', value: 'bot / process & notifications interface' },
+          { label: 'Channel', value: 'Telegram' },
+        ],
+        capabilities: [
+          'Commands and conversation flows',
+          'Notifications and broadcasts',
+          'External service integrations (API)',
+          'Logging and execution control',
+        ],
+        githubUrl: 'https://github.com/jfsagro-glitch/botvot',
       },
       {
         id: 'cms',
