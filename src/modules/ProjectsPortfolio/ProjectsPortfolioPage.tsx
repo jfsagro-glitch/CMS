@@ -56,6 +56,9 @@ const ProjectsPortfolioPage: React.FC = () => {
             <NavLink to="/projects-portfolio/cases" className={linkClass}>
               {copy.nav.cases}
             </NavLink>
+            <NavLink to="/projects-portfolio/projects" className={linkClass}>
+              {copy.nav.projects}
+            </NavLink>
             <NavLink to="/projects-portfolio/about" className={linkClass}>
               {copy.nav.about}
             </NavLink>

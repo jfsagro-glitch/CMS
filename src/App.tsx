@@ -50,6 +50,7 @@ import { ServicesPage } from './modules/ProjectsPortfolio/ServicesPage';
 import { CasesPage } from './modules/ProjectsPortfolio/CasesPage';
 import { BrandStoryPage } from './modules/ProjectsPortfolio/BrandStoryPage';
 import { CommercialOfferPage } from './modules/ProjectsPortfolio/CommercialOfferPage';
+import { ITProjectsPage } from './modules/ProjectsPortfolio/ITProjectsPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
 import './styles/global.css';
@@ -279,6 +280,7 @@ const AppContent: React.FC = () => {
                     <Route index element={<ConsultingHomePage />} />
                     <Route path="services" element={<ServicesPage />} />
                     <Route path="cases" element={<CasesPage />} />
+                    <Route path="projects" element={<ITProjectsPage />} />
                     <Route path="about" element={<BrandStoryPage />} />
                     <Route path="offer" element={<CommercialOfferPage />} />
                   </Route>

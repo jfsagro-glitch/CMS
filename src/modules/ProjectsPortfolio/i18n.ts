@@ -1,7 +1,7 @@
 export type MarketingLang = 'ru' | 'en';
 
 export type MarketingCopy = {
-  nav: { home: string; services: string; cases: string; about: string };
+  nav: { home: string; services: string; cases: string; projects: string; about: string };
   links: { readFullLegend: string };
   cta: { getAudit: string; getOffer: string; downloadPdf: string; send: string; cancel: string };
   footer: { title: string; tagline: string };
@@ -60,6 +60,25 @@ export type MarketingCopy = {
     ctaBandTitle: string;
     ctaBandText: string;
   };
+  projectsPage: {
+    title: string;
+    lead: string;
+    repo: string;
+    demo: string;
+    stack: string;
+    highlights: string;
+    capabilities: string;
+  };
+  projectsData: Array<{
+    id: 'zadachnik' | 'cms' | 'cms-check' | 'carshop-website';
+    name: string;
+    short: string;
+    stack: string[];
+    highlights: Array<{ label: string; value: string }>;
+    capabilities: string[];
+    githubUrl: string;
+    demoUrl?: string;
+  }>;
   servicesData: Array<{
     key: 'audit' | 'architecture' | 'rpa-ai' | 'bi-integrations' | 'support';
     title: string;
@@ -142,7 +161,7 @@ export function setStoredLang(lang: MarketingLang) {
 
 export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
   const ru: MarketingCopy = {
-    nav: { home: 'Главная', services: 'Услуги', cases: 'Кейсы', about: 'О CMS' },
+    nav: { home: 'Главная', services: 'Услуги', cases: 'Кейсы', projects: 'IT проекты', about: 'О CMS' },
     links: { readFullLegend: 'Читать полную легенду →' },
     cta: {
       getAudit: 'Получить аудит процессов',
@@ -252,6 +271,94 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
       ctaBandTitle: 'Нужен “взгляд со стороны”?',
       ctaBandText: 'Начнём с аудита: зафиксируем цель, измерим потери и соберём архитектуру решений.',
     },
+    projectsPage: {
+      title: 'IT проекты',
+      lead:
+        'Подборка наших продуктовых и прикладных решений. Ниже — краткое описание функционала, особенности реализации и характеристики.',
+      repo: 'GitHub',
+      demo: 'Демо',
+      stack: 'Стек',
+      highlights: 'Характеристики',
+      capabilities: 'Функциональность',
+    },
+    projectsData: [
+      {
+        id: 'zadachnik',
+        name: 'Задачник — Pipeline',
+        short:
+          'Рабочий конвейер по распределению задач: роли, статусы, регионы, приоритеты и контроль исполнения.',
+        stack: ['JavaScript', 'SPA', 'Local storage / IndexedDB'],
+        highlights: [
+          { label: 'Тип', value: 'таск‑менеджмент / операционный pipeline' },
+          { label: 'Фокус', value: 'скорость распределения и прозрачность исполнения' },
+        ],
+        capabilities: [
+          'Ролевая модель доступа',
+          'Распределение по регионам',
+          'Статусы/приоритеты, история и комментарии',
+          'KPI/аналитика по задачам и исполнителям',
+        ],
+        githubUrl: 'https://github.com/jfsagro-glitch/zadachnik',
+        demoUrl: 'https://jfsagro-glitch.github.io/zadachnik/',
+      },
+      {
+        id: 'cms',
+        name: 'CMS — Система управления залогами',
+        short:
+          'Корпоративная система управления залоговым имуществом: реестры, досье, мониторинг, отчётность и рабочие модули.',
+        stack: ['TypeScript', 'React', 'Ant Design', 'Redux', 'Dexie (IndexedDB)', 'Vite'],
+        highlights: [
+          { label: 'Тип', value: 'корпоративная система / реестры и контроль' },
+          { label: 'Данные', value: 'локальное хранилище + импорт/экспорт' },
+        ],
+        capabilities: [
+          'Реестр объектов и карточки с динамическими формами',
+          'Экспорт/импорт (Excel), резервное копирование',
+          'Модули мониторинга/оценки/аналитики',
+          'Интеграции и вспомогательные сервисы',
+        ],
+        githubUrl: 'https://github.com/jfsagro-glitch/CMS',
+        demoUrl: 'https://cmsauto.ru/#/registry',
+      },
+      {
+        id: 'cms-check',
+        name: 'CMS_check — Дистанционные осмотры',
+        short:
+          'Сервис дистанционных осмотров объектов: чек‑листы, фотофиксация, геолокация, отчёты и контроль качества.',
+        stack: ['TypeScript', 'React', 'Mobile-first'],
+        highlights: [
+          { label: 'Тип', value: 'мобильный сервис осмотров' },
+          { label: 'Каналы', value: 'фото + геометки + структурированные проверки' },
+        ],
+        capabilities: [
+          'Мобильный интерфейс и чек‑листы',
+          'Фотофиксация и геолокация',
+          'История осмотров и формирование отчётов',
+          'Интеграция с основной CMS',
+        ],
+        githubUrl: 'https://github.com/jfsagro-glitch/CMS_chek',
+        demoUrl: 'https://jfsagro-glitch.github.io/CMS_chek/',
+      },
+      {
+        id: 'carshop-website',
+        name: 'CarExport — Авто из Грузии',
+        short:
+          'Маркетинговый сайт для сервиса подбора и доставки автомобилей: каталог, фильтры, формы заявок и калькуляторы.',
+        stack: ['HTML', 'CSS', 'JavaScript'],
+        highlights: [
+          { label: 'Тип', value: 'маркетинговый сайт / лидогенерация' },
+          { label: 'Фокус', value: 'конверсия в заявку и удобный каталог' },
+        ],
+        capabilities: [
+          'Каталог и фильтры',
+          'Формы заявок и обратной связи',
+          'Калькуляторы/информационные блоки',
+          'Адаптивная верстка',
+        ],
+        githubUrl: 'https://github.com/jfsagro-glitch/carshop-website',
+        demoUrl: 'https://cmsauto.store/index.html#catalog',
+      },
+    ],
     servicesData: [
       {
         key: 'audit',
@@ -565,7 +672,7 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
   };
 
   const en: MarketingCopy = {
-    nav: { home: 'Home', services: 'Services', cases: 'Cases', about: 'About CMS' },
+    nav: { home: 'Home', services: 'Services', cases: 'Cases', projects: 'IT Projects', about: 'About CMS' },
     links: { readFullLegend: 'Read the full brand story →' },
     cta: {
       getAudit: 'Get a process audit',
@@ -659,6 +766,94 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
       ctaBandTitle: 'Need an outside perspective?',
       ctaBandText: 'Start with an audit: define the goal, quantify losses, and build solution architecture.',
     },
+    projectsPage: {
+      title: 'IT Projects',
+      lead:
+        'A selection of our product and delivery work. Below are concise descriptions of functionality, implementation highlights, and key characteristics.',
+      repo: 'GitHub',
+      demo: 'Demo',
+      stack: 'Stack',
+      highlights: 'Highlights',
+      capabilities: 'Capabilities',
+    },
+    projectsData: [
+      {
+        id: 'zadachnik',
+        name: 'Zadachnik — Pipeline',
+        short:
+          'An operational task distribution pipeline: roles, statuses, regions, priorities, and execution control.',
+        stack: ['JavaScript', 'SPA', 'Local storage / IndexedDB'],
+        highlights: [
+          { label: 'Type', value: 'task management / operations pipeline' },
+          { label: 'Focus', value: 'fast assignment and execution visibility' },
+        ],
+        capabilities: [
+          'Role-based access model',
+          'Region-based distribution',
+          'Statuses/priorities, history and comments',
+          'KPI/analytics by tasks and executors',
+        ],
+        githubUrl: 'https://github.com/jfsagro-glitch/zadachnik',
+        demoUrl: 'https://jfsagro-glitch.github.io/zadachnik/',
+      },
+      {
+        id: 'cms',
+        name: 'CMS — Collateral Management System',
+        short:
+          'A corporate system for collateral management: registries, dossiers, monitoring, reporting, and operational modules.',
+        stack: ['TypeScript', 'React', 'Ant Design', 'Redux', 'Dexie (IndexedDB)', 'Vite'],
+        highlights: [
+          { label: 'Type', value: 'corporate system / registries & control' },
+          { label: 'Data', value: 'local storage + import/export workflows' },
+        ],
+        capabilities: [
+          'Object registry and dynamic card forms',
+          'Excel import/export and backups',
+          'Monitoring/appraisal/analytics modules',
+          'Integrations and supporting services',
+        ],
+        githubUrl: 'https://github.com/jfsagro-glitch/CMS',
+        demoUrl: 'https://cmsauto.ru/#/registry',
+      },
+      {
+        id: 'cms-check',
+        name: 'CMS_check — Remote inspections',
+        short:
+          'Remote inspection service: checklists, photo evidence, geolocation, reports, and quality control.',
+        stack: ['TypeScript', 'React', 'Mobile-first'],
+        highlights: [
+          { label: 'Type', value: 'mobile inspection service' },
+          { label: 'Signals', value: 'photos + geo tags + structured checks' },
+        ],
+        capabilities: [
+          'Mobile UI and checklists',
+          'Photo capture and geolocation',
+          'Inspection history and reporting',
+          'Integration with the main CMS',
+        ],
+        githubUrl: 'https://github.com/jfsagro-glitch/CMS_chek',
+        demoUrl: 'https://jfsagro-glitch.github.io/CMS_chek/',
+      },
+      {
+        id: 'carshop-website',
+        name: 'CarExport — Cars from Georgia',
+        short:
+          'Marketing website for car sourcing and delivery: catalog, filters, request forms, and calculators.',
+        stack: ['HTML', 'CSS', 'JavaScript'],
+        highlights: [
+          { label: 'Type', value: 'marketing site / lead generation' },
+          { label: 'Focus', value: 'conversion to request and usable catalog' },
+        ],
+        capabilities: [
+          'Catalog and filters',
+          'Lead forms and contact flows',
+          'Calculators / informational blocks',
+          'Responsive layout',
+        ],
+        githubUrl: 'https://github.com/jfsagro-glitch/carshop-website',
+        demoUrl: 'https://cmsauto.store/index.html#catalog',
+      },
+    ],
     servicesData: [
       {
         key: 'audit',
