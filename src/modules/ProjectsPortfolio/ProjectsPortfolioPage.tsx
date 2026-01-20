@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Segmented } from 'antd';
+import { MoonOutlined, SunOutlined } from '@ant-design/icons';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { RequestAuditModal } from './RequestAuditModal';
 import { CONTACT_EMAIL } from './marketingContent';
@@ -22,10 +23,27 @@ const ProjectsPortfolioPage: React.FC = () => {
   const location = useLocation();
   const [auditOpen, setAuditOpen] = useState(false);
   const [lang, setLang] = useState<MarketingLang>(() => getInitialLang());
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('mkt-theme');
+      return saved === 'dark';
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     setStoredLang(lang);
   }, [lang]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('mkt-theme', isDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-mkt-theme', isDark ? 'dark' : 'light');
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, [isDark]);
 
   const copy = useMemo(() => getMarketingCopy(lang), [lang]);
 
@@ -33,6 +51,10 @@ const ProjectsPortfolioPage: React.FC = () => {
     const p = location.pathname;
     return p === '/projects-portfolio' || p === '/projects-portfolio/';
   }, [location.pathname]);
+
+  const toggleTheme = () => {
+    setIsDark(prev => !prev);
+  };
 
   return (
     <div className="mkt-shell">
@@ -111,9 +133,20 @@ const ProjectsPortfolioPage: React.FC = () => {
             </div>
           </div>
           <div className="mkt-footer__right">
-            <a className="mkt-link" href={`mailto:${CONTACT_EMAIL}`}>
-              {CONTACT_EMAIL}
-            </a>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <Button
+                type="text"
+                icon={isDark ? <SunOutlined /> : <MoonOutlined />}
+                onClick={toggleTheme}
+                className="mkt-theme-toggle"
+                title={isDark ? 'Светлая тема' : 'Тёмная тема'}
+              >
+                {isDark ? 'Светлая' : 'Тёмная'}
+              </Button>
+              <a className="mkt-link" href={`mailto:${CONTACT_EMAIL}`}>
+                {CONTACT_EMAIL}
+              </a>
+            </div>
           </div>
         </div>
       </footer>

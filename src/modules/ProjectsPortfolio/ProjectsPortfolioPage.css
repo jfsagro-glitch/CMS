@@ -8,6 +8,16 @@
   --mkt-accent: #135cff;
 }
 
+[data-mkt-theme='dark'] {
+  --mkt-bg: #0a0e18;
+  --mkt-fg: #e8eaed;
+  --mkt-paper: #1a1d26;
+  --mkt-muted: rgba(255, 255, 255, 0.55);
+  --mkt-border: rgba(255, 255, 255, 0.12);
+  --mkt-border-strong: rgba(255, 255, 255, 0.2);
+  --mkt-accent: #4a9eff;
+}
+
 .mkt-shell {
   min-height: 100vh;
   background: var(--mkt-paper);
@@ -28,6 +38,10 @@
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--mkt-border);
+}
+
+[data-mkt-theme='dark'] .mkt-topbar {
+  background: rgba(26, 29, 38, 0.92);
 }
 
 .mkt-topbar__inner {
@@ -79,6 +93,14 @@
   white-space: nowrap;
 }
 
+[data-mkt-theme='dark'] .mkt-brand__sub {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-mkt-theme='dark'] .mkt-brand__logo {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
 .mkt-nav {
   display: flex;
   align-items: center;
@@ -96,15 +118,28 @@
   border: 1px solid transparent;
 }
 
+[data-mkt-theme='dark'] .mkt-nav__link {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .mkt-nav__link:hover {
   color: rgba(0, 0, 0, 0.9);
   border-color: var(--mkt-border);
+}
+
+[data-mkt-theme='dark'] .mkt-nav__link:hover {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .mkt-nav__link--active {
   color: rgba(0, 0, 0, 0.95);
   border-color: var(--mkt-border-strong);
   background: rgba(0, 0, 0, 0.03);
+}
+
+[data-mkt-theme='dark'] .mkt-nav__link--active {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .mkt-topbar__cta {
@@ -125,6 +160,10 @@
   text-decoration: none;
 }
 
+[data-mkt-theme='dark'] .mkt-link {
+  color: rgba(255, 255, 255, 0.75);
+}
+
 .mkt-link:hover {
   text-decoration: underline;
 }
@@ -132,6 +171,10 @@
 .mkt-link--muted {
   color: rgba(0, 0, 0, 0.45);
   font-size: 13px;
+}
+
+[data-mkt-theme='dark'] .mkt-link--muted {
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .mkt-main {
@@ -176,6 +219,24 @@
   color: rgba(0, 0, 0, 0.6);
   font-size: 13px;
   max-width: 520px;
+}
+
+[data-mkt-theme='dark'] .mkt-footer__muted {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+[data-mkt-theme='dark'] .mkt-footer__logo {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.mkt-theme-toggle {
+  color: var(--mkt-fg);
+  border-color: var(--mkt-border);
+}
+
+.mkt-theme-toggle:hover {
+  border-color: var(--mkt-border-strong);
+  background: var(--mkt-paper);
 }
 
 /* ===== Page primitives (used by Home/Services/Cases) ===== */
