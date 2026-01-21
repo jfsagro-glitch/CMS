@@ -1112,7 +1112,7 @@ const ReferencePage: React.FC = () => {
 
       return { content: response, sources, context: knowledgeContext };
     },
-    [categoryNames, categories, cachedKnowledgeSearch, expertiseSkills]
+    [categoryNames, cachedKnowledgeSearch, expertiseSkills]
   );
 
   const handleSend = useCallback(async () => {
