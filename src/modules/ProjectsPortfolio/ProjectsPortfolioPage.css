@@ -691,3 +691,164 @@
   }
 }
 
+/* ===== Dark theme overrides ===== */
+[data-mkt-theme='dark'] {
+  color-scheme: dark;
+}
+
+[data-mkt-theme='dark'] .mkt-hero__kicker,
+[data-mkt-theme='dark'] .mkt-kicker {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-mkt-theme='dark'] .mkt-hero__subtitle,
+[data-mkt-theme='dark'] .mkt-lead,
+[data-mkt-theme='dark'] .mkt-brandline,
+[data-mkt-theme='dark'] .mkt-prose,
+[data-mkt-theme='dark'] .mkt-card__text,
+[data-mkt-theme='dark'] .mkt-list,
+[data-mkt-theme='dark'] .mkt-steps,
+[data-mkt-theme='dark'] .mkt-service__short,
+[data-mkt-theme='dark'] .mkt-project__desc,
+[data-mkt-theme='dark'] .mkt-case__effect {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+[data-mkt-theme='dark'] .mkt-card,
+[data-mkt-theme='dark'] .mkt-meta,
+[data-mkt-theme='dark'] .mkt-case,
+[data-mkt-theme='dark'] .mkt-figure {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-mkt-theme='dark'] .mkt-section--alt {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-mkt-theme='dark'] .mkt-hero__brand,
+[data-mkt-theme='dark'] .mkt-hero,
+[data-mkt-theme='dark'] .mkt-service,
+[data-mkt-theme='dark'] .mkt-case__effect {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-mkt-theme='dark'] .mkt-card__title,
+[data-mkt-theme='dark'] .mkt-service__title,
+[data-mkt-theme='dark'] .mkt-steps__title,
+[data-mkt-theme='dark'] .mkt-project__title,
+[data-mkt-theme='dark'] .mkt-h1,
+[data-mkt-theme='dark'] .mkt-h2,
+[data-mkt-theme='dark'] .mkt-hero__title {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-mkt-theme='dark'] .mkt-meta__label,
+[data-mkt-theme='dark'] .mkt-kpi__label,
+[data-mkt-theme='dark'] .mkt-case__note {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+[data-mkt-theme='dark'] .mkt-meta__value,
+[data-mkt-theme='dark'] .mkt-kpi__value {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-mkt-theme='dark'] .mkt-chip {
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-mkt-theme='dark'] .mkt-cta-band {
+  background: rgba(74, 158, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-mkt-theme='dark'] .mkt-cta-band__text {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-mkt-theme='dark'] .mkt-cta-band__title {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-mkt-theme='dark'] .mkt-lang {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-mkt-theme='dark'] .mkt-diagram {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+[data-mkt-theme='dark'] .mkt-diagram__layer rect {
+  fill: rgba(255, 255, 255, 0.08);
+  stroke: rgba(255, 255, 255, 0.25);
+}
+
+[data-mkt-theme='dark'] .mkt-diagram__muted,
+[data-mkt-theme='dark'] .mkt-diagram__caption text {
+  fill: rgba(255, 255, 255, 0.65);
+}
+
+[data-mkt-theme='dark'] .mkt-diagram__arrow {
+  stroke: rgba(255, 255, 255, 0.65);
+}
+
+[data-mkt-theme='dark'] .mkt-diagram__layer text {
+  fill: rgba(255, 255, 255, 0.9);
+}
+
+[data-mkt-theme='dark'] .mkt-hero__kicker,
+[data-mkt-theme='dark'] .mkt-kicker {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+[data-mkt-theme='dark'] .mkt-service__short {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+[data-mkt-theme='dark'] .mkt-steps__title {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-mkt-theme='dark'] .mkt-steps__text {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Улучшение контрастности всех текстов в темной теме */
+[data-mkt-theme='dark'] {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-mkt-theme='dark'] .mkt-hero__title {
+  color: rgba(255, 255, 255, 0.98);
+}
+
+[data-mkt-theme='dark'] .mkt-h1,
+[data-mkt-theme='dark'] .mkt-h2 {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-mkt-theme='dark'] .mkt-hero__subtitle {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+[data-mkt-theme='dark'] .mkt-brandline {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+[data-mkt-theme='dark'] .mkt-brandline__title {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-mkt-theme='dark'] .mkt-service__title {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Улучшение фонов всех блоков */
+[data-mkt-theme='dark'] .mkt-meta {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
