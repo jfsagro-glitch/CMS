@@ -852,3 +852,65 @@
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.15);
 }
+
+/* Исправление контраста текста в темной теме - все параграфы и списки */
+[data-mkt-theme='dark'] .mkt-prose,
+[data-mkt-theme='dark'] .mkt-prose p,
+[data-mkt-theme='dark'] .mkt-prose div,
+[data-mkt-theme='dark'] .mkt-prose li,
+[data-mkt-theme='dark'] .mkt-prose ul,
+[data-mkt-theme='dark'] .mkt-prose ol {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Ant Design Typography компоненты в темной теме */
+[data-mkt-theme='dark'] .ant-typography,
+[data-mkt-theme='dark'] .ant-typography p,
+[data-mkt-theme='dark'] .ant-typography h1,
+[data-mkt-theme='dark'] .ant-typography h2,
+[data-mkt-theme='dark'] .ant-typography h3,
+[data-mkt-theme='dark'] .ant-typography h4,
+[data-mkt-theme='dark'] .ant-typography h5,
+[data-mkt-theme='dark'] .ant-typography h6 {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-mkt-theme='dark'] .ant-typography b,
+[data-mkt-theme='dark'] .ant-typography strong {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Убеждаемся что все текстовые элементы на странице имеют светлый цвет */
+[data-mkt-theme='dark'] section p,
+[data-mkt-theme='dark'] section div:not(.ant-btn):not(.ant-segmented):not(.ant-collapse),
+[data-mkt-theme='dark'] section li,
+[data-mkt-theme='dark'] section ul,
+[data-mkt-theme='dark'] section ol {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Конкретно для BrandStoryPage - все элементы внутри .mkt-prose */
+[data-mkt-theme='dark'] .mkt-prose .ant-typography,
+[data-mkt-theme='dark'] .mkt-prose .ant-typography p,
+[data-mkt-theme='dark'] .mkt-prose .ant-typography h3,
+[data-mkt-theme='dark'] .mkt-prose .ant-typography h3.ant-typography {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-mkt-theme='dark'] .mkt-prose .mkt-list,
+[data-mkt-theme='dark'] .mkt-prose .mkt-list li {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Ant Design Collapse компонент */
+[data-mkt-theme='dark'] .ant-collapse,
+[data-mkt-theme='dark'] .ant-collapse-item,
+[data-mkt-theme='dark'] .ant-collapse-header,
+[data-mkt-theme='dark'] .ant-collapse-content,
+[data-mkt-theme='dark'] .ant-collapse-content-box {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-mkt-theme='dark'] .ant-collapse-header {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
