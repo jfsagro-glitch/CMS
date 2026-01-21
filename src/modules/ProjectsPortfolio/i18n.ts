@@ -162,7 +162,7 @@ export function setStoredLang(lang: MarketingLang) {
 export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
   const ru: MarketingCopy = {
     nav: { home: 'Главная', services: 'Услуги', cases: 'Кейсы', projects: 'IT проекты', about: 'О CMS' },
-    links: { readFullLegend: 'Читать полную легенду →' },
+    links: { readFullLegend: 'Подробнее →' },
     cta: {
       getAudit: 'Получить аудит процессов',
       getOffer: 'Получить коммерческое предложение',
@@ -184,7 +184,7 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
         { label: 'Формат', value: 'Аудит → Архитектура → Внедрение' },
         { label: 'Результат', value: 'Метрики, план, расчёт эффекта' },
       ],
-      brandTeaserLink: 'Читать полную легенду →',
+      brandTeaserLink: 'Подробнее →',
       diagram: {
         businessGoal: 'Цель бизнеса',
         businessGoalSub: 'эффект / KPI',
@@ -700,7 +700,7 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
 
   const en: MarketingCopy = {
     nav: { home: 'Home', services: 'Services', cases: 'Cases', projects: 'IT Projects', about: 'About CMS' },
-    links: { readFullLegend: 'Read the full brand story →' },
+    links: { readFullLegend: 'Learn more →' },
     cta: {
       getAudit: 'Get a process audit',
       getOffer: 'Get a commercial proposal',
@@ -722,7 +722,7 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
         { label: 'Approach', value: 'Audit → Architecture → Delivery' },
         { label: 'Output', value: 'KPIs, plan, impact model' },
       ],
-      brandTeaserLink: 'Read the full brand story →',
+      brandTeaserLink: 'Learn more →',
       diagram: {
         businessGoal: 'Business goal',
         businessGoalSub: 'impact / KPI',
