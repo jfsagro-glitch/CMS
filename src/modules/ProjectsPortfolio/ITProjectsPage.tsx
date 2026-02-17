@@ -29,14 +29,16 @@ export const ITProjectsPage: React.FC = () => {
                     <div className="mkt-project__desc">{p.short}</div>
                   </div>
                   <div className="mkt-project__actions">
-                    <Button
-                      icon={<GithubOutlined />}
-                      href={p.githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {copy.projectsPage.repo}
-                    </Button>
+                    {p.githubUrl && (
+                      <Button
+                        icon={<GithubOutlined />}
+                        href={p.githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {copy.projectsPage.repo}
+                      </Button>
+                    )}
                     {p.demoUrl && (
                       <Button
                         icon={<LinkOutlined />}

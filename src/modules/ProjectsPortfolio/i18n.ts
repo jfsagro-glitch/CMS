@@ -70,13 +70,20 @@ export type MarketingCopy = {
     capabilities: string;
   };
   projectsData: Array<{
-    id: 'zadachnik' | 'cms' | 'cms-check' | 'carshop-website' | 'botvot';
+    id:
+      | 'zadachnik'
+      | 'botvot'
+      | 'nutria-crm'
+      | 'zhurbot'
+      | 'cms'
+      | 'cms-check'
+      | 'carshop-website';
     name: string;
     short: string;
     stack: string[];
     highlights: Array<{ label: string; value: string }>;
     capabilities: string[];
-    githubUrl: string;
+    githubUrl?: string;
     demoUrl?: string;
   }>;
   servicesData: Array<{
@@ -318,6 +325,42 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
           'Платежи: плагинная архитектура (payment/), мок для dev, инструкции по деплою (Docker/Railway/Procfile)',
         ],
         githubUrl: 'https://github.com/jfsagro-glitch/botvot',
+      },
+      {
+        id: 'nutria-crm',
+        name: 'НУТРИЯ CRM — CRM для нутрициологов',
+        short:
+          'CRM для нутрициологов: список клиентов, Client 360, задачи, сообщения и контроль рисков.',
+        stack: ['React 18', 'React Router', 'Vite', 'Node.js', 'Express', 'PostgreSQL'],
+        highlights: [
+          { label: 'Тип', value: 'CRM для нутрициологов' },
+          { label: 'Архитектура', value: 'frontend: apps/crm-web + API: services/crm-api' },
+        ],
+        capabilities: [
+          'Список клиентов',
+          'Client 360: overview, timeline, tasks, messages',
+          'RBAC, consent, audit',
+          'Ingestion endpoint: /events/ingest',
+          'Rule-based risk flags и weekly brief',
+        ],
+      },
+      {
+        id: 'zhurbot',
+        name: 'ЖУРБОТ — Telegram-бот агрегации новостей (TopNews)',
+        short:
+          'Асинхронный Telegram-бот для агрегации новостей из RSS/HTML/Telegram источников с дедупликацией, фильтрацией и историей публикаций.',
+        stack: ['Python', 'python-telegram-bot', 'aiohttp', 'SQLite', 'Redis', 'SQLAlchemy'],
+        highlights: [
+          { label: 'Тип', value: 'Telegram-бот агрегации новостей' },
+          { label: 'Архитектура', value: 'async collector + SQLite storage + Redis stop (sandbox)' },
+        ],
+        capabilities: [
+          'Сбор новостей из RSS/HTML/Telegram источников',
+          'Очистка текста, категоризация, фильтры',
+          'Дедупликация по URL/заголовку с историей в SQLite',
+          'Публикация в Telegram-канал и/или личные сообщения',
+          'Prod/sandbox режимы доступа и Mgmt API для global stop (sandbox-only)',
+        ],
       },
       {
         id: 'cms',
@@ -840,6 +883,42 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
           'Payments: plugin architecture (payment/), mock for dev, deployment instructions (Docker/Railway/Procfile)',
         ],
         githubUrl: 'https://github.com/jfsagro-glitch/botvot',
+      },
+      {
+        id: 'nutria-crm',
+        name: 'NUTRIA CRM — CRM for nutritionists',
+        short:
+          'CRM for nutritionists with a clients list, Client 360, tasks, messages, and risk control.',
+        stack: ['React 18', 'React Router', 'Vite', 'Node.js', 'Express', 'PostgreSQL'],
+        highlights: [
+          { label: 'Type', value: 'CRM for nutritionists' },
+          { label: 'Architecture', value: 'frontend: apps/crm-web + API: services/crm-api' },
+        ],
+        capabilities: [
+          'Clients list',
+          'Client 360: overview, timeline, tasks, messages',
+          'RBAC, consent, audit',
+          'Ingestion endpoint: /events/ingest',
+          'Rule-based risk flags and weekly brief',
+        ],
+      },
+      {
+        id: 'zhurbot',
+        name: 'ZhurBot — Telegram news aggregation bot (TopNews)',
+        short:
+          'Async Telegram bot aggregating news from RSS/HTML/Telegram sources with deduplication, filtering, and publication history.',
+        stack: ['Python', 'python-telegram-bot', 'aiohttp', 'SQLite', 'Redis', 'SQLAlchemy'],
+        highlights: [
+          { label: 'Type', value: 'Telegram news aggregation bot' },
+          { label: 'Architecture', value: 'async collector + SQLite storage + Redis stop (sandbox)' },
+        ],
+        capabilities: [
+          'Collects news from RSS/HTML/Telegram sources',
+          'Text cleaning, categorization, and filters',
+          'Deduplication by URL/title with SQLite history',
+          'Publishes to Telegram channel and/or direct messages',
+          'Prod/sandbox access modes and Mgmt API for global stop (sandbox-only)',
+        ],
       },
       {
         id: 'cms',
