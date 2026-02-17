@@ -48,6 +48,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { currentTheme, setTheme } = useTheme();
+  const basePath = '/cms';
 
   // Определяем структуру меню
   const menuItems: MenuItem[] = [
@@ -55,124 +56,124 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       key: 'registry',
       label: 'Реестр объектов',
       icon: <DatabaseOutlined />,
-      path: '/registry',
+      path: `${basePath}/registry`,
     },
     {
       key: 'portfolio',
       label: 'Залоговый портфель',
       icon: <WalletOutlined />,
-      path: '/portfolio',
+      path: `${basePath}/portfolio`,
     },
     {
       key: 'tasks',
       label: 'Задачи',
       icon: <LinkOutlined />,
-      path: '/tasks',
+      path: `${basePath}/tasks`,
     },
     {
       key: 'kpi',
       label: 'KPI',
       icon: <DashboardOutlined />,
-      path: '/kpi',
+      path: `${basePath}/kpi`,
       tooltip: 'KPI и аналитика',
     },
     {
       key: 'reports',
       label: 'Отчеты',
       icon: <BarChartOutlined />,
-      path: '/reports',
+      path: `${basePath}/reports`,
       tooltip: 'Агрегирование отчетности',
     },
     {
       key: 'collateral-dossier',
       label: 'Залоговое досье',
       icon: <FolderOpenOutlined />,
-      path: '/collateral-dossier',
+      path: `${basePath}/collateral-dossier`,
     },
     {
       key: 'collateral-conclusions',
       label: 'Залоговые заключения',
       icon: <FileTextOutlined />,
-      path: '/collateral-conclusions',
+      path: `${basePath}/collateral-conclusions`,
     },
     {
       key: 'insurance',
       label: 'Страхование',
       icon: <SafetyOutlined />,
-      path: '/insurance',
+      path: `${basePath}/insurance`,
     },
     {
       key: 'fnp',
       label: 'ФНП',
       icon: <BankOutlined />,
-      path: '/fnp',
+      path: `${basePath}/fnp`,
       tooltip: 'Регистрация залога движимого имущества ФНП',
     },
     {
       key: 'analytics',
       label: 'Аналитика',
       icon: <LineChartOutlined />,
-      path: '/analytics',
+      path: `${basePath}/analytics`,
     },
     {
       key: 'credit-risk',
       label: 'Модуль мониторинга',
       icon: <AlertOutlined />,
-      path: '/credit-risk',
+      path: `${basePath}/credit-risk`,
       tooltip: 'Модуль мониторинга',
     },
     {
       key: 'appraisal',
       label: 'Модуль оценки',
       icon: <DollarOutlined />,
-      path: '/appraisal',
+      path: `${basePath}/appraisal`,
       tooltip: 'Автоматическая оценка объектов залога',
     },
     {
       key: 'cms-check',
       label: 'CMS Check',
       icon: <CameraOutlined />,
-      path: '/cms-check',
+      path: `${basePath}/cms-check`,
       tooltip: 'Система дистанционных осмотров',
     },
     {
       key: 'egrn',
       label: 'ЕГРН',
       icon: <FileTextOutlined />,
-      path: '/egrn',
+      path: `${basePath}/egrn`,
       tooltip: 'Регистрация ипотеки, снятие обременений, выписки ЕГРН',
     },
     {
       key: 'upload',
       label: 'Загрузка',
       icon: <CloudUploadOutlined />,
-      path: '/upload',
+      path: `${basePath}/upload`,
     },
     {
       key: 'monitoring',
       label: 'Мониторинг',
       icon: <MonitorOutlined />,
-      path: '/monitoring',
+      path: `${basePath}/monitoring`,
     },
     {
       key: 'reference',
       label: 'Справочная с ИИ',
       icon: <RobotOutlined />,
-      path: '/reference',
+      path: `${basePath}/reference`,
       tooltip: 'Консультации по нормативным документам, оценке и рабочим вопросам',
     },
     {
       key: 'workflow',
       label: 'Внесудебная реализация',
       icon: <FileTextOutlined />,
-      path: '/workflow',
+      path: `${basePath}/workflow`,
       tooltip: 'Workflow внесудебной реализации залога',
     },
     {
       key: 'settings',
       label: 'Настройки',
       icon: <SettingOutlined />,
-      path: '/settings',
+      path: `${basePath}/settings`,
     },
   ];
 
@@ -205,7 +206,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   const getSelectedKey = (): string => {
     const pathParts = location.pathname.split('/').filter(Boolean);
     if (pathParts.length === 0) return 'registry'; // По умолчанию
-    return pathParts[0];
+    const baseIndex = pathParts[0] === 'cms' ? 1 : 0;
+    return pathParts[baseIndex] || 'registry';
   };
 
   return (
@@ -228,7 +230,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
     >
       <div
         className="sidebar-logo"
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/cms')}
         style={{
           height: '64px',
           display: 'flex',

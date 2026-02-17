@@ -141,7 +141,7 @@ const ExtendedRegistryPage: React.FC = () => {
     const existing = workflowCases.find((c: any) => c.objectId === viewingCard.id);
     if (existing) {
       message.info('Workflow уже запущен для этого объекта');
-      navigate(`/workflow/object/${existing.id}`);
+      navigate(`/cms/workflow/object/${existing.id}`);
       closeViewModal();
       return;
     }
@@ -178,7 +178,7 @@ const ExtendedRegistryPage: React.FC = () => {
 
     dispatch(addWorkflowCase(newCase as any));
     message.success('Workflow запущен');
-    navigate(`/workflow/object/${newCaseId}`);
+    navigate(`/cms/workflow/object/${newCaseId}`);
     closeViewModal();
   };
 
@@ -340,7 +340,7 @@ const ExtendedRegistryPage: React.FC = () => {
               key="portfolio"
               icon={<LinkOutlined />}
               onClick={() => {
-                navigate(`/portfolio?q=${viewingCard.reference}`);
+                navigate(`/cms/portfolio?q=${viewingCard.reference}`);
                 closeViewModal();
               }}
             >

@@ -247,7 +247,7 @@ const CreditRiskPage: React.FC = () => {
       render: (_, record) => (
         <Button
           type="link"
-          onClick={() => navigate(`/portfolio?q=${record.reference}`)}
+          onClick={() => navigate(`/cms/portfolio?q=${record.reference}`)}
           icon={<LinkOutlined />}
         >
           {record.reference}
@@ -476,7 +476,7 @@ const CreditRiskPage: React.FC = () => {
               <Button
                 type="link"
                 onClick={() => {
-                  navigate(`/portfolio?q=${selectedRecord.reference}`);
+                  navigate(`/cms/portfolio?q=${selectedRecord.reference}`);
                   setModalVisible(false);
                 }}
                 icon={<LinkOutlined />}
@@ -511,7 +511,7 @@ const CreditRiskPage: React.FC = () => {
                 <Button
                   type="link"
                   onClick={() => {
-                    navigate(`/insurance?ref=${selectedRecord.reference}`);
+                    navigate(`/cms/insurance?ref=${selectedRecord.reference}`);
                     setModalVisible(false);
                   }}
                   icon={<InsuranceOutlined />}

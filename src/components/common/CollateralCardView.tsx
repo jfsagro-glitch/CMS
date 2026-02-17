@@ -257,24 +257,24 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
   // Обработчик заказа выписки ЕГРН
   const handleOrderEgrn = () => {
     const cadastralNumber = card.address?.cadastralNumber || card.characteristics?.objectCadastralNumber;
-    navigate(`/egrn?objectId=${card.id}&cadastralNumber=${cadastralNumber}&objectName=${encodeURIComponent(card.name || '')}`);
+    navigate(`/cms/egrn?objectId=${card.id}&cadastralNumber=${cadastralNumber}&objectName=${encodeURIComponent(card.name || '')}`);
   };
   
   // Переход к договору
   const handleGoToContract = () => {
     if (card.contractId) {
-      navigate(`/portfolio?contractId=${card.contractId}`);
+      navigate(`/cms/portfolio?contractId=${card.contractId}`);
     } else if (card.contractNumber) {
-      navigate(`/portfolio?contractNumber=${card.contractNumber}`);
+      navigate(`/cms/portfolio?contractNumber=${card.contractNumber}`);
     } else if (card.reference) {
-      navigate(`/portfolio?reference=${card.reference}`);
+      navigate(`/cms/portfolio?reference=${card.reference}`);
     }
   };
   
   // Переход в залоговое досье
   const handleGoToDossier = () => {
     if (card.reference) {
-      window.open(`#/portfolio?reference=${card.reference}`, '_blank');
+      window.open(`#/cms/portfolio?reference=${card.reference}`, '_blank');
     }
   };
 
@@ -680,7 +680,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
           <Button
             type="primary"
             icon={<CameraOutlined />}
-            onClick={() => navigate(`/cms-check?cardId=${card.id}`)}
+            onClick={() => navigate(`/cms/cms-check?cardId=${card.id}`)}
           >
             Создать осмотр
           </Button>
@@ -726,7 +726,7 @@ export const CollateralCardView: React.FC<CollateralCardViewProps> = ({ card }) 
               icon={<FileSearchOutlined />}
               onClick={() => {
                 const cadastralNumber = card.address?.cadastralNumber || card.characteristics?.objectCadastralNumber;
-                navigate(`/egrn?objectId=${card.id}&cadastralNumber=${cadastralNumber}&objectName=${encodeURIComponent(card.name || '')}`);
+                navigate(`/cms/egrn?objectId=${card.id}&cadastralNumber=${cadastralNumber}&objectName=${encodeURIComponent(card.name || '')}`);
               }}
             >
               Перейти в модуль ЕГРН

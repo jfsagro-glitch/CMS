@@ -291,7 +291,7 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
 
   // Переход к объекту в реестре
   const handleGoToObject = (objectId: string) => {
-    navigate(`/registry?objectId=${objectId}`);
+    navigate(`/cms/registry?objectId=${objectId}`);
     onClose();
   };
 
@@ -622,7 +622,7 @@ const PortfolioContractCard: React.FC<PortfolioContractCardProps> = ({
                               size="small"
                               icon={<EyeOutlined />}
                               onClick={() => {
-                                navigate(`/cms-check/inspections?inspectionId=${record.id}`);
+                                navigate(`/cms/cms-check/inspections?inspectionId=${record.id}`);
                                 onClose();
                               }}
                             >

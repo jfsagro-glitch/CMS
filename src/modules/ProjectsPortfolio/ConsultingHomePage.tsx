@@ -84,7 +84,7 @@ export const ConsultingHomePage: React.FC = () => {
               <div>{copy.brand.shortVersionLines[1]}</div>
               <div>{copy.brand.shortVersionLines[2]}</div>
             </div>
-            <Link className="mkt-link mkt-link--muted" to="/projects-portfolio/about">
+            <Link className="mkt-link mkt-link--muted" to="/about">
               {copy.home.brandTeaserLink}
             </Link>
           </div>
@@ -93,10 +93,10 @@ export const ConsultingHomePage: React.FC = () => {
             <Button type="primary" size="large" onClick={onRequestAudit}>
               {copy.cta.getAudit}
             </Button>
-            <Link className="mkt-link" to="/projects-portfolio/offer">
+            <Link className="mkt-link" to="/offer">
               {copy.cta.getOffer}
             </Link>
-            <Link className="mkt-link" to="/projects-portfolio/cases">
+            <Link className="mkt-link" to="/cases">
               {copy.home.viewCases} <ArrowRightOutlined />
             </Link>
           </div>
@@ -150,7 +150,7 @@ export const ConsultingHomePage: React.FC = () => {
         <div className="mkt-container">
           <div className="mkt-section__header">
             <h2 className="mkt-h2">{copy.home.servicesTitle}</h2>
-            <Link className="mkt-link" to="/projects-portfolio/services">
+            <Link className="mkt-link" to="/services">
               {copy.home.servicesAllLink} <ArrowRightOutlined />
             </Link>
           </div>

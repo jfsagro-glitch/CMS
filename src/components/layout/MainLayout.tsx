@@ -29,7 +29,8 @@ const MainLayout: React.FC = () => {
 
   const currentPath = location.pathname || location.hash.replace('#', '');
   const pathParts = currentPath.split('/').filter(Boolean);
-  const mainSection = pathParts[0] || 'registry';
+  const isCmsRoute = pathParts[0] === 'cms';
+  const mainSection = (isCmsRoute ? pathParts[1] : pathParts[0]) || 'registry';
 
   const getHeaderContextTitle = () => {
     switch (mainSection) {
@@ -93,7 +94,14 @@ const MainLayout: React.FC = () => {
   };
 
   const isRegistrySection = mainSection === 'registry';
-  const isProjectsPortfolio = mainSection === 'projects-portfolio';
+  const isProjectsPortfolio = !isCmsRoute &&
+    (mainSection === 'projects-portfolio' ||
+      mainSection === 'projects' ||
+      mainSection === 'services' ||
+      mainSection === 'cases' ||
+      mainSection === 'about' ||
+      mainSection === 'offer' ||
+      mainSection === 'home');
   const shouldShowHeader = headerVisible && !isProjectsPortfolio;
   const shouldShowSidebar = !isProjectsPortfolio;
   const contentMarginLeft = isProjectsPortfolio ? 0 : isMobile ? 0 : sidebarCollapsed ? 80 : 250;

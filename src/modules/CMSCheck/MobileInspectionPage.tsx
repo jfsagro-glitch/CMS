@@ -73,7 +73,7 @@ const MobileInspectionPage: React.FC = () => {
       const data = await inspectionService.getInspectionByToken(token!);
       if (!data) {
         message.error('Осмотр не найден или ссылка истекла');
-        navigate('/');
+        navigate('/cms');
         return;
       }
       setInspection(data);
@@ -197,7 +197,7 @@ const MobileInspectionPage: React.FC = () => {
 
       message.success('Осмотр отправлен на проверку');
       setTimeout(() => {
-        navigate('/');
+        navigate('/cms');
       }, 2000);
     } catch (error) {
       console.error('Ошибка отправки осмотра:', error);

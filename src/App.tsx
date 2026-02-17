@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { ConfigProvider, theme, App as AntApp } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
@@ -56,9 +56,23 @@ import 'antd/dist/reset.css';
 import './styles/global.css';
 
 const AppContent: React.FC = () => {
+  const LegacyParamRedirect: React.FC<{
+    buildTo: (params: Record<string, string | undefined>) => string;
+  }> = ({ buildTo }) => {
+    const params = useParams();
+    return <Navigate to={buildTo(params)} replace />;
+  };
+
   const dispatch = useAppDispatch();
   const { theme: appTheme, initialized } = useAppSelector(state => state.app);
   const workflowState = useAppSelector(state => state.workflow);
+
+  useEffect(() => {
+    const { pathname, hash } = window.location;
+    if (pathname.startsWith('/cms') && (!hash || hash === '#' || hash === '#/')) {
+      window.location.hash = '#/cms/registry';
+    }
+  }, []);
 
   useEffect(() => {
     const initApp = async () => {
@@ -256,8 +270,126 @@ const AppContent: React.FC = () => {
           <AntApp>
             <HashRouter>
               <Routes>
-                <Route path="/" element={<MainLayout />}>
-                  <Route index element={<Navigate to="/registry" replace />} />
+                <Route path="/" element={<ProjectsPortfolioPage />}>
+                  <Route index element={<ITProjectsPage />} />
+                  <Route path="home" element={<ConsultingHomePage />} />
+                  <Route path="services" element={<ServicesPage />} />
+                  <Route path="cases" element={<CasesPage />} />
+                  <Route path="projects" element={<ITProjectsPage />} />
+                  <Route path="about" element={<BrandStoryPage />} />
+                  <Route path="offer" element={<CommercialOfferPage />} />
+                </Route>
+                <Route
+                  path="projects-portfolio"
+                  element={<Navigate to="/" replace />}
+                />
+                <Route
+                  path="projects-portfolio/services"
+                  element={<Navigate to="/services" replace />}
+                />
+                <Route
+                  path="projects-portfolio/cases"
+                  element={<Navigate to="/cases" replace />}
+                />
+                <Route
+                  path="projects-portfolio/projects"
+                  element={<Navigate to="/projects" replace />}
+                />
+                <Route
+                  path="projects-portfolio/about"
+                  element={<Navigate to="/about" replace />}
+                />
+                <Route
+                  path="projects-portfolio/offer"
+                  element={<Navigate to="/offer" replace />}
+                />
+                <Route path="registry" element={<Navigate to="/cms/registry" replace />} />
+                <Route path="portfolio" element={<Navigate to="/cms/portfolio" replace />} />
+                <Route
+                  path="collateral-dossier"
+                  element={<Navigate to="/cms/collateral-dossier" replace />}
+                />
+                <Route
+                  path="collateral-conclusions"
+                  element={<Navigate to="/cms/collateral-conclusions" replace />}
+                />
+                <Route path="tasks" element={<Navigate to="/cms/tasks" replace />} />
+                <Route path="kpi" element={<Navigate to="/cms/kpi" replace />} />
+                <Route path="reports" element={<Navigate to="/cms/reports" replace />} />
+                <Route path="insurance" element={<Navigate to="/cms/insurance" replace />} />
+                <Route path="fnp" element={<Navigate to="/cms/fnp" replace />} />
+                <Route path="analytics" element={<Navigate to="/cms/analytics" replace />} />
+                <Route
+                  path="credit-risk"
+                  element={<Navigate to="/cms/credit-risk" replace />}
+                />
+                <Route path="appraisal" element={<Navigate to="/cms/appraisal" replace />} />
+                <Route
+                  path="cms-check"
+                  element={<Navigate to="/cms/cms-check" replace />}
+                />
+                <Route
+                  path="cms-check/inspections"
+                  element={<Navigate to="/cms/cms-check/inspections" replace />}
+                />
+                <Route
+                  path="inspection/:token"
+                  element={
+                    <LegacyParamRedirect
+                      buildTo={(params) => `/cms/inspection/${params.token ?? ''}`}
+                    />
+                  }
+                />
+                <Route path="egrn" element={<Navigate to="/cms/egrn" replace />} />
+                <Route path="upload" element={<Navigate to="/cms/upload" replace />} />
+                <Route
+                  path="monitoring"
+                  element={<Navigate to="/cms/monitoring" replace />}
+                />
+                <Route
+                  path="reference"
+                  element={<Navigate to="/cms/reference" replace />}
+                />
+                <Route path="workflow" element={<Navigate to="/cms/workflow" replace />} />
+                <Route
+                  path="workflow/object/:id"
+                  element={
+                    <LegacyParamRedirect
+                      buildTo={(params) => `/cms/workflow/object/${params.id ?? ''}`}
+                    />
+                  }
+                />
+                <Route
+                  path="workflow/settings"
+                  element={<Navigate to="/cms/settings/workflow" replace />}
+                />
+                <Route path="settings" element={<Navigate to="/cms/settings" replace />} />
+                <Route
+                  path="settings/workflow"
+                  element={<Navigate to="/cms/settings/workflow" replace />}
+                />
+                <Route
+                  path="settings/employees"
+                  element={<Navigate to="/cms/settings/employees" replace />}
+                />
+                <Route
+                  path="settings/reference-data"
+                  element={<Navigate to="/cms/settings/reference-data" replace />}
+                />
+                <Route
+                  path="settings/norm-hours"
+                  element={<Navigate to="/cms/settings/norm-hours" replace />}
+                />
+                <Route
+                  path="settings/metrics"
+                  element={<Navigate to="/cms/settings/metrics" replace />}
+                />
+                <Route
+                  path="settings/appraisal-companies"
+                  element={<Navigate to="/cms/settings/appraisal-companies" replace />}
+                />
+                <Route path="cms" element={<MainLayout />}>
+                  <Route index element={<Navigate to="registry" replace />} />
                   <Route path="registry" element={<ExtendedRegistryPage />} />
                   <Route path="portfolio" element={<PortfolioPage />} />
                   <Route path="collateral-dossier" element={<CollateralDossierPage />} />
@@ -270,25 +402,17 @@ const AppContent: React.FC = () => {
                   <Route path="analytics" element={<AnalyticsPage />} />
                   <Route path="credit-risk" element={<CreditRiskPage />} />
                   <Route path="appraisal" element={<AppraisalPage />} />
-                  <Route path="cms-check" element={<CMSCheckPage />} />
+                  <Route path="cms-check/*" element={<CMSCheckPage />} />
                   <Route path="inspection/:token" element={<MobileInspectionPage />} />
                   <Route path="egrn" element={<EGRNPage />} />
                   <Route path="upload" element={<UploadPage />} />
                   <Route path="monitoring" element={<MonitoringPage />} />
                   <Route path="reference" element={<ReferencePage />} />
-                  <Route path="projects-portfolio" element={<ProjectsPortfolioPage />}>
-                    <Route index element={<ConsultingHomePage />} />
-                    <Route path="services" element={<ServicesPage />} />
-                    <Route path="cases" element={<CasesPage />} />
-                    <Route path="projects" element={<ITProjectsPage />} />
-                    <Route path="about" element={<BrandStoryPage />} />
-                    <Route path="offer" element={<CommercialOfferPage />} />
-                  </Route>
                   <Route path="workflow" element={<WorkflowPage />} />
                   <Route path="workflow/object/:id" element={<WorkflowCasePage />} />
                   <Route
                     path="workflow/settings"
-                    element={<Navigate to="/settings/workflow" replace />}
+                    element={<Navigate to="/cms/settings/workflow" replace />}
                   />
                   <Route path="settings" element={<PlaceholderPage title="Настройки" />} />
                   <Route path="settings/workflow" element={<WorkflowSettingsPage />} />

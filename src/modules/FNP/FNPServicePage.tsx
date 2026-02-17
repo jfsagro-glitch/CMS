@@ -351,7 +351,7 @@ const FNPServicePage: React.FC = () => {
 
   const handleGoToPortfolio = React.useCallback((reference?: string | null) => {
     if (reference) {
-      navigate(`/portfolio?q=${reference}`);
+      navigate(`/cms/portfolio?q=${reference}`);
     }
   }, [navigate]);
 

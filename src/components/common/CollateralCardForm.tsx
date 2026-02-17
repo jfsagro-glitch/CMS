@@ -133,7 +133,7 @@ const CollateralCardForm: React.FC<CollateralCardFormProps> = ({
     const objectName = form.getFieldValue('name');
     
     // Переходим в модуль ЕГРН с предзаполненными данными
-    navigate(`/egrn?objectId=${cardId}&cadastralNumber=${cadastralNumber}&objectName=${encodeURIComponent(objectName || '')}`);
+    navigate(`/cms/egrn?objectId=${cardId}&cadastralNumber=${cadastralNumber}&objectName=${encodeURIComponent(objectName || '')}`);
     message.info('Переход в модуль ЕГРН для заказа выписки');
   };
   
@@ -141,7 +141,7 @@ const CollateralCardForm: React.FC<CollateralCardFormProps> = ({
   const handleGoToDossier = () => {
     const reference = form.getFieldValue('reference');
     if (reference) {
-      window.open(`#/portfolio?reference=${reference}`, '_blank');
+      window.open(`#/cms/portfolio?reference=${reference}`, '_blank');
     } else {
       message.warning('Не указан REFERENCE сделки');
     }
@@ -238,11 +238,11 @@ const CollateralCardForm: React.FC<CollateralCardFormProps> = ({
     const reference = form.getFieldValue('reference');
     
     if (contractId) {
-      navigate(`/portfolio?contractId=${contractId}`);
+      navigate(`/cms/portfolio?contractId=${contractId}`);
     } else if (contractNumber) {
-      navigate(`/portfolio?contractNumber=${contractNumber}`);
+      navigate(`/cms/portfolio?contractNumber=${contractNumber}`);
     } else if (reference) {
-      navigate(`/portfolio?reference=${reference}`);
+      navigate(`/cms/portfolio?reference=${reference}`);
     } else {
       message.warning('Не указан договор');
     }

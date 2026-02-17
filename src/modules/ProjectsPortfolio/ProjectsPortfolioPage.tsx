@@ -49,7 +49,7 @@ const ProjectsPortfolioPage: React.FC = () => {
 
   const isHome = useMemo(() => {
     const p = location.pathname;
-    return p === '/projects-portfolio' || p === '/projects-portfolio/';
+    return p === '/' || p === '/projects' || p === '/home';
   }, [location.pathname]);
 
   const toggleTheme = () => {
@@ -60,7 +60,7 @@ const ProjectsPortfolioPage: React.FC = () => {
     <div className="mkt-shell">
       <header className="mkt-topbar">
         <div className="mkt-container mkt-topbar__inner">
-          <button className="mkt-brand" type="button" onClick={() => navigate('/projects-portfolio')}>
+          <button className="mkt-brand" type="button" onClick={() => navigate('/')}>
             <img src="/brand/consulting-logo.png" alt="Логотип" className="mkt-brand__logo" />
             <span className="mkt-brand__text">
               <span className="mkt-brand__name">CMS</span>
@@ -69,19 +69,19 @@ const ProjectsPortfolioPage: React.FC = () => {
           </button>
 
           <nav className="mkt-nav" aria-label="Навигация">
-            <NavLink end to="/projects-portfolio" className={linkClass}>
+            <NavLink end to="/" className={linkClass}>
               {copy.nav.home}
             </NavLink>
-            <NavLink to="/projects-portfolio/services" className={linkClass}>
+            <NavLink to="/services" className={linkClass}>
               {copy.nav.services}
             </NavLink>
-            <NavLink to="/projects-portfolio/cases" className={linkClass}>
+            <NavLink to="/cases" className={linkClass}>
               {copy.nav.cases}
             </NavLink>
-            <NavLink to="/projects-portfolio/projects" className={linkClass}>
+            <NavLink to="/projects" className={linkClass}>
               {copy.nav.projects}
             </NavLink>
-            <NavLink to="/projects-portfolio/about" className={linkClass}>
+            <NavLink to="/about" className={linkClass}>
               {copy.nav.about}
             </NavLink>
           </nav>
@@ -102,7 +102,7 @@ const ProjectsPortfolioPage: React.FC = () => {
                 {CONTACT_EMAIL}
               </a>
             )}
-            <Button onClick={() => navigate('/projects-portfolio/offer')}>{copy.cta.getOffer}</Button>
+            <Button onClick={() => navigate('/offer')}>{copy.cta.getOffer}</Button>
             <Button type="primary" onClick={() => setAuditOpen(true)}>
               {copy.cta.getAudit}
             </Button>

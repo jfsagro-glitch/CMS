@@ -345,7 +345,7 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
           'Данные: экспорт/импорт Excel, массовые операции, резервное копирование, миграция данных, валидация и история изменений',
         ],
         githubUrl: 'https://github.com/jfsagro-glitch/CMS',
-        demoUrl: 'https://cmsauto.ru/#/registry',
+        demoUrl: 'https://cmsauto.ru/cms',
       },
       {
         id: 'cms-check',
@@ -867,7 +867,7 @@ export function getMarketingCopy(lang: MarketingLang): MarketingCopy {
           'Data: Excel import/export, bulk operations, backup/restore, data migration, validation, and change history',
         ],
         githubUrl: 'https://github.com/jfsagro-glitch/CMS',
-        demoUrl: 'https://cmsauto.ru/#/registry',
+        demoUrl: 'https://cmsauto.ru/cms',
       },
       {
         id: 'cms-check',

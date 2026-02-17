@@ -138,7 +138,7 @@ const MonitoringCardModal: React.FC<MonitoringCardModalProps> = ({ visible, entr
   // Путь к CMS Check
   const cmsCheckPath = React.useMemo(() => {
     const base = import.meta.env.BASE_URL ?? '/';
-    return `${base}cms-check/index.html#/inspections`;
+    return `${base}#/cms/cms-check/inspections`;
   }, []);
 
   // Вкладки модалки

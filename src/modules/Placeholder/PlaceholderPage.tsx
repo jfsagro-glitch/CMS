@@ -23,9 +23,9 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
   // Если это страница настроек, показываем ссылки на подразделы
   const isSettingsPage =
-    location.pathname === '/settings' ||
-    location.pathname === '#/settings' ||
-    location.hash === '#/settings';
+    location.pathname === '/cms/settings' ||
+    location.pathname === '#/cms/settings' ||
+    location.hash === '#/cms/settings';
 
   const getSystemDescriptionMarkdown = (): string => {
     return `# ОПИСАНИЕ ФУНКЦИОНАЛА CMS - СИСТЕМА УПРАВЛЕНИЯ ЗАЛОГОВЫМ ИМУЩЕСТВОМ
@@ -61,7 +61,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 1. РЕЕСТР ОБЪЕКТОВ
 
-**Путь:** /registry
+**Путь:** /cms/registry
 
 ### Основной функционал:
 - **Управление карточками залогового имущества** - полный CRUD (создание, чтение, обновление, удаление)
@@ -77,7 +77,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 2. ЗАЛОГОВЫЙ ПОРТФЕЛЬ
 
-**Путь:** /portfolio
+**Путь:** /cms/portfolio
 
 ### Основной функционал:
 - **Агрегированное представление залогового портфеля**
@@ -90,7 +90,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 3. ЗАДАЧИ
 
-**Путь:** /tasks
+**Путь:** /cms/tasks
 
 ### Основной функционал:
 - **Управление задачами** (Zadachnik) - система задач для сотрудников
@@ -105,7 +105,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 4. KPI
 
-**Путь:** /kpi
+**Путь:** /cms/kpi
 
 ### Основной функционал:
 - **KPI и аналитика** - ключевые показатели эффективности
@@ -117,7 +117,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 5. ОТЧЕТЫ
 
-**Путь:** /reports
+**Путь:** /cms/reports
 
 ### Основной функционал:
 - **Агрегирование отчетности** - формирование различных отчетов
@@ -129,7 +129,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 6. ЗАЛОГОВОЕ ДОСЬЕ
 
-**Путь:** /collateral-dossier
+**Путь:** /cms/collateral-dossier
 
 ### Основной функционал:
 - **Формирование залогового досье** - комплексная информация об объекте залога
@@ -142,7 +142,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 7. ЗАЛОГОВЫЕ ЗАКЛЮЧЕНИЯ
 
-**Путь:** /collateral-conclusions
+**Путь:** /cms/collateral-conclusions
 
 ### Основной функционал:
 - **Создание залоговых заключений** - формирование экспертных заключений
@@ -155,7 +155,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 8. СТРАХОВАНИЕ
 
-**Путь:** /insurance
+**Путь:** /cms/insurance
 
 ### Основной функционал:
 - **Управление страховыми полисами** - учет страховых полисов по объектам залога
@@ -168,7 +168,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 9. ФНП
 
-**Путь:** /fnp
+**Путь:** /cms/fnp
 
 ### Основной функционал:
 - **Регистрация залога движимого имущества ФНП** - работа с Федеральной нотариальной палатой
@@ -180,7 +180,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 10. АНАЛИТИКА
 
-**Путь:** /analytics
+**Путь:** /cms/analytics
 
 ### Основной функционал:
 - **Расширенная аналитика** - углубленный анализ данных
@@ -193,7 +193,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 11. МОДУЛЬ МОНИТОРИНГА
 
-**Путь:** /credit-risk
+**Путь:** /cms/credit-risk
 
 ### Основной функционал:
 - **Мониторинг кредитных рисков** - отслеживание рисков по залоговому имуществу
@@ -206,7 +206,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 12. МОДУЛЬ ОЦЕНКИ
 
-**Путь:** /appraisal
+**Путь:** /cms/appraisal
 
 ### Основной функционал:
 - **Автоматическая оценка объектов залога** - расчет стоимости объектов
@@ -220,7 +220,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 13. CMS CHECK
 
-**Путь:** /cms-check
+**Путь:** /cms/cms-check
 
 ### Основной функционал:
 - **Система дистанционных осмотров** - проведение осмотров объектов залога
@@ -235,7 +235,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 14. ЕГРН
 
-**Путь:** /egrn
+**Путь:** /cms/egrn
 
 ### Основной функционал:
 - **Регистрация ипотеки** - работа с Единым государственным реестром недвижимости
@@ -248,7 +248,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 15. ЗАГРУЗКА
 
-**Путь:** /upload
+**Путь:** /cms/upload
 
 ### Основной функционал:
 - **Миграция данных** - перенос данных из других систем
@@ -262,7 +262,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 16. МОНИТОРИНГ
 
-**Путь:** /monitoring
+**Путь:** /cms/monitoring
 
 ### Основной функционал:
 - **Мониторинг системы** - отслеживание состояния системы
@@ -275,7 +275,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 17. СПРАВОЧНАЯ С ИИ
 
-**Путь:** /reference
+**Путь:** /cms/reference
 
 ### Основной функционал:
 - **AI-помощник** - интеллектуальный помощник на базе DeepSeek AI
@@ -295,7 +295,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
 
 ## 18. НАСТРОЙКИ
 
-**Путь:** /settings
+**Путь:** /cms/settings
 
 ### Подразделы:
 
@@ -564,7 +564,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
             <Card
               hoverable
               style={{ height: '100%' }}
-              onClick={() => navigate('/settings/employees')}
+              onClick={() => navigate('/cms/settings/employees')}
             >
               <div style={{ textAlign: 'center' }}>
                 <UserOutlined
@@ -581,7 +581,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
             <Card
               hoverable
               style={{ height: '100%' }}
-              onClick={() => navigate('/settings/reference-data')}
+              onClick={() => navigate('/cms/settings/reference-data')}
             >
               <div style={{ textAlign: 'center' }}>
                 <DatabaseOutlined
@@ -596,7 +596,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
             <Card
               hoverable
               style={{ height: '100%' }}
-              onClick={() => navigate('/settings/norm-hours')}
+              onClick={() => navigate('/cms/settings/norm-hours')}
             >
               <div style={{ textAlign: 'center' }}>
                 <ClockCircleOutlined
@@ -613,7 +613,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
             <Card
               hoverable
               style={{ height: '100%' }}
-              onClick={() => navigate('/settings/metrics')}
+              onClick={() => navigate('/cms/settings/metrics')}
             >
               <div style={{ textAlign: 'center' }}>
                 <LineChartOutlined
@@ -630,7 +630,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
             <Card
               hoverable
               style={{ height: '100%' }}
-              onClick={() => navigate('/settings/appraisal-companies')}
+              onClick={() => navigate('/cms/settings/appraisal-companies')}
             >
               <div style={{ textAlign: 'center' }}>
                 <SafetyCertificateOutlined
@@ -647,7 +647,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
             <Card
               hoverable
               style={{ height: '100%' }}
-              onClick={() => navigate('/settings/workflow')}
+              onClick={() => navigate('/cms/settings/workflow')}
             >
               <div style={{ textAlign: 'center' }}>
                 <RocketOutlined
@@ -670,7 +670,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle }) =>
       status="info"
       title={title}
       subTitle={subtitle || 'Этот раздел находится в разработке'}
-      extra={<Button onClick={() => navigate('/registry')}>Вернуться к реестру</Button>}
+      extra={<Button onClick={() => navigate('/cms/registry')}>Вернуться к реестру</Button>}
     />
   );
 };

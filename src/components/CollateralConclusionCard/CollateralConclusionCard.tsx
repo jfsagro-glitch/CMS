@@ -62,7 +62,7 @@ const CollateralConclusionCard: React.FC<CollateralConclusionCardProps> = ({
       
       // Переходим в модуль ФКР
       setTimeout(() => {
-        navigate('/credit-risk');
+        navigate('/cms/credit-risk');
       }, 500);
     } catch (error) {
       console.error('Ошибка добавления в ФКР:', error);
