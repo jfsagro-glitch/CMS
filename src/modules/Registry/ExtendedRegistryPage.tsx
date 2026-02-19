@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, message, Button, Space, List, Tag, Empty, Typography, Popconfirm } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Modal, Button, Space, List, Tag, Empty, Typography, Popconfirm } from 'antd';
+import { PlusOutlined, DownloadOutlined } from '@ant-design/icons';
 import CollateralCardForm from '@/components/common/CollateralCardForm';
 import CollateralCardView from '@/components/common/CollateralCardView';
 import RegistryTable from '@/components/common/RegistryTable';
 import type { RegistryTableRecord } from '@/components/common/RegistryTable';
+import excelExportService from '@/services/ExcelExportService';
+import notificationService from '@/services/NotificationService';
 import '@/components/common/RegistryTable.css';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import {
-  setExtendedCards,
-  addExtendedCard,
-  updateExtendedCard,
-  deleteExtendedCard,
-  setExtendedLoading,
-} from '@/store/slices/extendedCardsSlice';
 import { addCase as addWorkflowCase } from '@/store/slices/workflowSlice';
+import {
+  bumpRegistryReloadToken,
+  selectRegistryQuery,
+  setRegistryFilters,
+  setRegistryPage,
+  setRegistryPageSize,
+  setRegistrySort,
+} from '@/store/slices/registryQuerySlice';
+import type { RootState } from '@/store';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import type { CollateralDocument, CollateralDossierPayload } from '@/types/collateralDossier';
 import type { WorkflowCase } from '@/types/workflow';
@@ -28,8 +32,11 @@ const ExtendedRegistryPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { filteredItems: cards, loading } = useAppSelector((state: any) => state.extendedCards);
-  const workflowCases = useAppSelector((state: any) => state.workflow.cases);
+  const query = useAppSelector(selectRegistryQuery);
+  const workflowCases = useAppSelector((state: RootState) => state.workflow.cases);
+  const [cards, setCards] = useState<ExtendedCollateralCard[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCard, setEditingCard] = useState<ExtendedCollateralCard | null>(null);
   const [viewingCard, setViewingCard] = useState<ExtendedCollateralCard | null>(null);
@@ -41,14 +48,21 @@ const ExtendedRegistryPage: React.FC = () => {
 
   const loadCards = async () => {
     try {
-      dispatch(setExtendedLoading(true));
-      const loadedCards = await extendedStorageService.getExtendedCards();
-      dispatch(setExtendedCards(loadedCards));
+      setLoading(true);
+      const result = await extendedStorageService.queryExtendedCards({
+        filters: query.filters,
+        page: query.page,
+        pageSize: query.pageSize,
+        sort: query.sort,
+      });
+      setCards(result.items);
+      setTotalCount(result.total);
     } catch (error) {
-      message.error('Ошибка загрузки данных');
+      const errorMsg = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      notificationService.error('Ошибка загрузки', errorMsg);
       console.error(error);
     } finally {
-      dispatch(setExtendedLoading(false));
+      setLoading(false);
     }
   };
 
@@ -56,7 +70,13 @@ const ExtendedRegistryPage: React.FC = () => {
   useEffect(() => {
     loadCards();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    query.filters,
+    query.page,
+    query.pageSize,
+    query.sort,
+    query.reloadToken,
+  ]);
 
   // Обработка deep linking - открытие объекта по ID из URL
   useEffect(() => {
@@ -111,10 +131,11 @@ const ExtendedRegistryPage: React.FC = () => {
   const handleDelete = async (id: string) => {
     try {
       await extendedStorageService.deleteExtendedCard(id);
-      dispatch(deleteExtendedCard(id));
-      message.success('Карточка удалена');
+      dispatch(bumpRegistryReloadToken());
+      notificationService.success('Карточка удалена');
     } catch (error) {
-      message.error('Ошибка удаления карточки');
+      const errorMsg = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      notificationService.error('Ошибка удаления', errorMsg);
       console.error(error);
     }
   };
@@ -140,7 +161,7 @@ const ExtendedRegistryPage: React.FC = () => {
     if (!viewingCard) return;
     const existing = workflowCases.find((c: any) => c.objectId === viewingCard.id);
     if (existing) {
-      message.info('Workflow уже запущен для этого объекта');
+      notificationService.info('Workflow уже запущен для этого объекта');
       navigate(`/cms/workflow/object/${existing.id}`);
       closeViewModal();
       return;
@@ -177,7 +198,7 @@ const ExtendedRegistryPage: React.FC = () => {
     };
 
     dispatch(addWorkflowCase(newCase as any));
-    message.success('Workflow запущен');
+    notificationService.success('Workflow запущен');
     navigate(`/cms/workflow/object/${newCaseId}`);
     closeViewModal();
   };
@@ -210,17 +231,29 @@ const ExtendedRegistryPage: React.FC = () => {
       await extendedStorageService.saveExtendedCard(values);
 
       if (editingCard) {
-        dispatch(updateExtendedCard(values));
-        message.success('Карточка обновлена');
+        notificationService.success('Карточка обновлена');
       } else {
-        dispatch(addExtendedCard(values));
-        message.success('Карточка создана');
+        notificationService.success('Карточка создана');
       }
+      dispatch(bumpRegistryReloadToken());
 
       setModalVisible(false);
       setEditingCard(null);
     } catch (error) {
-      message.error('Ошибка сохранения карточки');
+      if (typeof error === 'object' && error && 'code' in error && error.code === 'VERSION_CONFLICT') {
+        notificationService.error(
+          'Конфликт версии',
+          'Карточка была изменена в другой вкладке. Обновите список и повторите.',
+          { duration: 5 }
+        );
+      } else {
+        const errorMsg = error instanceof Error ? error.message : 'Неизвестная ошибка';
+        notificationService.error(
+          'Ошибка сохранения',
+          errorMsg,
+          { duration: 5 }
+        );
+      }
       console.error(error);
     }
   };
@@ -232,7 +265,7 @@ const ExtendedRegistryPage: React.FC = () => {
 
   const handleGenerateDemoData = async () => {
     try {
-      message.loading({ content: 'Генерация демо-карточек...', key: 'generating', duration: 0 });
+      const loadingKey = notificationService.loading('Генерация демо-карточек...');
       const demoCards = await generateAllCollateralDemoCards();
       let successCount = 0;
       let errorCount = 0;
@@ -249,14 +282,24 @@ const ExtendedRegistryPage: React.FC = () => {
         }
       }
 
-      await loadCards();
-      message.destroy('generating');
-      message.success(
-        `Создано ${successCount} демо-карточек${errorCount > 0 ? `, ошибок: ${errorCount}` : ''}`
+      dispatch(bumpRegistryReloadToken());
+      notificationService.close(loadingKey);
+      notificationService.bulkOperationSuccess(
+        successCount,
+        'Создание демо-карточек'
       );
+      if (errorCount > 0) {
+        notificationService.warning(
+          `Ошибки: ${errorCount}`,
+          `Проверьте консоль для деталей`
+        );
+      }
     } catch (error) {
-      message.destroy('generating');
-      message.error('Ошибка генерации демо-данных');
+      const errorMsg = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      notificationService.error(
+        'Ошибка генерации',
+        errorMsg
+      );
       console.error(error);
     }
   };
@@ -278,11 +321,54 @@ const ExtendedRegistryPage: React.FC = () => {
             Создать демо-данные (50 карточек на каждый тип)
           </Button>
         </Popconfirm>
+        <Button
+          icon={<DownloadOutlined />}
+          onClick={() => {
+            try {
+              const loadingKey = notificationService.loading('Экспорт в Excel...');
+              excelExportService.exportCards(cards);
+              notificationService.close(loadingKey);
+              notificationService.success(
+                'Экспорт завершен',
+                `Выгружено ${cards.length} карточек`
+              );
+            } catch (err) {
+              notificationService.error(
+                'Ошибка экспорта',
+                'Не удалось экспортировать данные'
+              );
+              console.error(err);
+            }
+          }}
+          disabled={cards.length === 0}
+        >
+          Экспорт в Excel ({cards.length})
+        </Button>
       </Space>
 
       <RegistryTable
         data={tableData}
         loading={loading}
+        pagination={{ current: query.page, pageSize: query.pageSize, total: totalCount }}
+        filters={query.filters}
+        sort={query.sort}
+        onChange={(pagination, filters, sort) => {
+          if (pagination.current && pagination.current !== query.page) {
+            dispatch(setRegistryPage(pagination.current));
+          }
+          if (pagination.pageSize && pagination.pageSize !== query.pageSize) {
+            dispatch(setRegistryPageSize(pagination.pageSize));
+          }
+          if (
+            filters.mainCategory !== query.filters.mainCategory ||
+            filters.status !== query.filters.status
+          ) {
+            dispatch(setRegistryFilters(filters));
+          }
+          if (sort?.field !== query.sort?.field || sort?.order !== query.sort?.order) {
+            dispatch(setRegistrySort(sort));
+          }
+        }}
         onEdit={handleEdit}
         onView={handleView}
         onDelete={handleDelete}

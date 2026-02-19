@@ -25,7 +25,7 @@ import {
   updateCaseSegment,
 } from '@/store/slices/workflowSlice';
 import extendedStorageService from '@/services/ExtendedStorageService';
-import type { TaskDB } from '@/services/ExtendedStorageService';
+import type { TaskDB } from '@/data/db/extendedDb';
 import type { ExtendedCollateralCard } from '@/types';
 import { renderWorkflowTemplate } from '@/utils/workflowTemplates';
 

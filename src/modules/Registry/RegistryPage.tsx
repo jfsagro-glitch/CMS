@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Space, Modal, message, Breadcrumb } from 'antd';
+import { Button, Modal, message, Breadcrumb } from 'antd';
 import {
   PlusOutlined,
   ExportOutlined,
@@ -206,17 +206,25 @@ const RegistryPage: React.FC = () => {
         <Breadcrumb.Item>Реестр объектов</Breadcrumb.Item>
       </Breadcrumb>
 
-      <Space style={{ marginBottom: 16 }} wrap>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+      <div style={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: 12, 
+        marginBottom: 20,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        width: '100%'
+      }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate} style={{ whiteSpace: 'nowrap' }}>
           Создать карточку
         </Button>
-        <Button icon={<ExportOutlined />} onClick={handleExport}>
+        <Button icon={<ExportOutlined />} onClick={handleExport} style={{ whiteSpace: 'nowrap' }}>
           Экспорт в Excel
         </Button>
-        <Button icon={<ImportOutlined />} onClick={handleImportClick}>
+        <Button icon={<ImportOutlined />} onClick={handleImportClick} style={{ whiteSpace: 'nowrap' }}>
           Импорт из Excel
         </Button>
-        <Button icon={<CloudDownloadOutlined />} onClick={handleExportBackup}>
+        <Button icon={<CloudDownloadOutlined />} onClick={handleExportBackup} style={{ whiteSpace: 'nowrap' }}>
           Создать резервную копию
         </Button>
         <input
@@ -232,10 +240,11 @@ const RegistryPage: React.FC = () => {
         <Button
           icon={<CloudDownloadOutlined />}
           onClick={() => document.getElementById('backup-import')?.click()}
+          style={{ whiteSpace: 'nowrap' }}
         >
           Восстановить из копии
         </Button>
-      </Space>
+      </div>
 
       <BaseTable
         data={cards}

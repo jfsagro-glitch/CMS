@@ -3,8 +3,8 @@
  */
 
 import { documentIndexer, type DocumentChunk } from './documentIndexer';
-import { extendedDb } from '@/services/ExtendedStorageService';
-import type { KnowledgeTopicDB, KnowledgeCategoryDB, KnowledgeSearchIndexDB } from '@/services/ExtendedStorageService';
+import { extendedDb } from '@/data/db/extendedDb';
+import type { KnowledgeTopicDB, KnowledgeCategoryDB, KnowledgeSearchIndexDB } from '@/data/db/extendedDb';
 
 export interface KnowledgeTopic {
   id: string;

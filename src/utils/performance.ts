@@ -54,6 +54,21 @@ export const measurePerformanceAsync = async (name: string, fn: () => Promise<vo
   console.log(`[Performance] ${name}: ${(end - start).toFixed(2)}ms`);
 };
 
+// Метки для замера производительности (dev-only)
+export const perfMark = (name: string): void => {
+  if (!import.meta.env.DEV || typeof performance === 'undefined') return;
+  performance.mark(name);
+};
+
+export const perfMeasure = (label: string, startMark: string, endMark: string): void => {
+  if (!import.meta.env.DEV || typeof performance === 'undefined') return;
+  performance.measure(label, startMark, endMark);
+  const entry = performance.getEntriesByName(label).slice(-1)[0];
+  if (entry) {
+    console.log(`[Performance] ${label}: ${entry.duration.toFixed(2)}ms`);
+  }
+};
+
 // Lazy load компонента с задержкой
 export const lazyWithDelay = (
   importFunc: () => Promise<any>,

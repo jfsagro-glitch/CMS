@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { message } from 'antd';
 import { useAppDispatch } from '@/store/hooks';
-import { setExtendedCards } from '@/store/slices/extendedCardsSlice';
+import { bumpRegistryReloadToken } from '@/store/slices/registryQuerySlice';
 import { generateDemoCards } from '@/services/demoDataGenerator';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import { DemoDataContext } from './DemoDataContext.types';
@@ -20,7 +20,7 @@ export const DemoDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         await extendedStorageService.saveExtendedCard(card);
       }
 
-      dispatch(setExtendedCards(demoCards));
+      dispatch(bumpRegistryReloadToken());
       message.success({
         content: `Загружено ${demoCards.length} демо-карточек`,
         key: 'demo',
@@ -48,7 +48,7 @@ export const DemoDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       
       // Очищаем store
-      dispatch(setExtendedCards([]));
+      dispatch(bumpRegistryReloadToken());
       
       message.success({
         content: 'Все демо-данные удалены',

@@ -4,6 +4,9 @@ export type MainCategory = 'real_estate' | 'movable' | 'property_rights';
 // Статусы карточек
 export type CardStatus = 'editing' | 'approved' | 'archived';
 
+// ISO date string (storage boundary)
+export type SafeDateString = string & { __brand: 'iso-date' };
+
 // Роли пользователей
 export type UserRole = 'business' | 'employee' | 'manager' | 'superuser';
 
@@ -136,6 +139,8 @@ export type PartnerRole = 'owner' | 'pledgor' | 'appraiser' | 'other'; // Рол
 // Партнер
 export interface Partner {
   id: string;
+  cardId?: string;
+  version?: number;
   type: PartnerType;
   role: PartnerRole;
   // Для физлица
@@ -202,11 +207,14 @@ export interface Address {
 // Документ
 export interface Document {
   id: string;
+  cardId?: string;
+  version?: number;
   name: string;
   type: string; // Тип документа
   size: number; // Размер в байтах
   mimeType: string;
   uploadDate: Date;
+  updatedAt?: Date;
   category?: string; // Категория документа
   description?: string;
   fileData?: string; // Base64 для хранения в IndexedDB
@@ -234,6 +242,11 @@ export type CharacteristicsValues = Record<string, any>;
 export interface ExtendedCollateralCard extends CollateralCard {
   // Партнеры
   partners?: Partner[];
+  version?: number;
+
+  // Поля для индексации/поиска
+  region?: string;
+  partnerIds?: string[];
 
   // Адрес
   address?: Address;

@@ -19,7 +19,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import employeeService from '@/services/EmployeeService';
 import extendedStorageService from '@/services/ExtendedStorageService';
 import type { Employee, EmployeeTaskStats } from '@/types/employee';
-import type { TaskDB } from '@/services/ExtendedStorageService';
+import type { TaskDB } from '@/data/db/extendedDb';
 import type { KPIData } from '@/types/kpi';
 import { REGION_CENTERS } from '@/utils/regionCenters';
 import {

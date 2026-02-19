@@ -2,11 +2,113 @@
  * Сервис для работы с осмотрами CMS Check
  */
 
-import type { Inspection, InspectionType, InspectionStatus } from '@/types/inspection';
-import { extendedDb } from './ExtendedStorageService';
+import type {
+  Inspection,
+  InspectionType,
+  InspectionStatus,
+  InspectionDB,
+  InspectionHistoryItem,
+  InspectionPhoto,
+  InspectionDefect,
+  InspectionRecommendation,
+} from '@/types/inspection';
+import { extendedDb } from '@/data/db/extendedDb';
+import { toSafeDateString, fromSafeDateString } from '@/utils/dateSerialization';
 
 class InspectionService {
   private db = extendedDb;
+
+  private toDbHistoryItem(item: InspectionHistoryItem): InspectionDB['history'][number] {
+    return {
+      ...item,
+      date: toSafeDateString(item.date),
+    };
+  }
+
+  private toDbPhoto(photo: InspectionPhoto): InspectionDB['photos'][number] {
+    return {
+      ...photo,
+      takenAt: toSafeDateString(photo.takenAt),
+    };
+  }
+
+  private toDbDefect(defect: InspectionDefect): InspectionDB['defects'][number] {
+    return {
+      ...defect,
+      fixedDate: defect.fixedDate ? toSafeDateString(defect.fixedDate) : undefined,
+    };
+  }
+
+  private toDbRecommendation(
+    recommendation: InspectionRecommendation
+  ): InspectionDB['recommendations'][number] {
+    return {
+      ...recommendation,
+      deadline: recommendation.deadline ? toSafeDateString(recommendation.deadline) : undefined,
+      completedDate: recommendation.completedDate
+        ? toSafeDateString(recommendation.completedDate)
+        : undefined,
+    };
+  }
+
+  private toDbInspection(inspection: Inspection): InspectionDB {
+    return {
+      ...inspection,
+      inspectionDate: toSafeDateString(inspection.inspectionDate),
+      scheduledDate: inspection.scheduledDate ? toSafeDateString(inspection.scheduledDate) : undefined,
+      completedDate: inspection.completedDate ? toSafeDateString(inspection.completedDate) : undefined,
+      clientLinkExpiresAt: inspection.clientLinkExpiresAt
+        ? toSafeDateString(inspection.clientLinkExpiresAt)
+        : undefined,
+      createdAt: toSafeDateString(inspection.createdAt),
+      updatedAt: toSafeDateString(inspection.updatedAt),
+      reviewedAt: inspection.reviewedAt ? toSafeDateString(inspection.reviewedAt) : undefined,
+      approvedAt: inspection.approvedAt ? toSafeDateString(inspection.approvedAt) : undefined,
+      revisionRequestedAt: inspection.revisionRequestedAt
+        ? toSafeDateString(inspection.revisionRequestedAt)
+        : undefined,
+      photos: (inspection.photos || []).map(photo => this.toDbPhoto(photo)),
+      defects: (inspection.defects || []).map(defect => this.toDbDefect(defect)),
+      recommendations: (inspection.recommendations || []).map(rec => this.toDbRecommendation(rec)),
+      history: (inspection.history || []).map(item => this.toDbHistoryItem(item)),
+    };
+  }
+
+  private fromDbInspection(inspection: InspectionDB): Inspection {
+    return {
+      ...inspection,
+      inspectionDate: fromSafeDateString(inspection.inspectionDate),
+      scheduledDate: inspection.scheduledDate ? fromSafeDateString(inspection.scheduledDate) : undefined,
+      completedDate: inspection.completedDate ? fromSafeDateString(inspection.completedDate) : undefined,
+      clientLinkExpiresAt: inspection.clientLinkExpiresAt
+        ? fromSafeDateString(inspection.clientLinkExpiresAt)
+        : undefined,
+      createdAt: fromSafeDateString(inspection.createdAt),
+      updatedAt: fromSafeDateString(inspection.updatedAt),
+      reviewedAt: inspection.reviewedAt ? fromSafeDateString(inspection.reviewedAt) : undefined,
+      approvedAt: inspection.approvedAt ? fromSafeDateString(inspection.approvedAt) : undefined,
+      revisionRequestedAt: inspection.revisionRequestedAt
+        ? fromSafeDateString(inspection.revisionRequestedAt)
+        : undefined,
+      photos: (inspection.photos || []).map(photo => ({
+        ...photo,
+        takenAt: fromSafeDateString(photo.takenAt),
+      })),
+      defects: (inspection.defects || []).map(defect => ({
+        ...defect,
+        fixedDate: defect.fixedDate ? fromSafeDateString(defect.fixedDate) : undefined,
+      })),
+      recommendations: (inspection.recommendations || []).map(rec => ({
+        ...rec,
+        deadline: rec.deadline ? fromSafeDateString(rec.deadline) : undefined,
+        completedDate: rec.completedDate ? fromSafeDateString(rec.completedDate) : undefined,
+      })),
+      history: (inspection.history || []).map(item => ({
+        ...item,
+        date: fromSafeDateString(item.date),
+      })),
+    };
+  }
 
   /**
    * Инициализация базы данных
@@ -30,7 +132,8 @@ class InspectionService {
    */
   async getInspections(): Promise<Inspection[]> {
     try {
-      return await this.db.inspections.toArray();
+      const items = await this.db.inspections.toArray();
+      return items.map(item => this.fromDbInspection(item));
     } catch (error) {
       console.error('Failed to get inspections:', error);
       return [];
@@ -42,7 +145,8 @@ class InspectionService {
    */
   async getInspectionById(id: string): Promise<Inspection | undefined> {
     try {
-      return await this.db.inspections.get(id);
+      const inspection = await this.db.inspections.get(id);
+      return inspection ? this.fromDbInspection(inspection) : undefined;
     } catch (error) {
       console.error('Failed to get inspection:', error);
       return undefined;
@@ -54,10 +158,11 @@ class InspectionService {
    */
   async getInspectionsByCardId(cardId: string): Promise<Inspection[]> {
     try {
-      return await this.db.inspections
+      const items = await this.db.inspections
         .where('collateralCardId')
         .equals(cardId)
         .toArray();
+      return items.map(item => this.fromDbInspection(item));
     } catch (error) {
       console.error('Failed to get inspections by card ID:', error);
       return [];
@@ -69,10 +174,11 @@ class InspectionService {
    */
   async getInspectionsByType(type: InspectionType): Promise<Inspection[]> {
     try {
-      return await this.db.inspections
+      const items = await this.db.inspections
         .where('inspectionType')
         .equals(type)
         .toArray();
+      return items.map(item => this.fromDbInspection(item));
     } catch (error) {
       console.error('Failed to get inspections by type:', error);
       return [];
@@ -84,10 +190,11 @@ class InspectionService {
    */
   async getInspectionsByStatus(status: InspectionStatus): Promise<Inspection[]> {
     try {
-      return await this.db.inspections
+      const items = await this.db.inspections
         .where('status')
         .equals(status)
         .toArray();
+      return items.map(item => this.fromDbInspection(item));
     } catch (error) {
       console.error('Failed to get inspections by status:', error);
       return [];
@@ -99,10 +206,11 @@ class InspectionService {
    */
   async getInspectionsByInspector(inspectorId: string): Promise<Inspection[]> {
     try {
-      return await this.db.inspections
+      const items = await this.db.inspections
         .where('inspectorId')
         .equals(inspectorId)
         .toArray();
+      return items.map(item => this.fromDbInspection(item));
     } catch (error) {
       console.error('Failed to get inspections by inspector:', error);
       return [];
@@ -122,8 +230,9 @@ class InspectionService {
         updatedAt: now,
         history: inspection.history || [],
       };
-      
-      await this.db.inspections.add(newInspection);
+
+      const dbInspection = this.toDbInspection(newInspection);
+      await this.db.inspections.add(dbInspection);
       return newInspection.id;
     } catch (error) {
       console.error('Failed to create inspection:', error);
@@ -344,10 +453,14 @@ class InspectionService {
         throw new Error('Inspection not found');
       }
 
-      await this.db.inspections.update(id, {
+      const current = this.fromDbInspection(inspection);
+      const next: Inspection = {
+        ...current,
         ...updates,
         updatedAt: new Date(),
-      });
+      };
+
+      await this.db.inspections.put(this.toDbInspection(next));
     } catch (error) {
       console.error('Failed to update inspection:', error);
       throw error;

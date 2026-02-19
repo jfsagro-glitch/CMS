@@ -1,7 +1,8 @@
 import React from 'react';
 import { Table, Button, Tooltip, Tag } from 'antd';
 import { EditOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
+import type { RegistrySort, RegistryFilters } from '@/store/slices/registryQuerySlice';
 
 export interface RegistryTableRecord {
   id: string;
@@ -27,6 +28,10 @@ export interface RegistryTableRecord {
 interface RegistryTableProps {
   data: RegistryTableRecord[];
   loading?: boolean;
+  pagination: { current: number; pageSize: number; total: number };
+  filters: RegistryFilters;
+  sort: RegistrySort | null;
+  onChange: (pagination: TablePaginationConfig, filters: RegistryFilters, sort: RegistrySort | null) => void;
   onEdit: (id: string) => void;
   onView: (id: string) => void;
   onDelete: (id: string) => void;
@@ -36,6 +41,10 @@ interface RegistryTableProps {
 export const RegistryTable: React.FC<RegistryTableProps> = ({
   data,
   loading,
+  pagination,
+  filters,
+  sort,
+  onChange,
   onEdit,
   onView,
   onDelete,
@@ -51,14 +60,16 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
       key: 'number',
       width: 100,
       fixed: 'left',
-      sorter: (a, b) => a.number.localeCompare(b.number),
+      sorter: true,
+      sortOrder: sort?.field === 'number' ? (sort.order === 'asc' ? 'ascend' : 'descend') : null,
     },
     {
       title: 'Наименование',
       dataIndex: 'name',
       key: 'name',
       width: 250,
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      sorter: true,
+      sortOrder: sort?.field === 'name' ? (sort.order === 'asc' ? 'ascend' : 'descend') : null,
       render: (name: string, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>{name}</div>
@@ -78,7 +89,7 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
         { text: 'Движимое имущество', value: 'movable' },
         { text: 'Имущественные права', value: 'property_rights' },
       ],
-      onFilter: (value, record) => record.mainCategory === value,
+      filteredValue: filters.mainCategory ? [filters.mainCategory] : null,
       render: (category: string) => {
         const categoryConfig = {
           real_estate: { color: 'blue', text: 'Недвижимость' },
@@ -102,7 +113,7 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
         { text: 'Согласовано', value: 'approved' },
         { text: 'Архив', value: 'archived' },
       ],
-      onFilter: (value, record) => record.status === value,
+      filteredValue: filters.status ? [filters.status] : null,
       render: (status: string) => {
         const statusConfig = {
           editing: { color: 'orange', text: 'Редактирование' },
@@ -128,7 +139,8 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 120,
-      sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      sorter: true,
+      sortOrder: sort?.field === 'createdAt' ? (sort.order === 'asc' ? 'ascend' : 'descend') : null,
       render: (date: Date) => new Date(date).toLocaleDateString('ru-RU'),
     },
     {
@@ -175,13 +187,39 @@ export const RegistryTable: React.FC<RegistryTableProps> = ({
         dataSource={filteredData}
         loading={loading}
         rowKey="id"
-        scroll={{ x: 1200 }}
+        scroll={{ x: 1200, y: 620 }}
+        virtual
         pagination={{
-          pageSize: 30,
+          current: pagination.current,
+          pageSize: pagination.pageSize,
+          total: pagination.total,
           showSizeChanger: true,
           showQuickJumper: true,
           showTotal: (total, range) => `Показано ${range[0]}-${range[1]} из ${total} записей`,
           pageSizeOptions: ['15', '30', '50', '100'],
+        }}
+        onChange={(nextPagination, tableFilters, tableSorter) => {
+          const mainCategory = Array.isArray(tableFilters.mainCategory)
+            ? (tableFilters.mainCategory[0] as RegistryFilters['mainCategory'])
+            : undefined;
+          const status = Array.isArray(tableFilters.status)
+            ? (tableFilters.status[0] as RegistryFilters['status'])
+            : undefined;
+          const nextFilters: RegistryFilters = {
+            ...filters,
+            mainCategory,
+            status,
+          };
+
+          let nextSort: RegistrySort | null = null;
+          if (!Array.isArray(tableSorter) && tableSorter?.field && tableSorter?.order) {
+            nextSort = {
+              field: tableSorter.field as RegistrySort['field'],
+              order: tableSorter.order === 'ascend' ? 'asc' : 'desc',
+            };
+          }
+
+          onChange(nextPagination, nextFilters, nextSort);
         }}
         onRow={record => ({
           onDoubleClick: () => onDoubleClick(record),

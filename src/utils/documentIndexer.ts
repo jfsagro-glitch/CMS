@@ -2,7 +2,7 @@
  * Утилита для индексации и поиска по документам из папки VND
  */
 
-import { extendedDb, type DocumentIndexDB, type DocumentChunkDB } from '@/services/ExtendedStorageService';
+import { extendedDb, type DocumentIndexDB, type DocumentChunkDB } from '@/data/db/extendedDb';
 
 export interface DocumentChunk {
   id: string;

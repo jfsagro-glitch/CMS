@@ -2,6 +2,8 @@
  * Типы для системы осмотров CMS Check
  */
 
+import type { SafeDateString } from './index';
+
 export type InspectionType =
   | 'primary' // Первичный осмотр
   | 'periodic' // Периодический осмотр
@@ -187,5 +189,54 @@ export interface Inspection {
   ownerConsent?: boolean;
   ownerName?: string;
   ownerSignature?: string;
+}
+
+export interface InspectionHistoryItemDB extends Omit<InspectionHistoryItem, 'date'> {
+  date: SafeDateString;
+}
+
+export interface InspectionPhotoDB extends Omit<InspectionPhoto, 'takenAt'> {
+  takenAt: SafeDateString;
+}
+
+export interface InspectionDefectDB extends Omit<InspectionDefect, 'fixedDate'> {
+  fixedDate?: SafeDateString;
+}
+
+export interface InspectionRecommendationDB extends Omit<InspectionRecommendation, 'deadline' | 'completedDate'> {
+  deadline?: SafeDateString;
+  completedDate?: SafeDateString;
+}
+
+export interface InspectionDB
+  extends Omit<
+    Inspection,
+    | 'inspectionDate'
+    | 'scheduledDate'
+    | 'completedDate'
+    | 'clientLinkExpiresAt'
+    | 'createdAt'
+    | 'updatedAt'
+    | 'reviewedAt'
+    | 'approvedAt'
+    | 'revisionRequestedAt'
+    | 'photos'
+    | 'defects'
+    | 'recommendations'
+    | 'history'
+  > {
+  inspectionDate: SafeDateString;
+  scheduledDate?: SafeDateString;
+  completedDate?: SafeDateString;
+  clientLinkExpiresAt?: SafeDateString;
+  createdAt: SafeDateString;
+  updatedAt: SafeDateString;
+  reviewedAt?: SafeDateString;
+  approvedAt?: SafeDateString;
+  revisionRequestedAt?: SafeDateString;
+  photos: InspectionPhotoDB[];
+  defects: InspectionDefectDB[];
+  recommendations: InspectionRecommendationDB[];
+  history: InspectionHistoryItemDB[];
 }
 

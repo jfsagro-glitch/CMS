@@ -4,7 +4,7 @@
 
 import employeeService from '@/services/EmployeeService';
 import extendedStorageService from '@/services/ExtendedStorageService';
-import type { TaskDB } from '@/services/ExtendedStorageService';
+import type { TaskDB } from '@/data/db/extendedDb';
 import dayjs from 'dayjs';
 import { REGION_CENTERS } from '@/utils/regionCenters';
 import {

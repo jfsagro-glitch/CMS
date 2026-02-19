@@ -1,19 +1,19 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { HashRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { ConfigProvider, theme, App as AntApp } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import { store } from './store';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { setInitialized, setSettings } from './store/slices/appSlice';
+import { setInitialized } from './store/slices/appSlice';
 import { setCards } from './store/slices/cardsSlice';
+import { initializeApp, AppInitState } from './store/slices/appStateSlice';
 import {
   setCases as setWorkflowCases,
   setTemplates as setWorkflowTemplates,
   DEFAULT_WORKFLOW_TEMPLATES,
 } from './store/slices/workflowSlice';
 import extendedStorageService from './services/ExtendedStorageService';
-import employeeService from './services/EmployeeService';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DemoDataProvider } from './contexts/DemoDataContext';
 import MainLayout from './components/layout/MainLayout';
@@ -52,6 +52,7 @@ import { BrandStoryPage } from './modules/ProjectsPortfolio/BrandStoryPage';
 import { CommercialOfferPage } from './modules/ProjectsPortfolio/CommercialOfferPage';
 import { ITProjectsPage } from './modules/ProjectsPortfolio/ITProjectsPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { perfMark, perfMeasure } from './utils/performance';
 import 'antd/dist/reset.css';
 import './styles/global.css';
 
@@ -65,6 +66,7 @@ const AppContent: React.FC = () => {
 
   const dispatch = useAppDispatch();
   const { theme: appTheme, initialized } = useAppSelector(state => state.app);
+  const { initState, error: initError } = useAppSelector(state => state.appState);
   const workflowState = useAppSelector(state => state.workflow);
 
   useEffect(() => {
@@ -74,146 +76,82 @@ const AppContent: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const initApp = async () => {
-      try {
-        // Очищаем старые задачи из localStorage, если они слишком большие (чтобы избежать QuotaExceededError)
-        // Пытаемся удалить сразу, без чтения, чтобы избежать QuotaExceededError при чтении
-        try {
-          // Просто удаляем старые данные, если они есть
-          localStorage.removeItem('zadachnik_tasks');
-          console.log('✅ Очищены старые задачи из localStorage (данные теперь в IndexedDB)');
-        } catch (error) {
-          // Если не удалось удалить, просто продолжаем (не критично)
-          console.warn('Не удалось очистить задачи из localStorage (не критично):', error);
-        }
+  /**
+   * Load application data after database initialization succeeds
+   */
+  const loadApplicationData = useCallback(async () => {
+    try {
+      // Load extended cards
+      perfMark('load:cards:start');
+      const cards = await extendedStorageService.getExtendedCards();
+      dispatch(setCards(cards));
+      perfMark('load:cards:end');
+      perfMeasure('load:cards', 'load:cards:start', 'load:cards:end');
 
-        // Инициализация расширенной базы данных
-        await extendedStorageService.initDatabase();
-
-        // Загрузка настроек
-        const settings = await extendedStorageService.getSettings();
-        dispatch(setSettings(settings));
-
-        // Загрузка расширенных карточек
-        const cards = await extendedStorageService.getExtendedCards();
-
-        // Автозагрузка демо-данных при первом запуске (если база пустая)
-        if (cards.length === 0) {
-          try {
-            const { loadDemoData } = await import('./utils/demoData');
-            await loadDemoData(extendedStorageService);
-            const demoCards = await extendedStorageService.getExtendedCards();
-            dispatch(setCards(demoCards));
-            console.log('✅ Демо-данные загружены автоматически');
-          } catch (error) {
-            console.warn('Демо-данные не загружены:', error);
-            dispatch(setCards(cards));
-          }
-        } else {
-          dispatch(setCards(cards));
-        }
-
-        // Синхронизация сотрудников с zadachnik
-        try {
-          const { syncEmployeesToZadachnik } = await import('./utils/syncEmployeesToZadachnik');
-          syncEmployeesToZadachnik();
-
-          // Проверяем наличие сотрудников
-          const employees = employeeService.getEmployees();
-          const activeEmployees = employees.filter(emp => emp.isActive);
-
-          // Проверяем, есть ли задачи, и достаточно ли их (минимум 60 задач на сотрудника)
-          let tasksData: any[] = [];
-          try {
-            tasksData = await extendedStorageService.getTasks();
-          } catch (error) {
-            // Fallback на localStorage (только если IndexedDB недоступен)
-            try {
-              const existingTasks = localStorage.getItem('zadachnik_tasks');
-              if (existingTasks) {
-                // Проверяем размер перед парсингом
-                if (existingTasks.length < 4 * 1024 * 1024) {
-                  // Только если меньше 4MB
-                  tasksData = JSON.parse(existingTasks);
-                } else {
-                  console.warn(
-                    'Задачи в localStorage слишком большие, используем только IndexedDB'
-                  );
-                }
-              }
-            } catch (e) {
-              console.warn('Не удалось загрузить задачи из localStorage:', e);
-            }
-          }
-
-          const minTasksPerEmployee = 60;
-          const expectedMinTasks = activeEmployees.length * minTasksPerEmployee;
-
-          if (!tasksData || tasksData.length === 0 || tasksData.length < expectedMinTasks) {
-            const { generateTasksForEmployees } = await import('./utils/generateTasksForEmployees');
-            await generateTasksForEmployees();
-            tasksData = await extendedStorageService.getTasks();
-            console.log(
-              `✅ Сгенерировано ${tasksData.length} задач для ${
-                activeEmployees.length
-              } активных сотрудников (${(tasksData.length / activeEmployees.length).toFixed(
-                1
-              )} задач на сотрудника)`
-            );
-          } else {
-            console.log(
-              `✅ Загружено ${tasksData.length} задач для ${
-                activeEmployees.length
-              } активных сотрудников (${(tasksData.length / activeEmployees.length).toFixed(
-                1
-              )} задач на сотрудника)`
-            );
-          }
-        } catch (error) {
-          console.warn('Не удалось синхронизировать сотрудников с zadachnik:', error);
-        }
-
-        // Загрузка демо-данных осмотров при первом запуске
-        try {
-          const inspectionService = (await import('./services/InspectionService')).default;
-          await inspectionService.initDatabase();
-          const inspections = await inspectionService.getInspections();
-
-          if (inspections.length === 0) {
-            const { loadInspectionDemoData } = await import('./utils/inspectionDemoData');
-            await loadInspectionDemoData();
-            console.log('✅ Демо-данные осмотров загружены автоматически');
-          }
-        } catch (error) {
-          console.warn('Демо-данные осмотров не загружены:', error);
-        }
-
-        // Загрузка workflow (кейсы и шаблоны) из IndexedDB
-        try {
-          const wfCases = await extendedStorageService.getWorkflowCases();
-          if (wfCases && wfCases.length > 0) {
-            dispatch(setWorkflowCases(wfCases));
-          }
-          const wfTemplates = await extendedStorageService.getWorkflowTemplates();
-          if (wfTemplates && wfTemplates.length > 0) {
-            dispatch(setWorkflowTemplates(wfTemplates));
-          } else {
-            await extendedStorageService.saveWorkflowTemplates(DEFAULT_WORKFLOW_TEMPLATES);
-            dispatch(setWorkflowTemplates(DEFAULT_WORKFLOW_TEMPLATES));
-          }
-        } catch (error) {
-          console.warn('Не удалось загрузить workflow из IndexedDB:', error);
-        }
-
-        dispatch(setInitialized(true));
-      } catch (error) {
-        console.error('Failed to initialize app:', error);
+      // Load and ensure workflow data
+      perfMark('load:workflow:start');
+      const wfCases = await extendedStorageService.getWorkflowCases();
+      if (wfCases && wfCases.length > 0) {
+        dispatch(setWorkflowCases(wfCases));
       }
-    };
+      const wfTemplates = await extendedStorageService.getWorkflowTemplates();
+      if (wfTemplates && wfTemplates.length > 0) {
+        dispatch(setWorkflowTemplates(wfTemplates));
+      } else {
+        await extendedStorageService.saveWorkflowTemplates(DEFAULT_WORKFLOW_TEMPLATES);
+        dispatch(setWorkflowTemplates(DEFAULT_WORKFLOW_TEMPLATES));
+      }
+      perfMark('load:workflow:end');
+      perfMeasure('load:workflow', 'load:workflow:start', 'load:workflow:end');
 
-    initApp();
+      // Load inspection data
+      try {
+        const inspectionService = (await import('./services/InspectionService')).default;
+        await inspectionService.initDatabase();
+        const inspections = await inspectionService.getInspections();
+        if (inspections.length === 0) {
+          const { loadInspectionDemoData } = await import('./utils/inspectionDemoData');
+          await loadInspectionDemoData();
+          console.log('✅ Демо-данные осмотров загружены');
+        }
+      } catch (err) {
+        console.warn('Ошибка при загрузке осмотров:', err);
+      }
+
+      // Mark app as initialized after all data is loaded
+      dispatch(setInitialized(true));
+    } catch (err) {
+      console.error('Ошибка при загрузке данных приложения:', err);
+    }
   }, [dispatch]);
+
+  /**
+   * Main app initialization using state machine
+   * Triggers once on mount
+   */
+  useEffect(() => {
+    if (initialized || initState !== AppInitState.Idle) {
+      return;
+    }
+
+    // Clean up old localStorage data and trigger app initialization
+    try {
+      localStorage.removeItem('zadachnik_tasks');
+      console.log('✅ Очищены старые задачи из localStorage');
+    } catch (err) {
+      console.warn('Не удалось очистить localStorage:', err);
+    }
+
+    // Dispatch state machine initialization
+    perfMark('init:start');
+    dispatch(initializeApp()).then(() => {
+      perfMark('init:end');
+      perfMeasure('init:total', 'init:start', 'init:end');
+      
+      // Load additional application data after DB is ready
+      loadApplicationData();
+    });
+  }, [dispatch, initialized, initState, loadApplicationData]);
 
   // Сохраняем workflow кейсы и шаблоны в IndexedDB при изменениях (после инициализации)
   useEffect(() => {
@@ -228,7 +166,14 @@ const AppContent: React.FC = () => {
     })();
   }, [initialized, workflowState.cases, workflowState.templates]);
 
-  if (!initialized) {
+  /**
+   * Handle initialization states
+   * - Idle/Loading: Show spinner
+   * - Error: Show retry message
+   * - CriticalError: Show fatal error message
+   * - Ready: Proceed to main UI
+   */
+  if (!initialized || initState === AppInitState.Loading || initState === AppInitState.Idle) {
     return (
       <div
         style={{
@@ -236,9 +181,89 @@ const AppContent: React.FC = () => {
           justifyContent: 'center',
           alignItems: 'center',
           height: '100vh',
+          flexDirection: 'column',
+          gap: '20px',
         }}
       >
-        Загрузка...
+        <div style={{ fontSize: '16px' }}>Инициализация приложения...</div>
+        <div style={{ fontSize: '12px', color: '#999' }}>
+          {initState === AppInitState.Loading ? 'Подготовка данных' : 'Ожидание'}
+        </div>
+      </div>
+    );
+  }
+
+  // Handle initialization error state
+  if (initState === AppInitState.Error) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          flexDirection: 'column',
+          gap: '20px',
+          padding: '40px',
+        }}
+      >
+        <div style={{ fontSize: '18px', color: '#d4380d' }}>⚠️ Ошибка инициализации</div>
+        <div style={{ fontSize: '14px', color: '#666', textAlign: 'center', maxWidth: '400px' }}>
+          {initError || 'Неизвестная ошибка при инициализации приложения'}
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            padding: '8px 24px',
+            fontSize: '14px',
+            cursor: 'pointer',
+            border: '1px solid #d4380d',
+            color: '#d4380d',
+            backgroundColor: 'transparent',
+            borderRadius: '4px',
+          }}
+        >
+          Перезагрузить
+        </button>
+      </div>
+    );
+  }
+
+  // Handle critical error state
+  if (initState === AppInitState.CriticalError) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          flexDirection: 'column',
+          gap: '20px',
+          padding: '40px',
+        }}
+      >
+        <div style={{ fontSize: '20px', color: '#d4380d' }}>❌ Критическая ошибка</div>
+        <div style={{ fontSize: '14px', color: '#666', textAlign: 'center', maxWidth: '400px' }}>
+          {initError || 'Приложение не может быть инициализировано. Пожалуйста, свяжитесь с администратором.'}
+        </div>
+        <button
+          onClick={() => {
+            localStorage.clear();
+            window.location.reload();
+          }}
+          style={{
+            padding: '8px 24px',
+            fontSize: '14px',
+            cursor: 'pointer',
+            border: '1px solid #d4380d',
+            color: '#d4380d',
+            backgroundColor: 'transparent',
+            borderRadius: '4px',
+          }}
+        >
+          Очистить и перезагрузить
+        </button>
       </div>
     );
   }

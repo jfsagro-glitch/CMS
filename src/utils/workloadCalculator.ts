@@ -2,7 +2,7 @@
  * Утилита для расчета нормочасов и загрузки сотрудников
  */
 
-import type { TaskDB } from '@/services/ExtendedStorageService';
+import type { TaskDB } from '@/data/db/extendedDb';
 import dayjs from 'dayjs';
 
 // Нормочасы по типам задач (в рабочих часах)

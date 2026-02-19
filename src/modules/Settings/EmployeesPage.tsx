@@ -39,7 +39,7 @@ import { REGION_CENTERS } from '@/utils/regionCenters';
 import { syncEmployeesToZadachnik } from '@/utils/syncEmployeesToZadachnik';
 import { generateTasksForEmployees } from '@/utils/generateTasksForEmployees';
 import extendedStorageService from '@/services/ExtendedStorageService';
-import type { TaskDB } from '@/services/ExtendedStorageService';
+import type { TaskDB } from '@/data/db/extendedDb';
 import dayjs from 'dayjs';
 import { calculateRegionCenterWorkload } from '@/utils/workloadCalculator';
 import './EmployeesPage.css';
@@ -119,13 +119,11 @@ const EmployeesPage: React.FC = () => {
             loaded = JSON.parse(existingTasks);
           }
         } catch (e) {
-          // eslint-disable-next-line no-console
           console.warn('Не удалось загрузить задачи из localStorage:', e);
         }
       }
       setTasks(loaded);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.warn('Ошибка загрузки задач для статистики загрузки сотрудников:', error);
     }
   };

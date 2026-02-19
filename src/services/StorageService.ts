@@ -6,11 +6,18 @@ import type {
   AppSettings,
   ImportResult,
   ExportResult,
+  SafeDateString,
 } from '@/types';
+import { toSafeDateString, fromSafeDateString } from '@/utils/dateSerialization';
+
+type CollateralCardDB = Omit<CollateralCard, 'createdAt' | 'updatedAt'> & {
+  createdAt: SafeDateString;
+  updatedAt: SafeDateString;
+};
 
 // Определяем схему базы данных
 class CMSDatabase extends Dexie {
-  collateralCards!: Table<CollateralCard, string>;
+  collateralCards!: Table<CollateralCardDB, string>;
   settings!: Table<AppSettings & { id: string }, string>;
 
   constructor() {
@@ -55,6 +62,22 @@ class StorageService {
     }
   }
 
+  private toDbCard(card: CollateralCard): CollateralCardDB {
+    return {
+      ...card,
+      createdAt: toSafeDateString(card.createdAt),
+      updatedAt: toSafeDateString(card.updatedAt),
+    };
+  }
+
+  private fromDbCard(card: CollateralCardDB): CollateralCard {
+    return {
+      ...card,
+      createdAt: fromSafeDateString(card.createdAt),
+      updatedAt: fromSafeDateString(card.updatedAt),
+    };
+  }
+
   // ============ Операции с карточками ============
 
   // Сохранение карточки
@@ -67,8 +90,9 @@ class StorageService {
         createdAt: card.createdAt || now,
       };
 
-      await this.db.collateralCards.put(cardToSave);
-      return cardToSave.id;
+      const dbCard = this.toDbCard(cardToSave);
+      await this.db.collateralCards.put(dbCard);
+      return dbCard.id;
     } catch (error) {
       console.error('Failed to save collateral card:', error);
       throw error;
@@ -98,15 +122,20 @@ class StorageService {
         }
 
         if (filters.dateFrom) {
-          collection = collection.filter(card => card.createdAt >= filters.dateFrom!);
+          collection = collection.filter(
+            card => fromSafeDateString(card.createdAt) >= filters.dateFrom!
+          );
         }
 
         if (filters.dateTo) {
-          collection = collection.filter(card => card.createdAt <= filters.dateTo!);
+          collection = collection.filter(
+            card => fromSafeDateString(card.createdAt) <= filters.dateTo!
+          );
         }
       }
 
-      return await collection.toArray();
+      const items = await collection.toArray();
+      return items.map(card => this.fromDbCard(card));
     } catch (error) {
       console.error('Failed to get collateral cards:', error);
       throw error;
@@ -116,7 +145,8 @@ class StorageService {
   // Получение карточки по ID
   async getCollateralCardById(id: string): Promise<CollateralCard | undefined> {
     try {
-      return await this.db.collateralCards.get(id);
+      const card = await this.db.collateralCards.get(id);
+      return card ? this.fromDbCard(card) : undefined;
     } catch (error) {
       console.error('Failed to get collateral card:', error);
       throw error;
@@ -192,7 +222,6 @@ class StorageService {
   // Экспорт в Excel
   async exportToExcel(data: CollateralCard[], filename: string): Promise<ExportResult> {
     try {
-      // Подготовка данных для экспорта
       const exportData = data.map(card => ({
         ID: card.id,
         Номер: card.number,
@@ -207,16 +236,13 @@ class StorageService {
         'Дата обновления': new Date(card.updatedAt).toLocaleString('ru-RU'),
       }));
 
-      // Создание рабочей книги
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Карточки');
 
-      // Установка ширины столбцов
       const maxWidth = 30;
       worksheet['!cols'] = Object.keys(exportData[0] || {}).map(() => ({ wch: maxWidth }));
 
-      // Скачивание файла
       XLSX.writeFile(workbook, `${filename}.xlsx`);
 
       return {
@@ -246,7 +272,6 @@ class StorageService {
 
       for (const row of jsonData) {
         try {
-          // Валидация и преобразование данных
           const card: CollateralCard = this.validateImportRow(row);
           await this.saveCollateralCard(card);
           importedCount++;
@@ -305,20 +330,15 @@ class StorageService {
         throw new Error('Некорректный формат файла резервной копии');
       }
 
-      // Очистка текущих данных
       await this.db.collateralCards.clear();
 
-      // Импорт карточек
       if (backup.data.cards && Array.isArray(backup.data.cards)) {
         for (const card of backup.data.cards) {
-          // Преобразование дат из строк в объекты Date
-          card.createdAt = new Date(card.createdAt);
-          card.updatedAt = new Date(card.updatedAt);
-          await this.saveCollateralCard(card);
+          const restored = this.fromDbCard(card as CollateralCardDB);
+          await this.saveCollateralCard(restored);
         }
       }
 
-      // Импорт настроек
       if (backup.data.settings) {
         await this.saveSettings(backup.data.settings);
       }
@@ -342,7 +362,6 @@ class StorageService {
   }
 
   private validateImportRow(row: any): CollateralCard {
-    // Базовая валидация импортируемых данных
     if (!row['ID'] || !row['Название']) {
       throw new Error('Отсутствуют обязательные поля');
     }
@@ -364,8 +383,8 @@ class StorageService {
     };
   }
 
-  private reverseTranslateCategory(category: string): any {
-    const translations: Record<string, string> = {
+  private reverseTranslateCategory(category: string): CollateralCard['mainCategory'] {
+    const translations: Record<string, CollateralCard['mainCategory']> = {
       Недвижимость: 'real_estate',
       'Движимое имущество': 'movable',
       'Имущественные права': 'property_rights',

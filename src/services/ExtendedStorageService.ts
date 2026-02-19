@@ -1,4 +1,3 @@
-import Dexie, { Table } from 'dexie';
 import * as XLSX from 'xlsx';
 import type {
   ExtendedCollateralCard,
@@ -8,265 +7,47 @@ import type {
   AppSettings,
   ExportResult,
 } from '@/types';
+import { perfMark, perfMeasure } from '@/utils/performance';
+import { fromSafeDateString } from '@/utils/dateSerialization';
 import type { WorkflowCase, WorkflowTemplate } from '@/types/workflow';
-import type { Inspection } from '@/types/inspection';
+import {
+  extendedDb,
+  type ExtendedCMSDatabase,
+  type ExtendedCollateralCardDB,
+  type TaskDB,
+} from '@/data/db/extendedDb';
+import type {
+  ExtendedCardSort,
+  ExtendedCardSortField,
+  ExtendedCardQueryInput,
+  ExtendedCardQueryResult,
+} from '@/data/queries/extendedCardQuery';
+import { CollateralRepo, VersionConflictError } from '@/data/repos/CollateralRepo';
+import { PartnerRepo } from '@/data/repos/PartnerRepo';
+import { DocumentRepo } from '@/data/repos/DocumentRepo';
+import { SettingsRepo } from '@/data/repos/SettingsRepo';
+import { TaskRepo } from '@/data/repos/TaskRepo';
+import { WorkflowRepo } from '@/data/repos/WorkflowRepo';
 
-// Интерфейсы для индексов документов
-export interface DocumentIndexDB {
-  documentName: string;
-  totalPages: number;
-  indexedAt: Date;
-}
-
-export interface DocumentChunkDB {
-  id: string;
-  documentName: string;
-  page: number;
-  text: string;
-  keywords: string[];
-  imageData?: string;
-  isImage?: boolean;
-}
-
-// Интерфейсы для базы знаний
-export interface KnowledgeTopicDB {
-  id: string;
-  title: string;
-  category: string;
-  keywords: string[];
-  content: string;
-  page: number;
-  relatedTopics?: string[];
-}
-
-export interface KnowledgeCategoryDB {
-  id: string;
-  name: string;
-  description: string;
-  topicIds: string[]; // Ссылки на темы вместо полных объектов
-}
-
-export interface KnowledgeSearchIndexDB {
-  keyword: string;
-  topicIds: string[];
-}
-
-// Интерфейс для задач (Zadachnik)
-export interface TaskDB {
-  id: string;
-  region: string;
-  type: string;
-  title: string;
-  description?: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  dueDate: string;
-  status: string;
-  businessUser: string;
-  businessUserName: string;
-  assignedTo: string[];
-  currentAssignee: string | null;
-  currentAssigneeName: string | null;
-  employeeId?: string;
-  documents: any[];
-  comments: any[];
-  createdAt: string;
-  updatedAt: string;
-  completedAt?: string;
-  history: Array<{
-    date: string;
-    user: string;
-    userRole: string;
-    action: string;
-    comment?: string;
-    status: string;
-  }>;
-  category?: string;
-  workflowCaseId?: string;
-}
-
-// Расширенная схема базы данных
-class ExtendedCMSDatabase extends Dexie {
-  collateralCards!: Table<ExtendedCollateralCard, string>;
-  partners!: Table<Partner, string>;
-  documents!: Table<Document, string>;
-  settings!: Table<AppSettings & { id: string }, string>;
-  inspections!: Table<Inspection, string>;
-  documentIndexes!: Table<DocumentIndexDB, string>;
-  documentChunks!: Table<DocumentChunkDB, string>;
-  knowledgeTopics!: Table<KnowledgeTopicDB, string>;
-  knowledgeCategories!: Table<KnowledgeCategoryDB, string>;
-  knowledgeSearchIndex!: Table<KnowledgeSearchIndexDB, string>;
-  tasks!: Table<TaskDB, string>;
-  workflowCases!: Table<WorkflowCase, string>;
-  workflowTemplates!: Table<WorkflowTemplate, string>;
-
-  constructor() {
-    super('CMSDatabase');
-
-    // Версия 2 с расширенной схемой
-    this.version(2)
-      .stores({
-        collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
-        partners: 'id, type, role, inn, lastName, organizationName',
-        documents: 'id, name, type, category, uploadDate',
-        settings: 'id',
-      })
-      .upgrade(async () => {
-        // Миграция данных из версии 1
-        console.log('Upgrading database to version 2...');
-      });
-
-    // Версия 3 с таблицей осмотров
-    this.version(3)
-      .stores({
-        collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
-        partners: 'id, type, role, inn, lastName, organizationName',
-        documents: 'id, name, type, category, uploadDate',
-        settings: 'id',
-        inspections:
-          'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
-      })
-      .upgrade(async () => {
-        // Миграция данных из версии 2
-        console.log('Upgrading database to version 3...');
-      });
-
-    // Версия 4 с таблицами для индексов документов
-    this.version(4)
-      .stores({
-        collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
-        partners: 'id, type, role, inn, lastName, organizationName',
-        documents: 'id, name, type, category, uploadDate',
-        settings: 'id',
-        inspections:
-          'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
-        documentIndexes: 'documentName',
-        documentChunks: 'id, documentName, page',
-      })
-      .upgrade(async () => {
-        // Миграция данных из версии 3
-        console.log('Upgrading database to version 4...');
-      });
-
-    // Версия 5 с таблицами для базы знаний
-    this.version(5)
-      .stores({
-        collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
-        partners: 'id, type, role, inn, lastName, organizationName',
-        documents: 'id, name, type, category, uploadDate',
-        settings: 'id',
-        inspections:
-          'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
-        documentIndexes: 'documentName',
-        documentChunks: 'id, documentName, page',
-        knowledgeTopics: 'id, category',
-        knowledgeCategories: 'id',
-        knowledgeSearchIndex: 'keyword',
-      })
-      .upgrade(async () => {
-        // Миграция данных из версии 4
-        console.log('Upgrading database to version 5...');
-      });
-
-    // Версия 6 с таблицей для задач
-    this.version(6)
-      .stores({
-        collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
-        partners: 'id, type, role, inn, lastName, organizationName',
-        documents: 'id, name, type, category, uploadDate',
-        settings: 'id',
-        inspections:
-          'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
-        documentIndexes: 'documentName',
-        documentChunks: 'id, documentName, page',
-        knowledgeTopics: 'id, category',
-        knowledgeCategories: 'id',
-        knowledgeSearchIndex: 'keyword',
-        tasks: 'id, employeeId, region, status, type, dueDate, createdAt',
-      })
-      .upgrade(async tx => {
-        // Миграция задач из localStorage в IndexedDB
-        console.log('Upgrading database to version 6: migrating tasks from localStorage...');
-        try {
-          let tasksJson: string | null = null;
-          try {
-            tasksJson = localStorage.getItem('zadachnik_tasks');
-          } catch (error) {
-            // Если не удалось прочитать из localStorage (например, QuotaExceededError), просто пропускаем миграцию
-            console.warn(
-              'Не удалось прочитать задачи из localStorage (возможно, данные слишком большие), пропускаем миграцию'
-            );
-            return;
-          }
-
-          if (tasksJson) {
-            try {
-              const tasks = JSON.parse(tasksJson);
-              if (Array.isArray(tasks) && tasks.length > 0) {
-                // Сохраняем задачи батчами по 1000
-                const batchSize = 1000;
-                for (let i = 0; i < tasks.length; i += batchSize) {
-                  const batch = tasks.slice(i, i + batchSize);
-                  await tx.table('tasks').bulkPut(batch);
-                }
-                console.log(`✅ Мигрировано ${tasks.length} задач из localStorage в IndexedDB`);
-                // Удаляем из localStorage после успешной миграции
-                try {
-                  localStorage.removeItem('zadachnik_tasks');
-                } catch (e) {
-                  console.warn('Не удалось удалить задачи из localStorage (не критично)');
-                }
-              }
-            } catch (parseError) {
-              console.error('Ошибка парсинга задач из localStorage:', parseError);
-              // Пытаемся очистить поврежденные данные
-              try {
-                localStorage.removeItem('zadachnik_tasks');
-              } catch (e) {
-                // Игнорируем ошибку удаления
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Ошибка миграции задач:', error);
-        }
-      });
-
-    // Версия 7 с таблицами workflow
-    this.version(7)
-      .stores({
-        collateralCards: 'id, mainCategory, status, number, name, createdAt, updatedAt, cbCode',
-        partners: 'id, type, role, inn, lastName, organizationName',
-        documents: 'id, name, type, category, uploadDate',
-        settings: 'id',
-        inspections:
-          'id, inspectionType, status, inspectionDate, collateralCardId, inspectorId, condition, createdAt, updatedAt',
-        documentIndexes: 'documentName',
-        documentChunks: 'id, documentName, page',
-        knowledgeTopics: 'id, category',
-        knowledgeCategories: 'id',
-        knowledgeSearchIndex: 'keyword',
-        tasks: 'id, employeeId, region, status, type, dueDate, createdAt',
-        workflowCases: 'id, objectId, stage, updatedAt',
-        workflowTemplates: 'id, type, updatedAt',
-      })
-      .upgrade(async () => {
-        console.log('Upgrading database to version 7: adding workflow tables');
-      });
-  }
-}
-
-// Создаем экземпляр базы данных
-const extendedDb = new ExtendedCMSDatabase();
-
-// Экспортируем экземпляр базы данных для использования в других сервисах
-export { extendedDb };
+export type { ExtendedCardSort, ExtendedCardSortField, ExtendedCardQueryInput, ExtendedCardQueryResult };
 
 class ExtendedStorageService {
   private db: ExtendedCMSDatabase;
+  private cardsRepo: CollateralRepo;
+  private partnerRepo: PartnerRepo;
+  private documentRepo: DocumentRepo;
+  private settingsRepo: SettingsRepo;
+  private taskRepo: TaskRepo;
+  private workflowRepo: WorkflowRepo;
 
   constructor() {
     this.db = extendedDb;
+    this.cardsRepo = new CollateralRepo(this.db);
+    this.partnerRepo = new PartnerRepo(this.db);
+    this.documentRepo = new DocumentRepo(this.db);
+    this.settingsRepo = new SettingsRepo(this.db);
+    this.taskRepo = new TaskRepo(this.db);
+    this.workflowRepo = new WorkflowRepo(this.db);
   }
 
   // Инициализация базы данных
@@ -291,21 +72,24 @@ class ExtendedStorageService {
     }
   }
 
+  private fromDbCard(card: ExtendedCollateralCardDB): ExtendedCollateralCard {
+    return {
+      ...card,
+      createdAt: fromSafeDateString(card.createdAt),
+      updatedAt: fromSafeDateString(card.updatedAt),
+    };
+  }
+
   // ============ Операции с расширенными карточками ============
 
   // Сохранение расширенной карточки
   async saveExtendedCard(card: ExtendedCollateralCard): Promise<string> {
     try {
-      const now = new Date();
-      const cardToSave: ExtendedCollateralCard = {
-        ...card,
-        updatedAt: now,
-        createdAt: card.createdAt || now,
-      };
-
-      await this.db.collateralCards.put(cardToSave);
-      return cardToSave.id;
+      return await this.cardsRepo.saveCard(card, card.version);
     } catch (error) {
+      if (error instanceof VersionConflictError) {
+        throw error;
+      }
       console.error('Failed to save collateral card:', error);
       throw error;
     }
@@ -314,81 +98,23 @@ class ExtendedStorageService {
   // Получение расширенных карточек с фильтрацией
   async getExtendedCards(filters?: ExtendedFilterParams): Promise<ExtendedCollateralCard[]> {
     try {
-      let collection = this.db.collateralCards.toCollection();
-
-      if (filters) {
-        if (filters.mainCategory) {
-          collection = this.db.collateralCards.where('mainCategory').equals(filters.mainCategory);
-        }
-
-        if (filters.status) {
-          collection = collection.filter(card => card.status === filters.status);
-        }
-
-        if (filters.searchQuery) {
-          const query = filters.searchQuery.toLowerCase();
-          collection = collection.filter(
-            card =>
-              card.name.toLowerCase().includes(query) ||
-              card.number.toLowerCase().includes(query) ||
-              card.address?.fullAddress?.toLowerCase().includes(query) ||
-              card.partners?.some(
-                p =>
-                  p.lastName?.toLowerCase().includes(query) ||
-                  p.firstName?.toLowerCase().includes(query) ||
-                  p.organizationName?.toLowerCase().includes(query)
-              ) ||
-              false
-          );
-        }
-
-        if (filters.dateFrom) {
-          collection = collection.filter(card => card.createdAt >= filters.dateFrom!);
-        }
-
-        if (filters.dateTo) {
-          collection = collection.filter(card => card.createdAt <= filters.dateTo!);
-        }
-
-        if (filters.region) {
-          collection = collection.filter(card =>
-            Boolean(card.address?.region?.toLowerCase().includes(filters.region!.toLowerCase()))
-          );
-        }
-
-        if (filters.objectType) {
-          collection = collection.filter(() => {
-            // Логика определения типа объекта
-            return true; // Упрощенная версия
-          });
-        }
-
-        if (filters.hasDocuments !== undefined) {
-          collection = collection.filter(card =>
-            filters.hasDocuments
-              ? (card.documents?.length || 0) > 0
-              : (card.documents?.length || 0) === 0
-          );
-        }
-
-        if (filters.areaFrom !== undefined) {
-          collection = collection.filter(card => {
-            const area = card.characteristics?.totalArea || card.characteristics?.area;
-            return area && area >= filters.areaFrom!;
-          });
-        }
-
-        if (filters.areaTo !== undefined) {
-          collection = collection.filter(card => {
-            const area = card.characteristics?.totalArea || card.characteristics?.area;
-            return area && area <= filters.areaTo!;
-          });
-        }
-      }
-
-      return await collection.toArray();
+      return await this.cardsRepo.list(filters);
     } catch (error) {
       console.error('Failed to get collateral cards:', error);
+      throw error;
+    }
+  }
+
+  // Запрос карточек с пагинацией (query-driven UI)
+  async queryExtendedCards(input: ExtendedCardQueryInput): Promise<ExtendedCardQueryResult> {
+    try {
+      perfMark('registry:query:start');
+      const result = await this.cardsRepo.query(input);
+      perfMark('registry:query:end');
+      perfMeasure('registry:query', 'registry:query:start', 'registry:query:end');
+      return result;
+    } catch (error) {
+      console.error('Failed to query collateral cards:', error);
       throw error;
     }
   }
@@ -396,7 +122,7 @@ class ExtendedStorageService {
   // Получение карточки по ID
   async getExtendedCardById(id: string): Promise<ExtendedCollateralCard | undefined> {
     try {
-      return await this.db.collateralCards.get(id);
+      return await this.cardsRepo.getById(id);
     } catch (error) {
       console.error('Failed to get collateral card:', error);
       throw error;
@@ -406,7 +132,7 @@ class ExtendedStorageService {
   // Удаление карточки
   async deleteExtendedCard(id: string): Promise<void> {
     try {
-      await this.db.collateralCards.delete(id);
+      await this.cardsRepo.deleteCard(id);
     } catch (error) {
       console.error('Failed to delete collateral card:', error);
       throw error;
@@ -416,7 +142,7 @@ class ExtendedStorageService {
   // Массовое удаление карточек
   async deleteExtendedCards(ids: string[]): Promise<void> {
     try {
-      await this.db.collateralCards.bulkDelete(ids);
+      await this.cardsRepo.deleteCards(ids);
     } catch (error) {
       console.error('Failed to delete collateral cards:', error);
       throw error;
@@ -428,8 +154,7 @@ class ExtendedStorageService {
   // Сохранение партнера
   async savePartner(partner: Partner): Promise<string> {
     try {
-      await this.db.partners.put(partner);
-      return partner.id;
+      return await this.partnerRepo.save(partner);
     } catch (error) {
       console.error('Failed to save partner:', error);
       throw error;
@@ -439,7 +164,7 @@ class ExtendedStorageService {
   // Получение всех партнеров
   async getPartners(): Promise<Partner[]> {
     try {
-      return await this.db.partners.toArray();
+      return await this.partnerRepo.list();
     } catch (error) {
       console.error('Failed to get partners:', error);
       throw error;
@@ -449,17 +174,7 @@ class ExtendedStorageService {
   // Поиск партнеров
   async searchPartners(query: string): Promise<Partner[]> {
     try {
-      const lowerQuery = query.toLowerCase();
-      return await this.db.partners
-        .filter(partner =>
-          Boolean(
-            partner.lastName?.toLowerCase().includes(lowerQuery) ||
-              partner.firstName?.toLowerCase().includes(lowerQuery) ||
-              partner.organizationName?.toLowerCase().includes(lowerQuery) ||
-              partner.inn?.includes(query)
-          )
-        )
-        .toArray();
+      return await this.partnerRepo.search(query);
     } catch (error) {
       console.error('Failed to search partners:', error);
       throw error;
@@ -471,8 +186,7 @@ class ExtendedStorageService {
   // Сохранение документа
   async saveDocument(document: Document): Promise<string> {
     try {
-      await this.db.documents.put(document);
-      return document.id;
+      return await this.documentRepo.save(document);
     } catch (error) {
       console.error('Failed to save document:', error);
       throw error;
@@ -482,7 +196,7 @@ class ExtendedStorageService {
   // Получение всех документов
   async getDocuments(): Promise<Document[]> {
     try {
-      return await this.db.documents.toArray();
+      return await this.documentRepo.list();
     } catch (error) {
       console.error('Failed to get documents:', error);
       throw error;
@@ -494,14 +208,7 @@ class ExtendedStorageService {
   // Получение настроек
   async getSettings(): Promise<AppSettings> {
     try {
-      const settings = await this.db.settings.get('app-settings');
-      return (
-        settings || {
-          theme: 'light',
-          language: 'ru',
-          sidebarCollapsed: false,
-        }
-      );
+      return await this.settingsRepo.get();
     } catch (error) {
       console.error('Failed to get settings:', error);
       throw error;
@@ -511,12 +218,7 @@ class ExtendedStorageService {
   // Сохранение настроек
   async saveSettings(settings: Partial<AppSettings>): Promise<void> {
     try {
-      const currentSettings = await this.getSettings();
-      await this.db.settings.put({
-        id: 'app-settings',
-        ...currentSettings,
-        ...settings,
-      });
+      await this.settingsRepo.save(settings);
     } catch (error) {
       console.error('Failed to save settings:', error);
       throw error;
@@ -528,7 +230,7 @@ class ExtendedStorageService {
   // Получить все задачи
   async getTasks(): Promise<TaskDB[]> {
     try {
-      return await this.db.tasks.toArray();
+      return await this.taskRepo.list();
     } catch (error) {
       console.error('Failed to get tasks:', error);
       throw error;
@@ -538,15 +240,7 @@ class ExtendedStorageService {
   // Сохранить задачи (батчами)
   async saveTasks(tasks: TaskDB[]): Promise<void> {
     try {
-      // Очищаем старые задачи перед сохранением новых
-      await this.db.tasks.clear();
-
-      // Сохраняем батчами по 1000 для производительности
-      const batchSize = 1000;
-      for (let i = 0; i < tasks.length; i += batchSize) {
-        const batch = tasks.slice(i, i + batchSize);
-        await this.db.tasks.bulkPut(batch);
-      }
+      await this.taskRepo.saveAll(tasks);
     } catch (error) {
       console.error('Failed to save tasks:', error);
       throw error;
@@ -556,7 +250,7 @@ class ExtendedStorageService {
   // Добавить или обновить задачу
   async saveTask(task: TaskDB): Promise<void> {
     try {
-      await this.db.tasks.put(task);
+      await this.taskRepo.save(task);
     } catch (error) {
       console.error('Failed to save task:', error);
       throw error;
@@ -566,7 +260,7 @@ class ExtendedStorageService {
   // Удалить задачу
   async deleteTask(taskId: string): Promise<void> {
     try {
-      await this.db.tasks.delete(taskId);
+      await this.taskRepo.delete(taskId);
     } catch (error) {
       console.error('Failed to delete task:', error);
       throw error;
@@ -576,7 +270,7 @@ class ExtendedStorageService {
   // Получить задачи по employeeId
   async getTasksByEmployeeId(employeeId: string): Promise<TaskDB[]> {
     try {
-      return await this.db.tasks.where('employeeId').equals(employeeId).toArray();
+      return await this.taskRepo.byEmployee(employeeId);
     } catch (error) {
       console.error('Failed to get tasks by employeeId:', error);
       throw error;
@@ -586,7 +280,7 @@ class ExtendedStorageService {
   // Получить задачи по региону
   async getTasksByRegion(region: string): Promise<TaskDB[]> {
     try {
-      return await this.db.tasks.where('region').equals(region).toArray();
+      return await this.taskRepo.byRegion(region);
     } catch (error) {
       console.error('Failed to get tasks by region:', error);
       throw error;
@@ -686,9 +380,8 @@ class ExtendedStorageService {
       // Импорт данных
       if (backup.data.cards && Array.isArray(backup.data.cards)) {
         for (const card of backup.data.cards) {
-          card.createdAt = new Date(card.createdAt);
-          card.updatedAt = new Date(card.updatedAt);
-          await this.saveExtendedCard(card);
+          const restored = this.fromDbCard(card as ExtendedCollateralCardDB);
+          await this.saveExtendedCard(restored);
         }
       }
 
@@ -761,29 +454,23 @@ class ExtendedStorageService {
   // ============ Workflow ============
 
   async getWorkflowCases(): Promise<WorkflowCase[]> {
-    return await this.db.workflowCases.toArray();
+    return await this.workflowRepo.getCases();
   }
 
   async saveWorkflowCases(cases: WorkflowCase[]): Promise<void> {
-    await this.db.workflowCases.clear();
-    if (cases.length > 0) {
-      await this.db.workflowCases.bulkPut(cases);
-    }
+    await this.workflowRepo.saveCases(cases);
   }
 
   async getWorkflowTemplates(): Promise<WorkflowTemplate[]> {
-    return await this.db.workflowTemplates.toArray();
+    return await this.workflowRepo.getTemplates();
   }
 
   async saveWorkflowTemplates(templates: WorkflowTemplate[]): Promise<void> {
-    await this.db.workflowTemplates.clear();
-    if (templates.length > 0) {
-      await this.db.workflowTemplates.bulkPut(templates);
-    }
+    await this.workflowRepo.saveTemplates(templates);
   }
 
   async ensureDefaultWorkflowTemplates(defaultTemplates: WorkflowTemplate[]): Promise<void> {
-    const existing = await this.db.workflowTemplates.toArray();
+    const existing = await this.workflowRepo.getTemplates();
     if (!existing || existing.length === 0) {
       await this.saveWorkflowTemplates(defaultTemplates);
     }

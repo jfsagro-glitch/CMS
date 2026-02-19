@@ -3,7 +3,7 @@ import { Card, Col, Row, Statistic, List, Tag, Typography, Space, Tooltip } from
 import { useAppSelector } from '@/store/hooks';
 import { WORKFLOW_STAGES } from './stages';
 import extendedStorageService from '@/services/ExtendedStorageService';
-import type { TaskDB } from '@/services/ExtendedStorageService';
+import type { TaskDB } from '@/data/db/extendedDb';
 
 const WorkflowDashboard: React.FC = () => {
   const cases = useAppSelector(state => state.workflow.cases);
