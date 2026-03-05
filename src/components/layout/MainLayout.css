@@ -1,5 +1,8 @@
 /* Main Layout Styles */
 .main-layout {
+  --layout-header-height: 64px;
+  --layout-desktop-gutter: 32px;
+  --layout-mobile-gutter: 8px;
   min-height: 100vh;
 }
 
@@ -18,32 +21,32 @@
 
 /* Когда шапка видна */
 .main-layout .ant-layout-content.main-content {
-  min-height: calc(100vh - 64px - 32px);
-  max-height: calc(100vh - 64px - 32px);
+  min-height: calc(100vh - var(--layout-header-height) - var(--layout-desktop-gutter));
+  max-height: calc(100vh - var(--layout-header-height) - var(--layout-desktop-gutter));
 }
 
 /* Когда шапка скрыта */
 .main-layout .ant-layout-content.main-content[style*='marginTop: 0'] {
-  min-height: calc(100vh - 32px);
-  max-height: calc(100vh - 32px);
+  min-height: calc(100vh - var(--layout-desktop-gutter));
+  max-height: calc(100vh - var(--layout-desktop-gutter));
 }
 
 @supports (height: 100dvh) {
   .main-layout .ant-layout-content.main-content {
-    min-height: calc(100dvh - 64px - 32px);
-    max-height: calc(100dvh - 64px - 32px);
+    min-height: calc(100dvh - var(--layout-header-height) - var(--layout-desktop-gutter));
+    max-height: calc(100dvh - var(--layout-header-height) - var(--layout-desktop-gutter));
   }
 
   .main-layout .ant-layout-content.main-content[style*='marginTop: 0'] {
-    min-height: calc(100dvh - 32px);
-    max-height: calc(100dvh - 32px);
+    min-height: calc(100dvh - var(--layout-desktop-gutter));
+    max-height: calc(100dvh - var(--layout-desktop-gutter));
   }
 }
 
 .main-layout__show-header-button-wrapper {
   position: fixed;
   z-index: 1001;
-  transition: left 0.2s;
+  transition: left 0.2s, top 0.2s;
 }
 
 .main-layout__show-header-button {
@@ -118,24 +121,24 @@
   }
 
   .main-layout .ant-layout-content.main-content {
-    min-height: calc(100vh - 64px - 8px);
-    max-height: calc(100vh - 64px - 8px);
+    min-height: calc(100vh - var(--layout-header-height) - var(--layout-mobile-gutter));
+    max-height: calc(100vh - var(--layout-header-height) - var(--layout-mobile-gutter));
   }
 
   .main-layout .ant-layout-content.main-content[style*='marginTop: 0'] {
-    min-height: calc(100vh - 8px);
-    max-height: calc(100vh - 8px);
+    min-height: calc(100vh - var(--layout-mobile-gutter));
+    max-height: calc(100vh - var(--layout-mobile-gutter));
   }
 
   @supports (height: 100dvh) {
     .main-layout .ant-layout-content.main-content {
-      min-height: calc(100dvh - 64px - 8px);
-      max-height: calc(100dvh - 64px - 8px);
+      min-height: calc(100dvh - var(--layout-header-height) - var(--layout-mobile-gutter));
+      max-height: calc(100dvh - var(--layout-header-height) - var(--layout-mobile-gutter));
     }
 
     .main-layout .ant-layout-content.main-content[style*='marginTop: 0'] {
-      min-height: calc(100dvh - 8px);
-      max-height: calc(100dvh - 8px);
+      min-height: calc(100dvh - var(--layout-mobile-gutter));
+      max-height: calc(100dvh - var(--layout-mobile-gutter));
     }
   }
 }

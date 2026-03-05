@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Layout, Button } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { Outlet, useLocation } from 'react-router-dom';
@@ -126,9 +126,9 @@ const MainLayout: React.FC = () => {
     // Логика импорта будет передана через контекст
   };
 
-  const handleToggleHeader = useCallback(() => {
+  const handleToggleHeader = () => {
     setHeaderVisible(prev => !prev);
-  }, []);
+  };
 
   const isRegistrySection = mainSection === 'registry';
   const isProjectsPortfolio = !isCmsRoute && PROJECTS_PORTFOLIO_SECTIONS.has(mainSection);
@@ -137,6 +137,14 @@ const MainLayout: React.FC = () => {
   const contentMarginLeft = isProjectsPortfolio || isMobile ? 0 : sidebarCollapsed ? 80 : 250;
   const hiddenHeaderButtonLeft = isMobile ? 12 : sidebarCollapsed ? 96 : 266;
   const hiddenHeaderButtonTop = isMobile ? 'calc(env(safe-area-inset-top, 0px) + 12px)' : 16;
+  const layoutStyle = useMemo(
+    () => ({ marginLeft: contentMarginLeft, transition: 'margin-left 0.2s' }),
+    [contentMarginLeft]
+  );
+  const showHeaderButtonStyle = useMemo(
+    () => ({ left: hiddenHeaderButtonLeft, top: hiddenHeaderButtonTop }),
+    [hiddenHeaderButtonLeft, hiddenHeaderButtonTop]
+  );
 
   return (
     <Layout className="main-layout">
@@ -149,7 +157,7 @@ const MainLayout: React.FC = () => {
           hasCards={cards.length > 0}
         />
       )}
-      <Layout style={{ marginLeft: contentMarginLeft, transition: 'margin-left 0.2s' }}>
+      <Layout style={layoutStyle}>
         {shouldShowHeader && (
           <Header
             onCreateCard={handleCreateCard}
@@ -170,10 +178,7 @@ const MainLayout: React.FC = () => {
           {!shouldShowHeader && !isProjectsPortfolio && (
             <div
               className="main-layout__show-header-button-wrapper"
-              style={{
-                left: hiddenHeaderButtonLeft,
-                top: hiddenHeaderButtonTop,
-              }}
+              style={showHeaderButtonStyle}
             >
               <Button
                 type="primary"
