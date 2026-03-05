@@ -18,14 +18,14 @@
 
 /* Когда шапка видна */
 .main-layout .ant-layout-content.main-content {
-  min-height: calc(100vh - 64px - 32px); /* 100vh - header - margins */
-  max-height: calc(100vh - 64px - 32px);
+  min-height: calc(100dvh - 64px - 32px); /* 100vh - header - margins */
+  max-height: calc(100dvh - 64px - 32px);
 }
 
 /* Когда шапка скрыта */
 .main-layout .ant-layout-content.main-content[style*='marginTop: 0'] {
-  min-height: calc(100vh - 32px); /* 100vh - margins */
-  max-height: calc(100vh - 32px);
+  min-height: calc(100dvh - 32px); /* 100vh - margins */
+  max-height: calc(100dvh - 32px);
 }
 
 .right-toolbar {
@@ -84,7 +84,18 @@
 
 @media (max-width: 768px) {
   .main-content {
-    margin: 8px;
-    padding: 16px;
+    margin: 4px;
+    padding: 12px;
+    border-radius: 6px;
+  }
+
+  .main-layout .ant-layout-content.main-content {
+    min-height: calc(100dvh - 64px - 8px);
+    max-height: calc(100dvh - 64px - 8px);
+  }
+
+  .main-layout .ant-layout-content.main-content[style*='marginTop: 0'] {
+    min-height: calc(100dvh - 8px);
+    max-height: calc(100dvh - 8px);
   }
 }
