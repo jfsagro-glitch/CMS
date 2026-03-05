@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Layout, Button } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { Outlet, useLocation } from 'react-router-dom';
@@ -6,31 +6,60 @@ import SidebarMenu from './SidebarMenu';
 import Header from './Header';
 import { useAppSelector } from '@/store/hooks';
 import { useDemoData } from '@/hooks/useDemoData';
+import type { RootState } from '@/store';
 
 const { Content } = Layout;
 
 const MainLayout: React.FC = () => {
   const location = useLocation();
-  const sidebarCollapsed = useAppSelector((state: any) => state.app.sidebarCollapsed);
-  const cards = useAppSelector((state: any) => state.extendedCards?.filteredItems || []);
+  const sidebarCollapsed = useAppSelector((state: RootState) => state.app.sidebarCollapsed);
+  const cards = useAppSelector((state: RootState) => state.extendedCards?.filteredItems || []);
   const { loadDemoData, clearDemoData } = useDemoData();
   const [searchText, setSearchText] = useState('');
   const [searchAttribute, setSearchAttribute] = useState('name');
   const [headerVisible, setHeaderVisible] = useState(true);
-  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState<boolean>(window.matchMedia('(max-width: 767px)').matches);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    let frameId: number | null = null;
+
+    const syncMobileState = (matches: boolean) => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        setIsMobile(prev => (prev === matches ? prev : matches));
+        frameId = null;
+      });
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      syncMobileState(event.matches);
+    };
+
+    syncMobileState(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
   }, []);
 
-  const currentPath = location.pathname || location.hash.replace('#', '');
-  const pathParts = currentPath.split('/').filter(Boolean);
-  const isCmsRoute = pathParts[0] === 'cms';
-  const mainSection = (isCmsRoute ? pathParts[1] : pathParts[0]) || 'registry';
+  const { isCmsRoute, mainSection } = useMemo(() => {
+    const currentPath = location.pathname || location.hash.replace('#', '');
+    const pathParts = currentPath.split('/').filter(Boolean);
+    const cmsRoute = pathParts[0] === 'cms';
+
+    return {
+      isCmsRoute: cmsRoute,
+      mainSection: (cmsRoute ? pathParts[1] : pathParts[0]) || 'registry',
+    };
+  }, [location.hash, location.pathname]);
 
   const getHeaderContextTitle = () => {
     switch (mainSection) {
@@ -104,7 +133,8 @@ const MainLayout: React.FC = () => {
       mainSection === 'home');
   const shouldShowHeader = headerVisible && !isProjectsPortfolio;
   const shouldShowSidebar = !isProjectsPortfolio;
-  const contentMarginLeft = isProjectsPortfolio ? 0 : isMobile ? 0 : sidebarCollapsed ? 80 : 250;
+  const contentMarginLeft = isProjectsPortfolio || isMobile ? 0 : sidebarCollapsed ? 80 : 250;
+  const hiddenHeaderButtonLeft = isMobile ? 16 : sidebarCollapsed ? 96 : 266;
 
   return (
     <Layout className="main-layout">
@@ -140,7 +170,7 @@ const MainLayout: React.FC = () => {
               style={{
                 position: 'fixed',
                 top: 16,
-                left: sidebarCollapsed ? 96 : 266,
+                left: hiddenHeaderButtonLeft,
                 zIndex: 1001,
                 transition: 'left 0.2s',
               }}
