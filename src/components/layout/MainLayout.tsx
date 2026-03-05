@@ -145,6 +145,7 @@ const MainLayout: React.FC = () => {
     () => ({ left: hiddenHeaderButtonLeft, top: hiddenHeaderButtonTop }),
     [hiddenHeaderButtonLeft, hiddenHeaderButtonTop]
   );
+  const contentStyle = useMemo(() => ({ marginTop: shouldShowHeader ? 64 : 0 }), [shouldShowHeader]);
 
   return (
     <Layout className="main-layout">
@@ -174,7 +175,7 @@ const MainLayout: React.FC = () => {
             isMobile={isMobile}
           />
         )}
-        <Content className="main-content" style={{ marginTop: shouldShowHeader ? 64 : 0 }}>
+        <Content className="main-content" style={contentStyle}>
           {!shouldShowHeader && !isProjectsPortfolio && (
             <div
               className="main-layout__show-header-button-wrapper"
