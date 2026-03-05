@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Layout, Button } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { Outlet, useLocation } from 'react-router-dom';
@@ -6,76 +6,113 @@ import SidebarMenu from './SidebarMenu';
 import Header from './Header';
 import { useAppSelector } from '@/store/hooks';
 import { useDemoData } from '@/hooks/useDemoData';
+import type { RootState } from '@/store';
 
 const { Content } = Layout;
 
+const MOBILE_MEDIA_QUERY = '(max-width: 767px)';
+
+const SECTION_TITLES: Record<string, string> = {
+  registry: 'Реестр объектов',
+  portfolio: 'Залоговый портфель',
+  tasks: 'Задачи',
+  kpi: 'KPI и аналитика',
+  reports: 'Отчеты',
+  'collateral-dossier': 'Залоговое досье',
+  'collateral-conclusions': 'Залоговые заключения',
+  insurance: 'Страхование',
+  fnp: 'ФНП',
+  analytics: 'Аналитика',
+  'credit-risk': 'Модуль мониторинга',
+  appraisal: 'Модуль оценки',
+  'cms-check': 'CMS Check',
+  egrn: 'ЕГРН',
+  upload: 'Загрузка и миграция',
+  monitoring: 'Мониторинг',
+  reference: 'Справочная с ИИ',
+  workflow: 'Внесудебная реализация (Workflow)',
+  settings: 'Настройки',
+};
+
+const PROJECTS_PORTFOLIO_SECTIONS = new Set([
+  'projects-portfolio',
+  'projects',
+  'services',
+  'cases',
+  'about',
+  'offer',
+  'home',
+]);
+
 const MainLayout: React.FC = () => {
   const location = useLocation();
-  const sidebarCollapsed = useAppSelector((state: any) => state.app.sidebarCollapsed);
-  const cards = useAppSelector((state: any) => state.extendedCards?.filteredItems || []);
+  const sidebarCollapsed = useAppSelector((state: RootState) => state.app.sidebarCollapsed);
+  const cards = useAppSelector((state: RootState) => state.extendedCards?.filteredItems || []);
   const { loadDemoData, clearDemoData } = useDemoData();
   const [searchText, setSearchText] = useState('');
   const [searchAttribute, setSearchAttribute] = useState('name');
   const [headerVisible, setHeaderVisible] = useState(true);
-  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.matchMedia(MOBILE_MEDIA_QUERY).matches : false
+  );
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+    const mediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
+    let frameId: number | null = null;
+
+    const syncMobileState = (matches: boolean) => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        setIsMobile(prev => (prev === matches ? prev : matches));
+        frameId = null;
+      });
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    const handleMediaChange = (event: MediaQueryListEvent) => {
+      syncMobileState(event.matches);
+    };
+
+    syncMobileState(mediaQuery.matches);
+
+    const legacyMediaQuery = mediaQuery as MediaQueryList & {
+      addListener?: (callback: (event: MediaQueryListEvent) => void) => void;
+      removeListener?: (callback: (event: MediaQueryListEvent) => void) => void;
+    };
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleMediaChange);
+    } else {
+      legacyMediaQuery.addListener?.(handleMediaChange);
+    }
+
+    return () => {
+      if (typeof mediaQuery.removeEventListener === 'function') {
+        mediaQuery.removeEventListener('change', handleMediaChange);
+      } else {
+        legacyMediaQuery.removeListener?.(handleMediaChange);
+      }
+
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
   }, []);
 
-  const currentPath = location.pathname || location.hash.replace('#', '');
-  const pathParts = currentPath.split('/').filter(Boolean);
-  const isCmsRoute = pathParts[0] === 'cms';
-  const mainSection = (isCmsRoute ? pathParts[1] : pathParts[0]) || 'registry';
+  const { isCmsRoute, mainSection } = useMemo(() => {
+    const currentPath = location.pathname || location.hash.replace('#', '');
+    const pathParts = currentPath.split('/').filter(Boolean);
+    const cmsRoute = pathParts[0] === 'cms';
 
-  const getHeaderContextTitle = () => {
-    switch (mainSection) {
-      case 'registry':
-        return 'Реестр объектов';
-      case 'portfolio':
-        return 'Залоговый портфель';
-      case 'tasks':
-        return 'Задачи';
-      case 'kpi':
-        return 'KPI и аналитика';
-      case 'reports':
-        return 'Отчеты';
-      case 'collateral-dossier':
-        return 'Залоговое досье';
-      case 'collateral-conclusions':
-        return 'Залоговые заключения';
-      case 'insurance':
-        return 'Страхование';
-      case 'fnp':
-        return 'ФНП';
-      case 'analytics':
-        return 'Аналитика';
-      case 'credit-risk':
-        return 'Модуль мониторинга';
-      case 'appraisal':
-        return 'Модуль оценки';
-      case 'cms-check':
-        return 'CMS Check';
-      case 'egrn':
-        return 'ЕГРН';
-      case 'upload':
-        return 'Загрузка и миграция';
-      case 'monitoring':
-        return 'Мониторинг';
-      case 'reference':
-        return 'Справочная с ИИ';
-      case 'workflow':
-        return 'Внесудебная реализация (Workflow)';
-      case 'settings':
-        return 'Настройки';
-      default:
-        return 'Система управления залоговым имуществом';
-    }
-  };
+    return {
+      isCmsRoute: cmsRoute,
+      mainSection: (cmsRoute ? pathParts[1] : pathParts[0]) || 'registry',
+    };
+  }, [location.hash, location.pathname]);
+
+  const contextTitle = SECTION_TITLES[mainSection] || 'Система управления залоговым имуществом';
 
   const handleCreateCard = () => {
     // Логика создания карточки будет передана через контекст
@@ -89,22 +126,17 @@ const MainLayout: React.FC = () => {
     // Логика импорта будет передана через контекст
   };
 
-  const handleToggleHeader = () => {
-    setHeaderVisible(!headerVisible);
-  };
+  const handleToggleHeader = useCallback(() => {
+    setHeaderVisible(prev => !prev);
+  }, []);
 
   const isRegistrySection = mainSection === 'registry';
-  const isProjectsPortfolio = !isCmsRoute &&
-    (mainSection === 'projects-portfolio' ||
-      mainSection === 'projects' ||
-      mainSection === 'services' ||
-      mainSection === 'cases' ||
-      mainSection === 'about' ||
-      mainSection === 'offer' ||
-      mainSection === 'home');
+  const isProjectsPortfolio = !isCmsRoute && PROJECTS_PORTFOLIO_SECTIONS.has(mainSection);
   const shouldShowHeader = headerVisible && !isProjectsPortfolio;
   const shouldShowSidebar = !isProjectsPortfolio;
-  const contentMarginLeft = isProjectsPortfolio ? 0 : isMobile ? 0 : sidebarCollapsed ? 80 : 250;
+  const contentMarginLeft = isProjectsPortfolio || isMobile ? 0 : sidebarCollapsed ? 80 : 250;
+  const hiddenHeaderButtonLeft = isMobile ? 12 : sidebarCollapsed ? 96 : 266;
+  const hiddenHeaderButtonTop = isMobile ? 'calc(env(safe-area-inset-top, 0px) + 12px)' : 16;
 
   return (
     <Layout className="main-layout">
@@ -129,7 +161,7 @@ const MainLayout: React.FC = () => {
             searchText={searchText}
             searchAttribute={searchAttribute}
             headerVisible={headerVisible}
-            contextTitle={getHeaderContextTitle()}
+            contextTitle={contextTitle}
             isRegistry={isRegistrySection}
             isMobile={isMobile}
           />
@@ -137,27 +169,17 @@ const MainLayout: React.FC = () => {
         <Content className="main-content" style={{ marginTop: shouldShowHeader ? 64 : 0 }}>
           {!shouldShowHeader && !isProjectsPortfolio && (
             <div
+              className="main-layout__show-header-button-wrapper"
               style={{
-                position: 'fixed',
-                top: 16,
-                left: sidebarCollapsed ? 96 : 266,
-                zIndex: 1001,
-                transition: 'left 0.2s',
+                left: hiddenHeaderButtonLeft,
+                top: hiddenHeaderButtonTop,
               }}
             >
               <Button
                 type="primary"
                 icon={<DownOutlined />}
                 onClick={handleToggleHeader}
-                style={{
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  borderRadius: '50%',
-                  width: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                className="main-layout__show-header-button"
                 title="Показать шапку"
               />
             </div>
